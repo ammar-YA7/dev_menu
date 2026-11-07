@@ -8,6 +8,12 @@
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="icon" type="image/png" sizes="192x192" href="/images/icon-192.png">
 <link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
+<link rel="manifest" href="/admin-manifest.json">
+<meta name="theme-color" content="#233d2c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ديف منيو">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>لوحة التحكم الاحترافية | Dev Menu</title>
 
 <link rel="stylesheet" href="/css/fonts.css">
@@ -485,6 +491,17 @@
             <button onclick="goAddDish()" data-needs="menu" class="bg-brand text-cream hover:bg-brand-dark px-4 py-2.5 rounded-xl text-xs font-black transition"><i class="ph-bold ph-plus"></i> أضف طبق</button>
             <button onclick="downloadQrCard()" data-needs="menu" class="bg-brand/10 hover:bg-brand/15 text-ink px-4 py-2.5 rounded-xl text-xs font-bold border border-brand/25 transition"><i class="ph-bold ph-printer"></i> بطاقة QR</button>
           </div>
+        </div>
+
+        <!-- ثبّت اللوحة كتطبيق على الجوال (يختفي لو مثبّتة أو على الكمبيوتر) -->
+        <div id="install-card" class="hidden pro-card p-4 flex items-center gap-3">
+          <img src="/images/apple-touch-icon.png" alt="" width="44" height="44" class="w-11 h-11 rounded-xl border border-[#e3e3e3] shrink-0">
+          <div class="min-w-0 flex-1">
+            <h3 class="text-[13px] font-bold text-ink">حط لوحة التحكم على شاشة جوالك</h3>
+            <p class="text-[11px] text-ink mt-0.5">تفتح من أيقونة مثل أي تطبيق، بدون سفاري وبدون ما تكتب الرابط.</p>
+          </div>
+          <button type="button" id="install-go" class="bg-brand text-cream hover:bg-brand-dark px-3.5 py-2 rounded-xl text-xs font-black transition shrink-0">ثبّت</button>
+          <button type="button" id="install-x" aria-label="إخفاء" class="text-ink/60 hover:text-ink p-1 shrink-0"><i class="ph-bold ph-x"></i></button>
         </div>
 
         <!-- أكثر أسئلة الزبائن لمساعد المنيو (يطلع لو المساعد مفعّل) -->
@@ -2356,6 +2373,7 @@
 <script src="/js/admin/loyalty.js"></script>
 <script src="/js/admin/menu.js"></script>
 <script src="/js/admin/start.js"></script>
+<script src="/js/admin/install.js"></script>
 
 </body>
 </html>
