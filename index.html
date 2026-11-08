@@ -378,8 +378,8 @@
   <div class="wrap grid lg:grid-cols-[.95fr_1.05fr] gap-12 items-center">
     <div class="reveal order-last lg:order-first">
       <div class="flex justify-center gap-4">
-        <div class="phone !w-[220px] !m-0" style="margin-top:40px !important"><video src="videos/pager-v4.mp4" poster="videos/pager-v4.jpg" autoplay muted loop playsinline preload="none" aria-label="تنبيه البيجر في جوال العميل"></video></div>
-        <div class="phone !w-[220px] !m-0 hidden sm:block"><video src="videos/loyalty-v4.mp4" poster="videos/loyalty-v4.jpg" autoplay muted loop playsinline preload="none" aria-label="بطاقة الولاء من DEV MENU"></video></div>
+        <div class="phone !w-[220px] !m-0" style="margin-top:40px !important"><video src="videos/pager-live.mp4" poster="videos/pager-live.jpg" autoplay muted loop playsinline preload="none" aria-label="تنبيه البيجر في جوال العميل"></video></div>
+        <div class="phone !w-[220px] !m-0 hidden sm:block"><video src="videos/loyalty-live.mp4" poster="videos/loyalty-live.jpg" autoplay muted loop playsinline preload="none" aria-label="بطاقة الولاء من DEV MENU"></video></div>
       </div>
     </div>
     <div class="reveal">
@@ -603,7 +603,7 @@
     if (ly) document.getElementById('chip-loyalty').innerHTML = `&#x20C1; ${ly}`;
   }
   // ─── بطاقة التجربة: فيديو للمنيو والولاء، وتجربة حية للبيجر ───
-  const DEMOS = { menu: ['videos/menu-v4.mp4', 'videos/menu-v4.jpg', 0], loyalty: ['videos/loyalty-v4.mp4', 'videos/loyalty-v4.jpg', 0] };
+  const DEMOS = { menu: ['videos/menu-v4.mp4', 'videos/menu-v4.jpg', 0], loyalty: ['videos/loyalty-live.mp4', 'videos/loyalty-live.jpg', 0] };
   const LIVE_SRC = '/pager.html?client=bistrobella&preview=1';
   let liveNum = 23, liveReady = false;
   const liveSend = (state) => { const f = $('demo-live'); if (f.contentWindow) f.contentWindow.postMessage({ dm: 'pager-demo', state, number: liveNum }, location.origin); };
@@ -629,6 +629,12 @@
     setLiveUi();
   }
   document.querySelector('.tabs').addEventListener('click', (e) => { const b = e.target.closest('[data-tab]'); if (b) showTab(b.dataset.tab); });
+  // العميل ضغط «استلمت طلبي» داخل الجوال: يشوف «بالعافية» ثانيتين، وبعدها يجي العميل اللي بعده
+  window.addEventListener('message', (e) => {
+    if (e.origin !== location.origin || !e.data || e.data.dm !== 'pager-demo-got' || !liveReady) return;
+    liveReady = false; liveNum = liveNum >= 99 ? 1 : liveNum + 1; setLiveUi();
+    setTimeout(() => { if (!liveReady) liveSend('waiting'); }, 2500);
+  });
   let actx = null;
   function chime() {
     try {
