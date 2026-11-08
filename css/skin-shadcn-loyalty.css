@@ -1,0 +1,38 @@
+/* =====================================================================
+   DEV MENU — صفحة بطاقة الولاء للزبون بشكل shadcn/ui (نفس اللوحة)
+   البطاقة نفسها (لونها وخلفيتها من تصميم المحل) ما تتغير، ولون الأزرار يتبع لون بطاقة المحل مثل قبل
+   للرجوع: احذف سطر <link> هذا الملف من loyalty.html
+   ===================================================================== */
+:root { --sand: #f8fafc; --ink: #0f1f15; --gold: #3f7a4a; }
+body { background: #f8fafc !important; color: #0f1f15; }
+
+/* الصناديق: أبيض، إطار رفيع، ظل خفيف، حواف 14 */
+.card { border: 1px solid #e2e8f0 !important; border-radius: 14px !important; box-shadow: 0 1px 2px rgba(15, 23, 42, .05) !important; }
+
+/* الأزرار: حواف 10، بدون ظل ملوّن */
+.btn { border-radius: 10px !important; padding: 15px !important; font-weight: 600 !important; font-size: 16px !important; }
+.btn-brand { box-shadow: 0 1px 2px rgba(15, 23, 42, .1) !important; }
+.btn-gold { background: #233d2c !important; color: #fff !important; }
+.btn-ghost { background: #fff !important; color: #0f1f15 !important; border: 1px solid #e2e8f0 !important; box-shadow: 0 1px 2px rgba(15, 23, 42, .05); }
+.btn-wallet { border-radius: 10px !important; box-shadow: 0 1px 2px rgba(0, 0, 0, .2) !important; }
+
+/* الحقول والاختيارات */
+.field { background: #fff !important; border: 1px solid #e2e8f0 !important; border-radius: 10px !important; }
+.field:focus { border-color: #94a3b8 !important; box-shadow: 0 0 0 3px rgba(148, 163, 184, .3); }
+.reason, .gender { border-radius: 10px !important; border: 1px solid #e2e8f0 !important; background: #fff; font-weight: 500; }
+.reason[aria-checked="true"], .gender[aria-checked="true"] { border-color: var(--brand) !important; font-weight: 600; }
+
+/* الرسائل: خلفية فاتحة بإطار */
+.msg { border-radius: 10px !important; font-weight: 500 !important; border: 1px solid transparent; }
+.msg-ok { background: #f0fdf4 !important; color: #166534 !important; border-color: #bbf7d0; }
+.msg-warn { background: #fffbeb !important; color: #92400e !important; border-color: #fde68a; }
+.msg-err { background: #fef2f2 !important; color: #991b1b !important; border-color: #fecaca; }
+.happy { border-radius: 10px !important; background: #fffbeb !important; color: #92400e !important; border: 1px solid #fde68a; }
+.happy.now { background: #233d2c !important; color: #fff !important; border-color: #233d2c; animation: none !important; }
+
+/* شاشة إثبات المكافأة: تبقى متحركة (عشان ما تنفع لقطة شاشة)، بألوان الأخضر بدل الذهبي */
+#v-proof { background: linear-gradient(135deg, #16a34a, #233d2c, #3f7a4a, #16a34a) !important; background-size: 400% 400% !important; }
+
+/* أيقونات الهدية والقلب: أخضر بدل الذهبي */
+.text-\[\#c9a227\] { color: #3f7a4a !important; }
+#logo { border-radius: 14px !important; border-color: #e2e8f0 !important; }
