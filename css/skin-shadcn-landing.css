@@ -94,3 +94,13 @@ details.q .faq-list li::before { background: #94a3b8 !important; }
 /* داخل قسم الأسعار الأخضر: الكلمة الملوّنة فاتحة عشان تنقرأ */
 .dark .h2 em, .dark .pill { color: #a7d7ae !important; }
 .dark .pill { background: rgba(255, 255, 255, .06); border-color: rgba(255, 255, 255, .15); }
+/* قسم الأسعار الأخضر: كل الكتابة بيضاء، والوصف أبيض أخف (الملخص الأبيض يبقى كتابته غامقة) */
+.dark { color: #fff !important; }
+.dark :is(h2, h3, .h2, .h2 em, b, strong):not(.summary *) { color: #fff !important; }
+.dark :is(.sub, p, small, .feat-pick p, .feat-pick .pr small):not(.summary *) { color: rgba(255, 255, 255, .75) !important; }
+.dark .feat-pick, .dark .feat-pick .pr { color: #fff !important; }
+.dark .period button[aria-pressed="false"], .dark .preset[aria-pressed="false"] { color: rgba(255, 255, 255, .8) !important; }
+.dark .period button[aria-pressed="true"] small { color: #3f7a4a !important; }
+.dark .period button[aria-pressed="false"] small { color: #a7d7ae !important; }
+.dark .pill { color: #fff !important; }
+.dark .h2 em { color: #fff !important; }
