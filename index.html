@@ -604,7 +604,7 @@
   }
   // ─── بطاقة التجربة: فيديو للمنيو والولاء، وتجربة حية للبيجر ───
   const DEMOS = { menu: ['videos/menu-v4.mp4', 'videos/menu-v4.jpg', 0], loyalty: ['videos/loyalty-live.mp4', 'videos/loyalty-live.jpg', 0] };
-  const LIVE_SRC = '/pager.html?client=bistrobella&preview=1';
+  const LIVE_SRC = '/pager.html?client=bistrobella&preview=1&demo=1';
   let liveNum = 23, liveReady = false;
   const liveSend = (state) => { const f = $('demo-live'); if (f.contentWindow) f.contentWindow.postMessage({ dm: 'pager-demo', state, number: liveNum }, location.origin); };
   function setLiveUi() {

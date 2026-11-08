@@ -786,6 +786,7 @@
   // تجربة حية في صفحة الهبوط: الصفحة الأم ترسل «جاهز» أو «استلم» (المعاينة بس، بدون أي طلب للسيرفر).
   // الصوت يطلع من الصفحة الأم، وهنا الشكل بس (الوميض والرقم الجاهز)
   let demoState = '', demoNum = 0;
+  const DEMO = PREVIEW && params.get('demo') === '1';   // صفحة الهبوط: نعرض المساعد بردود جاهزة حتى لو المحل التجريبي مطفيه
   if (PREVIEW) window.addEventListener('message', (e) => {
     if (e.origin !== location.origin || !e.data || e.data.dm !== 'pager-demo') return;
     demoState = e.data.state === 'ready' ? 'ready' : 'waiting';
@@ -1458,6 +1459,17 @@
     if (!text || askBusy) return;
     $('ask-in').value = ''; askBusy = true; $('ask-send').disabled = true; $('ask-chips').innerHTML = '';
     askBubble('me', text); askMsgs.push({ role: 'user', content: text });
+    if (DEMO) {   // تجربة صفحة الهبوط: ردود جاهزة تشبه رد المساعد الحقيقي
+      const qq = String(askMsgs[askMsgs.length - 1] && askMsgs[askMsgs.length - 1].content || '');
+      const a = /متى|يجهز|وقت/.test(qq) ? `طلبك رقم ${curNumber} قدامه طلبين، ويجهز تقريباً خلال 5 إلى 10 دقايق. لا تشيل هم، أول ما يجهز يرن جوالك.`
+        : /كم|قبلي|قدامي/.test(qq) ? 'قدامك طلبين بس، وأنت الثالث.'
+        : /أضيف|اضيف|انتظر/.test(qq) ? 'تقدر تضيف أي صنف من المنيو وأنت تنتظر، من «تبي تزيد على طلبك؟»، ويوصل للكاشير مع طلبك.'
+        : /عدّل|عدل|تعديل/.test(qq) ? `تقدر تعدّل طلبك عند الكاشير، قل له رقمك ${curNumber}. ولو طلبك ما بدأ تجهيزه يعدّله لك على طول.`
+        : 'في محلك يرد المساعد على زبونك عن وقت طلبه، وعن أي شي في المنيو.';
+      await new Promise(r => setTimeout(r, 900));
+      $('ask-log').querySelector('.wait')?.remove();
+      askBubble('bot', a); askBusy = false; $('ask-send').disabled = false; return askChips();
+    }
     if (PREVIEW) { askBubble('bot', 'هذي معاينة: هنا يرد المساعد على زبونك عن وقت طلبه وعن المنيو.'); askMsgs.pop(); askBusy = false; $('ask-send').disabled = false; return askChips(); }
     const wait = askBubble('bot wait', ''); wait.innerHTML = '<i></i><i></i><i></i>'; wait.setAttribute('aria-label', 'يكتب…');
     try {
@@ -1484,6 +1496,7 @@
     if (PREVIEW) {
       try { r = await DM.get(`/api/pager?action=preview&slug=${encodeURIComponent(slug)}`); }
       catch (e) { return unavailable('المعاينة غير متاحة', e.message || ''); }
+      if (DEMO) r.chat = true;
       if (demoState) r.ticket = { ...r.ticket, status: demoState };
       if (demoNum) r.ticket = { ...r.ticket, number: demoNum };
     }
