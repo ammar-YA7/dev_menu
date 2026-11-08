@@ -229,7 +229,7 @@
       return svcCard('ph-seal-check', 'بطاقة الولاء', '#loyalty',
         tile(st.members || 0, 'عضو') + tile(st.stamps7 || 0, 'ختم هالأسبوع') + tile(st.redeemed || 0, 'مكافأة'),
         d && !d.enabled ? 'البطاقة متوقفة، شغّلها من صفحة الولاء' : `${st.active30 || 0} عضو زاروك آخر 30 يوم`,
-        d && d.enabled ? lyActions() : '',
+        '',   // أزرار المسح والختم صارت فوق في «شغل اليوم»
         miniBars(Object.fromEntries(((d && d.week) || []).map(x => [x.d, x.n])), 'الأختام آخر 7 أيام'));
     }));
     if (!featureLocked('waitlist') && client.waitlist_enabled) jobs.push(api('waitlist').catch(() => null).then(d => {
@@ -255,6 +255,8 @@
     if (deskLabel) deskLabel.textContent = featureLocked('pager') ? 'شاشة الكاشير' : 'شاشة البيجر';
     const bLabel = document.getElementById('bnav-desk-label');
     if (bLabel) bLabel.textContent = featureLocked('pager') ? 'الكاشير' : 'البيجر';
+    const qaLabel = document.getElementById('qa-desk-label');
+    if (qaLabel) qaLabel.textContent = featureLocked('pager') ? 'شاشة الكاشير' : 'شاشة البيجر';
     renderServiceLinks();
     renderServiceSummary();
     document.querySelectorAll('[data-nav], [data-feature]').forEach(el => {
