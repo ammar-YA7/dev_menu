@@ -931,6 +931,38 @@
     renderDishVideo();
   });
 
+  // ─── «فرّغ الصورة»: يطلع للطبق المحفوظ اللي له صورة (والصورة ما تغيّرت في النموذج) ───
+  function renderCutout() {
+    const box = document.getElementById('cutout-box'); if (!box) return;
+    const p = editingProductId ? loadedProducts.find(x => x.id === editingProductId) : null;
+    const pending = document.getElementById('prod-image-file').files[0];
+    const on = !!(p && p.image_url && !pending);
+    box.classList.toggle('hidden', !on); box.classList.toggle('flex', on);
+    if (!on) return;
+    const cut = p.cutout_url ? safeUrl(p.cutout_url) : '';
+    document.getElementById('cutout-prev').innerHTML = cut ? `<img src="${esc(cut)}" alt="" style="width:100%;height:100%;object-fit:contain">` : '<i class="ph-bold ph-magic-wand text-brand text-lg"></i>';
+    document.querySelector('#cutout-btn span').textContent = cut ? 'فرّغها من جديد' : 'فرّغ الصورة';
+    document.getElementById('cutout-clear').classList.toggle('hidden', !cut);
+  }
+  document.getElementById('prod-image-file').addEventListener('change', renderCutout);
+  document.getElementById('cutout-btn').addEventListener('click', async () => {
+    const p = loadedProducts.find(x => x.id === editingProductId); if (!p) return;
+    const btn = document.getElementById('cutout-btn'), label = btn.querySelector('span');
+    btn.disabled = true; label.textContent = 'جاري التفريغ...';
+    try {
+      const r = await api('product-cutout', { id: p.id });
+      p.cutout_url = r.cutout_url;
+      showToast(`تم تفريغ الصورة${Number.isFinite(r.left) ? `، باقي لك ${r.left} صورة هالشهر` : ''}`);
+    } catch (e) { showToast(lastApiError || 'تعذر تفريغ الصورة', true); }
+    finally { btn.disabled = false; renderCutout(); }
+  });
+  document.getElementById('cutout-clear').addEventListener('click', async () => {
+    const p = loadedProducts.find(x => x.id === editingProductId); if (!p) return;
+    try { await api('product-cutout-clear', { id: p.id }); p.cutout_url = null; showToast('رجعت الصورة الأصلية في المنيو التفاعلي'); }
+    catch (e) { showToast(lastApiError || 'تعذر الحفظ', true); }
+    renderCutout();
+  });
+
   // ─── إضافة وتعديل الأطباق ───
   function startEdit(id) {
     const p = loadedProducts.find(x => x.id === id);
@@ -958,6 +990,7 @@
     document.getElementById('img-ratio-warn').classList.add('hidden');
     setDishImagePreview(p.image_url || null, p.image_url ? 'الصورة الحالية (اضغط لتغييرها)' : null);
     setDishVideo(p.video_url);
+    renderCutout();
     document.getElementById('form-title').textContent = `تعديل: ${p.name}`;
     document.getElementById('form-icon').className = 'ph-bold ph-pencil-simple text-amber-600';
     document.getElementById('submit-btn').textContent = 'حفظ التعديلات';
@@ -984,6 +1017,7 @@
     document.getElementById('add-product-form').reset();
     setDishImagePreview(null);
     setDishVideo(null);
+    renderCutout();
     setCoffee(null);
     formSizes = [];
     renderSizes();

@@ -903,6 +903,18 @@
             </label>
             <p id="img-ratio-warn" class="hidden mt-2 text-[12px] font-bold text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2"></p>
             <input type="file" id="prod-image-file" accept="image/*" class="sr-only" onchange="previewDishImage(this)">
+            <!-- «فرّغ الصورة»: نسخة بدون خلفية تطلع في المنيو التفاعلي، والأصلية تبقى للمنيو العادي -->
+            <div id="cutout-box" class="hidden mt-2 items-center gap-3 p-2.5 rounded-xl border border-brand/15 bg-brand/5">
+              <span id="cutout-prev" class="w-14 h-14 rounded-lg shrink-0 grid place-items-center overflow-hidden" style="background:repeating-conic-gradient(#e5e7eb 0 25%,#fff 0 50%) 0 0/12px 12px"></span>
+              <span class="flex-1 min-w-0">
+                <b class="block text-[12.5px] text-ink">صورة الطبق بدون خلفية</b>
+                <span id="cutout-hint" class="block text-[11px] text-ink leading-relaxed">تظهر في المنيو التفاعلي كأن الطبق بارز على الشاشة، وتبقى الصورة الأصلية في المنيو العادي.</span>
+              </span>
+              <span class="flex flex-col gap-1.5 shrink-0">
+                <button type="button" id="cutout-btn" class="bg-brand text-cream hover:bg-brand-dark px-3 py-2 rounded-lg text-[11.5px] font-black disabled:opacity-50"><i class="ph-bold ph-magic-wand"></i> <span>فرّغ الصورة</span></button>
+                <button type="button" id="cutout-clear" class="hidden text-[11px] font-bold text-red-700 underline">إلغاء التفريغ</button>
+              </span>
+            </div>
           </div>
           <!-- فيديو الطبق (اختياري): يتحرك في المنيو مكان الصورة، والصورة تبقى غلافه -->
           <div>
