@@ -1,0 +1,90 @@
+/* =====================================================================
+   DEV MENU — شاشة البيجر والكاشير بشكل shadcn/ui (تجربة على الستيجنق، نفس لوحة التحكم)
+   للرجوع: احذف سطر <link> هذا الملف من pager-desk.html
+   بطاقة QR المطبوعة للزبون (.qr-card) ما تتغير
+   ===================================================================== */
+:root {
+  --brand: #0f172a; --brand-dark: #1e293b; --sand: #f8fafc;
+  --shadow-card: 0 1px 2px rgba(15, 23, 42, .05);
+  --shadow-button: 0 1px 2px rgba(15, 23, 42, .05);
+  --shadow-primary: 0 1px 2px rgba(15, 23, 42, .1);
+}
+body { background: #f8fafc !important; color: #0f172a; }
+::selection { background: #0f172a; color: #fff; }
+
+/* الشريط العلوي */
+header.sticky { background: rgba(255, 255, 255, .85) !important; border-bottom: 1px solid #e2e8f0 !important; }
+header h1 > i:first-child { width: 32px; height: 32px; border-radius: 9px; display: inline-grid; place-items: center; background: #fef3c7; color: #d97706 !important; font-size: 16px; vertical-align: middle; margin-inline-end: 4px; }
+header .owner-only[title] { border-radius: 8px !important; border-color: #e2e8f0 !important; color: #0f172a !important; }
+.mini { border-radius: 8px !important; font-weight: 500 !important; padding: 8px 12px; font-size: 13px; }
+header .mini.bg-white, header a.mini.bg-white, header button[data-lang-toggle] { border: 1px solid #e2e8f0 !important; box-shadow: var(--shadow-button) !important; color: #0f172a; }
+header .mini.bg-white:hover, header button[data-lang-toggle]:hover { background: #f8fafc !important; color: #0f172a !important; }
+#scan-btn, header .mini.bg-\[\#233d2c\] { background: #0f172a !important; }
+#scan-btn:hover { background: #1e293b !important; }
+#stamp-btn { background: #fef3c7 !important; color: #92400e !important; border: 1px solid #fde68a; }
+
+/* البحث */
+#search { background: #fff !important; border-color: #e2e8f0 !important; border-radius: 10px !important; }
+#search:hover { border-color: #cbd5e1 !important; }
+#search:focus { outline: none !important; border-color: #94a3b8 !important; box-shadow: 0 0 0 3px rgba(148, 163, 184, .3); }
+
+/* الأعمدة: بطاقة بيضاء بإطار رفيع بدل الرمادي */
+.col { background: #fff !important; border: 1px solid #e2e8f0; border-radius: 12px !important; box-shadow: var(--shadow-card); }
+.col-orders { background: #fff !important; }
+.col-hd { border-bottom: 1px solid #f1f5f9; margin-bottom: 12px; padding-bottom: 10px !important; }
+.col-hd h2 { font-size: 17px !important; font-weight: 600 !important; color: #0f172a !important; }
+.col-hd h2::before { content: ''; width: 10px; height: 10px; border-radius: 999px; background: #2563eb; flex-shrink: 0; }
+.col-ready .col-hd h2::before { background: #f59e0b; }
+.col-orders .col-hd h2::before { background: #16a34a; }
+.col-count { background: #f1f5f9 !important; color: #0f172a !important; font-weight: 600; }
+.col-ready .col-count { background: #fef3c7 !important; color: #92400e !important; }
+.col-note, .col-empty { color: #64748b !important; font-weight: 500 !important; }
+
+/* بطاقة الرقم */
+.tk { border: 1px solid #e2e8f0; border-radius: 12px !important; box-shadow: var(--shadow-card) !important; background: #fff; }
+.tk-ready { box-shadow: inset 4px 0 0 #f59e0b, var(--shadow-card) !important; }
+.tk-acc { box-shadow: inset 4px 0 0 #0f172a, var(--shadow-card) !important; }
+.tk-n, .tk-tbl b { color: #0f172a !important; font-weight: 700 !important; }
+.tk-time, .tk-tag { background: #f1f5f9 !important; color: #334155 !important; font-weight: 600 !important; }
+.tk-time.warn { background: #fef3c7 !important; color: #92400e !important; }
+.tk-time.late { background: #fee2e2 !important; color: #b91c1c !important; }
+.tk-tag.gold { background: #fef3c7 !important; color: #92400e !important; }
+.tk-order { border-top-color: #e2e8f0 !important; }
+.tk-order.menu { background: #f8fafc !important; border: 1px solid #e2e8f0 !important; border-radius: 10px !important; }
+.tk-order.new { background: #fffbeb !important; border: 1px solid #fcd34d !important; border-radius: 10px !important; }
+.tk-order .q, .tk-seen, .tk-dine { background: #0f172a !important; border-radius: 8px !important; }
+.tk-dine.out { background: #fef3c7 !important; color: #92400e !important; }
+.tk-dine.del { background: #16a34a !important; }
+.tk-addr { background: #f8fafc !important; border: 1px solid #e2e8f0; }
+.tk-reward { background: #fef3c7 !important; color: #92400e !important; border: 1px solid #fde68a; border-radius: 8px !important; }
+
+/* الأزرار: «جاهز» كحلي كبير، والباقي أبيض بإطار */
+.tk-main { background: #0f172a !important; border-radius: 10px !important; box-shadow: var(--shadow-primary) !important; font-weight: 600 !important; }
+.tk-main:hover { background: #1e293b !important; }
+.tk-main.done { background: #16a34a !important; }
+.tk-btn { background: #fff !important; border: 1px solid #e2e8f0; box-shadow: var(--shadow-button) !important; border-radius: 8px !important; color: #0f172a !important; font-weight: 500 !important; }
+.tk-btn:hover { background: #f8fafc !important; }
+.tk-btn.on { background: #f1f5f9 !important; border-color: #0f172a; color: #0f172a !important; }
+.tk-btn.del { color: #dc2626 !important; }
+
+/* شاشة الكاشير (ولاء بدون بيجر) */
+.panel { border: 1px solid #e2e8f0 !important; border-radius: 12px !important; box-shadow: var(--shadow-card) !important; }
+#loyalty-desk button, #loyalty-desk a { border-radius: 12px !important; border: 1px solid #e2e8f0 !important; background: #fff !important; color: #0f172a !important; box-shadow: var(--shadow-card); transition: box-shadow .15s; }
+#loyalty-desk button:hover, #loyalty-desk a:hover { box-shadow: 0 4px 12px -4px rgba(15, 23, 42, .15); }
+#loyalty-desk button i, #loyalty-desk a > i { width: 48px; height: 48px; border-radius: 12px; display: grid !important; place-items: center; font-size: 24px !important; background: #dbeafe; color: #2563eb !important; }
+#loyalty-desk [data-open="stamp-btn"] i { background: #fef3c7; color: #d97706 !important; }
+#loyalty-desk [data-open="join-btn"] i { background: #dcfce7; color: #16a34a !important; }
+#loyalty-desk a > i { background: #ede9fe; color: #7c3aed !important; }
+#loyalty-desk b { font-weight: 600 !important; }
+#loyalty-desk span.text-xs { color: #64748b; opacity: 1; }
+
+/* النوافذ: حواف 14 بدل 28، والأزرار نفس نظام اللوحة */
+.fixed > form.bg-white, .fixed > div.bg-white, .fixed > div.bg-\[\#fbf8f3\] { border-radius: 14px !important; border: 1px solid #e2e8f0; }
+.fixed > div.bg-\[\#fbf8f3\] { background: #f8fafc !important; }
+.fixed .bg-\[\#384f3d\] { background: #0f172a !important; border-radius: 8px !important; font-weight: 600 !important; }
+.fixed .bg-\[\#f5f2eb\] { background: #fff !important; border: 1px solid #e2e8f0 !important; border-radius: 8px !important; font-weight: 500 !important; }
+.fixed button.bg-white { border-radius: 8px !important; border-color: #e2e8f0 !important; font-weight: 500 !important; }
+#inv-input { background: #fff !important; border: 1px solid #e2e8f0 !important; border-radius: 10px !important; }
+#inv-input:focus { border-color: #94a3b8 !important; box-shadow: 0 0 0 3px rgba(148, 163, 184, .3); }
+#scan-id { border-radius: 8px !important; border-color: #e2e8f0 !important; }
+#toast { background: #0f172a !important; color: #fff !important; border-radius: 10px !important; font-weight: 600 !important; }
