@@ -452,21 +452,6 @@
           </div>
         </div>
 
-        <div>
-          <p class="lbl" id="reg-heard-lbl">كيف سمعت عنا؟</p>
-          <div id="reg-heard" role="radiogroup" aria-labelledby="reg-heard-lbl" class="grid grid-cols-2 md:grid-cols-4 gap-2">
-            <label><input type="radio" name="reg-heard" value="instagram" class="peer sr-only"><span class="type-chip"><i class="ph-bold ph-instagram-logo"></i> انستقرام</span></label>
-            <label><input type="radio" name="reg-heard" value="tiktok" class="peer sr-only"><span class="type-chip"><i class="ph-bold ph-tiktok-logo"></i> تيك توك</span></label>
-            <label><input type="radio" name="reg-heard" value="snapchat" class="peer sr-only"><span class="type-chip"><i class="ph-bold ph-snapchat-logo"></i> سناب شات</span></label>
-            <label><input type="radio" name="reg-heard" value="google" class="peer sr-only"><span class="type-chip"><i class="ph-bold ph-google-logo"></i> بحث قوقل</span></label>
-            <label><input type="radio" name="reg-heard" value="x" class="peer sr-only"><span class="type-chip"><i class="ph-bold ph-x-logo"></i> إكس (تويتر)</span></label>
-            <label><input type="radio" name="reg-heard" value="friend" class="peer sr-only"><span class="type-chip"><i class="ph-bold ph-users"></i> صديق أو محل</span></label>
-            <label><input type="radio" name="reg-heard" value="visit" class="peer sr-only"><span class="type-chip"><i class="ph-bold ph-handshake"></i> زيارة أو اتصال منا</span></label>
-            <label><input type="radio" name="reg-heard" value="other" class="peer sr-only"><span class="type-chip"><i class="ph-bold ph-dots-three-circle"></i> أخرى</span></label>
-          </div>
-          <input type="text" id="reg-heard-note" maxlength="80" placeholder="وين سمعت عنا؟ (اختياري)" class="field hidden mt-2">
-        </div>
-
         <button type="button" id="google-btn" onclick="registerWithGoogle()" class="btn btn-soft w-full py-3.5 text-[14px] disabled:opacity-60">
           <svg class="w-4 h-4" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.170z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.450 1.16-4.05 1.16-3.13 0-5.78-2.11-6.73-4.96H1.19v3.15C3.18 21.31 7.25 24 12 24z"/><path fill="#FBBC05" d="M5.27 14.24c-.25-.72-.38-1.49-.38-2.24s.13-1.52.38-2.24V6.61H1.19C.43 8.15 0 9.89 0 12s.43 3.85 1.19 5.39l4.08-3.15z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.25 0 3.18 2.69 1.19 6.61l4.08 3.15c.95-2.85 3.6-4.96 6.73-4.96z"/></svg>
           سجّل بحساب Google
@@ -728,20 +713,6 @@
     return v === 'more' ? sector : v;
   }
   const businessLabel = () => businessType() === 'other' ? $('reg-label').value.trim() : '';
-  // «كيف سمعت عنا؟»: إجباري بضغطة وحدة، و«أخرى» تفتح خانة يكتب فيها (اختياري)
-  const heardValue = () => document.querySelector('[name="reg-heard"]:checked')?.value || '';
-  const heardPayload = () => heardValue() ? { heard_from: heardValue(), ...(heardValue() === 'other' && $('reg-heard-note').value.trim() ? { heard_from_note: $('reg-heard-note').value.trim() } : {}) } : {};
-  document.querySelectorAll('[name="reg-heard"]').forEach(r => r.addEventListener('change', () => {
-    const other = heardValue() === 'other';
-    $('reg-heard-note').classList.toggle('hidden', !other);
-    if (other) $('reg-heard-note').focus();
-  }));
-  function needHeard() {
-    if (heardValue()) return false;
-    $('reg-heard').scrollIntoView({ behavior: 'smooth', block: 'center' });
-    showToast('اختر كيف سمعت عنا', 'error');
-    return true;
-  }
   renderPricing();   // بعد تجهيز نوع المنشأة
 
   // ─── التسجيل (رمز على البريد أو حساب Google) ───
@@ -788,8 +759,8 @@
     if (!phone) return showToast('رقم الجوال غير صحيح، تأكد من رمز الدولة والرقم', 'error');
     setRegisterBusy(true);
     try {
-      if (businessType() === 'other' && !businessLabel()) { $('reg-label').focus(); return showToast('أدخل نوع نشاطك', 'error'); } if (needHeard()) return;
-      formDataCache = { name, email, phone, businessType: businessType(), businessLabel: businessLabel(), ...heardPayload() };
+      if (businessType() === 'other' && !businessLabel()) { $('reg-label').focus(); return showToast('أدخل نوع نشاطك', 'error'); }
+      formDataCache = { name, email, phone, businessType: businessType(), businessLabel: businessLabel() };
       try { await DM.sendOtp(email); } catch (error) { return showToast(otpErrorMessage(error), 'error'); }
       $('register-form').classList.add('hidden');
       $('otp-section').classList.remove('hidden');
@@ -841,7 +812,7 @@
     try {
       try { await DM.verifyOtp(formDataCache.email, token); } catch { return showToast('الرمز غير صحيح أو انتهت صلاحيته', 'error'); }
       let regErr = null;
-      try { await DM.post('/api/owner?action=register', { name: formDataCache.name, phone: formDataCache.phone, business_type: formDataCache.businessType, business_label: formDataCache.businessLabel, heard_from: formDataCache.heard_from, heard_from_note: formDataCache.heard_from_note, ...planPayload() }, true); }
+      try { await DM.post('/api/owner?action=register', { name: formDataCache.name, phone: formDataCache.phone, business_type: formDataCache.businessType, business_label: formDataCache.businessLabel, ...planPayload() }, true); }
       catch (e) { regErr = e; }
       if (regErr) {
         if (regErr.code === 'EMAIL_TAKEN') { showToast('هذا البريد مسجّل مسبقاً، جارٍ تحويلك إلى لوحة التحكم...', 'info'); redirecting = true; setTimeout(() => { location.href = 'admin.html'; }, 1800); }
@@ -863,8 +834,8 @@
     const phone = normalizeMobile($('reg-phone').value);
     if (!name) { $('reg-name').focus(); return showToast('أدخل اسم المنشأة', 'error'); }
     if (!phone) { $('reg-phone').focus(); return showToast('رقم الجوال غير صحيح، تأكد من رمز الدولة والرقم', 'error'); }
-    if (businessType() === 'other' && !businessLabel()) { $('reg-label').focus(); return showToast('أدخل نوع نشاطك', 'error'); } if (needHeard()) return;
-    try { localStorage.setItem(PENDING_KEY, JSON.stringify({ name, phone, businessType: businessType(), businessLabel: businessLabel(), ...heardPayload(), ...planPayload(), at: Date.now() })); } catch {}
+    if (businessType() === 'other' && !businessLabel()) { $('reg-label').focus(); return showToast('أدخل نوع نشاطك', 'error'); }
+    try { localStorage.setItem(PENDING_KEY, JSON.stringify({ name, phone, businessType: businessType(), businessLabel: businessLabel(), ...planPayload(), at: Date.now() })); } catch {}
     $('google-btn').disabled = true;
     location.href = DM.googleUrl(location.origin + location.pathname);
   }
@@ -889,7 +860,7 @@
     location.replace(location.pathname + '#register');
   }
   async function registerSignedIn(data) {
-    await DM.post('/api/owner?action=register', { name: data.name, phone: data.phone, business_type: data.businessType, business_label: data.businessLabel, heard_from: data.heard_from, heard_from_note: data.heard_from_note, plan: data.plan, features: data.features, ...(data.free ? { free: true } : {}) }, true);
+    await DM.post('/api/owner?action=register', { name: data.name, phone: data.phone, business_type: data.businessType, business_label: data.businessLabel, plan: data.plan, features: data.features, ...(data.free ? { free: true } : {}) }, true);
     try { localStorage.removeItem(CHOICE_KEY); } catch {}
   }
   async function createSignedInStore() {
@@ -897,9 +868,9 @@
     const phone = normalizeMobile($('reg-phone').value);
     if (!name) { $('reg-name').focus(); return showToast('أدخل اسم المنشأة', 'error'); }
     if (!phone) { $('reg-phone').focus(); return showToast('رقم الجوال غير صحيح، تأكد من رمز الدولة والرقم', 'error'); }
-    if (businessType() === 'other' && !businessLabel()) { $('reg-label').focus(); return showToast('أدخل نوع نشاطك', 'error'); } if (needHeard()) return;
+    if (businessType() === 'other' && !businessLabel()) { $('reg-label').focus(); return showToast('أدخل نوع نشاطك', 'error'); }
     setRegisterBusy(true);
-    try { await registerSignedIn({ name, phone, businessType: businessType(), businessLabel: businessLabel(), ...heardPayload(), ...planPayload() }); }
+    try { await registerSignedIn({ name, phone, businessType: businessType(), businessLabel: businessLabel(), ...planPayload() }); }
     catch (e) { if (e.code !== 'EMAIL_TAKEN') { setRegisterBusy(false); return showToast(e.message || 'تعذّر إنشاء الحساب، حاول مرة أخرى', 'error'); } }
     location.replace('admin.html');
   }

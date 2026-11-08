@@ -417,6 +417,16 @@ module.exports.post = async function post(action, req, b, env) {
   }
 
   // ─── إخفاء تنبيه الإدارة بعد قراءته ───
+  // ─── «كيف سمعت عنا؟»: يطلع لصاحب المتجر مرة وحدة بعد ما يدخل لوحته، والجواب ينحفظ على المتجر الرئيسي ───
+  if (action === 'heard-from') {
+    if (admin) return { ok: true, skipped: true };   // المدير العام يتصفح لوحة متجر: ما نسجّل جوابه
+    const heard = HEARD_FROM[b.heard_from] ? b.heard_from : null;
+    if (!heard) throw new ApiError(400, 'اختر كيف سمعت عنا');
+    const note = heard === 'other' ? (str(b.note, 80, 'المصدر') || null) : null;
+    await rest(`clients?id=eq.${Number(store.parent_id || sid)}`, { method: 'PATCH', body: { heard_from: heard, heard_from_note: note } });
+    return { ok: true };
+  }
+
   if (action === 'notice-dismiss') {
     await patchStore(sid, { admin_notification: null });
     return { ok: true };

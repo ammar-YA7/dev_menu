@@ -329,6 +329,10 @@
   .qa-main i { background: rgba(255, 255, 255, .15); color: #fff; }
   @media (max-width: 640px) { .qa-row { grid-template-columns: 1fr 1fr; } .qa { min-height: 52px; padding: 0 12px; font-size: 13px; } }
   #quick-counts .grid { grid-template-columns: 1fr 1fr !important; }
+  /* «كيف سمعت عنا؟» */
+  .heard-opt { background: #fff; border-color: var(--line); }
+  .heard-opt:hover { background: var(--surface-hover); }
+  .heard-opt.heard-on { background: #233d2c; border-color: #233d2c; color: #fff; }
 </style>
 <!-- تجربة: شكل shadcn فوق التصميم الحالي. للرجوع احذف هالسطر -->
 <link rel="stylesheet" href="/css/skin-shadcn.css">
@@ -2392,6 +2396,7 @@
 <script src="/js/admin/menu.js"></script>
 <script src="/js/admin/start.js"></script>
 <script src="/js/admin/install.js"></script>
+<script src="/js/admin/heard.js"></script>
 
 </body>
 </html>
