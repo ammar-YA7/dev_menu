@@ -1,0 +1,134 @@
+/* =====================================================================
+   DEV MENU — لوحة التحكم بشكل shadcn/ui (تجربة على الستيجنق)
+   طبقة فوق تصميم Polaris: ألوان slate، بطاقات بإطار رفيع، أيقونات في مربعات ملوّنة
+   للرجوع للتصميم القديم: احذف سطر <link> هذا الملف من admin.html
+   ===================================================================== */
+:root {
+  --page: #f8fafc; --paper: #ffffff;
+  --ink: #0f172a; --ink-2: #475569; --ink-3: #64748b;
+  --line: #e2e8f0; --line-2: #cbd5e1; --input-border: #e2e8f0; --surface-hover: #f8fafc;
+  --sh-primary: #0f172a; --sh-primary-hover: #1e293b;
+  --shadow-card: 0 1px 2px rgba(15, 23, 42, .05);
+  --shadow-button: 0 1px 2px rgba(15, 23, 42, .05);
+}
+body { background: var(--page) !important; color: var(--ink); }
+
+/* ─── البطاقات: أبيض، إطار رفيع، ظل خفيف، حواف 12 ─── */
+.pro-card { border: 1px solid var(--line) !important; border-radius: 12px; box-shadow: var(--shadow-card) !important; }
+.pro-card h3 { font-size: 15px !important; font-weight: 600 !important; color: var(--ink) !important; }
+
+/* ─── القائمة الجانبية: بيضاء، والصفحة الحالية رمادي فاتح بنص غامق ─── */
+aside.fixed { background: #fff !important; border-color: var(--line) !important; }
+aside.fixed > .mx-3 { border: 1px solid var(--line); box-shadow: none !important; }
+aside.fixed nav > p { color: #94a3b8 !important; font-weight: 500 !important; font-size: 12px !important; }
+.nav-item { color: #475569; font-weight: 500; border-radius: 8px; }
+.nav-item i { color: #64748b; }
+.nav-item:hover { background: #f8fafc; color: var(--ink); }
+.nav-item:hover i { color: var(--ink); }
+.nav-item:active, .nav-item.nav-active { background: #f1f5f9 !important; color: var(--ink) !important; font-weight: 600; box-shadow: none !important; }
+.nav-item:active i, .nav-item.nav-active i { color: var(--ink) !important; }
+.nav-item.nav-active #nav-count, .nav-item.nav-active #lyt-count { background: #fff; color: var(--ink); }
+#nav-count, #lyt-count { background: #f1f5f9; color: #475569; }
+aside.fixed .border-t { border-color: var(--line) !important; }
+
+/* ─── الشريط العلوي والسفلي ─── */
+header.sticky { background: rgba(255, 255, 255, .8) !important; border-bottom: 1px solid var(--line) !important; }
+nav.fixed.bottom-0 { border-top: 1px solid var(--line) !important; }
+.bnav.nav-active, .bnav.nav-active i { color: var(--ink) !important; }
+header button.bg-cream, header select.bg-cream { background: #fff !important; border: 1px solid var(--line) !important; border-radius: 8px !important; box-shadow: var(--shadow-button); }
+header button.bg-cream:hover { background: #f8fafc !important; }
+
+/* ─── الأزرار: الأساسي كحلي غامق، والثانوي أبيض بإطار ─── */
+main button.bg-brand, main a.bg-brand, header a.bg-brand, .dmd-box button.bg-brand {
+  background-color: var(--sh-primary) !important; color: #fff !important; border-radius: 8px !important; box-shadow: var(--shadow-button) !important; font-weight: 500 !important;
+}
+main button.bg-brand:hover, main a.bg-brand:hover, header a.bg-brand:hover { background-color: var(--sh-primary-hover) !important; }
+main button.bg-white, main a.bg-white, main button.bg-cream, main a.bg-cream,
+main button[class*="bg-brand/10"], main a[class*="bg-brand/10"], main button[class*="bg-brand/5"], main a[class*="bg-brand/5"] {
+  background-color: #fff !important; border: 1px solid var(--line) !important; box-shadow: var(--shadow-button) !important; border-radius: 8px !important; color: var(--ink) !important; font-weight: 500 !important;
+}
+main button.bg-white:hover, main a.bg-white:hover, main button[class*="bg-brand/10"]:hover, main a[class*="bg-brand/10"]:hover, main button[class*="bg-brand/5"]:hover, main a[class*="bg-brand/5"]:hover { background-color: #f8fafc !important; }
+main button.bg-amber-400 { background: #fff !important; border: 1px solid var(--line) !important; border-radius: 8px !important; color: var(--ink) !important; font-weight: 500 !important; }
+
+/* ─── الحقول: إطار فاتح، وحلقة رمادية لما تنضغط ─── */
+.input-pro { background: #fff; border-color: var(--line); border-radius: 8px; }
+.input-pro:hover { border-color: var(--line-2); }
+.input-pro:focus { outline: none !important; border-color: #94a3b8; box-shadow: 0 0 0 3px rgba(148, 163, 184, .3) !important; }
+.input-pro::placeholder { color: #94a3b8; }
+
+/* ─── التبويبات: شريط رمادي والمختار أبيض ─── */
+.tab-btn.active { background: #fff; color: var(--ink); font-weight: 600; box-shadow: 0 1px 2px rgba(15, 23, 42, .08) !important; }
+.tab-btn:hover { background: rgba(15, 23, 42, .04); }
+#stats-periods { background: #f1f5f9 !important; border: 0 !important; border-radius: 8px !important; padding: 4px !important; }
+#stats-periods .stats-period { border-radius: 6px !important; color: #64748b !important; font-weight: 500; }
+#stats-periods .stats-period.bg-brand { background: #fff !important; color: var(--ink) !important; box-shadow: 0 1px 2px rgba(15, 23, 42, .1); }
+#stats-export { background: #fff !important; border: 1px solid var(--line) !important; border-radius: 8px !important; font-weight: 500 !important; }
+
+/* =====================================================================
+   الرئيسية
+   ===================================================================== */
+[data-page="dashboard"] #greeting { font-size: 26px; font-weight: 700; letter-spacing: -.01em; }
+[data-page="dashboard"] #greeting + p { font-size: 14px; color: var(--ink-3) !important; }
+
+/* عناوين البطاقات: الأيقونة داخل مربع ملوّن فاتح */
+[data-page="dashboard"] .pro-card h3 { display: flex; align-items: center; gap: 12px; }
+[data-page="dashboard"] .pro-card h3 > i {
+  width: 36px; height: 36px; border-radius: 10px; display: inline-grid; place-items: center; font-size: 17px; flex-shrink: 0;
+  background: #dbeafe; color: #2563eb !important;
+}
+[data-page="dashboard"] .pro-card h3 > i.text-emerald-600 { background: #dcfce7; color: #16a34a !important; }
+[data-page="dashboard"] .pro-card h3 > i.text-amber-600 { background: #fef3c7; color: #d97706 !important; }
+[data-page="dashboard"] .pro-card h3 > i.text-violet-600 { background: #ede9fe; color: #7c3aed !important; }
+[data-page="dashboard"] .pro-card h3 > i.ph-qr-code { background: #fef3c7; color: #d97706 !important; }
+[data-page="dashboard"] .pro-card > .flex.border-b { border-color: var(--line) !important; }
+
+/* بطاقة التثبيت: لمسة زرقاء */
+#install-card { background: #eff6ff !important; border-color: #bfdbfe !important; }
+#install-card #install-go { background: #2563eb !important; color: #fff !important; border-radius: 8px !important; }
+
+/* «اسأل عن أرقامك»: تدرّج بنفسجي ووردي، نص أبيض */
+#insights-card { background: linear-gradient(135deg, #7c3aed, #db2777) !important; border: 0 !important; color: #fff; }
+#insights-card h3, #insights-card h3 + span, #insights-card span { color: #fff !important; }
+#insights-card h3 > i { background: rgba(255, 255, 255, .2) !important; color: #fff !important; }
+#insights-card .input-pro { background: rgba(255, 255, 255, .15); border-color: rgba(255, 255, 255, .3); color: #fff; }
+#insights-card .input-pro::placeholder { color: rgba(255, 255, 255, .7); }
+#insights-card #ins-send { background: #fff !important; color: #6d28d9 !important; }
+#insights-card #ins-chips button { background: rgba(255, 255, 255, .15) !important; border-color: rgba(255, 255, 255, .25) !important; color: #fff !important; box-shadow: none !important; }
+#insights-card #ins-out { background: rgba(255, 255, 255, .95) !important; color: var(--ink); border: 0 !important; }
+
+/* بلاطات أرقام المنيو: لون مختلف لكل وحدة */
+.kpi { border: 1px solid var(--line) !important; box-shadow: var(--shadow-card) !important; }
+.kpi:hover { background: #fff; box-shadow: 0 4px 12px -4px rgba(15, 23, 42, .12) !important; }
+.kpi-ic { width: 44px; height: 44px; border-radius: 12px; }
+#quick-counts .kpi:nth-child(1) .kpi-ic { background: #dbeafe; color: #2563eb; }
+#quick-counts .kpi:nth-child(2) .kpi-ic { background: #ede9fe; color: #7c3aed; }
+#quick-counts .kpi:nth-child(3) .kpi-ic { background: #dcfce7; color: #16a34a; }
+#quick-counts .kpi:nth-child(4) .kpi-ic { background: #fee2e2; color: #dc2626; }
+.kpi.warn { background: #fef2f2 !important; border-color: #fecaca !important; }
+.kpi b { font-size: 26px; }
+#quick-counts > h3 { font-size: 15px; font-weight: 600; }
+
+/* جاهزية المنيو */
+#checklist-bar { background: var(--sh-primary) !important; }
+[data-page="dashboard"] .h-2.bg-brand\/5 { background: #f1f5f9 !important; }
+#checklist-pct { color: var(--ink) !important; font-weight: 600 !important; }
+
+/* بطاقات الخدمات (البيجر، الولاء، الانتظار) */
+#svc-summary > * { border: 1px solid var(--line) !important; box-shadow: var(--shadow-card) !important; }
+#svc-summary .bg-brand { background: var(--sh-primary) !important; border-radius: 8px !important; }
+#svc-summary .bg-\[\#c9a227\] { background: #fef3c7 !important; color: #92400e !important; border-radius: 8px !important; }
+#svc-summary [class*="bg-brand/10"] { background: #fff !important; border: 1px solid var(--line) !important; border-radius: 8px !important; }
+#svc-summary .text-\[\#c9a227\] { color: #fbbf24 !important; }
+
+/* تنبيه الإدارة */
+#admin-notice-box { border-right: 1px solid var(--line) !important; background: #eff6ff !important; border-color: #bfdbfe !important; }
+
+/* رأس بطاقات الخدمات: مربع الأيقونة ملوّن حسب الخدمة، والأرقام بإطار رفيع */
+#svc-summary h3 > span { width: 36px !important; height: 36px !important; border-radius: 10px !important; background: #dcfce7 !important; }
+#svc-summary h3 > span i { color: #16a34a !important; font-size: 17px; }
+#svc-summary h3 > span:has(.ph-seal-check) { background: #fef3c7 !important; }
+#svc-summary h3 > span:has(.ph-seal-check) i { color: #d97706 !important; }
+#svc-summary h3 > span:has(.ph-hourglass-medium) { background: #dbeafe !important; }
+#svc-summary h3 > span:has(.ph-hourglass-medium) i { color: #2563eb !important; }
+#svc-summary .rounded-2xl.bg-white { border-radius: 10px !important; border-color: var(--line) !important; }
+#svc-summary h3 + a { color: var(--ink-2) !important; text-decoration: none !important; font-weight: 500 !important; border: 1px solid var(--line); border-radius: 8px; padding: 4px 10px; }
