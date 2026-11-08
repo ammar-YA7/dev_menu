@@ -86,13 +86,13 @@ main button.bg-amber-400 { background: #fff !important; border: 1px solid var(--
 #install-card { background: #eff6ff !important; border-color: #bfdbfe !important; }
 #install-card #install-go { background: #2563eb !important; color: #fff !important; border-radius: 8px !important; }
 
-/* «اسأل عن أرقامك»: تدرّج بنفسجي ووردي، نص أبيض */
-#insights-card { background: linear-gradient(135deg, #7c3aed, #db2777) !important; border: 0 !important; color: #fff; }
+/* «اسأل عن أرقامك»: أخضر الشعار، نص أبيض */
+#insights-card { background: #233d2c !important; border: 0 !important; color: #fff; }
 #insights-card h3, #insights-card h3 + span, #insights-card span { color: #fff !important; }
 #insights-card h3 > i { background: rgba(255, 255, 255, .2) !important; color: #fff !important; }
 #insights-card .input-pro { background: rgba(255, 255, 255, .15); border-color: rgba(255, 255, 255, .3); color: #fff; }
 #insights-card .input-pro::placeholder { color: rgba(255, 255, 255, .7); }
-#insights-card #ins-send { background: #fff !important; color: #6d28d9 !important; }
+#insights-card #ins-send { background: #fff !important; color: #233d2c !important; }
 #insights-card #ins-chips button { background: rgba(255, 255, 255, .15) !important; border-color: rgba(255, 255, 255, .25) !important; color: #fff !important; box-shadow: none !important; }
 #insights-card #ins-out { background: rgba(255, 255, 255, .95) !important; color: var(--ink); border: 0 !important; }
 
