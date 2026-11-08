@@ -207,6 +207,16 @@
       </div>
     </section>
 
+    <!-- من وين سمعوا عنا (جواب «كيف سمعت عنا؟» في لوحة صاحب المحل) -->
+    <section class="card p-5 space-y-4">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <p class="text-xs font-black flex items-center gap-2"><i class="ph-bold ph-megaphone text-violet-600"></i> من وين سمعوا عنا</p>
+        <p id="heard-total" class="text-[11px] font-bold text-ink/60"></p>
+      </div>
+      <div id="heard-list" class="space-y-2.5"></div>
+      <p class="text-[10px] text-ink/45 leading-relaxed">المتاجر الرئيسية بس (بدون الفروع والعملاء المحتملين). «مشترك» = اشتراكه مدفوع وساري الحين.</p>
+    </section>
+
     </div>
 
     <!-- ═══ الطلبات: التجديد وتغيير الباقة والفروع والتواصل ═══ -->
@@ -502,7 +512,7 @@
     addBranch(x.client_id, { name: x.meta.name, features: x.meta.features, menu: x.meta.empty_menu ? 'empty' : 'copy', requestId: rid });
   }
 
-  function renderAll() { loadSupport(); renderKpis(); renderRevenue(); renderSignups(); renderFilters(); renderSectorFilter(); renderStores(); }
+  function renderAll() { loadSupport(); renderKpis(); renderRevenue(); renderSignups(); renderHeard(); renderFilters(); renderSectorFilter(); renderStores(); }
 
   // ─── الأرقام ───
   function counts() {
@@ -559,6 +569,27 @@
       <div class="flex justify-between border-t border-brand/10 pt-1.5"><span>لو اشترك كل التجريبيين بالباقة الكاملة سنوي (${trial})</span><b>+ ${money(trial * DMPlans.price(DMPlans.LEGACY, 'year').total)}</b></div>`;
   }
 
+  // عدد المتاجر من كل مصدر، ومنهم كم صار مشترك مدفوع
+  function renderHeard() {
+    const box = document.getElementById('heard-list'); if (!box) return;
+    const mains = clients.filter(c => !c.parent_id && !isProspect(c));
+    const answered = mains.filter(c => c.heard_from);
+    const rows = Object.keys(HEARD_FROM).map(k => {
+      const list = answered.filter(c => c.heard_from === k);
+      return { k, n: list.length, paid: list.filter(c => c.subscription_status === 'active').length, notes: k === 'other' ? list.map(c => c.heard_from_note).filter(Boolean) : [] };
+    }).filter(r => r.n).sort((a, b) => b.n - a.n);
+    const max = Math.max(1, ...rows.map(r => r.n));
+    document.getElementById('heard-total').textContent = `${answered.length} جاوبوا من ${mains.length} متجر`;
+    box.innerHTML = rows.length ? rows.map(r => `
+      <div>
+        <div class="flex items-center justify-between gap-2 text-[12px]">
+          <span class="font-bold">${esc(HEARD_FROM[r.k])}</span>
+          <span class="text-ink/70"><b class="text-ink">${r.n}</b> متجر${r.paid ? ` · <span class="text-emerald-700 font-bold">${r.paid} مشترك</span>` : ''}</span>
+        </div>
+        <div class="h-2 mt-1 rounded-full bg-ink/[0.06] overflow-hidden"><div class="h-full rounded-full bg-brand" style="width:${Math.round(r.n / max * 100)}%"></div></div>
+        ${r.notes.length ? `<p class="text-[10.5px] text-ink/55 mt-1">${r.notes.map(esc).join('، ')}</p>` : ''}
+      </div>`).join('') : '<p class="text-[12px] text-ink/55 py-2">ما فيه أجوبة للحين. تطلع هنا أول ما يجاوب أصحاب المحلات من لوحاتهم.</p>';
+  }
   function renderSignups() {
     const hasDates = clients.some(c => c.created_at);
     const chart = document.getElementById('signups-chart');
