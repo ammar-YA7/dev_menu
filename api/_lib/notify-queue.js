@@ -71,7 +71,7 @@ async function sendLoyalty(row, store) {
   const card = (await rest(`loyalty_cards?id=eq.${Number(row.card_id)}&client_id=eq.${row.client_id}&select=*`).catch(() => []))[0];
   if (!card || card.wallet_serial !== row.serial) return { status: 'failed', result: 'card gone' };
   const { normalizeLoyalty } = require('./loyalty'), { ctxFor } = require('./loyalty-assistant');
-  const r = await wallet.updatePass(row.serial, ctxFor(store, normalizeLoyalty(store.loyalty_settings), card, row.body));
+  const r = await wallet.updatePass(row.serial, ctxFor(store, normalizeLoyalty(store.loyalty_settings), card, row.body, true));
   await rest(`loyalty_cards?id=eq.${card.id}`, { method: 'PATCH', body: { wallet_error: r } }).catch(() => {});
   if (/^404\b/.test(r)) return { status: 'gone', result: r };
   if (!String(r).startsWith('ok')) return { status: 'failed', result: r };

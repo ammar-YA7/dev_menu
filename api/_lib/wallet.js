@@ -27,7 +27,7 @@ async function call(method, path, body) {
 }
 
 // محتوى البطاقة. full = مزايا الباقة المدفوعة (الشعار، الموقع على شاشة القفل)
-function passBody({ store, settings, card, url, restoreUrl, lat, lng, notice, strip, nearText }, full = true) {
+function passBody({ store, settings, card, url, restoreUrl, lat, lng, notice, strip, nearText, fresh }, full = true) {
   const n = settings.needed, s = Math.min(card.stamps, n);
   const L = (t) => tr(card.lang, t);   // لغة الزبون (آخر لغة فتح فيها بطاقته)
   const body = {
@@ -36,7 +36,9 @@ function passBody({ store, settings, card, url, restoreUrl, lat, lng, notice, st
     description: L(`بطاقة الولاء: ${store.name || ''}`).slice(0, 120),
     colorPreset: 'green',
     // العدد فوق (يبان حتى والبطاقة بين البطاقات)، والأختام نفسها في الصورة العريضة
-    headerFields: [{ label: L('الأختام'), value: `${s} / ${n}`, changeMessage: L('✅ انضاف ختمك، صار عندك %@') }],
+    // رسالة جديدة من المحل (fresh): نشيل إشعار الأختام من هالتحديث بس. آبل لو تغيّر حقلين لهم إشعار في نفس التحديث
+    // (مثل تسليم المكافأة: الأختام ترجع صفر + رسالة التهنئة) تطلع "تم تغيير البطاقة" بدل نص الرسالة
+    headerFields: [{ label: L('الأختام'), value: `${s} / ${n}`, ...(fresh && String(notice || '').trim() ? {} : { changeMessage: L('✅ انضاف ختمك، صار عندك %@') }) }],
     // المكافأة وحامل البطاقة بس (عدد الأختام فوق، والأختام نفسها في الصورة)
     secondaryFields: [{ label: L(s >= n ? 'مكافأتك جاهزة' : 'المكافأة'), value: (card.lang === 'en' && settings.reward_en) || settings.reward }, ...(card.name ? [{ label: L('صاحب البطاقة'), value: String(card.name).slice(0, 40) }] : [])],
     backFields: [
@@ -104,9 +106,9 @@ async function updatePass(serial, ctx) {
 
 // رابط صفحة البطاقة، ورابط الاسترجاع (فيه رقم البطاقة السري، يطلع على ظهر بطاقة المحفظة بس)
 const cardUrl = (slug) => require('./core').storeLink(slug, 'loyalty');
-function buildCtx({ store, settings, card, lat, lng, notice, nearText }) {
+function buildCtx({ store, settings, card, lat, lng, notice, nearText, fresh = false }) {
   const url = cardUrl(store.client_slug);
-  return { store, settings, card, url, restoreUrl: `${url}${url.includes('?') ? '&' : '?'}t=${encodeURIComponent(card.token)}`, lat, lng, notice, nearText };
+  return { store, settings, card, url, restoreUrl: `${url}${url.includes('?') ? '&' : '?'}t=${encodeURIComponent(card.token)}`, lat, lng, notice, nearText, fresh };
 }
 
 // إلغاء البطاقة من المحفظة (لما يُحذف العضو): آبل تطفيها وتشيل كودها وتنقلها للبطاقات المنتهية، وقوقل تنهيها

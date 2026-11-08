@@ -63,9 +63,10 @@ async function latestNotices(storeId, settings) {
   return (card) => { const a = latest.all, o = latest.by[card.id]; return ((a && o ? (a.id > o.id ? a : o) : a || o) || {}).body; };
 }
 
-const ctxFor = (store, settings, card, notice) => wallet.buildCtx({
+// fresh = رسالة جديدة من المحل (تطلع إشعار بنصها)، مو تحديث عادي للأختام
+const ctxFor = (store, settings, card, notice, fresh = false) => wallet.buildCtx({
   store: { name: store.name, client_slug: store.client_slug, logo_url: store.logo_url }, settings, card,
-  lat: store.loyalty_lat, lng: store.loyalty_lng, notice, nearText: nearLineFor(store, card, settings)
+  lat: store.loyalty_lat, lng: store.loyalty_lng, notice, nearText: nearLineFor(store, card, settings), fresh
 });
 
 // تحديث بطاقات المحفظة (كلها أو اللي نحددها). notices: card.id → نص الرسالة الجديدة
@@ -84,7 +85,7 @@ async function pushWalletCards(storeId, { cardIds = null, notice = null, notices
   for (let i = 0; i < cards.length && Date.now() - started < 50e3; i += 12) {
     await Promise.all(cards.slice(i, i + 12).map(async (c) => {
       const text = notices ? notices[c.id] : notice != null ? notice : noticeFor(c);
-      const err = await wallet.updatePass(c.wallet_serial, ctxFor(store, settings, c, text));
+      const err = await wallet.updatePass(c.wallet_serial, ctxFor(store, settings, c, text, notice != null || !!notices));
       if (!err || err.startsWith('ok')) sent++;
       await rest(`loyalty_cards?id=eq.${c.id}`, { method: 'PATCH', body: { wallet_error: err } }).catch(() => {});
     }));
@@ -107,7 +108,7 @@ async function pushWalletBatch(storeId, { notice, afterId = 0, limit = 40, branc
   let sent = 0;
   for (let i = 0; i < cards.length; i += 10) {
     await Promise.all(cards.slice(i, i + 10).map(async (c) => {
-      const err = await wallet.updatePass(c.wallet_serial, ctxFor(store, settings, c, notice));
+      const err = await wallet.updatePass(c.wallet_serial, ctxFor(store, settings, c, notice, true));
       if (!err || err.startsWith('ok')) sent++;
       await rest(`loyalty_cards?id=eq.${c.id}`, { method: 'PATCH', body: { wallet_error: err } }).catch(() => {});
     }));
