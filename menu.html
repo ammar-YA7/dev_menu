@@ -2304,7 +2304,7 @@
   function ixNav() {
     const n = ixEl('ixNav');
     n.innerHTML = ixScreen === 'home' ? '' :
-      (ixScreen === 'prod' ? `<button type="button" class="ix-btn" data-ix-nav="back">${IX_ICON.back} ${T('رجوع', 'Back')}</button>` : '') +
+      `<button type="button" class="ix-btn" data-ix-nav="back">${IX_ICON.back} ${T('رجوع', 'Back')}</button>` +
       `<button type="button" class="ix-btn ${ixScreen === 'cat' ? 'pri' : ''}" data-ix-nav="home">${IX_ICON.home} ${T('الرئيسية', 'Home')}</button>`;
   }
 
@@ -2364,7 +2364,8 @@
       return;
     }
     const nav = e.target.closest('[data-ix-nav]');
-    if (nav) { if (nav.dataset.ixNav === 'home') ixHome(); else history.back(); }
+    // رجوع: شاشة وحدة لورا (من القسم للترحيب، ومن الطبق للقسم)
+    if (nav) { if (nav.dataset.ixNav === 'home' || ixDepth <= 1 || !(history.state && history.state.ix)) ixHome(); else history.back(); }
   });
 
   // يتنادى مع كل رسم للمنيو: يشغّل/يطفّي التفاعلي، ويعيد الرسم بس لو تغيّرت البيانات أو اللغة (مو مع كل تغيير في السلة)
