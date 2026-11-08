@@ -1,11 +1,9 @@
 // =====================================================================
 // DEV MENU — «كيف سمعت عنا؟» بعد ما يدخل صاحب المتجر لوحته (مرة وحدة)
 //   يطلع للمتجر الرئيسي اللي ما جاوب، ومو للمدير العام وهو يتصفح متجر
-//   «بعدين» تخفيه 3 أيام، والجواب ينحفظ على المتجر (heard-from في api/_lib/owner/account.js)
+//   إجباري: ما يتسكّر إلا بعد ما يختار ويحفظ. الجواب ينحفظ على المتجر (heard-from في api/_lib/owner/account.js)
 // =====================================================================
 (function () {
-  const LATER_KEY = 'dm_heard_later';
-  const LATER_DAYS = 3;
   const OPTIONS = [
     ['instagram', 'ph-instagram-logo', 'انستقرام'], ['tiktok', 'ph-tiktok-logo', 'تيك توك'],
     ['snapchat', 'ph-snapchat-logo', 'سناب شات'], ['google', 'ph-google-logo', 'بحث قوقل'],
@@ -13,7 +11,6 @@
     ['visit', 'ph-handshake', 'زيارة أو اتصال منا'], ['other', 'ph-dots-three-circle', 'أخرى']
   ];
   const T = (s) => (window.DMi18n && DMi18n.t) ? DMi18n.t(s) : s;
-  const later = () => { try { const t = +localStorage.getItem(LATER_KEY) || 0; return t && Date.now() - t < LATER_DAYS * 864e5; } catch { return false; } };
 
   function open() {
     let pick = '';
@@ -27,17 +24,13 @@
         </div>
         <div class="grid grid-cols-2 gap-2" role="radiogroup" aria-labelledby="heard-title"></div>
         <input type="text" maxlength="80" class="input-pro hidden">
-        <div class="flex gap-2">
-          <button type="button" data-save disabled class="flex-1 bg-brand text-cream hover:bg-brand-dark py-2.5 rounded-xl text-xs font-black disabled:opacity-50"></button>
-          <button type="button" data-later class="bg-brand/10 hover:bg-brand/15 text-ink font-bold px-4 py-2.5 rounded-xl text-xs border border-brand/25"></button>
-        </div>
+        <button type="button" data-save disabled class="w-full bg-brand text-cream hover:bg-brand-dark py-2.5 rounded-xl text-xs font-black disabled:opacity-50"></button>
       </div>`;
     wrap.querySelector('h3').textContent = T('كيف سمعت عن ديف منيو؟');
     wrap.querySelector('p').textContent = T('سؤال واحد ويساعدنا نوصل لمحلات مثلك.');
     const grid = wrap.querySelector('[role="radiogroup"]'), note = wrap.querySelector('input'), save = wrap.querySelector('[data-save]');
     note.placeholder = T('وين سمعت عنا؟ (اختياري)');
     save.textContent = T('حفظ');
-    wrap.querySelector('[data-later]').textContent = T('بعدين');
     OPTIONS.forEach(([v, icon, label]) => {
       const b = document.createElement('button');
       b.type = 'button'; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', 'false'); b.dataset.v = v;
@@ -55,7 +48,6 @@
       save.disabled = false;
     });
     const close = () => wrap.remove();
-    wrap.querySelector('[data-later]').onclick = () => { try { localStorage.setItem(LATER_KEY, String(Date.now())); } catch {} close(); };
     save.onclick = async () => {
       if (!pick) return;
       save.disabled = true;
@@ -64,7 +56,11 @@
         try { client.heard_from = pick; } catch {}
         close();
         if (typeof showToast === 'function') showToast(T('شكراً لك'));
-      } catch { save.disabled = false; if (typeof showToast === 'function') showToast(T('ما انحفظ الجواب، جرّب مرة ثانية'), true); }
+      } catch {
+        // ما نعلّق صاحب المحل برا لوحته لو الحفظ فشل: تتسكّر، وتطلع له مرة ثانية أول ما يدخل
+        close();
+        if (typeof showToast === 'function') showToast(T('ما انحفظ الجواب، بنسألك مرة ثانية'), true);
+      }
     };
     document.body.appendChild(wrap);
   }
@@ -78,7 +74,7 @@
     if (c) {
       clearInterval(timer);
       // المدير العام يدخل لوحات المتاجر: ما نسأله
-      if (admin || c.parent_id || c.heard_from || later()) return;
+      if (admin || c.parent_id || c.heard_from) return;
       setTimeout(open, 1500);   // بعد ما تستقر اللوحة
     } else if (tries > 60) clearInterval(timer);
   }, 500);
