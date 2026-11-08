@@ -1,0 +1,39 @@
+/* =====================================================================
+   DEV MENU — منيو الزبون بشكل shadcn/ui (تجربة على الستيجنق)
+   الألوان تبقى من ثيم المحل (داكن، فاتح، بيج...)، والتغيير في الخط والحواف والإطارات والظلال بس
+   للرجوع: احذف سطر <link> هذا الملف من menu.html
+   ===================================================================== */
+body { font-family: 'SaudiRiyal', 'IBM Plex Sans Arabic', system-ui, sans-serif !important; }
+
+/* البطاقات: حواف 12، إطار رفيع، ظل خفيف بدل الزجاج الثقيل */
+.glass-card { border-radius: 12px !important; box-shadow: 0 1px 2px rgba(0, 0, 0, .06); transition: border-color .15s, box-shadow .15s !important; }
+.glass-card:active { transform: none !important; border-color: var(--line2) !important; }
+.product-img { border-radius: 10px !important; }
+.photo-card { border-radius: 12px !important; box-shadow: 0 8px 24px -14px rgba(0, 0, 0, .45) !important; }
+.sk-card { border-radius: 12px !important; }
+.sk-img { border-radius: 10px !important; }
+
+/* شريط الأقسام: كبسولات بحواف 8 بدون توهج */
+.cat-pill { border-radius: 8px !important; font-weight: 500; }
+body .cat-pill.active, body.tone-light .cat-pill.active:not(.keep-c) { box-shadow: none !important; font-weight: 600 !important; }
+.grp-btn { border-radius: 8px !important; font-weight: 500; }
+.grp-btn.grp-on { font-weight: 600; }
+
+/* نافذة الطبق والأزرار */
+.modal-panel { border-radius: 14px 14px 0 0; }
+@media (min-width: 640px) { .modal-panel { border-radius: 14px; } }
+.size-chip, .ex-opt, .dine-btn, .mo-steps span { border-radius: 8px !important; font-weight: 600 !important; }
+.ex-box { border-radius: 4px !important; }
+.ex-box.radio { border-radius: 50% !important; }
+.deal-badge { border-radius: 6px !important; }
+.sec-title { font-weight: 700; letter-spacing: -.01em; }
+
+/* المساعد */
+#chatFab { box-shadow: 0 8px 24px -8px rgba(0, 0, 0, .45), 0 0 0 1px rgba(0, 0, 0, .08) !important; }
+#chatSheet .panel { border-radius: 14px 14px 0 0 !important; }
+#chatChips button { border-radius: 8px !important; font-weight: 500 !important; }
+#chatForm { border-radius: 10px !important; }
+#chatForm button { border-radius: 8px !important; }
+.cb { border-radius: 12px !important; }
+.cb.me { border-bottom-right-radius: 4px !important; }
+.cb.bot { border-bottom-left-radius: 4px !important; }
