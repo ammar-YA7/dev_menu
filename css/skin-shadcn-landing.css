@@ -2,32 +2,32 @@
    DEV MENU — صفحة الهبوط بشكل shadcn/ui (تجربة على الستيجنق، نفس لوحة التحكم)
    للرجوع: احذف سطر <link> هذا الملف من index.html
    ===================================================================== */
-:root { --brand: #0f172a; --brand-dark: #1e293b; --ink: #0f172a; --sand: #f8fafc; --muted: #64748b; --line: #e2e8f0;
-  --gold: #2563eb; --gold-deep: #2563eb;
+:root { --brand: #233d2c; --brand-dark: #1a2e21; --ink: #233d2c; --sand: #f8fafc; --muted: #64748b; --line: #e2e8f0;
+  --gold: #3f7a4a; --gold-deep: #3f7a4a;
   --shadow-card: 0 1px 2px rgba(15, 23, 42, .05); --shadow-button: 0 1px 2px rgba(15, 23, 42, .05); --shadow-primary: 0 1px 2px rgba(15, 23, 42, .1); }
-body { background: #f8fafc !important; color: #0f172a !important; }
-::selection { background: #0f172a; color: #fff; }
+body { background: #f8fafc !important; color: #233d2c !important; }
+::selection { background: #233d2c; color: #fff; }
 :focus-visible { outline: 2px solid #94a3b8 !important; outline-offset: 2px; }
 
 /* الشريط العلوي */
 .topbar nav { background: rgba(255, 255, 255, .85) !important; border: 1px solid #e2e8f0 !important; border-radius: 12px !important; box-shadow: 0 4px 16px -8px rgba(15, 23, 42, .15) !important; }
 .topbar a.lnk { color: #64748b !important; font-weight: 500 !important; }
-.topbar a.lnk:hover { color: #0f172a !important; background: #f1f5f9 !important; }
-.topbar a.lnk:active { color: #fff !important; background: #0f172a !important; }
+.topbar a.lnk:hover { color: #233d2c !important; background: #f1f5f9 !important; }
+.topbar a.lnk:active { color: #fff !important; background: #233d2c !important; }
 
 /* الأزرار */
 .btn { border-radius: 8px !important; font-weight: 600 !important; }
-.btn-main { background: #0f172a !important; color: #fff !important; box-shadow: var(--shadow-primary) !important; }
-.btn-main:hover { background: #1e293b !important; }
-.btn-soft { background: #fff !important; border: 1px solid #e2e8f0 !important; box-shadow: var(--shadow-button) !important; color: #0f172a !important; }
-.btn-soft:hover { background: #f8fafc !important; color: #0f172a !important; }
-.btn-gold { background: #2563eb !important; color: #fff !important; box-shadow: var(--shadow-primary) !important; }
-.pill { color: #2563eb !important; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 999px; padding: 4px 12px; }
+.btn-main { background: #233d2c !important; color: #fff !important; box-shadow: var(--shadow-primary) !important; }
+.btn-main:hover { background: #1a2e21 !important; }
+.btn-soft { background: #fff !important; border: 1px solid #e2e8f0 !important; box-shadow: var(--shadow-button) !important; color: #233d2c !important; }
+.btn-soft:hover { background: #f8fafc !important; color: #233d2c !important; }
+.btn-gold { background: #3f7a4a !important; color: #fff !important; box-shadow: var(--shadow-primary) !important; }
+.pill { color: #3f7a4a !important; background: #f0f7f1; border: 1px solid #cfe3d3; border-radius: 999px; padding: 4px 12px; }
 
 /* العناوين */
-.hero-h, .h2 { color: #0f172a; letter-spacing: -.02em; }
-.hero-h em { color: #0f172a !important; }
-.h2 em { color: #2563eb !important; }
+.hero-h, .h2 { color: #233d2c; letter-spacing: -.02em; }
+.hero-h em { color: #233d2c !important; }
+.h2 em { color: #3f7a4a !important; }
 .lead, .sub { color: #64748b !important; }
 
 /* البطاقات: أبيض، إطار رفيع، حواف 12 */
@@ -47,8 +47,8 @@ body { background: #f8fafc !important; color: #0f172a !important; }
 /* التجربة والتبويبات */
 .tabs { background: #f1f5f9 !important; border-radius: 10px !important; }
 .tabs button { border-radius: 7px !important; color: #64748b !important; font-weight: 500 !important; }
-.tabs button:hover { background: rgba(255, 255, 255, .6) !important; color: #0f172a !important; }
-.tabs button[aria-selected="true"] { background: #fff !important; color: #0f172a !important; font-weight: 600 !important; box-shadow: 0 1px 2px rgba(15, 23, 42, .1) !important; }
+.tabs button:hover { background: rgba(255, 255, 255, .6) !important; color: #233d2c !important; }
+.tabs button[aria-selected="true"] { background: #fff !important; color: #233d2c !important; font-weight: 600 !important; box-shadow: 0 1px 2px rgba(15, 23, 42, .1) !important; }
 .phone { border-radius: 24px !important; box-shadow: 0 20px 40px -20px rgba(15, 23, 42, .35) !important; }
 .ring-card { background: #f8fafc !important; border: 1px solid #e2e8f0; border-radius: 12px !important; }
 .ring-ic { background: #dbeafe !important; color: #2563eb !important; border-radius: 10px !important; }
@@ -56,25 +56,25 @@ body { background: #f8fafc !important; color: #0f172a !important; }
 
 /* كيف يعمل */
 .step-row { border-color: #e2e8f0 !important; }
-.step-n { width: 32px; height: 32px; min-width: 32px !important; padding: 0 !important; border-radius: 999px; display: grid; place-items: center; background: #0f172a; color: #fff !important; font-size: 14px !important; }
+.step-n { width: 32px; height: 32px; min-width: 32px !important; padding: 0 !important; border-radius: 999px; display: grid; place-items: center; background: #233d2c; color: #fff !important; font-size: 14px !important; }
 
 /* الأسعار: قسم كحلي غامق */
-.dark { background: #0f172a !important; border-radius: 16px !important; color: #f8fafc !important; }
+.dark { background: #233d2c !important; border-radius: 16px !important; color: #f8fafc !important; }
 .dark .sub { color: #94a3b8 !important; }
 .period { background: rgba(255, 255, 255, .06) !important; border-color: rgba(255, 255, 255, .1) !important; border-radius: 10px !important; }
 .period button { border-radius: 7px !important; color: #94a3b8 !important; font-weight: 500 !important; }
-.period button[aria-pressed="true"] { background: #fff !important; color: #0f172a !important; font-weight: 600 !important; }
+.period button[aria-pressed="true"] { background: #fff !important; color: #233d2c !important; font-weight: 600 !important; }
 .period small { color: #4ade80 !important; }
 .preset { border-color: rgba(255, 255, 255, .15) !important; color: #cbd5e1 !important; font-weight: 500 !important; border-radius: 8px !important; }
-.preset[aria-pressed="true"] { background: #fff !important; color: #0f172a !important; border-color: #fff !important; }
+.preset[aria-pressed="true"] { background: #fff !important; color: #233d2c !important; border-color: #fff !important; }
 .feat-pick { background: rgba(255, 255, 255, .03) !important; border: 1px solid rgba(255, 255, 255, .1) !important; border-radius: 12px !important; }
 .feat-pick[aria-checked="true"] { background: rgba(255, 255, 255, .07) !important; border-color: #fff !important; }
 .feat-pick .box { border-radius: 6px !important; }
-.feat-pick[aria-checked="true"] .box { background: #fff !important; border-color: #fff !important; color: #0f172a !important; }
+.feat-pick[aria-checked="true"] .box { background: #fff !important; border-color: #fff !important; color: #233d2c !important; }
 .feat-pick p, .feat-pick .pr small { color: #94a3b8 !important; }
 .summary { background: #fff !important; border-radius: 12px !important; }
 .summary .disc { color: #16a34a !important; }
-.after .n { background: #0f172a !important; border-radius: 999px !important; }
+.after .n { background: #233d2c !important; border-radius: 999px !important; }
 
 /* المقارنة والأسئلة */
 .cmp-row { border-color: #e2e8f0 !important; }
@@ -83,11 +83,14 @@ details.q summary { font-weight: 600 !important; }
 details.q .faq-list li::before { background: #94a3b8 !important; }
 
 /* التسجيل */
-.lbl { font-weight: 500 !important; color: #0f172a; }
+.lbl { font-weight: 500 !important; color: #233d2c; }
 .field, .type-chip, .sector, .otp-box { background: #fff !important; border: 1px solid #e2e8f0 !important; border-radius: 8px !important; }
 .field:focus, .otp-box:focus { border-color: #94a3b8 !important; box-shadow: 0 0 0 3px rgba(148, 163, 184, .3) !important; }
-.type-chip, .sector { font-weight: 500 !important; color: #0f172a !important; }
-.peer:checked + .type-chip, .sector[aria-checked="true"], .otp-box.filled { background: #0f172a !important; border-color: #0f172a !important; color: #fff !important; }
+.type-chip, .sector { font-weight: 500 !important; color: #233d2c !important; }
+.peer:checked + .type-chip, .sector[aria-checked="true"], .otp-box.filled { background: #233d2c !important; border-color: #233d2c !important; color: #fff !important; }
 .chosen { background: #f8fafc !important; border: 1px solid #e2e8f0; border-radius: 10px !important; }
 .disc-note { color: #16a34a !important; }
-.toast { background: #0f172a !important; border-radius: 10px !important; }
+.toast { background: #233d2c !important; border-radius: 10px !important; }
+/* داخل قسم الأسعار الأخضر: الكلمة الملوّنة فاتحة عشان تنقرأ */
+.dark .h2 em, .dark .pill { color: #a7d7ae !important; }
+.dark .pill { background: rgba(255, 255, 255, .06); border-color: rgba(255, 255, 255, .15); }

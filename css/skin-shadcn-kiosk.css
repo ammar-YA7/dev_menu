@@ -2,16 +2,16 @@
    DEV MENU — شاشة الزبون (التابلت) بشكل shadcn/ui (تجربة على الستيجنق)
    للرجوع: احذف سطر <link> هذا الملف من kiosk.html
    ===================================================================== */
-:root { --brand: #0f172a; --deep: #0f172a; --sand: #f8fafc; --gold: #f59e0b; --ink: #0f172a;
+:root { --brand: #233d2c; --deep: #233d2c; --sand: #f8fafc; --gold: #f59e0b; --ink: #233d2c;
   --shadow-card: 0 1px 2px rgba(15, 23, 42, .05); }
-body { background: #f8fafc !important; color: #0f172a !important; }
+body { background: #f8fafc !important; color: #233d2c !important; }
 
 header img { border-radius: 1.6vmin !important; box-shadow: 0 0 0 1px #e2e8f0 !important; }
 header span { color: #64748b; opacity: 1 !important; }
 
 /* أكواد الخدمات: بطاقات بيضاء بإطار، والأيقونة في مربع ملوّن */
 .code { border: 1px solid #e2e8f0; border-radius: 2vmin !important; box-shadow: 0 1px 2px rgba(15, 23, 42, .05) !important; }
-.code .tt { color: #0f172a !important; font-weight: 700 !important; }
+.code .tt { color: #233d2c !important; font-weight: 700 !important; }
 .code .tt i { width: 6vmin; height: 6vmin; border-radius: 1.6vmin; display: inline-grid; place-items: center; font-size: 3.2vmin !important; background: #dbeafe; color: #2563eb !important; }
 .code:nth-child(2) .tt i { background: #fef3c7; color: #d97706 !important; }
 .code:nth-child(3) .tt i { background: #dcfce7; color: #16a34a !important; }
@@ -19,14 +19,14 @@ header span { color: #64748b; opacity: 1 !important; }
 
 /* الأرقام الجاهزة */
 .ready { border: 1px solid #e2e8f0; border-radius: 1.8vmin !important; box-shadow: 0 1px 2px rgba(15, 23, 42, .05) !important; }
-.ready > b { color: #0f172a !important; }
+.ready > b { color: #233d2c !important; }
 .ready .nums span { background: #fef3c7 !important; color: #92400e !important; box-shadow: none !important; border: .3vmin solid #fcd34d; border-radius: 1.2vmin !important; }
 .call { background: rgba(15, 23, 42, .94) !important; }
 .call .n { color: #fbbf24 !important; }
-.call.mini { background: #0f172a !important; }
+.call.mini { background: #233d2c !important; }
 
 /* الكاميرا */
-.cam { border-radius: 2.4vmin !important; background: #0f172a !important; }
+.cam { border-radius: 2.4vmin !important; background: #233d2c !important; }
 .cam-head { background: linear-gradient(rgba(15, 23, 42, .9), rgba(15, 23, 42, 0)) !important; }
 .cam-foot { background: linear-gradient(rgba(15, 23, 42, 0), rgba(15, 23, 42, .9)) !important; }
 .frame { border-color: #fff !important; border-radius: 2vmin !important; box-shadow: 0 0 0 200vmax rgba(15, 23, 42, .45) !important; }
@@ -38,18 +38,18 @@ header span { color: #64748b; opacity: 1 !important; }
 .result.wait { background: #b45309 !important; }
 .result.err { background: #b91c1c !important; }
 .dots span.f { background: #fff !important; }
-.gift { background: #fff !important; color: #0f172a !important; border-radius: 2vmin !important; }
+.gift { background: #fff !important; color: #233d2c !important; border-radius: 2vmin !important; }
 
 /* سؤال «وش أخّرك؟» */
 .ask { background: #f8fafc !important; }
-.ask .t { color: #0f172a !important; font-weight: 700 !important; }
+.ask .t { color: #233d2c !important; font-weight: 700 !important; }
 .ask .s { color: #64748b; opacity: 1 !important; }
 .ask .opt { border: 1px solid #e2e8f0; border-radius: 2vmin !important; box-shadow: 0 1px 2px rgba(15, 23, 42, .05) !important; font-weight: 600 !important; }
 .ask .opt i { color: #2563eb !important; }
 .ask .opt:active { background: #f1f5f9 !important; }
 .ask .bar { background: #e2e8f0 !important; }
-.ask .bar span { background: #0f172a !important; }
+.ask .bar span { background: #233d2c !important; }
 
 /* شاشة البداية */
-.start { background: #0f172a !important; color: #fff !important; }
-.start .go { background: #fff !important; color: #0f172a !important; border-radius: 1.6vmin !important; font-weight: 700 !important; }
+.start { background: #233d2c !important; color: #fff !important; }
+.start .go { background: #fff !important; color: #233d2c !important; border-radius: 1.6vmin !important; font-weight: 700 !important; }
