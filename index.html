@@ -31,7 +31,6 @@
 <script src="/js/api.js"></script>
 <script src="/js/plans.js"></script>
 <script src="/js/sectors.js"></script>
-<script src="/js/vendor/qrcode.min.js" defer></script>
 <style>
   .disc-note { font-size: 12px; font-weight: 700; color: var(--gold-deep); margin-top: 6px; }
   :root { --brand: #233d2c; --brand-dark: #15271b; --ink: #1b3022; --sand: #f6f3ec; --gold: #7fb685; --gold-deep: #3f7a4a;
@@ -216,6 +215,11 @@
   .topbar a.lnk:active { color: #fff; background: var(--brand); }
   .tabs button:hover { color: var(--brand); background: rgba(56,79,61,.1); }
   .tabs button[aria-selected="true"] { background: var(--brand); color: #fff; box-shadow: var(--shadow-primary); }
+  /* التجربة الحية: صفحة البيجر الحقيقية (عرض 390) مصغّرة داخل إطار الجوال */
+  #demo-live { position: absolute; top: 0; left: 0; width: 390px; height: 693px; border: 0; transform: scale(.6923); transform-origin: top left; background: #fff; }
+  @media (max-width: 767px) { #demo-live { height: 693px; transform: scale(.5641); } }
+  #demo-live[hidden] { display: none; }
+  .ring-card.live { background: #f0f7f1 !important; border-color: #cfe3d3 !important; }
 </style>
 <style>#oauth-wait{display:none}html.oauth-return #oauth-wait{display:flex}html.oauth-return body{overflow:hidden}</style>
 <script>if (/access_token=/.test(location.hash)) document.documentElement.classList.add('oauth-return');</script>
@@ -276,18 +280,15 @@
         <button role="tab" aria-selected="false" data-tab="pager"><i class="ph-bold ph-bell"></i> البيجر</button>
         <button role="tab" aria-selected="false" data-tab="loyalty"><i class="ph-bold ph-seal-check"></i> الولاء</button>
       </div>
-      <div class="py-6"><div class="phone"><video id="demo-video" src="videos/menu-v4.mp4" poster="videos/menu-v4.jpg" autoplay muted loop playsinline preload="metadata" aria-label="لقطات حقيقية من DEV MENU"></video></div></div>
+      <div class="py-6"><div class="phone" style="position:relative"><iframe id="demo-live" title="تجربة حية: صفحة البيجر في جوال العميل" hidden></iframe><video id="demo-video" src="videos/menu-v4.mp4" poster="videos/menu-v4.jpg" autoplay muted loop playsinline preload="metadata" aria-label="لقطات حقيقية من DEV MENU"></video></div></div>
+      <!-- تجربة حية: الزائر هو الكاشير، يضغط «جاهز» ويشوف جوال العميل يرن (صفحة البيجر الحقيقية بوضع المعاينة) -->
       <div class="ring-card">
         <span class="ring-ic" id="ring-ic"><i class="ph-bold ph-bell-ringing"></i></span>
         <div class="flex-1 min-w-0">
-          <p class="font-bold text-[15px]">بضغطة واحدة يصل التنبيه إلى جوال عميلك</p>
-          <p class="text-[12.5px] text-[color:var(--muted)] mt-0.5">استمع إلى صوت التنبيه، أو جرّبه على جوالك</p>
+          <p class="font-bold text-[15px]" id="live-title">جرّب البيجر الحين</p>
+          <p class="text-[12.5px] text-[color:var(--muted)] mt-0.5" id="live-sub">أنت الكاشير: اضغط «جاهز» وشوف جوال العميل يرن</p>
         </div>
-        <button type="button" id="ring-btn" class="btn btn-main px-4 py-2.5 text-[13px]">استمع</button>
-      </div>
-      <div class="flex items-center gap-4 mt-3 px-1">
-        <div id="try-qr" class="hidden md:block w-[92px] h-[92px] bg-white p-1.5 rounded-xl border border-[color:var(--line)] shrink-0"></div>
-        <p class="text-[13px] leading-relaxed text-[color:var(--muted)]"><span class="hidden md:inline">امسح الرمز بجوالك واحصل على رقم من منشأة تجريبية.</span> <a href="https://bistrobella.devmenu.digital/pager" target="_blank" rel="noopener" class="font-bold text-[color:var(--brand)] underline underline-offset-4 md:hidden">افتح البيجر التجريبي</a> خلال ثوانٍ يجهز طلبك ويصلك التنبيه، حتى لو كانت الشاشة مقفلة.</p>
+        <button type="button" id="ring-btn" class="btn btn-main px-4 py-2.5 text-[13px]">جرّب</button>
       </div>
     </div>
   </div>
@@ -601,15 +602,33 @@
     if (full) document.getElementById('chip-full').innerHTML = `&#x20C1; ${full}`;
     if (ly) document.getElementById('chip-loyalty').innerHTML = `&#x20C1; ${ly}`;
   }
-  // ─── بطاقة التجربة: فيديو لكل ميزة، وصوت التنبيه ───
-  const DEMOS = { menu: ['videos/menu-v4.mp4', 'videos/menu-v4.jpg', 0], pager: ['videos/pager-v4.mp4', 'videos/pager-v4.jpg', 0], loyalty: ['videos/loyalty-v4.mp4', 'videos/loyalty-v4.jpg', 0] };
-  document.querySelector('.tabs').addEventListener('click', (e) => {
-    const b = e.target.closest('[data-tab]'); if (!b) return;
-    document.querySelectorAll('.tabs [data-tab]').forEach(x => x.setAttribute('aria-selected', String(x === b)));
-    const v = $('demo-video'), [src, poster, at] = DEMOS[b.dataset.tab];
-    const go = () => { try { v.currentTime = at; } catch {} v.play().catch(() => {}); };
-    if (!v.src.endsWith(src)) { v.src = src; v.poster = poster; v.addEventListener('loadedmetadata', go, { once: true }); } else go();
-  });
+  // ─── بطاقة التجربة: فيديو للمنيو والولاء، وتجربة حية للبيجر ───
+  const DEMOS = { menu: ['videos/menu-v4.mp4', 'videos/menu-v4.jpg', 0], loyalty: ['videos/loyalty-v4.mp4', 'videos/loyalty-v4.jpg', 0] };
+  const LIVE_SRC = '/pager.html?client=bistrobella&preview=1';
+  let liveNum = 23, liveReady = false;
+  const liveSend = (state) => { const f = $('demo-live'); if (f.contentWindow) f.contentWindow.postMessage({ dm: 'pager-demo', state, number: liveNum }, location.origin); };
+  function setLiveUi() {
+    const pager = document.querySelector('.tabs [data-tab="pager"]').getAttribute('aria-selected') === 'true';
+    document.querySelector('.ring-card').classList.toggle('live', pager);
+    $('live-title').textContent = !pager ? 'جرّب البيجر الحين' : liveReady ? 'جوال العميل يرن الحين' : `رقم العميل ${liveNum}، وطلبه يتجهز`;
+    $('live-sub').textContent = !pager ? 'أنت الكاشير: اضغط «جاهز» وشوف جوال العميل يرن' : liveReady ? 'لما يستلم طلبه اضغط «استلم»، ويجي العميل اللي بعده' : 'أنت الكاشير: اضغط «جاهز» لما يجهز الطلب';
+    $('ring-btn').textContent = !pager ? 'جرّب' : liveReady ? 'استلم' : 'جاهز';
+  }
+  function showTab(tab) {
+    document.querySelectorAll('.tabs [data-tab]').forEach(x => x.setAttribute('aria-selected', String(x.dataset.tab === tab)));
+    const v = $('demo-video'), f = $('demo-live');
+    if (tab === 'pager') {
+      v.pause(); v.hidden = true; f.hidden = false;
+      if (!f.src) { f.src = LIVE_SRC; f.addEventListener('load', () => setTimeout(() => liveSend(liveReady ? 'ready' : 'waiting'), 600), { once: true }); }
+    } else {
+      f.hidden = true; v.hidden = false;
+      const [src, poster, at] = DEMOS[tab];
+      const go = () => { try { v.currentTime = at; } catch {} v.play().catch(() => {}); };
+      if (!v.src.endsWith(src)) { v.src = src; v.poster = poster; v.addEventListener('loadedmetadata', go, { once: true }); } else go();
+    }
+    setLiveUi();
+  }
+  document.querySelector('.tabs').addEventListener('click', (e) => { const b = e.target.closest('[data-tab]'); if (b) showTab(b.dataset.tab); });
   let actx = null;
   function chime() {
     try {
@@ -624,10 +643,12 @@
     const ic = $('ring-ic'); ic.classList.remove('on'); void ic.offsetWidth; ic.classList.add('on');
     if (navigator.vibrate) navigator.vibrate([120, 80, 120]);
   }
-  $('ring-btn').onclick = chime;
-  window.addEventListener('load', () => {
-    if (window.QRCode) new QRCode($('try-qr'), { text: 'https://bistrobella.devmenu.digital/pager', width: 80, height: 80, colorDark: '#1b3022', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
-  });
+  $('ring-btn').onclick = () => {
+    if (document.querySelector('.tabs [data-tab="pager"]').getAttribute('aria-selected') !== 'true') return showTab('pager');
+    if (!liveReady) { liveReady = true; liveSend('ready'); chime(); }
+    else { liveReady = false; liveNum = liveNum >= 99 ? 1 : liveNum + 1; liveSend('waiting'); }
+    setLiveUi();
+  };
 
   // ─── اختيار الباقة: يتحفظ ويروح مع التسجيل ───
   const CHOICE_KEY = 'dm_plan_choice';

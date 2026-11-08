@@ -783,6 +783,16 @@
   const KEY = `dm_pager_${slug}`;
   // معاينة لوحة التحكم: رقم تجريبي بدون ما ناخذ رقم حقيقي، والأزرار ما ترسل شي
   const PREVIEW = params.get('preview') === '1';
+  // تجربة حية في صفحة الهبوط: الصفحة الأم ترسل «جاهز» أو «استلم» (المعاينة بس، بدون أي طلب للسيرفر).
+  // الصوت يطلع من الصفحة الأم، وهنا الشكل بس (الوميض والرقم الجاهز)
+  let demoState = '', demoNum = 0;
+  if (PREVIEW) window.addEventListener('message', (e) => {
+    if (e.origin !== location.origin || !e.data || e.data.dm !== 'pager-demo') return;
+    demoState = e.data.state === 'ready' ? 'ready' : 'waiting';
+    if (e.data.number) demoNum = +e.data.number;
+    if (demoState === 'waiting') { stopRinging(); dismissed = false; }
+    poll();
+  });
   const VIEWS = ['loading', 'unavailable', 'start', 'waiting', 'ready', 'done'];
   const $ = (id) => document.getElementById(id);
   const show = (v) => { VIEWS.forEach(x => $(`v-${x}`).classList.toggle('hidden', x !== v)); $('v-game').classList.toggle('hidden', v !== 'waiting' || !gameOn); if (v === 'start') renderSteps(); };
@@ -899,6 +909,7 @@
   function startRinging() {
     if (ringTimer) return;
     document.body.classList.add('ringing');
+    if (PREVIEW && demoState) { ringTimer = setInterval(() => {}, 1600); return; }   // تجربة صفحة الهبوط: الصوت من الصفحة الأم
     keeperRing();
     const tick = () => ringOnce(!(keeperMode === 'ring' && !keeper.paused));
     tick(); ringTimer = setInterval(tick, 1600);
@@ -1473,6 +1484,8 @@
     if (PREVIEW) {
       try { r = await DM.get(`/api/pager?action=preview&slug=${encodeURIComponent(slug)}`); }
       catch (e) { return unavailable('المعاينة غير متاحة', e.message || ''); }
+      if (demoState) r.ticket = { ...r.ticket, status: demoState };
+      if (demoNum) r.ticket = { ...r.ticket, number: demoNum };
     }
     else try { r = await DM.get(`/api/pager?action=status&slug=${encodeURIComponent(slug)}&t=${encodeURIComponent(token)}${askChat ? '&c=1' : ''}${askQ ? '&q=1' : ''}`); }
     catch (e) {
