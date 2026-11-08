@@ -132,3 +132,97 @@ main button.bg-amber-400 { background: #fff !important; border: 1px solid var(--
 #svc-summary h3 > span:has(.ph-hourglass-medium) i { color: #2563eb !important; }
 #svc-summary .rounded-2xl.bg-white { border-radius: 10px !important; border-color: var(--line) !important; }
 #svc-summary h3 + a { color: var(--ink-2) !important; text-decoration: none !important; font-weight: 500 !important; border: 1px solid var(--line); border-radius: 8px; padding: 4px 10px; }
+
+/* =====================================================================
+   كل الصفحات: نحوّل ألوان الأخضر (brand) لدرجات slate عشان اللوحة كلها تمشي على نفس الشكل
+   (ألوان الحالات: الأخضر للمتوفر والأحمر للنافد، تبقى مثل ما هي)
+   ===================================================================== */
+:root { --brand: #0f172a; --brand-dark: #1e293b; }
+::selection { background: #0f172a; color: #fff; }
+
+.bg-brand { background-color: #0f172a !important; }
+.hover\:bg-brand:hover, .hover\:bg-brand-dark:hover, .bg-brand:hover { background-color: #1e293b !important; }
+.text-brand { color: #0f172a !important; }
+.border-brand { border-color: #0f172a !important; }
+.ring-brand { --tw-ring-color: #94a3b8 !important; }
+.bg-cream { background-color: #fff !important; }
+.bg-cream\/95 { background-color: rgba(255, 255, 255, .95) !important; }
+
+.bg-brand\/5, .bg-brand\/\[0\.03\], .bg-brand\/\[0\.04\], .hover\:bg-brand\/5:hover, .hover\:bg-brand\/\[0\.03\]:hover { background-color: #f8fafc !important; }
+.bg-brand\/10, .bg-brand\/\[0\.07\], .hover\:bg-brand\/10:hover, .hover\:bg-brand\/15:hover { background-color: #f1f5f9 !important; }
+.bg-brand\/25 { background-color: #cbd5e1 !important; }
+.bg-brand\/50 { background-color: #94a3b8 !important; }
+.border-brand\/10, .border-brand\/15, .border-brand\/20, .border-brand\/25, .border-brand\/30,
+.border-brand\/40, .border-brand\/45, .border-brand\/\[0\.13\], .border-\[\#e3e3e3\] { border-color: #e2e8f0 !important; }
+.hover\:border-brand\/40:hover, .hover\:border-brand\/60:hover { border-color: #94a3b8 !important; }
+.divide-brand\/10 > :not([hidden]) ~ :not([hidden]) { border-color: #e2e8f0 !important; }
+.accent-\[\#384f3d\] { accent-color: #0f172a !important; }
+input[type="checkbox"], input[type="radio"], input[type="range"] { accent-color: #0f172a; }
+input[type="file"].input-pro::file-selector-button { background: #0f172a; border-radius: 6px; font-weight: 500; }
+
+/* عناوين البطاقات في كل الصفحات: الأيقونة داخل مربع ملوّن */
+main .pro-card h3 { display: flex; align-items: center; gap: 10px; }
+main .pro-card h3 > i:first-child {
+  width: 32px; height: 32px; border-radius: 9px; display: inline-grid; place-items: center; font-size: 16px; flex-shrink: 0;
+  background: #dbeafe; color: #2563eb !important;
+}
+main .pro-card h3 > i:first-child[class*="emerald"], main .pro-card h3 > i:first-child[class*="green"] { background: #dcfce7; color: #16a34a !important; }
+main .pro-card h3 > i:first-child[class*="amber"], main .pro-card h3 > i:first-child[class*="saffron"], main .pro-card h3 > i:first-child[class*="c9a227"] { background: #fef3c7; color: #d97706 !important; }
+main .pro-card h3 > i:first-child[class*="violet"], main .pro-card h3 > i:first-child[class*="purple"] { background: #ede9fe; color: #7c3aed !important; }
+main .pro-card h3 > i:first-child[class*="red"], main .pro-card h3 > i:first-child[class*="rose"] { background: #fee2e2; color: #dc2626 !important; }
+
+/* تبويبات الولاء والمعاينة: شريط رمادي والمختار أبيض */
+.ly-tabs, .ly-views { background: #f1f5f9 !important; border-radius: 10px !important; padding: 4px !important; }
+.ly-tabs button, .ly-views button { border-radius: 7px !important; color: #64748b !important; font-weight: 500 !important; }
+.ly-tabs button[aria-selected="true"], .ly-views button[aria-selected="true"] { background: #fff !important; color: #0f172a !important; font-weight: 600 !important; box-shadow: 0 1px 2px rgba(15, 23, 42, .1) !important; }
+.lyt-badge { background: #e2e8f0 !important; }
+div[role="tablist"].bg-brand\/\[0\.07\] { background: #f1f5f9 !important; border-radius: 10px !important; }
+
+/* بلاطات الأرقام في الولاء والعملاء */
+.ly-kpi { border: 1px solid #e2e8f0 !important; border-radius: 12px !important; box-shadow: var(--shadow-card); }
+.ly-kpi .k-ic { background: #dbeafe !important; color: #2563eb !important; border-radius: 10px !important; }
+.ly-table th { color: #64748b !important; font-weight: 500 !important; border-color: #e2e8f0 !important; }
+.ly-table td { border-color: #f1f5f9 !important; }
+.ly-table tbody tr:hover { background: #f8fafc !important; }
+.ly-prog { background: #f1f5f9 !important; }
+.ly-prog > span { background: #0f172a !important; }
+.ly-act:hover { background: #f1f5f9 !important; color: #0f172a !important; }
+.ly-chip { background: #fef3c7 !important; color: #92400e !important; }
+
+/* نموذج الطبق ورفع الصور */
+.f-sec { color: #64748b; }
+.f-sec::after { background: #e2e8f0; }
+.f-sec i { background: #f1f5f9 !important; color: #0f172a !important; }
+.img-drop { border-color: #cbd5e1 !important; border-radius: 12px !important; }
+.img-drop:hover { border-color: #94a3b8 !important; background: #f8fafc !important; }
+.img-drop .ph { background: #f1f5f9 !important; color: #64748b !important; }
+.form-actions { background: linear-gradient(180deg, rgba(255, 255, 255, 0), #fff 30%) !important; }
+
+/* قائمة الأطباق وترتيب الأقسام */
+.dish-cat { border-bottom-color: #e2e8f0 !important; }
+.dish-row, .cat-row { border-color: #f1f5f9 !important; }
+.dish-thumb { background: #f1f5f9 !important; border-color: #e2e8f0 !important; }
+.more-btn:hover, .more-btn[aria-expanded="true"], .cat-grip:hover, .cat-arrow:hover:not(:disabled), .cat-act:hover { background: #f1f5f9 !important; color: #0f172a !important; }
+.cat-pos { background: #f1f5f9 !important; color: #475569 !important; }
+#dish-menu { border-color: #e2e8f0 !important; border-radius: 10px !important; box-shadow: 0 10px 30px -10px rgba(15, 23, 42, .25) !important; }
+#dish-menu button:hover:not(:disabled) { background: #f1f5f9 !important; }
+
+/* اختيار الباقة والمميزات */
+.plan-tile, .feat-row { border: 1px solid #e2e8f0 !important; border-radius: 12px !important; }
+.plan-tile:hover { border-color: #94a3b8 !important; }
+.plan-tile.on, .feat-row.on { border-color: #0f172a !important; box-shadow: 0 0 0 1px #0f172a !important; background: #fff !important; }
+.plan-tile.on .plan-dot, .feat-row.on .feat-box { background: #0f172a !important; border-color: #0f172a !important; }
+.plan-save { background: #fef3c7 !important; color: #92400e !important; }
+
+/* شريط الجوال السفلي و«المزيد» */
+.more-item { background: #f8fafc !important; border: 1px solid #e2e8f0; color: #0f172a !important; border-radius: 12px !important; }
+.more-item.nav-active { background: #0f172a !important; color: #fff !important; }
+
+/* النوافذ المنبثقة والتنبيه */
+#toast { background: #0f172a !important; border-color: #0f172a !important; color: #fff !important; border-radius: 10px !important; }
+[role="dialog"].pro-card { border-radius: 14px !important; }
+
+/* اللوقو: الشعار المفرغ بدون مربع ولا إطار */
+aside.fixed > div[dir="ltr"] { padding-top: 20px !important; padding-bottom: 16px !important; }
+aside.fixed > div[dir="ltr"] img { width: 120px !important; }
+img[src*="logo-mark"] { object-fit: contain !important; background: transparent !important; border: 0 !important; border-radius: 0 !important; }
