@@ -330,7 +330,7 @@ module.exports.post = async function post(action, req, b, env) {
     if (has('pager_quiz_need')) p.pager_quiz_need = Math.min(5, Math.max(3, int(b.pager_quiz_need) || 4));
     if (has('pager_game_moves')) p.pager_game_moves = Math.min(40, Math.max(10, int(b.pager_game_moves) || 20));
     if (has('pager_near_text')) p.pager_near_text = String(b.pager_near_text || '').replace(/\s+/g, ' ').trim().slice(0, 80) || null;
-    if (has('menu_layout')) p.menu_layout = b.menu_layout === 'photos' ? 'photos' : 'list';
+    if (has('menu_layout')) p.menu_layout = ['photos', 'interactive'].includes(b.menu_layout) ? b.menu_layout : 'list';
     if (has('google_review_url')) {
       const u = String(b.google_review_url || '').trim();
       if (u && !/^https:\/\/(g\.page|search\.google\.com|www\.google\.com|maps\.app\.goo\.gl|goo\.gl|maps\.google\.com|g\.co)\//i.test(u)) throw new ApiError(400, 'رابط تقييم قوقل لازم يكون من قوقل (مثل g.page/r/... أو maps.app.goo.gl)');

@@ -713,6 +713,12 @@
       <!-- إعدادات المنيو: تنحفظ مباشرة -->
       <section data-needs="menu" class="space-y-3">
         <h5 class="text-xs font-bold text-ink border-b border-ink/10 pb-1.5">إعدادات المنيو <span class="font-normal text-ink">(تنحفظ تلقائياً)</span></h5>
+        <!-- نوع المنيو: عادي أو تفاعلي (الافتراضي للزبون، ويقدر يبدّل من المنيو) -->
+        <div class="bg-brand/5 p-3 rounded-xl border border-brand/15 space-y-2">
+          <b class="text-xs text-ink block"><i class="ph-bold ph-device-tablet text-amber-600"></i> نوع المنيو</b>
+          <span class="block text-[11px] text-ink leading-relaxed">يُعرض المنيو لعملائك بهذا النوع افتراضياً، ويستطيع العميل التبديل بينهما من المنيو.</span>
+          <div id="menu-layout" role="radiogroup" class="grid grid-cols-2 gap-2"></div>
+        </div>
         <label class="flex items-start gap-2.5 bg-brand/5 p-3 rounded-xl border border-brand/15 cursor-pointer">
           <input type="checkbox" id="info-menu-chat" onchange="toggleMenuChat(this.checked)" class="w-4 h-4 mt-0.5 accent-[#384f3d] cursor-pointer">
           <span class="text-xs">

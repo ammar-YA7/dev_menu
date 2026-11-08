@@ -221,6 +221,94 @@
   .ex-rule { background: var(--chip); color: var(--fg); opacity: .85; } .ex-rule.need { background: #f59e0b; color: #111; opacity: 1; }
   @keyframes exShake { 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
   .ex-group.shake { animation: exShake .4s; }
+
+  /* ─── المنيو التفاعلي: شاشة الترحيب بأزرار الأقسام ← أطباق القسم ← الطبق بالكبير ─── */
+  /* ملء الشاشة وما فيه تمرير للصفحة: كل شاشة تتمرر لحالها (يناسب التابلت فوق الطاولة والجوال) */
+  #ix { display: none; }
+  body.ix-mode { overflow: hidden; }
+  body.ix-mode #app-content { display: none; }
+  body.ix-mode .bg-overlay { background: var(--ov-out); opacity: .92; }   /* الخلفية أهدى عشان الخط الكبير ينقرأ */
+  body.ix-mode #ix { display: block; position: fixed; inset: 0; z-index: 20; color: var(--fg); -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; }
+  body.ix-mode #chatFab { bottom: calc(92px + env(safe-area-inset-bottom)); }
+  body.ix-mode #cartBar:not(.hidden) ~ #chatFab { bottom: calc(162px + env(safe-area-inset-bottom)); }
+  .ix-top { position: absolute; top: 0; left: 0; right: 0; z-index: 3; display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: calc(12px + env(safe-area-inset-top)) 16px 0; pointer-events: none; }
+  .ix-top > * { pointer-events: auto; }
+  #ix-layout button { height: 32px; }
+  /* الانتقال بين الشاشات: تلاشي مع انزلاق خفيف (--dx = جهة الدخول) */
+  .ix-scr { position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; opacity: 0; visibility: hidden;
+    transform: translateX(calc(var(--dx, 1) * 28px)); transition: opacity .3s ease, transform .3s ease, visibility 0s linear .3s; }
+  .ix-scr.on { opacity: 1; visibility: visible; transform: none; transition: opacity .3s ease, transform .3s ease, visibility 0s; }
+  .ix-scr.enter .ix-pop { animation: ixPop .45s cubic-bezier(.2, .9, .3, 1.15) both; animation-delay: calc(var(--i, 0) * 60ms); }
+  @keyframes ixPop { from { opacity: 0; transform: translateY(14px) scale(.84); } to { opacity: 1; transform: none; } }
+  /* الترحيب */
+  .ix-home { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: clamp(12px, 2.6vmin, 26px); min-height: 100%; box-sizing: border-box; padding: 76px 20px calc(36px + env(safe-area-inset-bottom)); }
+  .ix-logo { width: clamp(108px, 23vmin, 210px); height: clamp(108px, 23vmin, 210px); border-radius: 50%; overflow: hidden; background: var(--ring-bg); box-shadow: 0 0 0 2px var(--line2), 0 24px 60px -24px rgba(0, 0, 0, .6); }
+  .ix-logo img { display: block; width: 100%; height: 100%; max-width: none; object-fit: cover; }
+  .ix-hi { margin: 0; font-size: clamp(32px, 6.6vmin, 68px); font-weight: 700; line-height: 1.15; color: var(--fg); }
+  .ix-sub { margin: -4px 0 0; font-size: clamp(14px, 2.3vmin, 21px); font-weight: 500; color: var(--fg2); }
+  .ix-cats { display: flex; flex-wrap: wrap; justify-content: center; gap: clamp(10px, 2vmin, 18px); max-width: 1000px; margin-top: clamp(4px, 1.6vmin, 18px); }
+  .ix-cat { min-width: min(40vw, 250px); min-height: 64px; padding: .55em 1.5em; border-radius: 999px; background: var(--accent); color: var(--accent-fg); font: inherit; font-size: clamp(19px, 3.1vmin, 30px); font-weight: 700; line-height: 1.3;
+    box-shadow: 0 14px 30px -14px var(--accent-glow), inset 0 -3px 0 rgba(0, 0, 0, .14); transition: transform .15s; }
+  .ix-cat:active { transform: scale(.96); }
+  @media (max-width: 560px) { .ix-cats { flex-direction: column; width: 100%; max-width: 360px; } .ix-cat { min-width: 0; width: 100%; } }
+  /* أطباق القسم */
+  .ix-list { max-width: 1280px; margin: 0 auto; box-sizing: border-box; padding: 70px clamp(16px, 3vw, 40px) calc(120px + env(safe-area-inset-bottom)); }
+  .ix-title { margin: 0 0 clamp(18px, 3.4vmin, 36px); text-align: center; font-size: clamp(28px, 5.2vmin, 56px); font-weight: 700; line-height: 1.2; color: var(--fg); }
+  .ix-sec { margin: clamp(22px, 4vmin, 40px) 0 clamp(12px, 2vmin, 20px); font-size: clamp(18px, 2.7vmin, 26px); font-weight: 700; color: var(--fg2); text-align: center; }
+  .ix-sec:first-of-type { margin-top: 0; }
+  .ix-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(18px, 3vmin, 34px) clamp(12px, 2.2vmin, 26px); }
+  @media (orientation: landscape) and (min-width: 700px) { .ix-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @media (orientation: landscape) and (min-width: 1100px) { .ix-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  .ix-card { display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: center; transition: transform .15s; }
+  .ix-card:active { transform: scale(.97); }
+  .ix-card.off { opacity: .45; filter: grayscale(1); }
+  .ix-pic { position: relative; width: 100%; aspect-ratio: 1 / 1; display: grid; place-items: center; }
+  .ix-pic img, .ix-pic video { display: block; width: 100%; height: 100%; max-width: none; opacity: 0; transition: opacity .35s; }
+  .ix-pic.ready img, .ix-pic video { opacity: 1; }
+  /* صورة عادية: داخل إطار بحواف دائرية وظل ناعم */
+  .ix-pic.frame img, .ix-pic.frame video, .ix-pic.probe img { object-fit: cover; border-radius: clamp(18px, 3vmin, 30px); box-shadow: 0 18px 40px -20px rgba(0, 0, 0, .55), 0 0 0 1px var(--img-line); }
+  /* صورة مفرّغة (PNG/WebP بخلفية شفافة): بدون إطار، طايرة بظلها */
+  .ix-pic.cut img { object-fit: contain; filter: drop-shadow(0 18px 20px rgba(0, 0, 0, .32)); }
+  /* طبق بدون صورة: بطاقة نصية */
+  .ix-pic.txt { box-sizing: border-box; padding: 12%; border-radius: clamp(18px, 3vmin, 30px); background: var(--surface); border: 1px solid var(--surface-line); }
+  .ix-pic.txt b { font-size: clamp(17px, 2.9vmin, 30px); font-weight: 700; line-height: 1.4; color: var(--fg); display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+  .ix-name { font-size: clamp(15px, 2.3vmin, 22px); font-weight: 600; line-height: 1.35; color: var(--fg); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .ix-price { font-size: clamp(15px, 2.3vmin, 22px); font-weight: 700; color: var(--price); white-space: nowrap; }
+  .ix-price small { font-size: .7em; font-weight: 600; opacity: .75; }
+  .ix-off { font-size: 12px; font-weight: 600; color: var(--fg3); }
+  /* الطبق بالكبير */
+  .ix-hero { display: grid; grid-template-columns: 1fr; align-items: center; gap: clamp(18px, 4vmin, 52px); max-width: 1280px; min-height: 100%; margin: 0 auto; box-sizing: border-box;
+    padding: 70px clamp(18px, 4vw, 56px) calc(110px + env(safe-area-inset-bottom)); }
+  @media (orientation: landscape) and (min-width: 700px) { .ix-hero:not(.nopic) { grid-template-columns: 1.1fr 1fr; } }
+  .ix-hero.nopic { max-width: 760px; text-align: center; }
+  .ix-heropic .ix-pic { width: min(100%, 68vh); margin: 0 auto; }
+  @media (orientation: portrait) { .ix-heropic .ix-pic { width: min(84vw, 46vh); } }
+  .ix-heropic .ix-pic.frame img, .ix-heropic .ix-pic.frame video { border-radius: clamp(24px, 4vmin, 40px); }
+  .ix-float { animation: ixFloat 6s ease-in-out infinite; }
+  @keyframes ixFloat { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-10px) scale(1.03); } }
+  .ix-hname { margin: 0; font-size: clamp(30px, 5.6vmin, 64px); font-weight: 700; line-height: 1.2; color: var(--fg); }
+  .ix-hprice { margin: 10px 0 0; font-size: clamp(24px, 4vmin, 44px); font-weight: 700; color: var(--price); }
+  .ix-hdesc { margin: 16px 0 0; font-size: clamp(15px, 2.3vmin, 21px); line-height: 1.8; color: var(--fg2); }
+  .ix-sizes, .ix-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  .ix-hero.nopic .ix-sizes, .ix-hero.nopic .ix-tags { justify-content: center; }
+  .ix-sizes span { padding: 8px 14px; border-radius: 12px; background: var(--chip); border: 1px solid var(--line); font-size: clamp(14px, 2vmin, 18px); font-weight: 600; color: var(--fg); }
+  .ix-sizes b { margin-inline-start: 8px; color: var(--price); }
+  .ix-tags span { padding: 5px 12px; border-radius: 8px; background: var(--chip); font-size: 13px; font-weight: 600; color: var(--fg2); }
+  .ix-tags .deal { background: var(--accent); color: var(--accent-fg); }
+  .ix-add { margin-top: 24px; min-height: 60px; }
+  /* أزرار الرجوع تحت */
+  .ix-nav { position: absolute; left: 0; right: 0; bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 4; display: flex; justify-content: center; gap: 10px; padding: 0 16px; pointer-events: none; transition: bottom .25s; }
+  body.ix-cart .ix-nav { bottom: calc(86px + env(safe-area-inset-bottom)); }
+  .ix-btn { pointer-events: auto; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 56px; padding: 0 26px; border-radius: 999px; font: inherit; font-size: clamp(16px, 2.2vmin, 20px); font-weight: 700;
+    background: var(--modal); color: var(--fg); border: 1px solid var(--line); box-shadow: 0 12px 30px -12px rgba(0, 0, 0, .5); transition: transform .15s; }
+  .ix-btn:active { transform: scale(.96); }
+  .ix-btn.pri { background: var(--accent); color: var(--accent-fg); border-color: transparent; }
+  .ix-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
+  [dir="ltr"] .ix-btn .flip { transform: scaleX(-1); }
+  @media (prefers-reduced-motion: reduce) {
+    .ix-scr, .ix-scr.on { transform: none; transition: opacity .2s, visibility 0s; }
+    .ix-scr.enter .ix-pop, .ix-float { animation: none; }
+  }
 </style>
 <link rel="stylesheet" href="/css/tw/menu.css">
 <!-- تجربة: شكل shadcn (الحواف والخط)، وألوان ثيم المحل تبقى. للرجوع احذف هالسطر -->
@@ -307,6 +395,7 @@
     <div id="layout-toggle" role="radiogroup" class="flex shrink-0 bg-black/60 border border-white/20 rounded-2xl p-1 gap-1 backdrop-blur-md shadow-lg">
       <button type="button" data-layout="list" role="radio" onclick="setMenuView('list')" class="w-9 rounded-xl text-xs text-white/70 transition"><i class="fa-solid fa-list"></i></button>
       <button type="button" data-layout="photos" role="radio" onclick="setMenuView('photos')" class="w-9 rounded-xl text-xs text-white/70 transition"><i class="fa-solid fa-table-cells-large"></i></button>
+      <button type="button" data-layout="interactive" role="radio" onclick="setMenuView('interactive')" class="w-9 rounded-xl text-xs text-white/70 transition"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:-2px"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M8 10h8M8 14h5"/></svg></button>
     </div>
   </div>
 
@@ -335,6 +424,24 @@
     <p class="text-[9px] font-bold text-gray-600">© DEV MENU 2026</p>
   </footer>
 
+</div>
+
+<!-- المنيو التفاعلي (لو صاحب المحل اختاره أو الزبون بدّل له): ثلاث شاشات تنرسم من js تحت -->
+<div id="ix">
+  <div class="ix-top">
+    <button type="button" onclick="toggleLanguage()" class="bg-black/60 text-white px-4 py-2 rounded-full text-xs font-bold border border-white/20 transition flex items-center gap-2 backdrop-blur-md">
+      <i class="fa-solid fa-globe"></i> <span id="ix-lang-text">English</span>
+    </button>
+    <div id="ix-layout" role="radiogroup" class="flex shrink-0 bg-black/60 border border-white/20 rounded-2xl p-1 gap-1 backdrop-blur-md shadow-lg">
+      <button type="button" data-layout="list" role="radio" onclick="setMenuView('list')" class="w-9 rounded-xl text-xs text-white/70 transition"><i class="fa-solid fa-list"></i></button>
+      <button type="button" data-layout="photos" role="radio" onclick="setMenuView('photos')" class="w-9 rounded-xl text-xs text-white/70 transition"><i class="fa-solid fa-table-cells-large"></i></button>
+      <button type="button" data-layout="interactive" role="radio" onclick="setMenuView('interactive')" class="w-9 rounded-xl text-xs text-white/70 transition"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:-2px"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M8 10h8M8 14h5"/></svg></button>
+    </div>
+  </div>
+  <section id="ixHome" class="ix-scr"></section>
+  <section id="ixCat" class="ix-scr"></section>
+  <section id="ixProd" class="ix-scr"></section>
+  <nav id="ixNav" class="ix-nav"></nav>
 </div>
 
 <!-- Modal تفاصيل المنتج -->
@@ -1220,19 +1327,30 @@
 
   // شكل الأطباق يختاره الزبون وينحفظ في جواله (وإلا الشكل القديم اللي كان مختار للمحل)
   let menuView = ''; try { menuView = localStorage.getItem('dm_menu_view') || ''; } catch {}
+  // نوع المنيو: عادي (قائمة أو صور كبيرة) أو تفاعلي. الافتراضي اختيار صاحب المحل، والزبون يقدر يبدّل
+  const IX_KEY = `dm_ix_${clientSlug}`;
+  let ixPref = null; try { ixPref = localStorage.getItem(IX_KEY); } catch {}
+  const ixMode = () => ixPref ? ixPref === '1' : !!(project && project.menu_layout === 'interactive');
   const photoLayout = () => (menuView || (project && project.menu_layout === 'photos' ? 'photos' : 'list')) === 'photos';
   function renderLayoutToggle() {
-    const cur = photoLayout() ? 'photos' : 'list';
-    document.querySelectorAll('#layout-toggle [data-layout]').forEach(b => {
+    const cur = ixMode() ? 'interactive' : photoLayout() ? 'photos' : 'list';
+    const names = { list: ['قائمة', 'List'], photos: ['صور كبيرة', 'Large photos'], interactive: ['تفاعلي', 'Interactive'] };
+    document.querySelectorAll('#layout-toggle [data-layout], #ix-layout [data-layout]').forEach(b => {
       const on = b.dataset.layout === cur;
       b.setAttribute('aria-checked', String(on));
-      b.setAttribute('aria-label', b.dataset.layout === 'photos' ? (currentLang === 'ar' ? 'صور كبيرة' : 'Large photos') : (currentLang === 'ar' ? 'قائمة' : 'List'));
+      b.setAttribute('aria-label', names[b.dataset.layout][currentLang === 'ar' ? 0 : 1]);
       b.classList.toggle('bg-white', on); b.classList.toggle('text-black', on); b.classList.toggle('text-white/70', !on);
     });
   }
   function setMenuView(k) {
-    menuView = k === 'photos' ? 'photos' : 'list';
-    try { localStorage.setItem('dm_menu_view', menuView); } catch {}
+    // التفاعلي ينحفظ لكل محل بروحه، وبس لو يخالف اختيار صاحب المحل (لو غيّر صاحب المحل النوع بعدين يوصل للزبون)
+    const want = k === 'interactive', ownerIx = !!(project && project.menu_layout === 'interactive');
+    ixPref = want === ownerIx ? null : (want ? '1' : '0');
+    try { if (ixPref) localStorage.setItem(IX_KEY, ixPref); else localStorage.removeItem(IX_KEY); } catch {}
+    if (!want) {
+      menuView = k === 'photos' ? 'photos' : 'list';
+      try { localStorage.setItem('dm_menu_view', menuView); } catch {}
+    }
     renderLayoutToggle();
     handleSearch();
   }
@@ -1296,7 +1414,7 @@
         ? (currentLang === 'ar' ? 'لا توجد نتائج مطابقة لبحثك.' : 'No dishes match your search.')
         : (currentLang === 'ar' ? 'لم تتم إضافة أطباق لهذا المنيو بعد.' : 'No dishes added yet.');
       container.innerHTML = `<p class="text-center text-xs text-gray-400 py-10">${msg}</p>`;
-      return;
+      return ixSync();
     }
 
     container.innerHTML = groups.map(([cat, ps]) => `
@@ -1304,7 +1422,7 @@
         <h3 class="sec-title font-bold text-base text-white tracking-wide border-b pb-1.5">${esc(catName(cat))}</h3>
         <div class="${photoLayout() ? 'space-y-3.5' : 'space-y-2.5'}">${ps.map(photoLayout() ? photoCard : productCard).join('')}</div>
       </section>`).join('');
-    watchVideos(container);
+    watchVideos(container);    ixSync();
   }
 
   function handleSearch() {
@@ -1596,6 +1714,7 @@
     bar.classList.toggle('hidden', !show);
     bar.classList.toggle('flex', show);
     document.body.style.paddingBottom = show ? '96px' : '';
+    document.body.classList.toggle('ix-cart', show);   // أزرار المنيو التفاعلي تطلع فوق شريط الطلب
     if (!show) return;
     document.getElementById('cartCount').textContent = count;
     document.getElementById('cartBarText').textContent = T('عرض الطلب', 'View order');
@@ -2045,6 +2164,247 @@
   function closeImgViewer() { const v = document.getElementById('imgViewer'); v.classList.add('hidden'); v.classList.remove('flex'); }
   document.getElementById('productModal').addEventListener('click', (e) => { if (e.target.id === 'productModal') closeModal(); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { if (!document.getElementById('imgViewer').classList.contains('hidden')) return closeImgViewer(); closeModal(); closeCart(); } });
+
+  // ─── المنيو التفاعلي ───
+  // ثلاث شاشات: الترحيب (الشعار وأزرار الأقسام) ← أطباق القسم ← الطبق بالكبير. الطلب يمشي من نفس نافذة الطبق والسلة
+  const IX_ICON = {
+    home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 10.5 12 3.5l8.5 7"/><path d="M5.5 9v11h13V9"/><path d="M10 20v-6h4v6"/></svg>',
+    back: '<svg class="flip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16M14 6l6 6-6 6"/></svg>',
+    plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>'
+  };
+  const ixEl = (id) => document.getElementById(id);
+  let ixScreen = 'home', ixKey = null, ixProd = null, ixSig = '', ixDepth = 0;
+  // بعد تحديث الصفحة نبدأ من الترحيب، فما نخلي حالة شاشة قديمة في السجل
+  try { if (history.state && history.state.ix) history.replaceState(null, ''); } catch {}
+
+  // أزرار الترحيب: الفئات الرئيسية لو صاحب المحل مقسّم المنيو، وإلا الأقسام
+  function ixHomeItems() {
+    const groups = menuGroups();
+    if (groups.length) return groups.map(g => ({ key: `g:${g}`, label: g === OTHER_GROUP ? T('أخرى', 'More') : tr(g) }));
+    return allCategories.filter(c => productsIn(c, allProducts).length).map(c => ({ key: `c:${c.id}`, label: catName(c) }));
+  }
+  const ixCatsOf = (key) => allCategories.filter(c => productsIn(c, allProducts).length && (String(key).startsWith('g:') ? `g:${groupOf(c)}` === key : `c:${c.id}` === key));
+  const ixTitle = (key, cats) => String(key).startsWith('g:') ? (key === `g:${OTHER_GROUP}` ? T('أخرى', 'More') : tr(key.slice(2))) : (cats[0] ? catName(cats[0]) : '');
+  const ixPrice = (p) => `${sizesOf(p).length ? `<small>${T('من', 'From')}</small> ` : ''}${priceHtml(minBase(p), minPrice(p))}`;
+
+  // ─── الصورة: المفرّغة (خلفية شفافة) تطلع طايرة بظلها، والعادية داخل إطار ───
+  // نعرف إنها مفرّغة من شفافية أطراف الصورة، ونحفظ النتيجة عشان ما نعيد الفحص كل مرة
+  const IX_CUT_KEY = 'dm_ix_cut';
+  let ixCut = {}; try { ixCut = JSON.parse(localStorage.getItem(IX_CUT_KEY) || '{}') || {}; } catch {}
+  function ixSaveCut() {
+    const keys = Object.keys(ixCut);
+    if (keys.length > 400) keys.slice(0, keys.length - 400).forEach(k => delete ixCut[k]);
+    try { localStorage.setItem(IX_CUT_KEY, JSON.stringify(ixCut)); } catch {}
+  }
+  // نقدر نقرأ بكسلات الصورة بس لو كانت من مخزن الصور عندنا أو من نفس الموقع (غيرها المتصفح يمنع)
+  const ixReadable = (u) => { try { const h = new URL(u).hostname; return h.endsWith('.supabase.co') || h === location.hostname; } catch { return false; } };
+  const ixMaybeCut = (u) => /\.(png|webp)(\?|$)/i.test(u) && ixReadable(u);
+  function ixIsCut(im) {
+    try {
+      const n = 24, c = document.createElement('canvas'); c.width = c.height = n;
+      const g = c.getContext('2d', { willReadFrequently: true });
+      g.drawImage(im, 0, 0, n, n);
+      const d = g.getImageData(0, 0, n, n).data, m = n >> 1;
+      // الزوايا الأربع ونص كل ضلع: لو ثلاث منها شفافة فهي مفرّغة
+      return [[0, 0], [n - 1, 0], [0, n - 1], [n - 1, n - 1], [m, 0], [0, m], [n - 1, m], [m, n - 1]].filter(([x, y]) => d[(y * n + x) * 4 + 3] < 200).length >= 3;
+    } catch { return false; }   // الصورة ممنوع قراءتها ← بإطار
+  }
+  function ixPic(p, hero) {
+    const img = safeUrl(p.image_url), vid = safeUrl(p.video_url);
+    // فيديو الطبق: في الشاشة الكبيرة يشتغل على طول (بدون صوت) والصورة غلافه
+    if (vid && hero) return `<div class="ix-pic frame ready"><video src="${esc(vid)}" ${img ? `poster="${esc(img)}"` : ''} muted loop playsinline ${calmMotion ? '' : 'autoplay'} disablepictureinpicture aria-hidden="true"></video></div>`;
+    if (vid && !img) return `<div class="ix-pic frame ready">${dishVideo(vid, '', 'ix-v')}</div>`;
+    if (!img) return `<div class="ix-pic txt"><b>${esc(productName(p))}</b></div>`;
+    const known = ixCut[img];
+    const cls = known === 1 ? 'cut' : (known === 0 || !ixMaybeCut(img)) ? 'frame' : 'probe';
+    return `<div class="ix-pic ${cls}"><img src="${esc(img)}" alt="" decoding="async" ${hero ? '' : 'loading="lazy"'} ${cls === 'probe' ? 'crossorigin="anonymous"' : ''}></div>`;
+  }
+  function ixWatchPics(root) {
+    root.querySelectorAll('.ix-pic img').forEach(im => {
+      const box = im.parentElement;
+      const done = () => {
+        if (box.classList.contains('probe')) {
+          const cut = ixIsCut(im);
+          box.classList.replace('probe', cut ? 'cut' : 'frame');
+          ixCut[im.getAttribute('src')] = cut ? 1 : 0; ixSaveCut();
+        }
+        box.classList.add('ready');
+      };
+      if (im.complete && im.naturalWidth) return done();
+      im.addEventListener('load', done, { once: true });
+      im.addEventListener('error', () => {
+        // الخادم ما سمح بالقراءة: نرجع نحمّلها عادي وتطلع بإطار
+        if (!box.classList.contains('probe')) return box.classList.add('ready');
+        box.classList.replace('probe', 'frame');
+        im.removeAttribute('crossorigin'); im.src = im.getAttribute('src');
+      }, { once: true });
+    });
+    watchVideos(root);
+  }
+
+  // ─── رسم الشاشات ───
+  function ixRenderHome() {
+    const p = project || {};
+    const logo = safeUrl(p.logo_url) || 'images/logo.jpeg?v=2';
+    const items = ixHomeItems();
+    ixEl('ixHome').innerHTML = `
+      <div class="ix-home">
+        <div class="ix-logo ix-pop" style="--i:0"><img src="${esc(logo)}" alt=""></div>
+        <h1 class="ix-hi ix-pop" style="--i:1">${T('حياكم الله', 'Welcome')}</h1>
+        <p class="ix-sub ix-pop" style="--i:2">${esc(p.name || '')}</p>
+        <div class="ix-cats">${items.map((x, i) => `<button type="button" class="ix-cat ix-pop" style="--i:${Math.min(i, 12) + 3}" data-ix-cat="${esc(x.key)}">${esc(x.label)}</button>`).join('')}</div>
+        ${items.length ? '' : `<p class="ix-sub">${T('لم تتم إضافة أصناف لهذا المنيو بعد.', 'Nothing added yet.')}</p>`}
+      </div>`;
+  }
+  function ixCard(p, i) {
+    const off = p.is_available === false;
+    const pic = ixPic(p, false);
+    return `
+      <button type="button" class="ix-card ix-pop ${off ? 'off' : ''}" style="--i:${Math.min(i, 14) + 1}" ${off ? 'disabled' : `data-ix-prod="${esc(p.id)}"`}>
+        ${pic}
+        ${pic.includes('ix-pic txt') ? '' : `<span class="ix-name">${esc(productName(p))}</span>`}
+        <span class="ix-price">${ixPrice(p)}</span>
+        ${off ? `<span class="ix-off">${T('غير متوفر حالياً', 'Currently unavailable')}</span>` : ''}
+      </button>`;
+  }
+  function ixRenderCat(key) {
+    const cats = ixCatsOf(key);
+    let i = 0;
+    const grid = (c) => `<div class="ix-grid">${productsIn(c, allProducts).map(p => ixCard(p, i++)).join('')}</div>`;
+    ixEl('ixCat').innerHTML = `
+      <div class="ix-list">
+        <h2 class="ix-title ix-pop" style="--i:0">${esc(ixTitle(key, cats))}</h2>
+        ${cats.length > 1 ? cats.map(c => `<h3 class="ix-sec">${esc(catName(c))}</h3>${grid(c)}`).join('') : cats.map(grid).join('')}
+      </div>`;
+    ixWatchPics(ixEl('ixCat'));
+  }
+  function ixRenderProd(p) {
+    const off = p.is_available === false, canOrder = !off && orderingOn();
+    const img = safeUrl(p.image_url), vid = safeUrl(p.video_url), desc = productDesc(p), zs = sizesOf(p), deal = autoDeal(p);
+    const tags = [
+      deal ? `<span class="deal">${T(`خصم ${promoLabel(deal)}`, `${promoLabel(deal)} off`)}</span>` : '',
+      p.is_bestseller === true ? `<span>${T('مميز', 'Featured')}</span>` : '',
+      caloriesOn() && p.calories != null ? `<span>${Number(p.calories)} ${T('سعرة حرارية', 'kcal')}</span>` : ''
+    ].join('');
+    ixEl('ixProd').innerHTML = `
+      <div class="ix-hero ${img || vid ? '' : 'nopic'}">
+        ${img || vid ? `<div class="ix-heropic ix-pop" style="--i:0"><div class="ix-float">${ixPic(p, true)}</div></div>` : ''}
+        <div>
+          <h2 class="ix-hname ix-pop" style="--i:1">${esc(productName(p))}</h2>
+          <p class="ix-hprice ix-pop" style="--i:2">${ixPrice(p)}</p>
+          ${zs.length > 1 ? `<div class="ix-sizes ix-pop" style="--i:3">${zs.map(z => `<span>${esc(sizeName(z))}<b>${priceHtml(Number(z.price), discounted(p, Number(z.price)))}</b></span>`).join('')}</div>` : ''}
+          ${tags ? `<div class="ix-tags ix-pop" style="--i:3">${tags}</div>` : ''}
+          ${desc ? `<p class="ix-hdesc ix-pop" style="--i:4">${esc(desc)}</p>` : ''}
+          ${off ? `<p class="ix-hdesc ix-pop" style="--i:4;font-weight:700">${T('غير متوفر حالياً', 'Currently unavailable')}</p>` : ''}
+          ${canOrder ? `<button type="button" class="ix-btn pri ix-add ix-pop" style="--i:5" data-ix-add="${esc(p.id)}">${IX_ICON.plus} ${T('أضف للطلب', 'Add to order')}</button>` : ''}
+        </div>
+      </div>`;
+    ixWatchPics(ixEl('ixProd'));
+  }
+  function ixNav() {
+    const n = ixEl('ixNav');
+    n.innerHTML = ixScreen === 'home' ? '' :
+      (ixScreen === 'prod' ? `<button type="button" class="ix-btn" data-ix-nav="back">${IX_ICON.back} ${T('رجوع', 'Back')}</button>` : '') +
+      `<button type="button" class="ix-btn ${ixScreen === 'cat' ? 'pri' : ''}" data-ix-nav="home">${IX_ICON.home} ${T('الرئيسية', 'Home')}</button>`;
+  }
+
+  // ─── التنقل: تلاشي مع انزلاق خفيف، وزر الرجوع في الجوال يرجع شاشة ───
+  const IX_SCR = { home: 'ixHome', cat: 'ixCat', prod: 'ixProd' };
+  function ixShow(name, back) {
+    const next = ixEl(IX_SCR[name]), cur = document.querySelector('#ix .ix-scr.on');
+    // التقدّم يدخل من جهة القراءة (من اليسار بالعربي)، والرجوع من الجهة الثانية
+    const dx = (back ? 1 : -1) * (document.documentElement.dir === 'ltr' ? -1 : 1);
+    if (cur && cur !== next) {
+      cur.style.setProperty('--dx', -dx); cur.classList.remove('on', 'enter');
+      cur.querySelectorAll('video').forEach(v => { try { v.pause(); } catch {} });
+    }
+    next.style.transition = 'none'; next.style.setProperty('--dx', dx); void next.offsetWidth; next.style.transition = '';
+    if (!back || name === 'home') { next.classList.remove('enter'); void next.offsetWidth; next.classList.add('enter'); }
+    next.classList.add('on');
+    if (!calmMotion) next.querySelectorAll('video[src]').forEach(v => v.play().catch(() => {}));
+    ixScreen = name;
+    ixNav();
+  }
+  function ixGo(name, arg) {
+    if (name === 'cat') { ixKey = arg; ixRenderCat(arg); ixEl('ixCat').scrollTop = 0; }
+    else {
+      const p = productById(arg); if (!p) return;
+      ixProd = p.id; ixRenderProd(p); ixEl('ixProd').scrollTop = 0;
+      trackOnce(`d:${p.id}`, 'dish', p.id);
+    }
+    ixDepth = name === 'prod' ? 2 : 1;
+    try { history.pushState({ ix: name, k: ixKey, p: ixProd, d: ixDepth }, ''); } catch {}
+    ixShow(name, false);
+  }
+  function ixHome() {
+    if (ixDepth > 0 && history.state && history.state.ix) history.go(-ixDepth);
+    else { ixDepth = 0; ixShow('home', true); }
+  }
+  window.addEventListener('popstate', (e) => {
+    if (!ixMode()) return;
+    const s = e.state || {}, d = s.ix ? (s.d || 0) : 0, back = d < ixDepth;
+    closeModal();
+    if (s.ix === 'prod' && productById(s.p)) {
+      if (ixProd !== s.p) { ixProd = s.p; ixRenderProd(productById(s.p)); }
+      if (s.k && ixKey !== s.k) { ixKey = s.k; ixRenderCat(s.k); }
+      ixDepth = 2; ixShow('prod', back);
+    } else if (s.ix === 'cat' && s.k && ixCatsOf(s.k).length) {
+      if (ixKey !== s.k || ixScreen === 'home') { ixKey = s.k; ixRenderCat(s.k); }
+      ixDepth = 1; ixShow('cat', back);
+    } else { ixDepth = 0; ixShow('home', true); }
+  });
+  ixEl('ix').addEventListener('click', (e) => {
+    const c = e.target.closest('[data-ix-cat]'); if (c) return ixGo('cat', c.dataset.ixCat);
+    const pr = e.target.closest('[data-ix-prod]'); if (pr) return ixGo('prod', pr.dataset.ixProd);
+    const add = e.target.closest('[data-ix-add]');
+    if (add) {
+      const p = productById(add.dataset.ixAdd); if (!p) return;
+      markAddFrom(ixEl('ixProd').querySelector('.ix-pic img, .ix-pic video'), add);
+      if (sizesOf(p).length || extrasOf(p).length) openModal(p.id); else addToCart(p.id, 1);
+      return;
+    }
+    const nav = e.target.closest('[data-ix-nav]');
+    if (nav) { if (nav.dataset.ixNav === 'home') ixHome(); else history.back(); }
+  });
+
+  // يتنادى مع كل رسم للمنيو: يشغّل/يطفّي التفاعلي، ويعيد الرسم بس لو تغيّرت البيانات أو اللغة (مو مع كل تغيير في السلة)
+  function ixSync() {
+    const on = ixMode(), was = document.body.classList.contains('ix-mode');
+    document.body.classList.toggle('ix-mode', on);
+    if (!on) { clearTimeout(ixIdleT); if (was) { ixScreen = 'home'; ixDepth = 0; ixSig = ''; document.querySelectorAll('#ix .ix-scr').forEach(s => { s.classList.remove('on', 'enter'); s.querySelectorAll('video').forEach(v => { try { v.pause(); } catch {} }); }); } return; }
+    ixEl('ix-lang-text').textContent = currentLang === 'ar' ? 'English' : 'عربي';
+    const sig = `${menuVersion}|${currentLang}|${allProducts.length}|${allCategories.length}`;
+    if (was && sig === ixSig) return;
+    ixSig = sig;
+    document.querySelectorAll('#ix .ix-scr').forEach(s => s.classList.remove('enter'));
+    ixRenderHome();
+    if (!was) { window.scrollTo(0, 0); ixShow('home', false); }
+    else if (ixScreen !== 'home') {
+      if (ixKey && ixCatsOf(ixKey).length) { const st = ixEl('ixCat').scrollTop; ixRenderCat(ixKey); ixEl('ixCat').scrollTop = st; }
+      else if (ixScreen === 'cat') return ixHome();
+      if (ixScreen === 'prod') { const p = productById(ixProd); if (p) ixRenderProd(p); else return ixHome(); }
+      ixNav();
+    }
+    ixIdle();
+  }
+
+  // ─── الخمول: على التابلت لو ما أحد لمس الشاشة 90 ثانية يرجع للترحيب (للزبون اللي بعده) ───
+  // ?idle=5 للتجربة (بالثواني). في الجوال ما نرجّعه، الزبون يمكن يقرأ على راحته
+  const IX_IDLE = Math.max(3, Number(urlParams.get('idle')) || 90) * 1000;
+  const ixIdleOn = () => urlParams.has('idle') || Math.min(innerWidth, innerHeight) >= 600;
+  let ixIdleT = null;
+  function ixIdle() {
+    clearTimeout(ixIdleT);
+    if (!document.body.classList.contains('ix-mode') || !ixIdleOn()) return;
+    ixIdleT = setTimeout(() => {
+      if (!ixMode()) return;
+      // الزبون فاتح السلة أو المساعد: ما نقاطعه
+      if (!ixEl('cartModal').classList.contains('pointer-events-none') || ixEl('chatSheet').classList.contains('open')) return ixIdle();
+      closeModal();
+      if (ixScreen !== 'home') ixHome();
+    }, IX_IDLE);
+  }
+  ['pointerdown', 'keydown', 'touchstart', 'scroll'].forEach(ev => document.addEventListener(ev, ixIdle, { passive: true, capture: true }));
 
   initMenu();
 </script>

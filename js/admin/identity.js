@@ -566,23 +566,25 @@
     });
   }
 
-  // ─── شكل الأطباق في المنيو ───
+  // ─── نوع المنيو: عادي (قائمة أو صور كبيرة، يختار الزبون) أو تفاعلي ───
   function renderMenuLayout() {
-    if (!document.getElementById('menu-layout')) return;   // صار الزبون يختار الشكل من المنيو
-    const cur = client.menu_layout === 'photos' ? 'photos' : 'list';
+    if (!document.getElementById('menu-layout')) return;
+    const cur = client.menu_layout === 'interactive' ? 'interactive' : 'normal';
     const opt = (k, label, sub, art) => `
       <button type="button" role="radio" aria-checked="${cur === k}" onclick="setMenuLayout('${k}')" class="rounded-xl border-2 p-2.5 text-right transition ${cur === k ? 'border-brand bg-white' : 'border-brand/15 bg-white/60 hover:border-brand/35'}">
         <span class="block h-14 rounded-lg bg-ink/[0.06] p-1.5 mb-2">${art}</span>
-        <b class="block text-[12px] text-ink">${label}</b><span class="block text-[11px] text-ink">${sub}</span>
+        <b class="block text-[12px] text-ink">${label}</b><span class="block text-[11px] text-ink leading-relaxed">${sub}</span>
       </button>`;
     const row = '<span class="flex gap-1.5 items-center mb-1"><span class="w-5 h-5 rounded bg-ink/25 shrink-0"></span><span class="flex-1 h-1.5 rounded bg-ink/20"></span></span>';
+    const pill = '<span class="block w-3/5 h-2.5 rounded-full bg-ink/25 mx-auto mb-1"></span>';
     document.getElementById('menu-layout').innerHTML =
-      opt('list', 'قائمة', 'صورة صغيرة جنب الاسم', row + row) +
-      opt('photos', 'صور كبيرة', 'الصورة تغطي البطاقة', '<span class="block h-full rounded-md bg-ink/25 relative"><span class="absolute bottom-1 right-1.5 w-1/2 h-1.5 rounded bg-white/80"></span></span>');
+      opt('normal', 'منيو عادي', 'قائمة بالأقسام والأصناف مع البحث، ويختار العميل بين القائمة والصور الكبيرة.', row + row) +
+      opt('interactive', 'منيو تفاعلي', 'شاشة ترحيب بأزرار الأقسام، ثم الأصناف بصور كبيرة وحركة خفيفة. مناسب للأجهزة اللوحية على الطاولات.', '<span class="block w-5 h-5 rounded-full bg-ink/25 mx-auto mb-1"></span>' + pill + pill);
   }
   async function setMenuLayout(k) {
-    if ((client.menu_layout || 'list') === k) return;
-    if (await updateClient({ menu_layout: k })) { renderMenuLayout(); showToast(k === 'photos' ? 'المنيو صار بالصور الكبيرة' : 'المنيو رجع قائمة'); }
+    const cur = client.menu_layout === 'interactive' ? 'interactive' : 'normal';
+    if (cur === k) return;
+    if (await updateClient({ menu_layout: k === 'interactive' ? 'interactive' : 'list' })) { renderMenuLayout(); showToast(k === 'interactive' ? 'تم اعتماد المنيو التفاعلي' : 'تم اعتماد المنيو العادي'); }
     else showToast('تعذر حفظ الإعداد', true);
   }
 
