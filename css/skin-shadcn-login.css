@@ -1,0 +1,18 @@
+/* =====================================================================
+   DEV MENU — صفحة الدخول بشكل shadcn/ui (نفس باقي النظام، أخضر الشعار)
+   للرجوع: احذف سطر <link> هذا الملف من login.html
+   ===================================================================== */
+:root { --brand: #233d2c; --brand-dark: #1a2e21; --sand: #f8fafc; --cream: #fff; }
+body { background: #f8fafc !important; color: #0f1f15 !important; }
+.pro-card { border: 1px solid #e2e8f0 !important; border-radius: 14px !important; box-shadow: 0 1px 2px rgba(15, 23, 42, .05), 0 20px 40px -28px rgba(15, 23, 42, .25) !important; }
+.btn-primary { background: #233d2c !important; color: #fff !important; border-radius: 10px !important; box-shadow: 0 1px 2px rgba(15, 23, 42, .1) !important; font-weight: 600 !important; }
+.btn-primary:hover { background: #1a2e21 !important; box-shadow: 0 1px 2px rgba(15, 23, 42, .1) !important; }
+.lbl { font-size: 13px !important; font-weight: 500 !important; color: #0f1f15 !important; }
+.input-pro, .otp-box { background: #fff !important; border: 1px solid #e2e8f0 !important; border-radius: 10px !important; color: #0f1f15 !important; }
+.input-pro:hover, .otp-box:hover { border-color: #cbd5e1 !important; }
+.input-pro:focus, .otp-box:focus { outline: none !important; border-color: #94a3b8 !important; box-shadow: 0 0 0 3px rgba(148, 163, 184, .3) !important; }
+.input-pro::placeholder { color: #94a3b8 !important; }
+.otp-box.filled { background: #233d2c !important; color: #fff !important; border-color: #233d2c !important; }
+.toast { background: #233d2c !important; color: #fff !important; border-radius: 10px !important; font-weight: 600 !important; }
+/* أزرار ثانوية (قوقل، الرجوع...) */
+.pro-card button:not(.btn-primary), .pro-card a.border { border-radius: 10px !important; }
