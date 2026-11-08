@@ -901,6 +901,36 @@
     });
   }
 
+  // ─── فيديو الطبق: الرابط الحالي، وهل صاحب المحل حذفه ───
+  const PROD_VIDEO_MB = 15;
+  let formVideo = null, formVideoRemoved = false;
+  function setDishVideo(url) {
+    formVideo = url || null; formVideoRemoved = false;
+    const f = document.getElementById('prod-video-file'); if (f) f.value = '';
+    renderDishVideo();
+  }
+  function renderDishVideo() {
+    const ph = document.getElementById('vid-drop-ph'), name = document.getElementById('vid-drop-name'), rm = document.getElementById('prod-video-remove');
+    if (!ph) return;
+    const file = document.getElementById('prod-video-file').files[0];
+    const src = file ? URL.createObjectURL(file) : (!formVideoRemoved && formVideo) || '';
+    ph.innerHTML = src ? `<video src="${esc(src)}" muted loop playsinline autoplay style="width:100%;height:100%;object-fit:cover"></video>` : '<i class="ph-bold ph-video-camera"></i>';
+    name.textContent = file ? (file.name.length > 28 ? file.name.slice(0, 25) + '…' : file.name) : src ? 'الفيديو الحالي (اضغط لتغييره)' : 'أضف فيديو قصير للطبق (اختياري)';
+    rm.classList.toggle('hidden', !src);
+  }
+  document.getElementById('prod-video-file').addEventListener('change', (e) => {
+    const f = e.target.files[0];
+    if (f && !f.type.startsWith('video/')) { e.target.value = ''; showToast('الملف لازم يكون فيديو (MP4)', true); }
+    else if (f && f.size > PROD_VIDEO_MB * 1024 * 1024) { e.target.value = ''; showToast(`حجم الفيديو كبير، الحد الأقصى ${PROD_VIDEO_MB} ميجابايت`, true); }
+    else if (f) formVideoRemoved = false;
+    renderDishVideo();
+  });
+  document.getElementById('prod-video-remove').addEventListener('click', () => {
+    document.getElementById('prod-video-file').value = '';
+    formVideoRemoved = true;
+    renderDishVideo();
+  });
+
   // ─── إضافة وتعديل الأطباق ───
   function startEdit(id) {
     const p = loadedProducts.find(x => x.id === id);
@@ -927,6 +957,7 @@
     document.getElementById('image-hint').textContent = p.image_url ? '(اتركها فارغة للإبقاء على الصورة الحالية)' : '';
     document.getElementById('img-ratio-warn').classList.add('hidden');
     setDishImagePreview(p.image_url || null, p.image_url ? 'الصورة الحالية (اضغط لتغييرها)' : null);
+    setDishVideo(p.video_url);
     document.getElementById('form-title').textContent = `تعديل: ${p.name}`;
     document.getElementById('form-icon').className = 'ph-bold ph-pencil-simple text-amber-600';
     document.getElementById('submit-btn').textContent = 'حفظ التعديلات';
@@ -952,6 +983,7 @@
     editingProductId = null;
     document.getElementById('add-product-form').reset();
     setDishImagePreview(null);
+    setDishVideo(null);
     setCoffee(null);
     formSizes = [];
     renderSizes();
@@ -1012,6 +1044,13 @@
         if (!url) return showToast(`فشل رفع الصورة: ${lastUploadError}`, true);
         payload.image_url = url;
       }
+      const videoFile = document.getElementById('prod-video-file').files[0];
+      if (videoFile) {
+        showToast('جاري رفع فيديو الطبق...');
+        const vurl = await uploadFile(videoFile, 'prod_video');
+        if (!vurl) return showToast(`فشل رفع الفيديو: ${lastUploadError}`, true);
+        payload.video_url = vurl;
+      } else if (formVideoRemoved && formVideo) payload.video_url = '';
 
       // الخادم يتحقق من القسم والصورة ويحدد الترتيب بنفسه
       if (!editingProductId) payload.also_branch_ids = [...document.querySelectorAll('#also-branches-list input:checked')].map(x => Number(x.value));

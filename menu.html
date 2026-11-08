@@ -144,7 +144,11 @@
   .no-scrollbar::-webkit-scrollbar { display: none; }
   /* شكل "صور كبيرة": الصورة تغطي البطاقة والاسم والسعر فوقها */
   .photo-card { position: relative; border-radius: 22px; overflow: hidden; cursor: pointer; background: #111; aspect-ratio: 4 / 3; box-shadow: 0 18px 40px -22px rgba(0,0,0,.6); }
-  .photo-card > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .5s ease; }
+  .photo-card > img, .photo-card > video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .5s ease; }
+  .photo-card:active > video { transform: scale(1.02); }
+  video.product-img { background: #111; }
+  /* الطبق يطير للسلة لما ينضاف */
+  .fly-ghost { position: fixed; z-index: 90; pointer-events: none; border-radius: 16px; background: #25d366 center / cover no-repeat; box-shadow: 0 10px 24px -8px rgba(0,0,0,.5); will-change: transform, opacity; }
   .photo-card:active > img { transform: scale(1.02); }
   .photo-card .pc-shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 38%, rgba(0,0,0,.55) 65%, rgba(0,0,0,.88) 100%); }
   .photo-card .pc-body { position: absolute; inset-inline: 0; bottom: 0; padding: 14px 16px 14px; color: #fff; }
@@ -155,7 +159,7 @@
   /* صورة الطبق كاملة بدون قص */
   .img-full { position: relative; background: #000; overflow: hidden; }
   .img-full .blur { position: absolute; inset: -20px; background: center / cover no-repeat; filter: blur(22px) brightness(.55); }
-  .img-full img { position: relative; width: 100%; height: 100%; object-fit: contain; }
+  .img-full img, .img-full video { position: relative; width: 100%; height: 100%; object-fit: contain; }
   #imgViewer img { max-width: 100%; max-height: 100%; object-fit: contain; touch-action: pinch-zoom; }
   /* صور المنيو: بدون "حفظ الصورة" بالضغط المطوّل، وبدون سحبها أو تحديدها */
   img { -webkit-touch-callout: none; -webkit-user-drag: none; user-select: none; -webkit-user-select: none; }
@@ -347,6 +351,7 @@
     <div class="img-full cursor-zoom-in" style="aspect-ratio: 4 / 3; max-height: 60vh" id="modalImgBox" onclick="openImgViewer()">
       <span class="blur" id="modalImgBlur"></span>
       <img id="modalImg" src="" alt="">
+      <video id="modalVid" class="hidden" muted loop playsinline preload="none"></video>
       <span class="absolute bottom-3 right-3 z-10 w-8 h-8 rounded-full text-white keep-c flex items-center justify-center text-xs" style="background:rgba(0,0,0,.6)" aria-hidden="true"><i class="fa-solid fa-expand"></i></span>
       <span id="modalCal" class="hidden absolute bottom-3 left-3 items-center gap-1.5 bg-white/95 text-black text-[11px] font-black px-3 py-1.5 rounded-full shadow-lg"></span>
     </div>
@@ -1178,7 +1183,7 @@
 
   function productCard(p) {
     const available = p.is_available !== false;
-    const img = safeUrl(p.image_url);
+    const img = safeUrl(p.image_url), vid = safeUrl(p.video_url);
     const name = productName(p), desc = productDesc(p);
     const canOrder = available && orderingOn();
     const inCart = canOrder ? cartQty(p.id) : 0;
@@ -1187,7 +1192,7 @@
       : 'glass-card p-3 flex gap-3 items-center opacity-45 grayscale';
     return `
       <article ${available ? `data-product="${esc(p.id)}" role="button" tabindex="0"` : ''} class="${cls}">
-        ${img
+        ${vid ? dishVideo(vid, img, 'product-img') : img
           ? `<img src="${esc(img)}" alt="" loading="lazy" class="product-img">`
           : `<div class="w-[90px] h-[90px] bg-white/10 rounded-2xl flex items-center justify-center shrink-0"><i class="fa-solid fa-utensils text-gray-400"></i></div>`}
         ${canOrder ? `<button type="button" data-add="${esc(p.id)}" aria-label="${currentLang === 'ar' ? 'أضف للطلب' : 'Add to order'}"
@@ -1232,15 +1237,15 @@
     handleSearch();
   }
   function photoCard(p) {
-    const img = safeUrl(p.image_url);
-    if (!img) return productCard(p);   // الطبق بدون صورة يطلع بالشكل العادي
+    const img = safeUrl(p.image_url), vid = safeUrl(p.video_url);
+    if (!img && !vid) return productCard(p);   // الطبق بدون صورة يطلع بالشكل العادي
     const available = p.is_available !== false;
     const name = productName(p), desc = productDesc(p);
     const canOrder = available && orderingOn();
     const inCart = canOrder ? cartQty(p.id) : 0;
     return `
       <article ${available ? `data-product="${esc(p.id)}" role="button" tabindex="0"` : ''} class="photo-card ${available ? '' : 'off'}">
-        <img src="${esc(img)}" alt="" loading="lazy">
+        ${vid ? dishVideo(vid, img, '') : `<img src="${esc(img)}" alt="" loading="lazy">`}
         <span class="pc-shade"></span>
         ${canOrder ? `<button type="button" data-add="${esc(p.id)}" aria-label="${currentLang === 'ar' ? 'أضف للطلب' : 'Add to order'}"
             class="absolute top-3 left-3 z-10 min-w-[38px] h-[38px] px-2 rounded-full ${inCart ? 'bg-[#25d366] text-black' : 'text-white keep-c'} text-sm font-black flex items-center justify-center active:scale-90 transition backdrop-blur" style="${inCart ? '' : 'background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.3)'}">
@@ -1256,6 +1261,28 @@
           ${!available ? `<p class="text-[11px] font-bold mt-1" style="color:#fca5a5">${currentLang === 'ar' ? 'غير متوفر حالياً' : 'Currently unavailable'}</p>` : ''}
         </div>
       </article>`;
+  }
+
+  // ─── فيديو الطبق: يتحرك بدون صوت وهو ظاهر على الشاشة بس، والصورة غلافه ───
+  // الفيديو ما يتحمّل إلا لما يقرب من الشاشة، ويوقف لما يطلع منها (أخف على باقة الزبون وبطاريته)
+  const calmMotion = (() => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches || (navigator.connection && navigator.connection.saveData); } catch { return false; } })();
+  function dishVideo(vid, img, cls) {
+    return `<video class="${cls}" data-src="${esc(vid)}" ${img ? `poster="${esc(img)}"` : ''} muted loop playsinline preload="none" disablepictureinpicture aria-hidden="true"></video>`;
+  }
+  const vidObs = 'IntersectionObserver' in window ? new IntersectionObserver((es) => es.forEach(({ target: v, isIntersecting }) => {
+    if (isIntersecting) { if (!v.getAttribute('src')) v.src = v.dataset.src; if (!calmMotion) v.play().catch(() => {}); }
+    else if (!v.paused) v.pause();
+  }), { rootMargin: '200px 0px' }) : null;
+  // البطاقات تنرسم من جديد مع كل تغيير في السلة: نرجّع نفس عنصر الفيديو عشان ما يعيد من البداية
+  const vidCache = new Map();
+  function watchVideos(root) {
+    root.querySelectorAll('video[data-src]').forEach(v => {
+      const key = `${v.dataset.src}|${v.className}`, old = vidCache.get(key);
+      if (old && !old.isConnected) { v.replaceWith(old); if (!calmMotion && old.paused) old.play().catch(() => {}); return; }
+      vidCache.set(key, v);
+      v.muted = true;
+      if (vidObs) vidObs.observe(v); else { v.src = v.dataset.src; if (!calmMotion) v.play().catch(() => {}); }
+    });
   }
 
   function renderMenu(products, isSearch) {
@@ -1277,6 +1304,7 @@
         <h3 class="sec-title font-bold text-base text-white tracking-wide border-b pb-1.5">${esc(catName(cat))}</h3>
         <div class="${photoLayout() ? 'space-y-3.5' : 'space-y-2.5'}">${ps.map(photoLayout() ? photoCard : productCard).join('')}</div>
       </section>`).join('');
+    watchVideos(container);
   }
 
   function handleSearch() {
@@ -1324,6 +1352,7 @@
     const add = e.target.closest('[data-add]');
     if (add) {
       e.stopPropagation();
+      markAddFrom(add.closest('article') && add.closest('article').querySelector('img, video'), add);
       const ap = productById(add.dataset.add);
       if (sizesOf(ap).length || extrasOf(ap).length) openModal(add.dataset.add);
       else addToCart(add.dataset.add, 1);
@@ -1340,12 +1369,16 @@
   function openModal(id) {
     const p = allProducts.find(x => String(x.id) === String(id));
     if (!p) return;
-    const img = safeUrl(p.image_url);
-    const modalImg = document.getElementById('modalImg');
-    modalImg.parentElement.classList.toggle('hidden', !img);
+    const img = safeUrl(p.image_url), vid = safeUrl(p.video_url);
+    const modalImg = document.getElementById('modalImg'), modalVid = document.getElementById('modalVid');
+    modalImg.parentElement.classList.toggle('hidden', !img && !vid);
+    modalImg.classList.toggle('hidden', !!vid);
+    modalVid.classList.toggle('hidden', !vid);
     modalImg.src = img || '';
+    if (vid) { modalVid.poster = img || ''; if (modalVid.getAttribute('src') !== vid) modalVid.src = vid; modalVid.muted = true; if (!calmMotion) modalVid.play().catch(() => {}); }
+    else { modalVid.pause(); modalVid.removeAttribute('src'); modalVid.load(); }
     document.getElementById('modalImgBlur').style.backgroundImage = img ? `url("${img.replace(/"/g, '%22')}")` : '';
-    document.getElementById('modalTitle').closest('.p-5').classList.toggle('pt-14', !img);
+    document.getElementById('modalTitle').closest('.p-5').classList.toggle('pt-14', !img && !vid);
     document.getElementById('modalTitle').textContent = productName(p);
     modalSize = sizesOf(p).length ? sizesOf(p)[0].name : null;
     modalExtras = [];
@@ -1362,7 +1395,7 @@
 
     // السعرات على زاوية الصورة (إذا كان المتجر مفعّلها)
     const cal = document.getElementById('modalCal');
-    const showCal = caloriesOn() && p.calories != null && !!img;
+    const showCal = caloriesOn() && p.calories != null && !!(img || vid);
     cal.classList.toggle('hidden', !showCal);
     cal.classList.toggle('inline-flex', showCal);
     if (showCal) cal.innerHTML = `<i class="fa-solid fa-fire-flame-simple text-amber-500"></i> ${Number(p.calories)} ${Lx ? 'kcal' : 'سعرة حرارية'}`;
@@ -1370,7 +1403,7 @@
 
     const L = currentLang === 'ar' ? 0 : 1;
     const meta = [];
-    if (caloriesOn() && p.calories != null && !img) {
+    if (caloriesOn() && p.calories != null && !img && !vid) {
       meta.push(`<span class="inline-flex items-center gap-1 bg-amber-400/15 text-amber-200 border border-amber-400/30 text-[10px] font-bold px-2.5 py-1 rounded-full"><i class="fa-solid fa-fire-flame-simple"></i> ${Number(p.calories)} ${L ? 'kcal' : 'سعرة حرارية'}</span>`);
     }
     String(p.allergens || '').split(',').filter(k => ALLERGEN_LABELS[k]).forEach(k => {
@@ -1509,8 +1542,44 @@
     if (item) item.qty = Math.min(directMode() ? 20 : 99, item.qty + qty);
     else cart.push({ id: p.id, size, qty: Math.min(directMode() ? 20 : 99, qty), note, ...(extras.length ? { extras: extras.map(x => ({ g: x.g, o: x.o })) } : {}) });
     saveCart();
+    flyToCart();
     const n = lineName(p, { size });
     menuToast(T(`أُضيف للطلب: ${n}`, `Added: ${n}`));
+  }
+
+  // ─── حركة الإضافة: صورة الطبق تطير لشريط الطلب، والجوال يهتز خفيف (أندرويد) ───
+  let addFrom = null;
+  function markAddFrom(media, fallback) {
+    const el = media && media.getBoundingClientRect().width ? media : fallback;
+    if (!el) return (addFrom = null);
+    const r = el.getBoundingClientRect();
+    const pic = media ? (media.tagName === 'VIDEO' ? media.poster : media.currentSrc || media.src) : '';
+    addFrom = { r, pic, at: Date.now() };
+  }
+  function bumpCart() {
+    const bar = document.getElementById('cartBar');
+    if (!bar || bar.classList.contains('hidden') || !bar.animate || calmMotion) return;
+    bar.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.05)' }, { transform: 'scale(1)' }], { duration: 320, easing: 'ease-out' });
+  }
+  function flyToCart() {
+    try { navigator.vibrate && navigator.vibrate(12); } catch {}
+    const from = addFrom; addFrom = null;
+    const dot = document.getElementById('cartCount'), bar = document.getElementById('cartBar');
+    if (!from || Date.now() - from.at > 1500 || calmMotion || !dot || bar.classList.contains('hidden') || !document.body.animate) return bumpCart();
+    const t = dot.getBoundingClientRect();
+    const size = Math.min(110, Math.max(44, Math.min(from.r.width, from.r.height)));
+    const x0 = from.r.left + from.r.width / 2 - size / 2, y0 = from.r.top + from.r.height / 2 - size / 2;
+    const dx = t.left + t.width / 2 - (x0 + size / 2), dy = t.top + t.height / 2 - (y0 + size / 2);
+    const g = document.createElement('div');
+    g.className = 'fly-ghost';
+    g.style.cssText = `left:${x0}px;top:${y0}px;width:${size}px;height:${size}px;${from.pic ? `background-image:url("${String(from.pic).replace(/"/g, '%22')}")` : ''}`;
+    document.body.appendChild(g);
+    const lift = Math.min(120, Math.abs(dy) * 0.35 + 40);
+    g.animate([
+      { transform: 'translate(0,0) scale(1)', opacity: 1, borderRadius: '16px' },
+      { transform: `translate(${dx * 0.45}px, ${dy * 0.45 - lift}px) scale(.7)`, opacity: 1, offset: 0.45 },
+      { transform: `translate(${dx}px, ${dy}px) scale(.18)`, opacity: .4, borderRadius: '50%' }
+    ], { duration: 640, easing: 'cubic-bezier(.45,.05,.55,.95)' }).onfinish = () => { g.remove(); bumpCart(); };
   }
   function setQty(i, qty) {
     if (!cart[i]) return;
@@ -1951,6 +2020,8 @@
       if (el) { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake'); }
       return menuToast(T(`اختر ${extrasOf(p)[miss].name}`, `Choose ${extrasOf(p)[miss].name_en || extrasOf(p)[miss].name}`));
     }
+    const mv = document.getElementById('modalVid'), mi = document.getElementById('modalImg');
+    markAddFrom(!mv.classList.contains('hidden') ? mv : !mi.parentElement.classList.contains('hidden') ? mi : null, document.getElementById('mAddBtn'));
     addToCart(currentModalProduct, modalQty, modalSize, null, modalExtras);
     closeModal();
   });
@@ -1959,12 +2030,13 @@
 
   function closeModal() {
     document.getElementById('productModal').classList.add('opacity-0', 'pointer-events-none');
+    try { document.getElementById('modalVid').pause(); } catch {}
     closeImgViewer();
   }
   // الصورة بملء الشاشة (تقدر تكبّرها بإصبعين)
   function openImgViewer() {
-    const src = document.getElementById('modalImg').src;
-    if (!src) return;
+    const src = document.getElementById('modalImg').getAttribute('src');
+    if (!src || !document.getElementById('modalVid').classList.contains('hidden')) return;   // الفيديو ما يفتح بملء الشاشة
     const v = document.getElementById('imgViewer');
     v.querySelector('img').src = src;
     v.querySelector('p').textContent = document.getElementById('modalTitle').textContent;

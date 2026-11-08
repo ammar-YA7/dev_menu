@@ -298,6 +298,11 @@ module.exports.post = async function post(action, req, b, env) {
       if (b.image_url && !ownsMediaUrl(b.image_url, sid)) throw new ApiError(400, 'الصورة غير تابعة لمتجرك');
       payload.image_url = b.image_url || '';
     }
+    // فيديو الطبق (اختياري): يتحرك في المنيو، والصورة تبقى غلافه
+    if (b.video_url !== undefined) {
+      if (b.video_url && !ownsMediaUrl(b.video_url, sid)) throw new ApiError(400, 'الفيديو غير تابع لمتجرك');
+      payload.video_url = b.video_url || null;
+    }
 
     const nextOrder = async () => {
       const same = await rest(`products?client_id=eq.${sid}&category=eq.${q(category)}&select=sort_order`);
