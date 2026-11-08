@@ -238,11 +238,11 @@
     <a href="#" class="logo" aria-label="DEV MENU"><img src="images/logo-mark.png" alt="DEV MENU" width="56" height="38" class="h-[38px] w-auto"></a>
     <a href="#products" class="lnk">المميزات</a>
     <a href="#how" class="lnk">كيف يعمل</a>
-    <a href="#pricing" class="lnk">الأسعار</a>
+    <a href="/pricing.html" class="lnk">الأسعار</a>
     <a href="#faq" class="lnk">الأسئلة</a>
     <button type="button" data-lang-toggle class="lnk"></button>
     <a href="login.html" class="lnk login-lnk"><i class="ph-bold ph-sign-in"></i> دخول</a>
-    <a href="#pricing" class="btn btn-main px-4 py-2.5 !rounded-full text-[13.5px] ms-1">ابدأ مجاناً</a>
+    <a href="/pricing.html" class="btn btn-main px-4 py-2.5 !rounded-full text-[13.5px] ms-1">ابدأ مجاناً</a>
   </nav>
 </header>
 
@@ -259,7 +259,7 @@
         <div class="price-chip"><small>بطاقة الولاء</small><b dir="ltr" id="chip-loyalty">&#x20C1; 69</b> <span class="text-[12px] font-semibold text-[color:var(--muted)]">بالشهر</span></div>
       </div>
       <div class="flex flex-wrap gap-3">
-        <a href="#pricing" class="btn btn-main px-7 py-4 text-[15px]">اختر باقتك وابدأ مجاناً</a>
+        <a href="/pricing.html" class="btn btn-main px-7 py-4 text-[15px]">اختر باقتك وابدأ مجاناً</a>
         <a href="#try" class="btn btn-soft px-6 py-4 text-[15px]"><i class="ph-bold ph-bell-ringing"></i> جرّب البيجر بنفسك</a>
       </div>
       <p class="text-[13px] font-semibold text-[color:var(--muted)]"><i class="ph-bold ph-check-circle text-emerald-700"></i> تجربة مجانية لمدة 14 يوماً دون بطاقة بنكية، ثم نتواصل معك لإتمام الاشتراك.</p>
@@ -394,48 +394,7 @@
   </div>
 </section>
 
-<!-- ═══════════ الأسعار: يختار ويبدأ ═══════════ -->
-<section id="pricing" class="dark py-16 md:py-24">
-  <div class="wrap">
-    <div class="text-center max-w-2xl mx-auto mb-10 reveal">
-      <h2 class="h2">باقة <span class="text-[color:var(--gold)]">تناسب منشأتك.</span></h2>
-      <p class="sub mt-4">اختر الأدوات التي تحتاجها ويظهر السعر مباشرة. تبدأ بتجربة مجانية لمدة 14 يوماً، ثم نتواصل معك للدفع والتفعيل.</p>
-    </div>
-    <div class="flex flex-wrap items-center justify-center gap-3 mb-8 reveal">
-      <div class="period" role="group" aria-label="مدة الاشتراك">
-        <button type="button" data-period="month" aria-pressed="true">شهري</button>
-        <button type="button" data-period="year" aria-pressed="false">سنوي <small>شهرين مجاناً</small></button>
-      </div>
-      <div id="presets" class="flex flex-wrap justify-center gap-2"></div>
-    </div>
-    <div class="grid lg:grid-cols-[1.25fr_.75fr] gap-5 items-start">
-      <div id="picks" class="grid sm:grid-cols-2 gap-3 reveal"></div>
-      <aside class="summary lg:sticky lg:top-24 reveal" aria-live="polite">
-        <p class="text-[13px] font-bold text-[color:var(--muted)]">باقتك</p>
-        <div id="sum-lines" class="mt-2"></div>
-        <p class="mt-2 text-[12.5px] font-semibold text-[color:var(--muted)] flex items-center gap-1.5"><i class="ph-bold ph-globe"></i> يشمل رابطاً خاصاً لمنشأتك: <span dir="ltr" class="font-bold text-[color:var(--ink)]">yourname.devmenu.digital</span></p>
-        <div class="border-t border-[color:var(--line)] mt-3 pt-4 flex items-end justify-between gap-3">
-          <div><p class="text-[13px] font-bold text-[color:var(--muted)]">المجموع</p><p class="total" dir="ltr" id="sum-total"></p></div>
-          <p class="text-[13px] font-semibold text-[color:var(--muted)] text-left" id="sum-per"></p>
-        </div>
-        <a href="#register" id="sum-go" class="btn btn-main w-full py-4 text-[15px] mt-5">ابدأ مجاناً بهذه الباقة</a>
-        <p class="text-[12px] font-semibold text-[color:var(--muted)] text-center mt-3">لا يلزمك الدفع الآن. الفرع الإضافي: رسوم <span dir="ltr">&#x20C1; 19</span> بالشهر + سعر مميزاته.</p>
-      </aside>
-    </div>
-  </div>
-</section>
 
-<!-- ═══════════ وش يصير بعد ما تختار ═══════════ -->
-<section class="py-16 md:py-20">
-  <div class="wrap">
-    <h2 class="h2 text-center mb-10 reveal">ماذا يحدث <em>بعد اختيار باقتك؟</em></h2>
-    <div class="grid md:grid-cols-3 gap-4">
-      <div class="after reveal"><span class="n">1</span><h3 class="text-[18px] font-bold mt-4">تسجّل وتبدأ فوراً</h3><p class="sub !text-[14.5px] mt-1">أدخل اسم منشأتك ورقم جوالك وبريدك، ويصبح حسابك جاهزاً خلال دقيقة برابط خاص باسم منشأتك، مثل <span dir="ltr" class="font-bold">yourname.devmenu.digital</span></p></div>
-      <div class="after reveal"><span class="n">2</span><h3 class="text-[18px] font-bold mt-4">تجربة مجانية لمدة 14 يوماً</h3><p class="sub !text-[14.5px] mt-1">جهّز المنيو أو بطاقتك، واطبع رموز QR، ودع عملاءك يجربون الخدمة بكامل مميزاتها.</p></div>
-      <div class="after reveal"><span class="n">3</span><h3 class="text-[18px] font-bold mt-4">نتواصل معك للدفع</h3><p class="sub !text-[14.5px] mt-1">نتواصل معك على جوالك لإتمام الدفع، ويُفعَّل اشتراكك في اليوم نفسه.</p></div>
-    </div>
-  </div>
-</section>
 
 <!-- ═══════════ التسجيل ═══════════ -->
 <section id="register" class="py-16 md:py-20">
@@ -452,7 +411,7 @@
     <div class="reg reveal">
       <div id="chosen" class="chosen mb-5 flex items-center justify-between gap-3">
         <div class="min-w-0"><p class="text-[12px] font-bold text-[color:var(--muted)]">باقتك</p><p id="chosen-name" class="font-bold text-[15px]"></p></div>
-        <div class="text-left shrink-0"><p id="chosen-price" class="font-bold text-[18px]" dir="ltr"></p><a href="#pricing" class="text-[12px] font-bold text-[color:var(--gold-deep)] underline underline-offset-4">غيّرها</a></div>
+        <div class="text-left shrink-0"><p id="chosen-price" class="font-bold text-[18px]" dir="ltr"></p><a href="/pricing.html" class="text-[12px] font-bold text-[color:var(--gold-deep)] underline underline-offset-4">غيّرها</a></div>
       </div>
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-[17px] font-bold">بيانات منشأتك</h3>
@@ -582,7 +541,7 @@
       <h2 class="h2">عميلك زارك مرة. <span class="text-[color:var(--gold)]">اجعله يعود.</span></h2>
       <p class="sub mt-4 mb-8">ابدأ خلال دقيقة، وجرّب جميع المميزات 14 يوماً مجاناً.</p>
       <div class="flex flex-wrap justify-center gap-3">
-        <a href="#pricing" class="btn btn-gold px-8 py-4 text-[15px]">اختر باقتك</a>
+        <a href="/pricing.html" class="btn btn-gold px-8 py-4 text-[15px]">اختر باقتك</a>
         <a href="https://wa.me/966561161448" target="_blank" rel="noopener" class="btn px-7 py-4 text-[15px] border border-white/25 text-white"><i class="ph-bold ph-whatsapp-logo"></i> تواصل معنا</a>
       </div>
     </div>
@@ -599,7 +558,7 @@
     </div>
     <ul class="space-y-2.5 font-semibold text-[color:var(--muted)]">
       <li><a href="#products" class="hover:text-[color:var(--ink)]">المميزات</a></li>
-      <li><a href="#pricing" class="hover:text-[color:var(--ink)]">الأسعار</a></li>
+      <li><a href="/pricing.html" class="hover:text-[color:var(--ink)]">الأسعار</a></li>
       <li><a href="#faq" class="hover:text-[color:var(--ink)]">الأسئلة</a></li>
       <li><a href="login.html" class="hover:text-[color:var(--ink)]">دخول المشتركين</a></li>
     </ul>
@@ -689,71 +648,23 @@
   ];
   const per = () => choice.period === 'month' ? 'بالشهر' : 'بالسنة';
   function saveChoice() { try { localStorage.setItem(CHOICE_KEY, JSON.stringify(choice)); } catch {} }
+  // الأسعار صارت في صفحة لحالها (pricing.html)، والاختيار يوصل هنا من التخزين المحلي.
+  // هنا نعرض بس الباقة المختارة في صندوق «باقتك» فوق نموذج التسجيل
   function renderPricing() {
-    const P = DMPlans, p = choice.period;
-    document.querySelectorAll('[data-period]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.period === p)));
-    $('presets').innerHTML = PRESETS.map(([name, f], i) => `<button type="button" class="preset" data-preset="${i}" aria-pressed="${same(choice.features, f) && !!PRESETS[i][2] === !!choice.free}">${PRESETS[i][2] ? '<i class="ph-bold ph-gift"></i> ' : ''}${name}</button>`).join('');
-    $('picks').innerHTML = P.ORDER.map(k => {
-      const f = P.FEATURES[k], on = choice.features.includes(k), covered = P.coveredNote(choice.features, k);
-      // الرسائل مع الولاء: مشمولة فيه، فتطلع معطّلة ومعها السبب بدل السعر
-      if (covered) return `<button type="button" role="checkbox" aria-checked="false" aria-disabled="true" disabled class="feat-pick covered">
-        <span class="box"><i class="ph-bold ph-check"></i></span>
-        <span class="min-w-0"><b><i class="ph-bold ${f.icon}"></i> ${f.name}</b><p>${covered}.</p></span>
-      </button>`;
-      return `<button type="button" role="checkbox" aria-checked="${on}" data-feat="${k}" class="feat-pick">
-        <span class="box">${on ? '<i class="ph-bold ph-check"></i>' : ''}</span>
-        <span class="min-w-0"><b><i class="ph-bold ${f.icon}"></i> ${f.name}</b><p>${f.desc}</p></span>
-        <span class="pr" dir="ltr">${choice.free && k === 'pager' ? 'مجاناً' : money(f[p])}<small>${choice.free && k === 'pager' ? `${DMPlans.FREE.pager} رقم شهرياً` : per()}</small></span>
-      </button>`;
-    }).join('');
-    const pr = P.price(choice.features, p);
+    const P = DMPlans, p = choice.period, more = document.querySelector('[name="reg-type"][value="more"]');
     if (choice.free) {
-      $('sum-lines').innerHTML = `<div class="line"><span>البيجر المجاني</span><span dir="ltr">${money(0)}</span></div>
-        <ul class="mt-2 space-y-1.5 text-[13px] font-semibold text-[color:var(--muted)]">
-          <li><i class="ph-bold ph-check"></i> ${P.FREE.pager} رقم شهرياً لفرع واحد</li>
-          <li><i class="ph-bold ph-check"></i> شاشة كاشير وشاشة للعملاء وإحصائيات الانتظار</li>
-        </ul>
-        <p class="disc-note"><i class="ph-bold ph-info"></i> لا تشمل بطاقة النداء في المحفظة والرسائل وصفحة الروابط. ولتجربة كل المميزات مجاناً لمدة ${P.TRIAL_DAYS} يوماً اختر باقة مدفوعة.</p>`;
-      $('sum-total').textContent = money(0);
-      $('sum-per').innerHTML = 'دائماً';
-      $('sum-go').classList.remove('pointer-events-none', 'opacity-50');
       $('chosen-name').textContent = 'البيجر المجاني';
       $('chosen-price').textContent = money(0);
-      const more = document.querySelector('[name="reg-type"][value="more"]');
       if (more && !more.checked && !typeTouched) { more.checked = true; more.dispatchEvent(new Event('change')); }
       return;
     }
-    $('sum-lines').innerHTML = pr.features.length
-      ? pr.lines.map(l => `<div class="line"><span>${esc(l.label)}</span><span dir="ltr">${money(l.amount)}</span></div>`).join('') + pr.discounts.map(d => `<div class="line disc"><span>${esc(d.label)}</span><span dir="ltr">- ${money(d.amount)}</span></div>`).join('')
-        + (pr.discounts.length ? '<p class="disc-note"><i class="ph-bold ph-clock-countdown"></i> خصومات الباقات عرض لفترة محدودة</p>' : '')
-        // البيجر بدون الرسائل: يجربها مجاناً خلال التجربة، وتتوقف بعدها إلا إذا أضافها
-        + (pr.features.includes('pager') && !pr.features.includes('notify') && !pr.features.includes('loyalty') ? '<p class="disc-note"><i class="ph-bold ph-gift"></i> هدية التجربة: "رسائل لزبائنك" مفعّلة مجاناً خلال فترة التجربة، وتتوقف بعدها إلا إذا أضفتها لاشتراكك.</p>' : '')
-      : '<p class="text-[14px] font-semibold text-[color:var(--muted)] py-2">اختر أداة واحدة على الأقل</p>';
-    $('sum-total').textContent = money(pr.total);
-    $('sum-per').innerHTML = p === 'year' && pr.total ? `بالسنة<br>أي <span dir="ltr">${money(Math.round(pr.total / 12))}</span> بالشهر` : 'بالشهر';
-    $('sum-go').classList.toggle('pointer-events-none', !pr.features.length);
-    $('sum-go').classList.toggle('opacity-50', !pr.features.length);
+    const pr = P.price(choice.features, p);
     $('chosen-name').textContent = pr.features.length ? `${pr.features.map(k => P.FEATURES[k].name).join(' + ')} (${p === 'month' ? 'شهري' : 'سنوي'})` : 'لم تختر باقة';
     $('chosen-price').textContent = pr.features.length ? money(pr.total) : '';
     // اختار البيجر أو الانتظار أو الولاء بدون منيو؟ غالباً منشأته مو مطعم، فنفتح له "أخرى"
     const noMenu = pr.features.length && !pr.features.includes('menu');
-    const more = document.querySelector('[name="reg-type"][value="more"]');
     if (more && noMenu && !more.checked && !typeTouched) { more.checked = true; more.dispatchEvent(new Event('change')); }
   }
-  $('picks').addEventListener('click', (e) => {
-    const b = e.target.closest('[data-feat]'); if (!b) return;
-    choice.features = DMPlans.toggle(choice.features, b.dataset.feat); choice.free = false; saveChoice(); renderPricing();
-  });
-  $('presets').addEventListener('click', (e) => {
-    const b = e.target.closest('[data-preset]'); if (!b) return;
-    const pre = PRESETS[+b.dataset.preset];
-    choice.features = pre[1].slice(); choice.free = !!pre[2]; saveChoice(); renderPricing();
-  });
-  document.querySelector('.period').addEventListener('click', (e) => {
-    const b = e.target.closest('[data-period]'); if (!b) return;
-    choice.period = b.dataset.period; saveChoice(); renderPricing();
-  });
-  $('sum-go').addEventListener('click', () => setTimeout(() => $('reg-name').focus({ preventScroll: true }), 600));
   renderPricing();
   const planPayload = () => choice.features.length ? { plan: choice.period, features: choice.features, ...(choice.free ? { free: true } : {}) } : {};
 
@@ -805,7 +716,7 @@
   function needFeatures() {
     if (choice.features.length) return false;
     showToast('اختر الخدمات التي تحتاجها أولاً، ويتفعّل حسابك بها', 'error');
-    $('pricing').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setTimeout(() => { location.href = '/pricing.html'; }, 1200);
     return true;
   }
   $('register-form').addEventListener('submit', async (e) => {

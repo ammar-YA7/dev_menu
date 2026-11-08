@@ -104,3 +104,4 @@ details.q .faq-list li::before { background: #94a3b8 !important; }
 .dark .period button[aria-pressed="false"] small { color: #a7d7ae !important; }
 .dark .pill { color: #fff !important; }
 .dark .h2 em { color: #fff !important; }
+.dark .h2 span, .dark .h2 [class*="text-"] { color: #fff !important; }
