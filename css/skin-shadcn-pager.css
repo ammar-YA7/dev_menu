@@ -1,0 +1,52 @@
+/* =====================================================================
+   DEV MENU — صفحة البيجر للزبون بشكل shadcn/ui (نفس باقي النظام)
+   الخلفية تبقى بلون المحل (هويته)، والتغيير في الحواف والإطارات، والذهبي صار أخضر («جاهز» = أخضر)
+   للرجوع: احذف سطر <link> هذا الملف من pager.html
+   ===================================================================== */
+:root { --gold: #22c55e; }
+
+/* الصناديق البيضاء: حواف 14 وإطار رفيع بدل الظل الثقيل */
+.card, .tips, .pw, .ups, .ask, .stp, .pw-link { border-radius: 16px !important; box-shadow: 0 8px 24px -16px rgba(0, 0, 0, .5) !important; }
+.steps li { border-radius: 12px !important; border: 1px solid #e2e8f0 !important; }
+.steps b { color: #fff !important; border-radius: 8px !important; }
+.ask { border: 1px solid #e2e8f0 !important; }
+.ask-ic, .stp-ic { border-radius: 12px !important; }
+.chip { border-radius: 8px !important; font-weight: 600 !important; }
+
+/* الأزرار والحقول */
+.btn { border-radius: 10px !important; font-weight: 700 !important; }
+.btn-brand, .btn-take, .btn-wallet { box-shadow: 0 1px 2px rgba(0, 0, 0, .15) !important; }
+.btn-gold { background: #16a34a !important; color: #fff !important; box-shadow: 0 1px 2px rgba(0, 0, 0, .15) !important; }
+.field, .it-note, .mn-search input { border-radius: 10px !important; border-width: 1px !important; }
+.stp .field { background: #fff !important; border: 1px solid #e2e8f0 !important; }
+.stp .field:focus { border-color: #94a3b8 !important; box-shadow: 0 0 0 3px rgba(148, 163, 184, .3); }
+#s-inv-in.stp-in { border-radius: 12px !important; }
+.car-c { border-width: 1px !important; border-radius: 8px !important; }
+.it-sizes button, .mn-cats button, .ask-chips button { border-radius: 8px !important; border-width: 1px !important; }
+.it-add, .ups-show { border-radius: 10px !important; }
+.it-img { border-radius: 16px 16px 0 0 !important; }
+
+/* التذكرة والرقم */
+.ticket { border-radius: 18px !important; }
+.ticket.ready { background: linear-gradient(160deg, #4ade80 0%, #22c55e 55%, #16a34a 100%) !important; color: #052e16 !important; }
+.ticket.ready .num { color: #052e16 !important; }
+.ring-ic { color: #fff !important; border-radius: 14px !important; }
+.ticket.ready .ring-ic { color: #052e16 !important; }
+
+/* «جاهز»: الحلقة والرقم أخضر بدل الذهبي */
+.orb.ready::before { background: conic-gradient(#86efac, #22c55e, #86efac) !important; }
+.orb.ready .orb-in { background: radial-gradient(circle at 50% 30%, #bbf7d0, #22c55e 75%) !important; color: #052e16 !important; }
+@keyframes glow { 50% { filter: drop-shadow(0 0 18px rgba(134, 239, 172, .9)); } }
+.track li.gold i { background: #22c55e !important; border-color: #22c55e !important; color: #052e16 !important; }
+
+/* وقت الرنين: الشاشة تومض أخضر بدل الذهبي */
+@keyframes flash2 { 0%, 100% { background: color-mix(in srgb, var(--brand) 60%, #000); } 50% { background: #16a34a; } }
+
+/* التقييم: نجوم كهرماني (المعروف للتقييم) */
+.star.on { color: #f59e0b !important; }
+
+/* اللعبة والنوافذ */
+.mg { border-radius: 16px !important; }
+.mg-won, .gm-inv { border-radius: 12px !important; }
+.qz-main, .qz-opts button, .qz-res { border-radius: 10px !important; }
+.ask-panel { border-radius: 16px 16px 0 0 !important; }
