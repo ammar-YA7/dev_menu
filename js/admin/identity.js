@@ -164,6 +164,13 @@
     ctx.fillText(text, x, y);
   }
 
+  // ذيل بطاقات الطباعة: شعار ديف منيو المفرغ بدل كلمة DEV MENU
+  async function drawBrandFooter(ctx, cx, y, h = 70) {
+    const mark = await loadImage('/images/logo-mark.png').catch(() => null);
+    if (mark) { const w = mark.width * (h / mark.height); ctx.drawImage(mark, cx - w / 2, y, w, h); return; }
+    ctx.save(); ctx.direction = 'ltr'; ctx.fillStyle = '#233d2c'; ctx.font = '700 26px "IBM Plex Sans Arabic", sans-serif'; ctx.fillText('DEV MENU', cx, y + h / 2); ctx.restore();
+  }
+
   async function downloadQrCard(opts = {}) {
     const btn = opts.button || document.getElementById('qr-download-btn');
     btn.disabled = true;
@@ -179,7 +186,7 @@
 
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, W, H);
-      ctx.fillStyle = '#15271b';
+      ctx.fillStyle = '#233d2c';   // أخضر الشعار
       ctx.fillRect(0, 0, W, 430);
 
       const logoUrl = safeUrl(client.logo_url);
@@ -195,28 +202,26 @@
       }
 
       ctx.direction = 'rtl';
-      ctx.fillStyle = '#f5f2eb';
+      ctx.fillStyle = '#ffffff';
       drawFittedText(ctx, client.name || 'المنيو', cx, logo ? 355 : 250, W - 160, 800, 66, FONT);
 
       const tmp = document.createElement('div');
       new QRCode(tmp, { text: opts.url || qrUrl(), width: 740, height: 740, correctLevel: QRCode.CorrectLevel.H });
       const qr = tmp.querySelector('canvas');
       const qx = (W - 740) / 2, qy = 540;
-      ctx.fillStyle = '#f5f2eb';
+      ctx.fillStyle = '#e2e8f0';   // إطار رمادي رفيع حول الرمز
       roundRectPath(ctx, qx - 40, qy - 40, 820, 820, 48); ctx.fill();
       ctx.fillStyle = '#ffffff';
-      roundRectPath(ctx, qx - 16, qy - 16, 772, 772, 28); ctx.fill();
+      roundRectPath(ctx, qx - 37, qy - 37, 814, 814, 45); ctx.fill();
       ctx.drawImage(qr, qx, qy, 740, 740);
 
-      ctx.fillStyle = '#1b3022';
+      ctx.fillStyle = '#233d2c';
       drawFittedText(ctx, opts.caption || 'امسح الرمز لعرض المنيو', cx, 1470, W - 160, 800, 58, FONT);
       ctx.direction = 'ltr';
-      ctx.fillStyle = '#5b6b60';
+      ctx.fillStyle = '#64748b';
       ctx.font = `600 36px ${FONT}`;
       ctx.fillText(opts.captionEn || 'Scan to view our menu', cx, 1535);
-      ctx.fillStyle = '#9aa39c';
-      ctx.font = `700 26px ${FONT}`;
-      ctx.fillText('DEV MENU', cx, 1645);
+      await drawBrandFooter(ctx, cx, 1590, 72);
 
       const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
       const a = document.createElement('a');

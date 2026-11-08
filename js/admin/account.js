@@ -642,17 +642,18 @@
     try { await document.fonts.load(`700 64px "IBM Plex Sans Arabic"`); } catch {}
     const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
     const g = cv.getContext('2d'); g.textAlign = 'center'; g.direction = 'rtl';
-    g.fillStyle = '#fbf8f3'; g.fillRect(0, 0, W, H);
-    g.fillStyle = '#233d2c'; g.fillRect(0, 0, W, 420);
-    g.fillStyle = '#c9a227'; g.font = `700 44px ${FONT}`; g.fillText(client.name || '', cx, 150);
-    g.fillStyle = '#fbf8f3'; g.font = `700 76px ${FONT}`; g.fillText('امسح وسجّل في بطاقة الولاء', cx, 290);
+    g.fillStyle = '#ffffff'; g.fillRect(0, 0, W, H);
+    g.fillStyle = '#233d2c'; g.fillRect(0, 0, W, 420);   // أخضر الشعار
+    g.fillStyle = '#a7d7ae'; g.font = `700 44px ${FONT}`; g.fillText(client.name || '', cx, 150);
+    g.fillStyle = '#ffffff'; g.font = `700 76px ${FONT}`; g.fillText('امسح وسجّل في بطاقة الولاء', cx, 290);
     const qr = document.querySelector('#ly-qr canvas') || document.querySelector('#ly-qr img');
-    g.fillStyle = '#fff'; g.fillRect(cx - 330, 520, 660, 660);
-    g.imageSmoothingEnabled = false; g.drawImage(qr, cx - 300, 550, 600, 600);
-    g.fillStyle = '#22362a'; g.font = `700 60px ${FONT}`;
+    g.fillStyle = '#e2e8f0'; roundRectPath(g, cx - 340, 510, 680, 680, 44); g.fill();   // إطار رمادي رفيع
+    g.fillStyle = '#ffffff'; roundRectPath(g, cx - 337, 513, 674, 674, 41); g.fill();
+    g.imageSmoothingEnabled = false; g.drawImage(qr, cx - 300, 550, 600, 600); g.imageSmoothingEnabled = true;
+    g.fillStyle = '#233d2c'; g.font = `700 60px ${FONT}`;
     g.fillText(`كل ${st.needed} زيارات: ${st.reward}`, cx, 1300);
-    g.fillStyle = '#6f7d72'; g.font = `500 40px ${FONT}`; g.fillText('بعد كل شراء اعرض كود بطاقتك للكاشير', cx, 1390);
-    g.font = `500 32px ${FONT}`; g.fillText('DEV MENU', cx, 1530);
+    g.fillStyle = '#64748b'; g.font = `500 40px ${FONT}`; g.fillText('بعد كل شراء اعرض كود بطاقتك للكاشير', cx, 1390);
+    await drawBrandFooter(g, cx, 1480, 72);
     const a = document.createElement('a'); a.download = `loyalty-${client.client_slug}.png`; a.href = cv.toDataURL('image/png'); a.click();
   }
 
