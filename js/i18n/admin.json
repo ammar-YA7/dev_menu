@@ -1626,5 +1626,6 @@
   "اختر «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية».": "Choose “Install app” or “Add to Home screen”.",
   "اضغط «تثبيت». بتطلع أيقونة ديف منيو على شاشتك.": "Tap “Install”. The DEV MENU icon appears on your home screen.",
   "انسخ الرابط، والصقه في المتصفح": "Copied. Paste it in your browser",
-  "إعدادات البيجر": "Pager settings"
+  "إعدادات البيجر": "Pager settings",
+  "أهلاً بك {s}": "Welcome, {s}"
 }

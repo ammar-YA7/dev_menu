@@ -320,7 +320,7 @@
 
   function setStoreName(name) {
     document.getElementById('header-title').textContent = name;
-    document.getElementById('greeting').textContent = `أهلاً بك في ${name}`;
+    document.getElementById('greeting').textContent = `أهلاً بك ${name}`;
   }
   function setLogo(url) {
     const logo = safeUrl(url);
