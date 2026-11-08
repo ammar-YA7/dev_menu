@@ -1,6 +1,6 @@
 /* DEV MENU — أيقونات (Phosphor, MIT). مولّد بـ tools/icons.js، لا تعدّله يدوياً */
-@font-face { font-family: "Phosphor-Bold"; src: url("/fonts/Phosphor-Bold.woff2?v=5a53f757") format("woff2"); font-display: block; }
-@font-face { font-family: "Phosphor-Fill"; src: url("/fonts/Phosphor-Fill.woff2?v=6b7ab035") format("woff2"); font-display: block; }
+@font-face { font-family: "Phosphor-Bold"; src: url("/fonts/Phosphor-Bold.woff2?v=dd1ab068") format("woff2"); font-display: block; }
+@font-face { font-family: "Phosphor-Fill"; src: url("/fonts/Phosphor-Fill.woff2?v=a3bbc747") format("woff2"); font-display: block; }
 .ph-bold { font-family: "Phosphor-Bold" !important; font-style: normal; font-weight: normal; font-variant: normal; text-transform: none; line-height: 1; display: inline-block; vertical-align: -.125em; speak: never; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
 .ph-bold.ph-star, .ph-bold.ph-star-half, .ph-bold.ph-circle { font-family: "Phosphor-Fill" !important; }
 .ph-address-book:before { content: "\e6f8"; }
@@ -48,7 +48,6 @@
 .ph-checks:before { content: "\e53a"; }
 .ph-circle:before { content: "\e18a"; }
 .ph-clock:before { content: "\e19a"; }
-.ph-clock-countdown:before { content: "\ed2c"; }
 .ph-clock-counter-clockwise:before { content: "\e1a0"; }
 .ph-coffee:before { content: "\e1c2"; }
 .ph-coins:before { content: "\e78e"; }
@@ -92,10 +91,12 @@
 .ph-gift:before { content: "\e276"; }
 .ph-git-branch:before { content: "\e278"; }
 .ph-globe:before { content: "\e288"; }
+.ph-google-logo:before { content: "\e292"; }
 .ph-hamburger:before { content: "\e790"; }
 .ph-hand-pointing:before { content: "\e29a"; }
 .ph-hand-tap:before { content: "\ec90"; }
 .ph-hand-waving:before { content: "\e580"; }
+.ph-handshake:before { content: "\e582"; }
 .ph-heart:before { content: "\e2a8"; }
 .ph-hourglass-medium:before { content: "\e2b8"; }
 .ph-house:before { content: "\e2c2"; }
@@ -192,6 +193,7 @@
 .ph-wrench:before { content: "\e5d4"; }
 .ph-x:before { content: "\e4f6"; }
 .ph-x-circle:before { content: "\e4f8"; }
+.ph-x-logo:before { content: "\e4bc"; }
 .ph-spin { animation: ph-spin 1s linear infinite; }
 @keyframes ph-spin { to { transform: rotate(360deg); } }
 .ph-shake { animation: ph-shake 1s ease-in-out infinite; transform-origin: 50% 10%; }

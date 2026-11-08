@@ -6,6 +6,8 @@
 /* eslint-disable no-unused-vars */
 const { crypto, handler, rest, rpc, q, storage, publicUrl, ownsMediaUrl, SUPABASE_URL, BUCKET, ApiError, getUser, isSuperAdmin, str, httpUrl, waNumber, int, readBody, SLUG_RE, RESERVED_SLUGS, CURRENCIES, SITE, storeLink, loyaltyHome, later, followParentFeatures, FIELDS, normalizeSettings, riyadhDayStart, positionOf, emailTemplate, statusUrlFor, sendMail, mailConfigured, sendPush, pushPublicKey, cleanSubscription, topic, storeTopics, poke, normalizeLoyalty, validPoint, PLANS, tr, wallet, queue, pushWalletCards, runAssistant, pagerReadyNotice, walletNotice, loyaltyMessages, loyaltyNearLines, stampPagerTicket, purchaseStamp, tagBranch, newStampCode, parseMemberQr, cooldownLeft, leftText, bySort, COFFEE_TYPES, SECTORS, LINKS_SECTIONS, BUSINESS_TYPES, ALLERGENS, PROCESS, ROAST, METHODS, DELIVERY, THEMES, MAX_SIZES, MAX_COUPONS, OCCASION_PRESETS, STICKER_POSITIONS, STICKER_LIB, STICKER_SIZES, STICKER_ANIMS, MAX_OCCASIONS, MAX_STICKERS, isDay, cleanOccasions, validPrice, round2, cleanSizes, cleanExtras, riyadhDate, MAX_ORDER_NUMBERS, MAX_CUSTOM_LINKS, phoneNumber, DESK_ACTIONS, DESK_KEY_RE, MENU_ONLY, context, familyIds, storeContext, familyOf, categoryIn, nextOrderIn, SHARED_PRODUCT_FIELDS, guestKeysOf, guestHistory, patchStore, cleanCoffee, IMAGE_TYPES, VIDEO_TYPES, PAGER_MAX_RINGS, ringTicket, refreshWalletCards, PAGER_MSG_GAP, winbackSettings, redeemMessage, FEEDBACK_REASONS, absenceDue, readyRewards } = require('./shared');
 const NEXT = require('./next');
+// «كيف سمعت عنا؟» وقت التسجيل (نفس القائمة في نموذج التسجيل بصفحة الهبوط)
+const HEARD_FROM = { instagram: 'انستقرام', tiktok: 'تيك توك', snapchat: 'سناب شات', google: 'بحث قوقل', x: 'إكس (تويتر)', friend: 'صديق أو محل ثاني', visit: 'زيارة أو اتصال منا', other: 'أخرى' };
 
 module.exports.pre = async function pre(action, req, b) {
 
@@ -33,6 +35,11 @@ module.exports.pre = async function pre(action, req, b) {
       if (!['restaurant', 'cafe', 'mixed', 'bakery'].includes(type) || label) {
         await rest(`clients?client_slug=eq.${q(slug)}`, { method: 'PATCH', body: { business_type: type, business_label: label || null } }).catch(e => console.error('REGISTER_TYPE', e.message));
       }
+      // «كيف سمعت عنا؟»: المصدر من قائمة ثابتة، و«أخرى» معها كلمة يكتبها هو
+      const heard = HEARD_FROM[b.heard_from] ? b.heard_from : null;
+      const heardNote = heard === 'other' ? (str(b.heard_from_note, 80, 'المصدر') || null) : null;
+      if (heard) await rest(`clients?client_slug=eq.${q(slug)}`, { method: 'PATCH', body: { heard_from: heard, heard_from_note: heardNote } }).catch(e => console.error('REGISTER_HEARD', e.message));
+      const heardLine = heard ? `\nسمع عنا من: ${HEARD_FROM[heard]}${heardNote ? ` (${heardNote})` : ''}` : '';
       // الباقة اللي اختارها قبل التسجيل: تنحفظ كطلب اشتراك، يبدأ التجربة المجانية، ونتواصل معه للدفع
       const plan = ['month', 'year'].includes(b.plan) ? b.plan : 'month';
       const features = chosen;
@@ -47,7 +54,7 @@ module.exports.pre = async function pre(action, req, b) {
           await sendMail({
             to: process.env.ADMIN_EMAIL || 'dmenu950@gmail.com', fromName: 'DEV MENU',
             subject: freeChoice ? `متجر جديد على البيجر المجاني: ${main.name}` : `متجر جديد مع طلب اشتراك: ${main.name}`,
-            text: `${main.name} (${main.client_slug}) سجّل و${freeChoice ? 'بدأ على البيجر المجاني' : 'بدأ التجربة المجانية'}.\n${freeChoice ? `البيجر الأساسي: ${PLANS.FREE.pager} رقم بالشهر، بدون بطاقة النداء والرسائل.` : `اختار ${plan === 'month' ? 'الشهري' : 'السنوي'}: ${features.map(k => PLANS.FEATURES[k].name).join('، ')} = ${PLANS.price(features, plan).total} ر.س.`}\nجوال: ${main.phone || '-'}\nبريد: ${main.email || '-'}\nلوحة المشتركين: ${SITE}/super-admin.html`
+            text: `${main.name} (${main.client_slug}) سجّل و${freeChoice ? 'بدأ على البيجر المجاني' : 'بدأ التجربة المجانية'}.\n${freeChoice ? `البيجر الأساسي: ${PLANS.FREE.pager} رقم بالشهر، بدون بطاقة النداء والرسائل.` : `اختار ${plan === 'month' ? 'الشهري' : 'السنوي'}: ${features.map(k => PLANS.FEATURES[k].name).join('، ')} = ${PLANS.price(features, plan).total} ر.س.`}\nجوال: ${main.phone || '-'}\nبريد: ${main.email || '-'}\nلوحة المشتركين: ${SITE}/super-admin.html${heardLine}`
           }).catch(e => console.error('REGISTER_PLAN_MAIL', e.message));
         }
       }

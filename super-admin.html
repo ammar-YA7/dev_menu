@@ -264,6 +264,8 @@
 
 <script>
   const A = (action) => `/api/admin?action=${action}`;
+  // «كيف سمعت عنا؟» من التسجيل (نفس قائمة api/_lib/owner/account.js)
+  const HEARD_FROM = { instagram: 'انستقرام', tiktok: 'تيك توك', snapchat: 'سناب شات', google: 'بحث قوقل', x: 'إكس (تويتر)', friend: 'صديق أو محل ثاني', visit: 'زيارة أو اتصال منا', other: 'أخرى' };
   const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const safeUrl = (u) => { try { const x = new URL(u); return /^https?:$/.test(x.protocol) ? x.href : ''; } catch { return ''; } };
   const SAR = '\u20C1';
@@ -660,6 +662,7 @@
           ${s.key === 'free' ? `<p class="flex justify-between gap-2"><span class="text-ink/55">الاشتراك</span><b class="text-emerald-700">البيجر المجاني · ${DMPlans.FREE.pager} رقم بالشهر</b></p>
           <p class="flex justify-between gap-2"><span class="text-ink/55">سجّل</span><span>${c.created_at ? new Date(c.created_at).toLocaleDateString('ar-SA-u-ca-gregory-nu-latn') : '—'}</span></p>`
           : `<p class="flex justify-between gap-2"><span class="text-ink/55">الاشتراك</span><b class="${isSoon(c) ? 'text-amber-700' : ''}">${esc(s.endText)}${days}</b></p>`}
+          ${c.heard_from ? `<p class="flex justify-between gap-2"><span class="text-ink/55">سمع عنا من</span><span>${esc(HEARD_FROM[c.heard_from] || c.heard_from)}${c.heard_from_note ? ` · ${esc(c.heard_from_note)}` : ''}</span></p>` : ''}
           <p class="flex justify-between gap-2"><span class="text-ink/55">البريد</span><span class="truncate" dir="ltr">${isProspect(c) ? '<span class="text-purple-700 font-bold">ما تسلّمه صاحبه بعد</span>' : c.email ? esc(c.email) : c.parent_id ? '<span class="text-ink/50">يديره صاحب المتجر الرئيسي</span>' : '<span class="text-red-600 font-bold">— بدون بريد —</span>'}</span></p>
           <p class="flex justify-between gap-2"><span class="text-ink/55">الجوال</span>${c.phone ? (phone ? `<a href="https://wa.me/${phone}" target="_blank" rel="noopener" class="text-green-700 font-bold" dir="ltr"><i class="ph-bold ph-whatsapp-logo"></i> ${esc(c.phone)}</a>` : `<span dir="ltr">${esc(c.phone)}</span>`) : '<span class="text-ink/40">—</span>'}</p>
         </div>
