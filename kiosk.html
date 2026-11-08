@@ -316,7 +316,18 @@
   }
 
   // ─── أكواد الخدمات: المنيو، البيجر، الانتظار، التسجيل في الولاء (حسب اشتراك المحل) ───
-  function renderCodes() {
+  // شعار المحل للكود: نحمّله أول ونحوّله لصورة داخلية. لو ما تحمّل خلال 4 ثواني أو منعه المتصفح، الكود يطلع بدون شعار
+  function logoForQr(url) {
+    return new Promise((done) => {
+      if (!url) return done('');
+      const img = new Image(); img.crossOrigin = 'anonymous';
+      const t = setTimeout(() => done(''), 4000);
+      img.onload = () => { clearTimeout(t); try { const c = document.createElement('canvas'); const n = 240; c.width = c.height = n; const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, n, n); const k = Math.min(n / img.width, n / img.height); g.drawImage(img, (n - img.width * k) / 2, (n - img.height * k) / 2, img.width * k, img.height * k); done(c.toDataURL('image/png')); } catch { done(''); } };
+      img.onerror = () => { clearTimeout(t); done(''); };
+      img.src = url;
+    });
+  }
+  async function renderCodes() {
     const T = DMSectors.terms(info);
     const all = {
       menu: { icon: 'ph-book-open-text', title: 'المنيو', text: 'تصفّح الأصناف والأسعار' },
@@ -327,11 +338,14 @@
     const list = (info.services || []).filter(k => all[k] && !(k === 'pager' && info.pager_full)).map(k => ({ key: k, ...all[k] }));
     const box = $('codes');
     box.className = `codes n${list.length}`; box.style.setProperty('--n', Math.max(1, list.length));
-    box.innerHTML = list.map(c => `<div class="code"><div class="qr" id="qr-${c.key}"></div><div><div class="tt"><i class="ph-bold ${c.icon}"></i> ${esc(c.title)}</div><p>${esc(c.text)}</p></div></div>`).join('');
+    box.innerHTML = list.map(c => `<div class="code"><div class="qr" id="qr-${c.key}"></div><div><div class="tt">${esc(c.title)}</div><p>${esc(c.text)}</p></div></div>`).join('');
+    // شعار المحل في نص كل كود (تصحيح الأخطاء H يتحمّله). بدون شعار: كود عادي
+    const logo = await logoForQr(info.logo_url);
     list.forEach(c => new QRCodeStyling({ width: 360, height: 360, type: 'canvas', data: DM.storeUrl(info.slug, c.key), margin: 0,
-      qrOptions: { errorCorrectionLevel: 'M' }, dotsOptions: { type: 'rounded', color: '#1b3022' },
-      cornersSquareOptions: { type: 'extra-rounded', color: '#233d2c' }, cornersDotOptions: { type: 'dot', color: '#c9a227' },
-      backgroundOptions: { color: '#ffffff' } }).append($(`qr-${c.key}`)));
+      qrOptions: { errorCorrectionLevel: logo ? 'H' : 'M' }, dotsOptions: { type: 'rounded', color: '#233d2c' },
+      cornersSquareOptions: { type: 'extra-rounded', color: '#233d2c' }, cornersDotOptions: { type: 'dot', color: '#3f7a4a' },
+      backgroundOptions: { color: '#ffffff' },
+      ...(logo ? { image: logo, imageOptions: { crossOrigin: 'anonymous', margin: 6, imageSize: 0.28, hideBackgroundDots: true } } : {}) }).append($(`qr-${c.key}`)));
   }
 
   async function load() {
