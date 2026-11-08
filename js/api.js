@@ -296,6 +296,16 @@
       if (nameEl && !nameEl.value && me.name) nameEl.value = me.name;
       if (phoneEl && !phoneEl.value && me.phone) { const p = splitPhone(me.phone); phoneEl.value = p.local; if (ccEl) ccEl.value = p.code; }
     },
+    // رابط المحفظة مباشرة: آيفون يفتح نافذة «إضافة» حق Apple Wallet على طول، وأندرويد يفتح Google Wallet،
+    // بدون صفحة وسيطة يختار فيها آبل أو قوقل. الكمبيوتر وغيره: صفحة الاختيار
+    walletHref(url) {
+      const m = String(url || '').match(/^https:\/\/pass\.walletwallet\.dev\/p\/([0-9a-f-]{36})$/i);
+      if (!m) return url;
+      const ua = navigator.userAgent;
+      if (/iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) return `https://api.walletwallet.dev/p/${m[1]}/apple.pkpass`;
+      if (/Android/.test(ua)) return `https://api.walletwallet.dev/api/passes/${m[1]}/google`;
+      return url;
+    },
     rememberLoyalty(slug, t) {
       try { t ? localStorage.setItem(`dm_loyalty_${slug}`, t) : localStorage.removeItem(`dm_loyalty_${slug}`); } catch {}
       if (!t) return;

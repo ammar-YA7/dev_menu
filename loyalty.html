@@ -603,7 +603,14 @@
     $('wallet-prompt').classList.remove('hidden'); $('wallet-btn').classList.remove('hidden');
     setTimeout(() => $('wallet-btn').scrollIntoView({ behavior: 'smooth', block: 'center' }), 350);
   }
-  // ─── المحفظة: آبل أو قوقل حسب الجوال (صفحة الإضافة تختار تلقائياً) ───
+  // ─── المحفظة: آبل أو قوقل حسب الجوال، مباشرة بدون صفحة اختيار ───
+  // نسخة احتياط لو الجوال ماسك api.js القديم (نفس DM.walletHref)
+  function directWallet(url) {
+    const m = String(url || '').match(/^https:\/\/pass\.walletwallet\.dev\/p\/([0-9a-f-]{36})$/i), ua = navigator.userAgent;
+    if (!m) return url;
+    if (/iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) return `https://api.walletwallet.dev/p/${m[1]}/apple.pkpass`;
+    return /Android/.test(ua) ? `https://api.walletwallet.dev/api/passes/${m[1]}/google` : url;
+  }
   $('wallet-btn').onclick = async () => {
     if (busy) return;
     const btn = $('wallet-btn');
@@ -611,7 +618,7 @@
     try {
       const r = await DM.post('/api/loyalty?action=wallet', { slug, t: loadToken() });
       card.in_wallet = true;
-      location.href = r.url;
+      location.href = DM.walletHref ? DM.walletHref(r.url) : directWallet(r.url);   // على طول لمحفظة الجوال (آبل أو قوقل) بدون صفحة اختيار
     } catch (e) {
       msg('err', 'ph-warning-circle', e.message || 'تعذر تجهيز البطاقة للمحفظة، جرّب بعد شوي');
     } finally { setBusy(btn, false); }
