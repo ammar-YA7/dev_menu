@@ -1,0 +1,51 @@
+/* =====================================================================
+   DEV MENU — لوحة المشتركين بشكل shadcn/ui (تجربة على الستيجنق، نفس لوحة التحكم)
+   للرجوع: احذف سطر <link> هذا الملف من super-admin.html
+   ===================================================================== */
+:root { --brand: #0f172a; --brand-dark: #1e293b;
+  --shadow-card: 0 1px 2px rgba(15, 23, 42, .05); --shadow-button: 0 1px 2px rgba(15, 23, 42, .05); --shadow-primary: 0 1px 2px rgba(15, 23, 42, .1); }
+body { background: #f8fafc !important; color: #0f172a !important; }
+::selection { background: #0f172a; color: #fff; }
+
+/* الرأس: أبيض بالشعار المفرغ الغامق */
+header.bg-brand { background: #fff !important; color: #0f172a !important; border-bottom: 1px solid #e2e8f0; }
+header.bg-brand .bg-cream\/10 { background: #fff !important; border: 1px solid #e2e8f0; border-radius: 8px !important; color: #0f172a; box-shadow: var(--shadow-button); }
+header.bg-brand .hover\:bg-cream\/20:hover { background: #f8fafc !important; }
+header.bg-brand .text-cream\/60 { color: #64748b !important; }
+header.bg-brand .bg-amber-400 { background: #fef3c7 !important; color: #92400e !important; font-weight: 600 !important; }
+
+/* التبويبات */
+nav.sticky { background: rgba(255, 255, 255, .9) !important; border-color: #e2e8f0 !important; }
+.sa-tab { color: #64748b !important; font-weight: 500 !important; }
+.sa-tab:hover { color: #0f172a !important; background: #f8fafc !important; }
+.sa-tab[aria-selected="true"] { color: #0f172a !important; font-weight: 600 !important; border-bottom-color: #0f172a !important; }
+
+/* البطاقات والحقول والأزرار */
+.card { border: 1px solid #e2e8f0 !important; border-radius: 12px !important; box-shadow: var(--shadow-card) !important; }
+.field { background: #fff !important; border-color: #e2e8f0 !important; border-radius: 8px !important; }
+.field:hover { border-color: #cbd5e1 !important; }
+.field:focus { outline: none !important; border-color: #94a3b8 !important; box-shadow: 0 0 0 3px rgba(148, 163, 184, .3) !important; }
+.chip { border: 1px solid #e2e8f0 !important; box-shadow: none !important; color: #475569 !important; font-weight: 500 !important; }
+.chip:hover { background: #f8fafc !important; color: #0f172a !important; }
+.chip.on, .chip:active { background: #0f172a !important; color: #fff !important; border-color: #0f172a !important; }
+.bg-brand { background-color: #0f172a !important; }
+.bg-brand:hover, .hover\:bg-brand:hover { background-color: #1e293b !important; }
+main button.bg-brand, main a.bg-brand, .card button.bg-brand { border-radius: 8px !important; box-shadow: var(--shadow-primary) !important; font-weight: 500 !important; }
+.text-brand { color: #0f172a !important; }
+.border-brand { border-color: #0f172a !important; }
+.bg-brand\/5, .bg-brand\/\[0\.04\], .hover\:bg-brand\/5:hover { background-color: #f8fafc !important; }
+.bg-brand\/10, .hover\:bg-brand\/15:hover { background-color: #f1f5f9 !important; }
+button.bg-brand\/10 { background: #fff !important; border: 1px solid #e2e8f0; border-radius: 8px !important; font-weight: 500 !important; }
+.border-brand\/10, .border-brand\/15, .border-brand\/20, .border-ink\/15, .border-ink\/20 { border-color: #e2e8f0 !important; }
+.hover\:border-brand\/40:hover { border-color: #94a3b8 !important; }
+.ring-brand\/50 { --tw-ring-color: rgba(148, 163, 184, .5) !important; }
+.menu-pop { border: 1px solid #e2e8f0 !important; border-radius: 10px !important; box-shadow: 0 10px 30px -10px rgba(15, 23, 42, .25) !important; }
+.menu-pop button:hover, .menu-pop a:hover { background: #f1f5f9 !important; color: #0f172a !important; }
+.menu-pop button:hover i, .menu-pop a:hover i { color: #0f172a !important; }
+
+/* بلاطات الأرقام: كل وحدة بلون */
+.kpi .ic { background: #dbeafe !important; color: #2563eb !important; border-radius: 10px !important; }
+.kpi:nth-child(4n+2) .ic { background: #dcfce7 !important; color: #16a34a !important; }
+.kpi:nth-child(4n+3) .ic { background: #fef3c7 !important; color: #d97706 !important; }
+.kpi:nth-child(4n+4) .ic { background: #ede9fe !important; color: #7c3aed !important; }
+.kpi small { color: #64748b !important; }
