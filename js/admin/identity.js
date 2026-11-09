@@ -580,6 +580,82 @@
     document.getElementById('menu-layout').innerHTML =
       opt('normal', 'منيو عادي', 'قائمة بالأقسام والأصناف مع البحث، ويختار العميل بين القائمة والصور الكبيرة.', row + row) +
       opt('interactive', 'منيو تفاعلي', 'شاشة ترحيب بأزرار الأقسام، ثم الأصناف بصور كبيرة وحركة خفيفة. مناسب للأجهزة اللوحية على الطاولات.', '<span class="block w-5 h-5 rounded-full bg-ink/25 mx-auto mb-1"></span>' + pill + pill);
+    renderIxLook();
+  }
+
+  // ─── شكل المنيو التفاعلي (menu_ix): القالب، لون الخلفية، لون التمييز، والملمس ───
+  // الألوان الفاضية = ألوان القالب (نفس القيم اللي في menu.html)، و«شبكة» بدون ألوان تاخذ ثيم المنيو
+  const IX_DEF = { grid: { bg: null, accent: null, texture: false }, zigzag: { bg: '#1f4d3a', accent: '#e9dfc4', texture: true } };
+  const ixCfg = () => {
+    const o = client.menu_ix && typeof client.menu_ix === 'object' ? client.menu_ix : {};
+    return { style: IX_DEF[o.style] ? o.style : 'grid', bg: o.bg || null, accent: o.accent || null, texture: typeof o.texture === 'boolean' ? o.texture : null };
+  };
+  function ixColors(c) {
+    const th = window.DMTheme ? DMTheme.resolve(client.theme, client.accent_color).vars : { bg: '#f6f6f3', accent: '#384f3d' };
+    const d = IX_DEF[c.style];
+    return { bg: c.bg || d.bg || th.bg, accent: c.accent || d.accent || th.accent, texture: c.texture ?? d.texture };
+  }
+  const ixShade = (hex, k) => '#' + [1, 3, 5].map(i => Math.round(parseInt(hex.slice(i, i + 2), 16) * (1 + k)).toString(16).padStart(2, '0')).join('');
+  // معاينة صغيرة بالألوان: «متعرج» خط بالنص ودوائر وألسنة بالتناوب، و«شبكة» مربعات
+  function ixArt(style, col) {
+    const tab = ixShade(col.bg, -0.28);
+    const grain = col.texture ? 'background-image:radial-gradient(60% 50% at 20% 10%, rgba(255,255,255,.12), transparent 70%), radial-gradient(60% 50% at 90% 90%, rgba(0,0,0,.18), transparent 70%);' : '';
+    const box = (inner) => `<span style="display:block;position:relative;height:64px;border-radius:8px;overflow:hidden;background-color:${col.bg};${grain}">${inner}</span>`;
+    if (style === 'zigzag') {
+      const rows = [0, 1, 2].map(i => {
+        const y = 7 + i * 19, right = i % 2 === 0;
+        return `<span style="position:absolute;top:${y}px;${right ? 'right' : 'left'}:calc(50% - 15px);width:14px;height:14px;border-radius:50%;background:${col.accent};opacity:.85"></span>` +
+          `<span style="position:absolute;top:${y + 2}px;${right ? 'left' : 'right'}:calc(50% - 30px);width:30px;height:10px;border-radius:5px;background:${tab}"></span>`;
+      }).join('');
+      return box(`<span style="position:absolute;top:4px;bottom:4px;left:50%;width:4px;margin-left:-2px;border-radius:4px;background:${col.accent}"></span>${rows}`);
+    }
+    const cell = `<span style="display:block;border-radius:4px;background:${ixShade(col.bg, -0.12)}"></span>`;
+    return box(`<span style="position:absolute;inset:7px 12px;display:grid;grid-template-columns:repeat(3,1fr);gap:5px">${cell.repeat(6)}</span><span style="position:absolute;bottom:4px;left:50%;width:26px;height:5px;margin-left:-13px;border-radius:3px;background:${col.accent}"></span>`);
+  }
+  function renderIxLook() {
+    const box = document.getElementById('menu-ix-look');
+    if (!box) return;
+    const on = client.menu_layout === 'interactive';
+    box.classList.toggle('hidden', !on);
+    if (!on) return;
+    const c = ixCfg(), col = ixColors(c);
+    const opt = (k, label, sub) => `
+      <button type="button" role="radio" aria-checked="${c.style === k}" onclick="setIxStyle('${k}')" class="rounded-xl border-2 p-2 text-right transition ${c.style === k ? 'border-brand bg-white' : 'border-brand/15 bg-white/60 hover:border-brand/35'}">
+        <span id="ix-art-${k}" class="block mb-2">${ixArt(k, k === c.style ? col : ixColors({ style: k }))}</span>
+        <b class="block text-[12px] text-ink">${label}</b><span class="block text-[11px] text-ink leading-relaxed">${sub}</span>
+      </button>`;
+    const color = (key, label) => `
+      <div class="flex items-center gap-2 bg-brand/5 rounded-lg border border-brand/15 p-2">
+        <input type="color" id="ix-${key}" value="${col[key]}" oninput="previewIxLook()" onchange="saveIxLook({ ${key}: this.value })" aria-label="${label}" class="w-9 h-9 rounded-lg border border-brand/20 cursor-pointer shrink-0 bg-white">
+        <span class="flex-1 text-[11px] font-bold text-ink">${label}</span>
+        ${c[key] ? `<button type="button" onclick="saveIxLook({ ${key}: null })" class="text-[11px] font-bold text-ink underline">افتراضي</button>` : ''}
+      </div>`;
+    box.innerHTML = `
+      <b class="block text-xs text-ink">شكل المنيو التفاعلي</b>
+      <div role="radiogroup" class="grid grid-cols-2 gap-2">
+        ${opt('grid', 'شبكة', 'الأصناف في شبكة بصور كبيرة، بألوان المنيو وخلفيته.')}
+        ${opt('zigzag', 'متعرج', 'خط في المنتصف والأصناف على جانبيه بالتناوب، بصور دائرية وخلفية داكنة.')}
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">${color('bg', 'لون الخلفية')}${color('accent', 'لون التمييز')}</div>
+      <label class="flex items-start gap-2 cursor-pointer text-xs">
+        <input type="checkbox" ${col.texture ? 'checked' : ''} onchange="saveIxLook({ texture: this.checked })" class="w-4 h-4 mt-0.5 accent-green-600 cursor-pointer">
+        <span><b class="text-ink">خلفية بملمس</b><span class="block text-[11px] text-ink leading-relaxed">حبيبات ناعمة وضربات فرشاة خفيفة فوق لون الخلفية.</span></span>
+      </label>`;
+  }
+  // المعاينة الصغيرة تتلوّن وهو يختار اللون، والحفظ لما يقفل منتقي الألوان
+  function previewIxLook() {
+    const c = ixCfg(), col = ixColors(c);
+    const bg = document.getElementById('ix-bg'), ac = document.getElementById('ix-accent'), art = document.getElementById(`ix-art-${c.style}`);
+    if (art) art.innerHTML = ixArt(c.style, { ...col, bg: bg ? bg.value : col.bg, accent: ac ? ac.value : col.accent });
+  }
+  async function saveIxLook(patch) {
+    if (await updateClient({ menu_ix: { ...ixCfg(), ...patch } })) { renderIxLook(); showToast('تم حفظ شكل المنيو التفاعلي'); }
+    else { renderIxLook(); showToast('تعذر حفظ الإعداد', true); }
+  }
+  // تغيير القالب يرجّع الألوان والملمس لافتراضي القالب الجديد
+  function setIxStyle(k) {
+    if (ixCfg().style === k) return;
+    saveIxLook({ style: k, bg: null, accent: null, texture: null });
   }
   async function setMenuLayout(k) {
     const cur = client.menu_layout === 'interactive' ? 'interactive' : 'normal';

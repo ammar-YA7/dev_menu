@@ -331,6 +331,12 @@ module.exports.post = async function post(action, req, b, env) {
     if (has('pager_game_moves')) p.pager_game_moves = Math.min(40, Math.max(10, int(b.pager_game_moves) || 20));
     if (has('pager_near_text')) p.pager_near_text = String(b.pager_near_text || '').replace(/\s+/g, ' ').trim().slice(0, 80) || null;
     if (has('menu_layout')) p.menu_layout = ['photos', 'interactive'].includes(b.menu_layout) ? b.menu_layout : 'list';
+    if (has('menu_ix')) {
+      // شكل المنيو التفاعلي: القالب، ولون الخلفية ولون التمييز (فاضي = ألوان القالب)، والملمس
+      const x = b.menu_ix && typeof b.menu_ix === 'object' ? b.menu_ix : {};
+      const hex = (c) => typeof c === 'string' && /^#[0-9a-fA-F]{6}$/.test(c) ? c.toLowerCase() : null;
+      p.menu_ix = { style: ['grid', 'zigzag'].includes(x.style) ? x.style : 'grid', bg: hex(x.bg), accent: hex(x.accent), texture: typeof x.texture === 'boolean' ? x.texture : null };
+    }
     if (has('google_review_url')) {
       const u = String(b.google_review_url || '').trim();
       if (u && !/^https:\/\/(g\.page|search\.google\.com|www\.google\.com|maps\.app\.goo\.gl|goo\.gl|maps\.google\.com|g\.co)\//i.test(u)) throw new ApiError(400, 'رابط تقييم قوقل لازم يكون من قوقل (مثل g.page/r/... أو maps.app.goo.gl)');
