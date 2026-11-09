@@ -235,7 +235,6 @@
   .ix-top > * { pointer-events: auto; }
   /* الصور ما تنسحب (سحبها كان يوقف السحب يمين ويسار)، والضغطة تروح للزر اللي فيها */
   #ix img, #ix video { pointer-events: none; -webkit-user-drag: none; }
-  #ix-layout button { height: 32px; }
   /* الانتقال بين الشاشات: تلاشي مع انزلاق خفيف (--dx = جهة الدخول) */
   .ix-scr { position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; opacity: 0; visibility: hidden;
     transform: translateX(calc(var(--dx, 1) * 28px)); transition: opacity .3s ease, transform .3s ease, visibility 0s linear .3s; touch-action: pan-y; }
@@ -481,7 +480,6 @@
     <div id="layout-toggle" role="radiogroup" class="flex shrink-0 bg-black/60 border border-white/20 rounded-2xl p-1 gap-1 backdrop-blur-md shadow-lg">
       <button type="button" data-layout="list" role="radio" onclick="setMenuView('list')" class="w-9 rounded-xl text-xs text-white/70 transition"><i class="fa-solid fa-list"></i></button>
       <button type="button" data-layout="photos" role="radio" onclick="setMenuView('photos')" class="w-9 rounded-xl text-xs text-white/70 transition"><i class="fa-solid fa-table-cells-large"></i></button>
-      <button type="button" data-layout="interactive" role="radio" onclick="setMenuView('interactive')" class="w-9 rounded-xl text-xs text-white/70 transition"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:-2px"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M8 10h8M8 14h5"/></svg></button>
     </div>
   </div>
 
@@ -518,11 +516,6 @@
     <button type="button" onclick="toggleLanguage()" class="bg-black/60 text-white px-4 py-2 rounded-full text-xs font-bold border border-white/20 transition flex items-center gap-2 backdrop-blur-md">
       <i class="fa-solid fa-globe"></i> <span id="ix-lang-text">English</span>
     </button>
-    <div id="ix-layout" role="radiogroup" class="flex shrink-0 bg-black/60 border border-white/20 rounded-2xl p-1 gap-1 backdrop-blur-md shadow-lg">
-      <button type="button" data-layout="list" role="radio" onclick="setMenuView('list')" class="w-9 rounded-xl text-xs text-white/70 transition"><i class="fa-solid fa-list"></i></button>
-      <button type="button" data-layout="photos" role="radio" onclick="setMenuView('photos')" class="w-9 rounded-xl text-xs text-white/70 transition"><i class="fa-solid fa-table-cells-large"></i></button>
-      <button type="button" data-layout="interactive" role="radio" onclick="setMenuView('interactive')" class="w-9 rounded-xl text-xs text-white/70 transition"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:-2px"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M8 10h8M8 14h5"/></svg></button>
-    </div>
   </div>
   <section id="ixHome" class="ix-scr"></section>
   <section id="ixCat" class="ix-scr"></section>
@@ -1414,14 +1407,15 @@
   // شكل الأطباق يختاره الزبون وينحفظ في جواله (وإلا الشكل القديم اللي كان مختار للمحل)
   let menuView = ''; try { menuView = localStorage.getItem('dm_menu_view') || ''; } catch {}
   // نوع المنيو: عادي (قائمة أو صور كبيرة) أو تفاعلي. الافتراضي اختيار صاحب المحل، والزبون يقدر يبدّل
-  const IX_KEY = `dm_ix_${clientSlug}`;
-  let ixPref = null; try { ixPref = localStorage.getItem(IX_KEY); } catch {}
-  const ixMode = () => ixPref ? ixPref === '1' : !!(project && project.menu_layout === 'interactive');
+  // نوع المنيو (عادي أو تفاعلي) يحدده صاحب المحل بس. ?ix=1 لتجربة التفاعلي بدون حفظ
+  try { localStorage.removeItem(`dm_ix_${clientSlug}`); } catch {}
+  const ixForced = new URLSearchParams(location.search).get('ix');
+  const ixMode = () => ixForced === '1' || (ixForced !== '0' && !!(project && project.menu_layout === 'interactive'));
   const photoLayout = () => (menuView || (project && project.menu_layout === 'photos' ? 'photos' : 'list')) === 'photos';
   function renderLayoutToggle() {
-    const cur = ixMode() ? 'interactive' : photoLayout() ? 'photos' : 'list';
-    const names = { list: ['قائمة', 'List'], photos: ['صور كبيرة', 'Large photos'], interactive: ['تفاعلي', 'Interactive'] };
-    document.querySelectorAll('#layout-toggle [data-layout], #ix-layout [data-layout]').forEach(b => {
+    const cur = photoLayout() ? 'photos' : 'list';
+    const names = { list: ['قائمة', 'List'], photos: ['صور كبيرة', 'Large photos'] };
+    document.querySelectorAll('#layout-toggle [data-layout]').forEach(b => {
       const on = b.dataset.layout === cur;
       b.setAttribute('aria-checked', String(on));
       b.setAttribute('aria-label', names[b.dataset.layout][currentLang === 'ar' ? 0 : 1]);
@@ -1429,14 +1423,8 @@
     });
   }
   function setMenuView(k) {
-    // التفاعلي ينحفظ لكل محل بروحه، وبس لو يخالف اختيار صاحب المحل (لو غيّر صاحب المحل النوع بعدين يوصل للزبون)
-    const want = k === 'interactive', ownerIx = !!(project && project.menu_layout === 'interactive');
-    ixPref = want === ownerIx ? null : (want ? '1' : '0');
-    try { if (ixPref) localStorage.setItem(IX_KEY, ixPref); else localStorage.removeItem(IX_KEY); } catch {}
-    if (!want) {
-      menuView = k === 'photos' ? 'photos' : 'list';
-      try { localStorage.setItem('dm_menu_view', menuView); } catch {}
-    }
+    menuView = k === 'photos' ? 'photos' : 'list';
+    try { localStorage.setItem('dm_menu_view', menuView); } catch {}
     renderLayoutToggle();
     handleSearch();
   }
