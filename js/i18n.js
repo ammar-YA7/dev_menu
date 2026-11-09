@@ -20,6 +20,7 @@
 
   const exact = new Map();
   const patterns = [];
+  const memo = new Map();
   const norm = (s) => String(s).replace(/\s+/g, ' ').trim();
   const AR = /[؀-ۿ]/;
   const escRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -35,20 +36,29 @@
     }
     // الأطول نصاً أول: "ختم دبل {d} من {a} إلى {b}" قبل "{h} بالليل" عشان القصير ما يبلع الجملة كلها
     patterns.sort((a, b) => b.lit - a.lit);
+    memo.clear();
   }
   // الترجمة: نفس النص بالضبط، وإلا قالب فيه متغيرات (والمتغيرات نفسها تترجم لو لها ترجمة)
-  function tr(s) {
+  // memo: كل نص يتحسب مرة وحدة. والمتغيرات تترجم لعمق محدود: بدونه القوالب تتداخل في بعضها
+  // وتاخذ أُسّياً، وكانت لوحة التحكم تعلق لما تتحول للإنجليزي
+  const MAX_DEPTH = 2;
+  function tr(s, depth = 0) {
     if (lang !== 'en' || !s || !AR.test(s)) return s;
     const k = norm(s);
     if (exact.has(k)) return exact.get(k);
-    for (const p of patterns) {
-      const m = k.match(p.re);
-      if (!m) continue;
-      let miss = false;
-      const out = p.en.replace(/\{(\w+)\}/g, (_, n) => { const v = m[p.names.indexOf(n) + 1]; if (v == null) return ''; const o = tr(v); if (o === v && AR.test(v)) miss = true; return o; });
-      if (!(p.strict && miss)) return out;
+    if (memo.has(k)) return memo.get(k);
+    let res = s;
+    if (depth <= MAX_DEPTH) {
+      for (const p of patterns) {
+        const m = k.match(p.re);
+        if (!m) continue;
+        let miss = false;
+        const out = p.en.replace(/\{(\w+)\}/g, (_, n) => { const v = m[p.names.indexOf(n) + 1]; if (v == null) return ''; const o = tr(v, depth + 1); if (o === v && AR.test(v)) miss = true; return o; });
+        if (!(p.strict && miss)) { res = out; break; }
+      }
     }
-    return s;
+    if (depth === 0) { if (memo.size > 5000) memo.clear(); memo.set(k, res); }
+    return res;
   }
   function t(s, vars) {
     let out = tr(s);
