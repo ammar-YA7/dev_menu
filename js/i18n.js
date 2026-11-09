@@ -49,8 +49,10 @@
     const k = norm(s);
     if (exact.has(k)) return exact.get(k);
     const mk = depth ? depth + '|' + k : k;
-    if (memo.has(mk)) return memo.get(mk);
-    let res = s;
+    // memo يحفظ الترجمة بس، و null لو ما لها ترجمة: نرجّع النص نفسه زي ما جا (بمسافاته).
+    // لو رجّعنا نسخة محفوظة من نص ثاني بمسافات مختلفة، textNode يحسبه تغيير ويعيد الكتابة بلا نهاية
+    if (memo.has(mk)) { const hit = memo.get(mk); return hit === null ? s : hit; }
+    let res = null;
     if (depth <= MAX_DEPTH) {
       for (const p of patterns) {
         if (!p.lits.every(l => k.includes(l))) continue;
@@ -63,7 +65,7 @@
     }
     if (memo.size > 8000) memo.clear();
     memo.set(mk, res);
-    return res;
+    return res === null ? s : res;
   }
   function t(s, vars) {
     let out = tr(s);
@@ -83,6 +85,9 @@
       const out = tr(v);
       if (out === v) return;
       const en = v.match(/^\s*/)[0] + out + v.match(/\s*$/)[0];
+      // لازم نتأكد إن النص فعلاً تغيّر: القوالب اللي ما تترجم كل أجزائها ترجع نفس النص بمسافات مختلفة،
+      // وكتابة نفس القيمة تطلق المراقب من جديد بلا نهاية (هذا اللي كان يعلّق اللوحة لما تتحول للإنجليزي)
+      if (en === v) return;
       textOrig.set(n, { ar: v, en });
       n.nodeValue = en;
     } else {
