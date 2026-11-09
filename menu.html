@@ -233,15 +233,24 @@
   body.ix-mode #cartBar:not(.hidden) ~ #chatFab { bottom: calc(162px + env(safe-area-inset-bottom)); }
   .ix-top { position: absolute; top: 0; left: 0; right: 0; z-index: 3; display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: calc(12px + env(safe-area-inset-top)) 16px 0; pointer-events: none; }
   .ix-top > * { pointer-events: auto; }
+  /* الصور ما تنسحب (سحبها كان يوقف السحب يمين ويسار)، والضغطة تروح للزر اللي فيها */
+  #ix img, #ix video { pointer-events: none; -webkit-user-drag: none; }
   #ix-layout button { height: 32px; }
   /* الانتقال بين الشاشات: تلاشي مع انزلاق خفيف (--dx = جهة الدخول) */
   .ix-scr { position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; opacity: 0; visibility: hidden;
-    transform: translateX(calc(var(--dx, 1) * 28px)); transition: opacity .3s ease, transform .3s ease, visibility 0s linear .3s; }
+    transform: translateX(calc(var(--dx, 1) * 28px)); transition: opacity .3s ease, transform .3s ease, visibility 0s linear .3s; touch-action: pan-y; }
   .ix-scr.on { opacity: 1; visibility: visible; transform: none; transition: opacity .3s ease, transform .3s ease, visibility 0s; }
   .ix-scr.enter .ix-pop { animation: ixPop .45s cubic-bezier(.2, .9, .3, 1.15) both; animation-delay: calc(var(--i, 0) * 60ms); }
   @keyframes ixPop { from { opacity: 0; transform: translateY(14px) scale(.84); } to { opacity: 1; transform: none; } }
+  /* تبديل القسم أو الصنف بالسحب: المحتوى الجديد يدخل من جهته (--sx) */
+  .ix-slide { animation: ixSlide .4s cubic-bezier(.2, .8, .2, 1) both; }
+  @keyframes ixSlide { from { opacity: 0; transform: translateX(calc(var(--sx, 0) * 70px)); } }
+  /* الصورة الطايرة بين البطاقة وشاشة الطبق */
+  .ix-hide { visibility: hidden; }
+  .ix-ghost { position: fixed; z-index: 25; pointer-events: none; transform-origin: 0 0; background: center / cover no-repeat; border-radius: clamp(24px, 4vmin, 40px); box-shadow: 0 24px 50px -24px rgba(0, 0, 0, .55); will-change: transform; }
+  .ix-ghost.cut { background-size: contain; border-radius: 0; box-shadow: none; filter: drop-shadow(0 18px 20px rgba(0, 0, 0, .32)); }
   /* الترحيب */
-  .ix-home { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: clamp(12px, 2.6vmin, 26px); min-height: 100%; box-sizing: border-box; padding: 76px 20px calc(36px + env(safe-area-inset-bottom)); }
+  .ix-home { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: clamp(12px, 2.6vmin, 26px); min-height: 100%; box-sizing: border-box; padding: 76px 20px calc(36px + env(safe-area-inset-bottom)); }
   .ix-logo { width: clamp(108px, 23vmin, 210px); height: clamp(108px, 23vmin, 210px); border-radius: 50%; overflow: hidden; background: var(--ring-bg); box-shadow: 0 0 0 2px var(--line2), 0 24px 60px -24px rgba(0, 0, 0, .6); }
   .ix-logo img { display: block; width: 100%; height: 100%; max-width: none; object-fit: cover; }
   .ix-hi { margin: 0; font-size: clamp(32px, 6.6vmin, 68px); font-weight: 700; line-height: 1.15; color: var(--fg); }
@@ -250,10 +259,27 @@
   .ix-cat { min-width: min(40vw, 250px); min-height: 64px; padding: .55em 1.5em; border-radius: 999px; background: var(--accent); color: var(--accent-fg); font: inherit; font-size: clamp(19px, 3.1vmin, 30px); font-weight: 700; line-height: 1.3;
     box-shadow: 0 14px 30px -14px var(--accent-glow), inset 0 -3px 0 rgba(0, 0, 0, .14); transition: transform .15s; }
   .ix-cat:active { transform: scale(.96); }
+  /* أصناف مختارة تطفو بهدوء حول الترحيب، والضغط عليها يفتح الصنف */
+  .ix-home > :not(.ix-floats) { position: relative; z-index: 1; }
+  .ix-floats { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+  .ix-fl { position: absolute; width: clamp(74px, 15vmin, 160px); padding: 0; border: 0; background: none; pointer-events: auto; animation: ixDrift 8s ease-in-out infinite; }
+  .ix-fl .ix-pic.frame img, .ix-fl .ix-pic.probe img { border-radius: 50%; box-shadow: 0 0 0 4px var(--modal), 0 18px 36px -16px rgba(0, 0, 0, .55); }
+  .ix-fl0 { top: 14%; inset-inline-start: 3%; }
+  .ix-fl1 { top: 68%; inset-inline-start: 2%; animation-duration: 10s; animation-delay: -3s; }
+  .ix-fl2 { top: 16%; inset-inline-end: 4%; animation-duration: 9s; animation-delay: -5s; }
+  .ix-fl3 { top: 70%; inset-inline-end: 2%; animation-duration: 11s; animation-delay: -2s; }
+  @media (orientation: portrait) { .ix-fl0 { top: 8%; } .ix-fl2 { top: 9%; } .ix-fl1, .ix-fl3 { top: auto; bottom: 5%; } }
+  @keyframes ixDrift { 0%, 100% { transform: translate(0, 0) rotate(-4deg); } 50% { transform: translate(8px, -16px) rotate(4deg); } }
   @media (max-width: 560px) { .ix-cats { flex-direction: column; width: 100%; max-width: 360px; } .ix-cat { min-width: 0; width: 100%; } }
   /* أطباق القسم */
-  .ix-list { max-width: 1280px; margin: 0 auto; box-sizing: border-box; padding: 70px clamp(16px, 3vw, 40px) calc(120px + env(safe-area-inset-bottom)); }
-  .ix-title { margin: 0 0 clamp(18px, 3.4vmin, 36px); text-align: center; font-size: clamp(28px, 5.2vmin, 56px); font-weight: 700; line-height: 1.2; color: var(--fg); }
+  .ix-list { max-width: 1280px; margin: 0 auto; box-sizing: border-box; padding: 70px clamp(16px, 3vw, 40px) calc(130px + env(safe-area-inset-bottom)); }
+  .ix-title { margin: 0 0 clamp(12px, 2vmin, 20px); text-align: center; font-size: clamp(28px, 5.2vmin, 56px); font-weight: 700; line-height: 1.2; color: var(--fg); }
+  /* شريط الأقسام: ينقل بين الأقسام بدون رجوع للترحيب */
+  .ix-chips { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin: 0 calc(-1 * clamp(16px, 3vw, 40px)) clamp(18px, 3.4vmin, 34px); padding: 4px clamp(16px, 3vw, 40px); }
+  .ix-chips::-webkit-scrollbar { display: none; }
+  .ix-chip { flex-shrink: 0; min-height: 44px; padding: 0 18px; border-radius: 999px; background: var(--modal); border: 1px solid var(--line); color: var(--fg); font: inherit; font-size: clamp(14px, 2vmin, 18px); font-weight: 600; white-space: nowrap; transition: background-color .2s, color .2s; }
+  .ix-chip.on { background: var(--accent); color: var(--accent-fg); border-color: transparent; }
+  .ix-chip:first-child { margin-inline-start: auto; } .ix-chip:last-child { margin-inline-end: auto; }
   .ix-sec { margin: clamp(22px, 4vmin, 40px) 0 clamp(12px, 2vmin, 20px); font-size: clamp(18px, 2.7vmin, 26px); font-weight: 700; color: var(--fg2); text-align: center; }
   .ix-sec:first-of-type { margin-top: 0; }
   .ix-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(18px, 3vmin, 34px) clamp(12px, 2.2vmin, 26px); }
@@ -278,16 +304,26 @@
   .ix-off { font-size: 12px; font-weight: 600; color: var(--fg3); }
   /* الطبق بالكبير */
   .ix-hero { display: grid; grid-template-columns: 1fr; align-items: center; gap: clamp(18px, 4vmin, 52px); max-width: 1280px; min-height: 100%; margin: 0 auto; box-sizing: border-box;
-    padding: 70px clamp(18px, 4vw, 56px) calc(110px + env(safe-area-inset-bottom)); }
+    padding: 70px clamp(18px, 4vw, 56px) calc(130px + env(safe-area-inset-bottom)); }
+  body.ix-cart .ix-list, body.ix-cart .ix-hero { padding-bottom: calc(200px + env(safe-area-inset-bottom)); }
   @media (orientation: landscape) and (min-width: 700px) { .ix-hero:not(.nopic) { grid-template-columns: 1.1fr 1fr; } }
   .ix-hero.nopic { max-width: 760px; text-align: center; }
-  .ix-heropic .ix-pic { width: min(100%, 68vh); margin: 0 auto; }
-  @media (orientation: portrait) { .ix-heropic .ix-pic { width: min(84vw, 46vh); } }
+  .ix-heropic { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+  .ix-heropic .ix-pic { width: min(100%, 60vh); margin: 0 auto; }
+  @media (orientation: portrait) { .ix-heropic .ix-pic { width: min(74vw, 38vh); } }
+  .ix-tilt { transition: transform .35s ease-out; will-change: transform; }
+  /* مكان الصنف بين أصناف القسم مع السابق والتالي */
+  .ix-pager { display: flex; align-items: center; justify-content: center; gap: 14px; font-size: clamp(15px, 2vmin, 18px); font-weight: 700; color: var(--fg2); }
+  .ix-hero.nopic .ix-pager { margin-top: 20px; }
+  .ix-arrow { width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; padding: 0; background: var(--modal); border: 1px solid var(--line); color: var(--fg); box-shadow: 0 8px 20px -12px rgba(0, 0, 0, .5); transition: transform .15s, opacity .2s; }
+  .ix-arrow:active { transform: scale(.92); }
+  .ix-arrow:disabled { opacity: .35; }
+  .ix-arrow svg { width: 20px; height: 20px; }
   .ix-heropic .ix-pic.frame img, .ix-heropic .ix-pic.frame video { border-radius: clamp(24px, 4vmin, 40px); }
   .ix-float { animation: ixFloat 6s ease-in-out infinite; }
   @keyframes ixFloat { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-10px) scale(1.03); } }
   .ix-hname { margin: 0; font-size: clamp(30px, 5.6vmin, 64px); font-weight: 700; line-height: 1.2; color: var(--fg); }
-  .ix-hprice { margin: 10px 0 0; font-size: clamp(24px, 4vmin, 44px); font-weight: 700; color: var(--price); }
+  .ix-hprice { margin: 10px 0 0; font-size: clamp(32px, 6vmin, 64px); line-height: 1.15; font-weight: 700; color: var(--price); }
   .ix-hdesc { margin: 16px 0 0; font-size: clamp(15px, 2.3vmin, 21px); line-height: 1.8; color: var(--fg2); }
   .ix-sizes, .ix-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
   .ix-hero.nopic .ix-sizes, .ix-hero.nopic .ix-tags { justify-content: center; }
@@ -295,19 +331,31 @@
   .ix-sizes b { margin-inline-start: 8px; color: var(--price); }
   .ix-tags span { padding: 5px 12px; border-radius: 8px; background: var(--chip); font-size: 13px; font-weight: 600; color: var(--fg2); }
   .ix-tags .deal { background: var(--accent); color: var(--accent-fg); }
-  .ix-add { margin-top: 24px; min-height: 60px; }
+  .ix-add { margin-top: 18px; min-height: 60px; }
+  /* «يناسبه معه» */
+  .ix-pair { margin-top: 30px; }
+  .ix-pair > b { display: block; margin-bottom: 12px; font-size: clamp(15px, 2.1vmin, 19px); font-weight: 700; color: var(--fg2); }
+  .ix-pair-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; max-width: 440px; }
+  .ix-hero.nopic .ix-pair-row { margin: 0 auto; }
+  .ix-mini { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: center; transition: transform .15s; }
+  .ix-mini:active { transform: scale(.95); }
+  .ix-mini .ix-name, .ix-mini .ix-price { font-size: clamp(12px, 1.7vmin, 15px); }
+  .ix-mini .ix-pic.frame img, .ix-mini .ix-pic.probe img, .ix-mini .ix-pic.txt { border-radius: 16px; }
+  .ix-mini .ix-pic.txt { padding: 8%; } .ix-mini .ix-pic.txt b { font-size: 13px; }
+  .ix-mini .ix-pic.txt + .ix-name { display: none; }
   /* أزرار الرجوع تحت */
-  .ix-nav { position: absolute; left: 0; right: 0; bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 4; display: flex; justify-content: center; gap: 10px; padding: 0 16px; pointer-events: none; transition: bottom .25s; }
+  .ix-nav { position: absolute; left: 0; right: 0; bottom: calc(30px + env(safe-area-inset-bottom)); z-index: 4; display: flex; justify-content: center; gap: 10px; padding: 0 16px; pointer-events: none; transition: bottom .25s; }
   body.ix-cart .ix-nav { bottom: calc(86px + env(safe-area-inset-bottom)); }
   .ix-btn { pointer-events: auto; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 56px; padding: 0 26px; border-radius: 999px; font: inherit; font-size: clamp(16px, 2.2vmin, 20px); font-weight: 700;
     background: var(--modal); color: var(--fg); border: 1px solid var(--line); box-shadow: 0 12px 30px -12px rgba(0, 0, 0, .5); transition: transform .15s; }
   .ix-btn:active { transform: scale(.96); }
   .ix-btn.pri { background: var(--accent); color: var(--accent-fg); border-color: transparent; }
   .ix-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
-  [dir="ltr"] .ix-btn .flip { transform: scaleX(-1); }
+  [dir="ltr"] #ix .flip { transform: scaleX(-1); }
   @media (prefers-reduced-motion: reduce) {
     .ix-scr, .ix-scr.on { transform: none; transition: opacity .2s, visibility 0s; }
-    .ix-scr.enter .ix-pop, .ix-float { animation: none; }
+    .ix-scr.enter .ix-pop, .ix-float, .ix-slide, .ix-fl { animation: none; }
+    .ix-tilt { transform: none !important; }
   }
 </style>
 <link rel="stylesheet" href="/css/tw/menu.css">
@@ -2170,6 +2218,7 @@
   const IX_ICON = {
     home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 10.5 12 3.5l8.5 7"/><path d="M5.5 9v11h13V9"/><path d="M10 20v-6h4v6"/></svg>',
     back: '<svg class="flip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16M14 6l6 6-6 6"/></svg>',
+    next: '<svg class="flip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12H4M10 6l-6 6 6 6"/></svg>',
     plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>'
   };
   const ixEl = (id) => document.getElementById(id);
@@ -2209,10 +2258,14 @@
       return [[0, 0], [n - 1, 0], [0, n - 1], [n - 1, n - 1], [m, 0], [0, m], [n - 1, m], [m, n - 1]].filter(([x, y]) => d[(y * n + x) * 4 + 3] < 200).length >= 3;
     } catch { return false; }   // الصورة ممنوع قراءتها ← بإطار
   }
+  // صورة الصنف في التفاعلي: المفرّغة («فرّغ الصورة» من لوحة التحكم) أول، وإلا الأصلية
+  const ixImg = (p) => safeUrl(p.cutout_url) || safeUrl(p.image_url);
   function ixPic(p, hero) {
-    const img = safeUrl(p.image_url), vid = safeUrl(p.video_url);
-    // فيديو الطبق: في الشاشة الكبيرة يشتغل على طول (بدون صوت) والصورة غلافه
-    if (vid && hero) return `<div class="ix-pic frame ready"><video src="${esc(vid)}" ${img ? `poster="${esc(img)}"` : ''} muted loop playsinline ${calmMotion ? '' : 'autoplay'} disablepictureinpicture aria-hidden="true"></video></div>`;
+    const cut = safeUrl(p.cutout_url), img = cut || safeUrl(p.image_url), vid = safeUrl(p.video_url);
+    // فيديو الطبق: في الشاشة الكبيرة يشتغل على طول (بدون صوت) والصورة الأصلية غلافه
+    if (vid && hero) { const poster = safeUrl(p.image_url) || img; return `<div class="ix-pic frame ready"><video src="${esc(vid)}" ${poster ? `poster="${esc(poster)}"` : ''} muted loop playsinline ${calmMotion ? '' : 'autoplay'} disablepictureinpicture aria-hidden="true"></video></div>`; }
+    // المفرّغة معروف إنها شفافة: بدون فحص
+    if (cut) return `<div class="ix-pic cut"><img src="${esc(cut)}" alt="" decoding="async" ${hero ? '' : 'loading="lazy"'}></div>`;
     if (vid && !img) return `<div class="ix-pic frame ready">${dishVideo(vid, '', 'ix-v')}</div>`;
     if (!img) return `<div class="ix-pic txt"><b>${esc(productName(p))}</b></div>`;
     const known = ixCut[img];
@@ -2243,18 +2296,30 @@
   }
 
   // ─── رسم الشاشات ───
+  // أصناف القسم الحالي اللي يتنقل بينها الزبون في شاشة الطبق (المتوفرة بس)
+  const ixList = () => ixKey ? ixCatsOf(ixKey).flatMap(c => productsIn(c, allProducts)).filter(p => p.is_available !== false) : [];
+  // القسم (أو الفئة) اللي فيه الصنف: للصنف اللي ينفتح من الترحيب مباشرة
+  const ixKeyOf = (p) => (ixHomeItems().find(x => ixCatsOf(x.key).some(c => productsIn(c, allProducts).some(q => q.id === p.id))) || {}).key || null;
+  // أصناف مختارة تتحرك بهدوء حول الترحيب: المميزة أول، وبعدها أول الأصناف اللي لها صور
+  function ixFeatured() {
+    const pics = allProducts.filter(p => p.is_available !== false && ixImg(p));
+    const rank = (p) => (p.is_bestseller === true ? 0 : 2) + (safeUrl(p.cutout_url) ? 0 : 1);   // المميزة والمفرّغة أول
+    return pics.map((p, i) => [p, rank(p), i]).sort((a, b) => a[1] - b[1] || a[2] - b[2]).map(x => x[0]).slice(0, 4);
+  }
   function ixRenderHome() {
     const p = project || {};
     const logo = safeUrl(p.logo_url) || 'images/logo.jpeg?v=2';
     const items = ixHomeItems();
     ixEl('ixHome').innerHTML = `
       <div class="ix-home">
+        <div class="ix-floats">${ixFeatured().map((f, i) => `<button type="button" class="ix-fl ix-fl${i}" data-ix-feat="${esc(f.id)}" aria-label="${esc(productName(f))}">${ixPic(f, false)}</button>`).join('')}</div>
         <div class="ix-logo ix-pop" style="--i:0"><img src="${esc(logo)}" alt=""></div>
         <h1 class="ix-hi ix-pop" style="--i:1">${T('حياكم الله', 'Welcome')}</h1>
         <p class="ix-sub ix-pop" style="--i:2">${esc(p.name || '')}</p>
         <div class="ix-cats">${items.map((x, i) => `<button type="button" class="ix-cat ix-pop" style="--i:${Math.min(i, 12) + 3}" data-ix-cat="${esc(x.key)}">${esc(x.label)}</button>`).join('')}</div>
         ${items.length ? '' : `<p class="ix-sub">${T('لم تتم إضافة أصناف لهذا المنيو بعد.', 'Nothing added yet.')}</p>`}
       </div>`;
+    ixWatchPics(ixEl('ixHome'));
   }
   function ixCard(p, i) {
     const off = p.is_available === false;
@@ -2267,36 +2332,67 @@
         ${off ? `<span class="ix-off">${T('غير متوفر حالياً', 'Currently unavailable')}</span>` : ''}
       </button>`;
   }
-  function ixRenderCat(key) {
-    const cats = ixCatsOf(key);
+  // step = جهة الانتقال لما يبدّل القسم من الشريط أو بالسحب (0 = أول دخول)
+  function ixRenderCat(key, step = 0) {
+    const cats = ixCatsOf(key), items = ixHomeItems();
     let i = 0;
     const grid = (c) => `<div class="ix-grid">${productsIn(c, allProducts).map(p => ixCard(p, i++)).join('')}</div>`;
     ixEl('ixCat').innerHTML = `
-      <div class="ix-list">
+      <div class="ix-list ${step ? 'ix-slide' : ''}" style="--sx:${ixSx(step)}">
         <h2 class="ix-title ix-pop" style="--i:0">${esc(ixTitle(key, cats))}</h2>
+        ${items.length > 1 ? `<div class="ix-chips" role="tablist">${items.map(x => `<button type="button" role="tab" aria-selected="${x.key === key}" class="ix-chip ${x.key === key ? 'on' : ''}" data-ix-chip="${esc(x.key)}">${esc(x.label)}</button>`).join('')}</div>` : ''}
         ${cats.length > 1 ? cats.map(c => `<h3 class="ix-sec">${esc(catName(c))}</h3>${grid(c)}`).join('') : cats.map(grid).join('')}
       </div>`;
     ixWatchPics(ixEl('ixCat'));
+    // القسم الحالي في نص الشريط (نحرّك الشريط بس، مو الصفحة)
+    const bar = ixEl('ixCat').querySelector('.ix-chips'), on = bar && bar.querySelector('.on');
+    if (on) bar.scrollLeft += (on.getBoundingClientRect().left + on.offsetWidth / 2) - (bar.getBoundingClientRect().left + bar.clientWidth / 2);
   }
-  function ixRenderProd(p) {
+  // جهة دخول المحتوى الجديد بالبكسل: التالي يدخل من جهة القراءة (من اليسار بالعربي)
+  const ixRtl = () => document.documentElement.dir !== 'ltr';
+  const ixSx = (step) => step ? (step > 0 ? 1 : -1) * (ixRtl() ? -1 : 1) : 0;
+  // fly = الصورة جاية طايرة من البطاقة، فما نحرّكها هنا. step = بدّل للصنف اللي بعده/قبله
+  function ixRenderProd(p, { fly = false, step = 0 } = {}) {
     const off = p.is_available === false, canOrder = !off && orderingOn();
-    const img = safeUrl(p.image_url), vid = safeUrl(p.video_url), desc = productDesc(p), zs = sizesOf(p), deal = autoDeal(p);
+    const img = ixImg(p), vid = safeUrl(p.video_url), desc = productDesc(p), zs = sizesOf(p), deal = autoDeal(p);
     const tags = [
       deal ? `<span class="deal">${T(`خصم ${promoLabel(deal)}`, `${promoLabel(deal)} off`)}</span>` : '',
       p.is_bestseller === true ? `<span>${T('مميز', 'Featured')}</span>` : '',
       caloriesOn() && p.calories != null ? `<span>${Number(p.calories)} ${T('سعرة حرارية', 'kcal')}</span>` : ''
     ].join('');
+    // مكانه بين أصناف القسم (3 / 8) وأزرار السابق والتالي
+    const list = ixList(), at = list.findIndex(x => x.id === p.id);
+    const pager = list.length > 1 && at >= 0 ? `
+      <div class="ix-pager">
+        <button type="button" class="ix-arrow" data-ix-step="-1" ${at === 0 ? 'disabled' : ''} aria-label="${T('السابق', 'Previous')}">${IX_ICON.back}</button>
+        <span dir="ltr">${at + 1} / ${list.length}</span>
+        <button type="button" class="ix-arrow" data-ix-step="1" ${at === list.length - 1 ? 'disabled' : ''} aria-label="${T('التالي', 'Next')}">${IX_ICON.next}</button>
+      </div>` : '';
+    // «يناسبه معه»: ثلاثة أصناف ثانية من نفس القسم (اللي بعده بالترتيب، واللي لها صور أول)
+    const others = at >= 0 ? [...list.slice(at + 1), ...list.slice(0, at)] : list.filter(x => x.id !== p.id);
+    const pair = [...others.filter(x => ixImg(x)), ...others.filter(x => !ixImg(x))].slice(0, 3);
     ixEl('ixProd').innerHTML = `
       <div class="ix-hero ${img || vid ? '' : 'nopic'}">
-        ${img || vid ? `<div class="ix-heropic ix-pop" style="--i:0"><div class="ix-float">${ixPic(p, true)}</div></div>` : ''}
+        ${img || vid ? `<div class="ix-heropic ${step ? 'ix-slide' : ''}" style="--sx:${ixSx(step)}"><div class="${fly ? '' : 'ix-pop'}" style="--i:0"><div class="ix-tilt"><div class="ix-float">${ixPic(p, true)}</div></div></div>${pager}</div>` : ''}
         <div>
           <h2 class="ix-hname ix-pop" style="--i:1">${esc(productName(p))}</h2>
           <p class="ix-hprice ix-pop" style="--i:2">${ixPrice(p)}</p>
+          ${canOrder ? `<button type="button" class="ix-btn pri ix-add ix-pop" style="--i:3" data-ix-add="${esc(p.id)}">${IX_ICON.plus} ${T('أضف للطلب', 'Add to order')}</button>` : ''}
           ${zs.length > 1 ? `<div class="ix-sizes ix-pop" style="--i:3">${zs.map(z => `<span>${esc(sizeName(z))}<b>${priceHtml(Number(z.price), discounted(p, Number(z.price)))}</b></span>`).join('')}</div>` : ''}
           ${tags ? `<div class="ix-tags ix-pop" style="--i:3">${tags}</div>` : ''}
           ${desc ? `<p class="ix-hdesc ix-pop" style="--i:4">${esc(desc)}</p>` : ''}
           ${off ? `<p class="ix-hdesc ix-pop" style="--i:4;font-weight:700">${T('غير متوفر حالياً', 'Currently unavailable')}</p>` : ''}
-          ${canOrder ? `<button type="button" class="ix-btn pri ix-add ix-pop" style="--i:5" data-ix-add="${esc(p.id)}">${IX_ICON.plus} ${T('أضف للطلب', 'Add to order')}</button>` : ''}
+          ${img || vid ? '' : pager}
+          ${pair.length ? `
+            <div class="ix-pair ix-pop" style="--i:6">
+              <b>${T('يناسبه معه', 'Goes well with')}</b>
+              <div class="ix-pair-row">${pair.map(x => `
+                <button type="button" class="ix-mini" data-ix-swap="${esc(x.id)}">
+                  ${ixPic(x, false)}
+                  <span class="ix-name">${esc(productName(x))}</span>
+                  <span class="ix-price">${ixPrice(x)}</span>
+                </button>`).join('')}</div>
+            </div>` : ''}
         </div>
       </div>`;
     ixWatchPics(ixEl('ixProd'));
@@ -2308,12 +2404,37 @@
       `<button type="button" class="ix-btn ${ixScreen === 'cat' ? 'pri' : ''}" data-ix-nav="home">${IX_ICON.home} ${T('الرئيسية', 'Home')}</button>`;
   }
 
+  // ─── الصورة المشتركة: صورة البطاقة تطير وتكبر لمكانها في شاشة الطبق (وترجع لما يرجع) ───
+  const ixHeroPic = () => ixEl('ixProd').querySelector('.ix-heropic .ix-pic');
+  const ixCardPic = (id) => ixEl('ixCat').querySelector(`[data-ix-prod="${CSS.escape(String(id))}"] .ix-pic`);
+  const ixCanFly = (pic) => !calmMotion && !!document.body.animate && !!pic && !pic.classList.contains('txt') && !!pic.querySelector('img, video');
+  function ixFly(from, to) {
+    if (!ixCanFly(from) || !to) return;
+    const a = from.getBoundingClientRect(), b = to.getBoundingClientRect();
+    if (!a.width || !b.width) return;
+    const m = from.querySelector('img, video');
+    const src = m.tagName === 'VIDEO' ? m.poster : (m.currentSrc || m.src);
+    if (!src) return;
+    const g = document.createElement('div');
+    g.className = `ix-ghost ${from.classList.contains('cut') || to.classList.contains('cut') ? 'cut' : ''}`;
+    g.style.cssText = `left:${b.left}px;top:${b.top}px;width:${b.width}px;height:${b.height}px;background-image:url("${String(src).replace(/"/g, '%22')}")`;
+    document.body.appendChild(g);
+    from.classList.add('ix-hide'); to.classList.add('ix-hide');
+    const done = () => { from.classList.remove('ix-hide'); to.classList.remove('ix-hide'); g.remove(); };
+    const anim = g.animate([
+      { transform: `translate(${a.left - b.left}px, ${a.top - b.top}px) scale(${a.width / b.width})` },
+      { transform: 'none' }
+    ], { duration: 480, easing: 'cubic-bezier(.2, .8, .2, 1)' });
+    anim.onfinish = done; anim.oncancel = done;
+  }
+
   // ─── التنقل: تلاشي مع انزلاق خفيف، وزر الرجوع في الجوال يرجع شاشة ───
   const IX_SCR = { home: 'ixHome', cat: 'ixCat', prod: 'ixProd' };
-  function ixShow(name, back) {
+  // still = بدون انزلاق (لما الصورة طايرة لازم مكانها النهائي ثابت)
+  function ixShow(name, back, still = false) {
     const next = ixEl(IX_SCR[name]), cur = document.querySelector('#ix .ix-scr.on');
     // التقدّم يدخل من جهة القراءة (من اليسار بالعربي)، والرجوع من الجهة الثانية
-    const dx = (back ? 1 : -1) * (document.documentElement.dir === 'ltr' ? -1 : 1);
+    const dx = still ? 0 : (back ? 1 : -1) * (ixRtl() ? 1 : -1);
     if (cur && cur !== next) {
       cur.style.setProperty('--dx', -dx); cur.classList.remove('on', 'enter');
       cur.querySelectorAll('video').forEach(v => { try { v.pause(); } catch {} });
@@ -2325,16 +2446,53 @@
     ixScreen = name;
     ixNav();
   }
-  function ixGo(name, arg) {
+  // from = صورة البطاقة اللي انضغطت (تطير لشاشة الطبق)
+  function ixGo(name, arg, from = null) {
     if (name === 'cat') { ixKey = arg; ixRenderCat(arg); ixEl('ixCat').scrollTop = 0; }
     else {
       const p = productById(arg); if (!p) return;
-      ixProd = p.id; ixRenderProd(p); ixEl('ixProd').scrollTop = 0;
+      if (!ixKey || !ixCatsOf(ixKey).some(c => productsIn(c, allProducts).some(q => q.id === p.id))) ixKey = ixKeyOf(p);
+      ixProd = p.id; ixRenderProd(p, { fly: ixCanFly(from) }); ixEl('ixProd').scrollTop = 0;
       trackOnce(`d:${p.id}`, 'dish', p.id);
     }
-    ixDepth = name === 'prod' ? 2 : 1;
+    ixDepth++;
     try { history.pushState({ ix: name, k: ixKey, p: ixProd, d: ixDepth }, ''); } catch {}
-    ixShow(name, false);
+    const fly = name === 'prod' && ixCanFly(from);
+    ixShow(name, false, fly);
+    if (fly) ixFly(from, ixHeroPic());
+  }
+  // نفس الشاشة بمحتوى ثاني (صنف ثاني أو قسم ثاني): نبدّل حالة السجل بدل ما نضيف، عشان زر الرجوع يبقى منطقي
+  function ixReplaceState() {
+    try { if (history.state && history.state.ix) history.replaceState({ ...history.state, k: ixKey, p: ixProd }, ''); } catch {}
+  }
+  function ixSwap(id, step) {
+    const p = productById(id); if (!p) return;
+    ixProd = p.id; ixRenderProd(p, { step: step || 1 }); ixEl('ixProd').scrollTop = 0;
+    ixEl('ixProd').classList.remove('enter'); void ixEl('ixProd').offsetWidth; ixEl('ixProd').classList.add('enter');
+    trackOnce(`d:${p.id}`, 'dish', p.id);
+    ixReplaceState();
+  }
+  function ixStepProd(step) {
+    const list = ixList(), at = list.findIndex(x => x.id === ixProd), n = list[at + step];
+    if (at < 0 || !n) return ixNudge(ixEl('ixProd').querySelector('.ix-heropic, .ix-hero'), step);
+    ixSwap(n.id, step);
+  }
+  function ixSwitchCat(key, step) {
+    if (!key || key === ixKey || !ixCatsOf(key).length) return;
+    ixKey = key; ixRenderCat(key, step); ixEl('ixCat').scrollTop = 0;
+    ixEl('ixCat').classList.remove('enter'); void ixEl('ixCat').offsetWidth; ixEl('ixCat').classList.add('enter');
+    ixReplaceState();
+  }
+  function ixStepCat(step) {
+    const items = ixHomeItems(), at = items.findIndex(x => x.key === ixKey), n = items[at + step];
+    if (at < 0 || !n) return ixNudge(ixEl('ixCat').querySelector('.ix-list'), step);
+    ixSwitchCat(n.key, step);
+  }
+  // آخر القائمة: هزّة خفيفة بدل ما يصير شي
+  function ixNudge(el, step) {
+    if (!el || calmMotion || !el.animate) return;
+    const x = -ixSx(step) * 14;
+    el.animate([{ transform: 'none' }, { transform: `translateX(${x}px)` }, { transform: 'none' }], { duration: 260, easing: 'ease-out' });
   }
   function ixHome() {
     if (ixDepth > 0 && history.state && history.state.ix) history.go(-ixDepth);
@@ -2345,17 +2503,67 @@
     const s = e.state || {}, d = s.ix ? (s.d || 0) : 0, back = d < ixDepth;
     closeModal();
     if (s.ix === 'prod' && productById(s.p)) {
-      if (ixProd !== s.p) { ixProd = s.p; ixRenderProd(productById(s.p)); }
       if (s.k && ixKey !== s.k) { ixKey = s.k; ixRenderCat(s.k); }
-      ixDepth = 2; ixShow('prod', back);
+      if (ixProd !== s.p || ixScreen !== 'prod') { ixProd = s.p; ixRenderProd(productById(s.p)); }
+      ixDepth = d; ixShow('prod', back);
     } else if (s.ix === 'cat' && s.k && ixCatsOf(s.k).length) {
+      const fromProd = ixScreen === 'prod', hero = fromProd ? ixHeroPic() : null;
       if (ixKey !== s.k || ixScreen === 'home') { ixKey = s.k; ixRenderCat(s.k); }
-      ixDepth = 1; ixShow('cat', back);
+      ixDepth = d;
+      // الرجوع من الطبق: الصورة ترجع لبطاقتها (ونتأكد إن البطاقة ظاهرة لو تنقّل بين الأصناف)
+      const card = fromProd ? ixCardPic(ixProd) : null;
+      const fly = !!card && ixCanFly(hero);
+      if (fly) {
+        const sc = ixEl('ixCat'), r = card.getBoundingClientRect(), sr = sc.getBoundingClientRect();
+        if (r.top < sr.top + 60 || r.bottom > sr.bottom - 120) sc.scrollTop += r.top - sr.top - (sr.height - r.height) / 2;
+      }
+      ixShow('cat', back, fly);
+      if (fly) ixFly(hero, card);
     } else { ixDepth = 0; ixShow('home', true); }
   });
+
+  // ─── السحب يمين ويسار: في شاشة الطبق يتنقل بين أصناف القسم، وفي شاشة القسم بين الأقسام ───
+  let ixSwipedAt = 0;
+  function ixSwipe(el, fn) {
+    let x0 = null, y0 = 0, t0 = 0, id = null;
+    el.addEventListener('pointerdown', (e) => { if (!e.isPrimary || (e.pointerType === 'mouse' && e.button !== 0)) return; x0 = e.clientX; y0 = e.clientY; t0 = Date.now(); id = e.pointerId; });
+    el.addEventListener('pointercancel', () => { x0 = null; });
+    el.addEventListener('pointerup', (e) => {
+      if (x0 == null || e.pointerId !== id) return;
+      const dx = e.clientX - x0, dy = e.clientY - y0; x0 = null;
+      if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5 || Date.now() - t0 > 900) return;
+      ixSwipedAt = Date.now();
+      // بالعربي التالي على اليسار، فسحب الإصبع لليمين يجيبه
+      fn((dx > 0) === ixRtl() ? 1 : -1);
+    });
+  }
+  ixSwipe(ixEl('ixProd'), (step) => { if (ixScreen === 'prod') ixStepProd(step); });
+  ixSwipe(ixEl('ixCat'), (step) => { if (ixScreen === 'cat') ixStepCat(step); });
+
+  // ─── ميلان صورة الطبق مع حركة الإصبع أو الماوس ───
+  function ixTilt(e) {
+    const t = ixEl('ixProd').querySelector('.ix-tilt');
+    if (!t || calmMotion || ixScreen !== 'prod') return;
+    if (e.pointerType !== 'mouse' && !e.buttons) return;
+    const r = t.getBoundingClientRect();
+    const cl = (v) => Math.max(-.5, Math.min(.5, v));
+    const x = cl((e.clientX - r.left) / r.width - .5), y = cl((e.clientY - r.top) / r.height - .5);
+    t.style.transform = `perspective(900px) rotateY(${(x * 16).toFixed(2)}deg) rotateX(${(-y * 16).toFixed(2)}deg)`;
+  }
+  const ixUntilt = () => { const t = ixEl('ixProd').querySelector('.ix-tilt'); if (t) t.style.transform = ''; };
+  ixEl('ixProd').addEventListener('pointermove', ixTilt);
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => ixEl('ixProd').addEventListener(ev, ixUntilt));
+
   ixEl('ix').addEventListener('click', (e) => {
+    if (Date.now() - ixSwipedAt < 350) return;   // نهاية سحبة، مو ضغطة
     const c = e.target.closest('[data-ix-cat]'); if (c) return ixGo('cat', c.dataset.ixCat);
-    const pr = e.target.closest('[data-ix-prod]'); if (pr) return ixGo('prod', pr.dataset.ixProd);
+    const ch = e.target.closest('[data-ix-chip]');
+    if (ch) { const items = ixHomeItems(); return ixSwitchCat(ch.dataset.ixChip, items.findIndex(x => x.key === ch.dataset.ixChip) > items.findIndex(x => x.key === ixKey) ? 1 : -1); }
+    const pr = e.target.closest('[data-ix-prod]'); if (pr) return ixGo('prod', pr.dataset.ixProd, pr.querySelector('.ix-pic'));
+    const ft = e.target.closest('[data-ix-feat]'); if (ft) return ixGo('prod', ft.dataset.ixFeat, ft.querySelector('.ix-pic'));
+    const st = e.target.closest('[data-ix-step]'); if (st) return ixStepProd(Number(st.dataset.ixStep));
+    const sw = e.target.closest('[data-ix-swap]');
+    if (sw) { const list = ixList(); return ixSwap(sw.dataset.ixSwap, list.findIndex(x => String(x.id) === sw.dataset.ixSwap) < list.findIndex(x => x.id === ixProd) ? -1 : 1); }
     const add = e.target.closest('[data-ix-add]');
     if (add) {
       const p = productById(add.dataset.ixAdd); if (!p) return;
