@@ -587,7 +587,7 @@
   // الألوان الفاضية = ألوان القالب (نفس القيم اللي في menu.html)، و«شبكة» بدون ألوان تاخذ ثيم المنيو
   const IX_DEF = { grid: { bg: null, accent: null, texture: 'none', shape: 'soft' }, zigzag: { bg: '#1f4d3a', accent: '#e9dfc4', texture: 'grain', shape: 'round' }, thread: { bg: '#1e4a3a', accent: '#d9c49a', texture: 'paper', shape: 'round' } };
   // سجل القوالب من js/plans.js، وألوانها الافتراضية من IX_DEF
-  const ixTemplates = () => (window.DMPlans && DMPlans.IX_TEMPLATES) || { grid: { name: 'شبكة' }, zigzag: { name: 'متعرج' } };
+  const ixTemplates = () => (window.DMPlans && DMPlans.IX_TEMPLATES) || { grid: { name: 'Classic' }, zigzag: { name: 'Modern' } };
   const ixTexture = (t) => t === true ? 'grain' : t === false ? 'none' : ['grain', 'paper', 'none'].includes(t) ? t : null;
   const ixCfg = () => {
     const o = client.menu_ix && typeof client.menu_ix === 'object' ? client.menu_ix : {};
