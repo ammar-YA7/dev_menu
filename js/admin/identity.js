@@ -715,9 +715,9 @@
         </div>
       </div>`;
     // مجموعات واضحة: القالب، الخلفية، الألوان، الشكل، النص. كل مجموعة بعنوانها وخط يفصلها
-    const group = (title, hint, body) => `
+    const group = (num, title, hint, body) => `
       <div class="space-y-2 pt-3 border-t border-brand/10 first:border-t-0 first:pt-0">
-        <div><b class="block text-[12px] text-ink">${title}</b>${hint ? `<span class="block text-[11px] text-ink/70 leading-relaxed">${hint}</span>` : ''}</div>
+        <div><b class="flex items-center gap-1.5 text-[12px] text-ink"><span class="inline-grid place-items-center w-5 h-5 rounded-full bg-brand text-cream text-[10px] font-bold shrink-0">${num}</span>${title}</b>${hint ? `<span class="block text-[11px] text-ink/70 leading-relaxed">${hint}</span>` : ''}</div>
         ${body}
       </div>`;
     const bgBody = `
@@ -729,12 +729,12 @@
       ${c.bg_mode !== 'color' ? '<span class="block text-[11px] text-ink/70 leading-relaxed">يظهر هذا اللون بشفافية فوق الصورة أو الفيديو حتى تبقى النصوص واضحة.</span>' : ''}`;
     box.innerHTML = `
       <b class="block text-xs text-ink">شكل المنيو التفاعلي</b>
-      ${group('1. القالب', 'اختر تصميم المنيو، وتتغير الألوان والشكل إلى إعدادات القالب.', `<div role="radiogroup" class="grid grid-cols-2 gap-2">${keys.map(opt).join('')}</div>`)}
-      ${group('2. الخلفية', 'لون سادة، أو صورة، أو فيديو قصير.', bgBody)}
-      ${group('3. لون التمييز', 'لون العناوين والأزرار والأسعار.', color('accent', 'لون التمييز'))}
-      ${group('4. الشكل', '', seg('shape', 'شكل البطاقات', [['round', 'دائري'], ['soft', 'حواف ناعمة'], ['square', 'حواف حادة']])
+      ${group(1, 'القالب', 'اختر تصميم المنيو، وتتغير الألوان والشكل إلى إعدادات القالب.', `<div role="radiogroup" class="grid grid-cols-2 gap-2">${keys.map(opt).join('')}</div>`)}
+      ${group(2, 'الخلفية', 'لون سادة، أو صورة، أو فيديو قصير.', bgBody)}
+      ${group(3, 'لون التمييز', 'لون العناوين والأزرار والأسعار.', color('accent', 'لون التمييز'))}
+      ${group(4, 'الشكل', '', seg('shape', 'شكل البطاقات', [['round', 'دائري'], ['soft', 'حواف ناعمة'], ['square', 'حواف حادة']])
         + seg('texture', 'الملمس', [['grain', 'حبيبات'], ['paper', 'ورق'], ['none', 'بدون']]))}
-      ${group('5. جملة تحت الشعار', 'اختيارية، حتى 40 حرفاً، وتظهر تحت اسم المحل في شاشة الترحيب.', `
+      ${group(5, 'جملة تحت الشعار', 'اختيارية، حتى 40 حرفاً، وتظهر تحت اسم المحل في شاشة الترحيب.', `
         <input id="ix-tagline" type="text" maxlength="40" aria-label="جملة تحت الشعار" value="${(c.tagline || '').replace(/"/g, '&quot;').replace(/</g, '&lt;')}" placeholder="مثال: قهوة مختصة منذ 2015" onchange="saveIxLook({ tagline: this.value })" class="input-pro text-xs">`)}`;
   }
   // ─── منيو التابلت: رابط مستقل يفتح المنيو التفاعلي دائماً (?mode=tablet) ───
