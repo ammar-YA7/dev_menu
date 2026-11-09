@@ -2314,8 +2314,7 @@
       <div class="ix-home">
         <div class="ix-floats">${ixFeatured().map((f, i) => `<button type="button" class="ix-fl ix-fl${i}" data-ix-feat="${esc(f.id)}" aria-label="${esc(productName(f))}">${ixPic(f, false)}</button>`).join('')}</div>
         <div class="ix-logo ix-pop" style="--i:0"><img src="${esc(logo)}" alt=""></div>
-        <h1 class="ix-hi ix-pop" style="--i:1">${T('حياكم الله', 'Welcome')}</h1>
-        <p class="ix-sub ix-pop" style="--i:2">${esc(p.name || '')}</p>
+        ${p.name ? `<h1 class="ix-hi ix-pop" style="--i:1">${esc(p.name)}</h1>` : ''}
         <div class="ix-cats">${items.map((x, i) => `<button type="button" class="ix-cat ix-pop" style="--i:${Math.min(i, 12) + 3}" data-ix-cat="${esc(x.key)}">${esc(x.label)}</button>`).join('')}</div>
         ${items.length ? '' : `<p class="ix-sub">${T('لم تتم إضافة أصناف لهذا المنيو بعد.', 'Nothing added yet.')}</p>`}
       </div>`;
