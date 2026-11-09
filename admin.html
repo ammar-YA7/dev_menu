@@ -714,13 +714,61 @@
       <section data-needs="menu" class="space-y-3">
         <h5 class="text-xs font-bold text-ink border-b border-ink/10 pb-1.5">إعدادات المنيو <span class="font-normal text-ink">(تنحفظ تلقائياً)</span></h5>
         <!-- ═══ المنيو العادي ═══ -->
-        <div class="bg-white p-3.5 rounded-xl border border-brand/15 space-y-2">
+        <div id="normal-card" class="bg-white p-3.5 rounded-xl border border-brand/15 space-y-3 scroll-mt-24">
           <div class="flex items-center gap-2">
             <span class="w-8 h-8 rounded-lg bg-brand/10 text-ink grid place-items-center shrink-0"><i class="ph-bold ph-list"></i></span>
             <b class="text-[13px] text-ink">المنيو العادي</b>
           </div>
           <p class="text-[11px] text-ink leading-relaxed">قائمة بالأقسام والأصناف مع البحث، ويختار العميل بين عرض القائمة والصور الكبيرة.</p>
           <div id="normal-status"></div>
+          <!-- شكل المنيو العادي: مجموعات مرقّمة مثل المنيو التفاعلي -->
+          <div class="space-y-2 pt-3 border-t border-brand/10">
+            <div><b class="flex items-center gap-1.5 text-[12px] text-ink"><span class="inline-grid place-items-center w-5 h-5 rounded-full bg-brand text-cream text-[10px] font-bold shrink-0">1</span>طريقة العرض الافتراضية</b><span class="block text-[11px] text-ink/70 leading-relaxed">يمكن للعميل التبديل بين العرضين من المنيو.</span></div>
+            <div id="normal-view" role="radiogroup" class="grid grid-cols-2 gap-1.5"></div>
+          </div>
+          <div class="space-y-2 pt-3 border-t border-brand/10">
+            <div><b class="flex items-center gap-1.5 text-[12px] text-ink"><span class="inline-grid place-items-center w-5 h-5 rounded-full bg-brand text-cream text-[10px] font-bold shrink-0">2</span>الخلفية</b><span class="block text-[11px] text-ink/70 leading-relaxed">صورة أو فيديو أعلى المنيو، وتُستخدم في صفحة الروابط ما لم تُحدَّد لها خلفية خاصة من «هوية المنشأة».</span></div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+      <div data-free-hide data-needs="menu" class="bg-brand/5 p-3 rounded-xl border border-brand/15 space-y-2">
+        <label class="text-[11px] font-bold text-ink">صورة</label>
+        <input type="file" id="bg-img-file" accept="image/*" class="input-pro text-[11px]">
+        <button id="upl-bg_image" onclick="uploadMedia('bg_image')" class="w-full bg-brand text-cream hover:bg-brand-dark text-xs font-bold py-2 rounded-xl transition">تحديث الخلفية</button>
+        <div id="bg-img-prev" class="hidden"></div>
+      </div>
+
+      <div data-free-hide data-needs="menu" class="bg-brand/5 p-3 rounded-xl border border-brand/15 space-y-2">
+        <label class="text-[11px] font-bold text-ink">فيديو (MP4)</label>
+        <p class="text-[11px] text-ink leading-relaxed">يتحرك مكان الصورة، وإذا رُفع يظهر بدلاً منها.</p>
+        <input type="file" id="bg-video-file" accept="video/*" class="input-pro text-[11px]">
+        <button id="upl-bg_video" onclick="uploadMedia('bg_video')" class="w-full bg-brand text-cream hover:bg-brand-dark text-xs font-bold py-2 rounded-xl transition">تحديث الفيديو</button>
+        <div id="bg-video-prev" class="hidden"></div>
+      </div>
+            </div>
+          </div>
+          <div class="space-y-2 pt-3 border-t border-brand/10">
+            <div><b class="flex items-center gap-1.5 text-[12px] text-ink"><span class="inline-grid place-items-center w-5 h-5 rounded-full bg-brand text-cream text-[10px] font-bold shrink-0">3</span>الألوان</b><span class="block text-[11px] text-ink/70 leading-relaxed">تُطبَّق على المنيو العادي وصفحة الروابط.</span></div>
+            <div id="appearance-menu-slot">
+          <div id="appearance-card" class="space-y-3">
+          <div id="theme-picker" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>
+          <div class="bg-brand/5 p-3.5 rounded-2xl border border-brand/15 space-y-2.5">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <label for="accent-input" class="text-[11px] font-bold text-ink">لون الهوية <span class="text-ink font-semibold">(الزر النشط، الأسعار، خط عناوين الأقسام)</span></label>
+              <span id="accent-label" class="text-[11px] font-mono text-ink" dir="ltr"></span>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <input type="color" id="accent-input" oninput="pickAccent(this.value)" class="w-11 h-11 rounded-xl border border-brand/20 bg-white p-1 cursor-pointer" aria-label="اختر لون">
+              <div id="accent-presets" class="flex flex-wrap gap-2"></div>
+              <button type="button" onclick="pickAccent(null)" class="text-[11px] font-bold text-ink bg-brand/10 border border-brand/45 hover:bg-brand/10 px-3 py-2 rounded-xl transition">لون الثيم الافتراضي</button>
+            </div>
+          </div>
+          <div class="flex flex-col sm:flex-row gap-2">
+            <button onclick="saveAppearance()" class="flex-1 bg-brand text-cream hover:bg-brand-dark font-bold py-2.5 rounded-xl text-xs transition">حفظ المظهر</button>
+            <a id="appearance-preview" href="#" target="_blank" rel="noopener" class="sm:w-40 text-center bg-brand/10 hover:bg-brand/15 text-ink font-bold py-2.5 rounded-xl text-xs border border-brand/25 transition"><i class="ph-bold ph-eye text-[11px]"></i> معاينة المنيو</a>
+            <a id="appearance-links-preview" href="#" target="_blank" rel="noopener" class="sm:w-44 text-center bg-brand/10 hover:bg-brand/15 text-ink font-bold py-2.5 rounded-xl text-xs border border-brand/25 transition"><i class="ph-bold ph-link-simple text-[11px]"></i> معاينة صفحة الروابط</a>
+          </div>
+          </div>
+            </div>
+          </div>
         </div>
         <!-- ═══ المنيو التفاعلي (إضافة): أين يظهر، ورابط التابلت، وشكله ═══ -->
         <div id="ix-card" class="bg-white p-3.5 rounded-xl border border-brand/15 space-y-3">
@@ -2165,7 +2213,7 @@
         </div>
         <div class="pro-card p-5 space-y-4">
           <h3 class="text-xs font-bold text-ink border-b border-brand/20 pb-2 flex items-center gap-2">
-            <i class="ph-bold ph-palette text-ink"></i> الاسم والشعار والخلفية
+            <i class="ph-bold ph-palette text-ink"></i> الاسم والشعار
           </h3>
     <div class="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-4 gap-4">
       <div class="bg-brand/5 p-3.5 rounded-2xl border border-brand/15 space-y-2">
@@ -2185,21 +2233,11 @@
         <button id="upl-logo" onclick="uploadMedia('logo')" class="w-full bg-brand text-cream hover:bg-brand-dark text-xs font-bold py-2 rounded-xl transition">تحديث الشعار</button>
       </div>
 
-      <div data-free-hide data-needs="menu" class="bg-brand/5 p-3.5 rounded-2xl border border-brand/15 space-y-2">
-        <label class="text-[11px] font-bold text-ink">صورة خلفية المنيو</label>
-        <p class="text-[11px] text-ink leading-relaxed">يطلع للزبون في: خلف أعلى المنيو، وفي صفحة الروابط لو ما حطيت لها خلفية خاصة.</p>
-        <input type="file" id="bg-img-file" accept="image/*" class="input-pro text-[11px]">
-        <button id="upl-bg_image" onclick="uploadMedia('bg_image')" class="w-full bg-brand text-cream hover:bg-brand-dark text-xs font-bold py-2 rounded-xl transition">تحديث الخلفية</button>
-        <div id="bg-img-prev" class="hidden"></div>
-      </div>
-
-      <div data-free-hide data-needs="menu" class="bg-brand/5 p-3.5 rounded-2xl border border-brand/15 space-y-2">
-        <label class="text-[11px] font-bold text-ink">فيديو خلفية المنيو (MP4)</label>
-        <p class="text-[11px] text-ink leading-relaxed">يطلع للزبون في: مكان صورة الخلفية، يتحرك. لو رفعته يطلع بدل الصورة.</p>
-        <input type="file" id="bg-video-file" accept="video/*" class="input-pro text-[11px]">
-        <button id="upl-bg_video" onclick="uploadMedia('bg_video')" class="w-full bg-brand text-cream hover:bg-brand-dark text-xs font-bold py-2 rounded-xl transition">تحديث الفيديو</button>
-        <div id="bg-video-prev" class="hidden"></div>
-      </div>
+    </div>
+    <!-- خلفية المنيو وألوانه وطريقة عرضه انتقلت لإعدادات المنيو -->
+    <div data-needs="menu" class="flex flex-col sm:flex-row sm:items-center gap-2 bg-brand/5 p-3.5 rounded-2xl border border-brand/15">
+      <p class="flex-1 text-[11px] text-ink leading-relaxed"><i class="ph-bold ph-swatches"></i> خلفية المنيو وألوانه وطريقة عرضه موجودة في إعدادات المنيو، بجانب إعدادات المنيو التفاعلي.</p>
+      <button type="button" onclick="goMenuLook()" class="shrink-0 bg-brand text-cream hover:bg-brand-dark font-bold px-4 py-2 rounded-xl text-xs transition"><i class="ph-bold ph-arrow-square-out"></i> إعدادات شكل المنيو</button>
     </div>
     <!-- خلفية صفحة الروابط السريعة: خاصة فيها، ولو ما فيه تاخذ خلفية المنيو -->
     <div id="links-bg-card" class="scroll-mt-24 bg-brand/5 p-3.5 rounded-2xl border border-brand/15 space-y-3">
@@ -2235,29 +2273,13 @@
       <ol id="links-order" class="space-y-1.5"></ol>
     </div>
         </div>
-        <!-- المظهر: الثيم ولون الهوية (للمنيو وصفحة الروابط، لكل الباقات ما عدا البيجر المجاني) -->
-        <div id="appearance-card" class="pro-card p-5 space-y-4">
+        <!-- المظهر: يطلع هنا بس للمحل اللي ما عنده المنيو (لصفحة الروابط)، وإلا مكانه في إعدادات المنيو (placeAppearance) -->
+        <div id="appearance-home-wrap" class="hidden pro-card p-5 space-y-4">
           <div class="flex flex-wrap items-center justify-between gap-2 border-b border-brand/20 pb-2">
             <h3 class="text-xs font-bold text-ink flex items-center gap-2"><i class="ph-bold ph-swatches text-ink"></i> المظهر</h3>
-            <span class="text-[11px] text-ink">يتطبق على المنيو وصفحة الروابط</span>
+            <span class="text-[11px] text-ink">يتطبق على صفحة الروابط</span>
           </div>
-          <div id="theme-picker" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>
-          <div class="bg-brand/5 p-3.5 rounded-2xl border border-brand/15 space-y-2.5">
-            <div class="flex flex-wrap items-center justify-between gap-2">
-              <label for="accent-input" class="text-[11px] font-bold text-ink">لون الهوية <span class="text-ink font-semibold">(الزر النشط، الأسعار، خط عناوين الأقسام)</span></label>
-              <span id="accent-label" class="text-[11px] font-mono text-ink" dir="ltr"></span>
-            </div>
-            <div class="flex flex-wrap items-center gap-2">
-              <input type="color" id="accent-input" oninput="pickAccent(this.value)" class="w-11 h-11 rounded-xl border border-brand/20 bg-white p-1 cursor-pointer" aria-label="اختر لون">
-              <div id="accent-presets" class="flex flex-wrap gap-2"></div>
-              <button type="button" onclick="pickAccent(null)" class="text-[11px] font-bold text-ink bg-brand/10 border border-brand/45 hover:bg-brand/10 px-3 py-2 rounded-xl transition">لون الثيم الافتراضي</button>
-            </div>
-          </div>
-          <div class="flex flex-col sm:flex-row gap-2">
-            <button onclick="saveAppearance()" class="flex-1 bg-brand text-cream hover:bg-brand-dark font-bold py-2.5 rounded-xl text-xs transition">حفظ المظهر</button>
-            <a id="appearance-preview" href="#" target="_blank" rel="noopener" class="sm:w-40 text-center bg-brand/10 hover:bg-brand/15 text-ink font-bold py-2.5 rounded-xl text-xs border border-brand/25 transition"><i class="ph-bold ph-eye text-[11px]"></i> معاينة المنيو</a>
-            <a id="appearance-links-preview" href="#" target="_blank" rel="noopener" class="sm:w-44 text-center bg-brand/10 hover:bg-brand/15 text-ink font-bold py-2.5 rounded-xl text-xs border border-brand/25 transition"><i class="ph-bold ph-link-simple text-[11px]"></i> معاينة صفحة الروابط</a>
-          </div>
+          <div id="appearance-home"></div>
         </div>
         <div class="grid grid-cols-1 gap-6 items-start">
     <!-- معلومات المنشأة -->

@@ -575,7 +575,50 @@
     return !paid && client.ix_gift_until && Date.parse(client.ix_gift_until) > Date.now() ? 'gift' : 'on';
   }
   const ixDate = (d) => new Date(d).toLocaleDateString('ar-SA-u-nu-latn-ca-gregory', { day: 'numeric', month: 'long', year: 'numeric' });
+  // ─── شكل المنيو العادي (في إعدادات المنيو): طريقة العرض والخلفية والألوان ───
+  // المظهر (الثيم ولون الهوية) مكانه في بطاقة المنيو العادي، والمحل اللي ما عنده المنيو يلقاه في «هوية المنشأة» لصفحة الروابط
+  function placeAppearance() {
+    const card = document.getElementById('appearance-card'), wrap = document.getElementById('appearance-home-wrap');
+    if (!card || !client) return;
+    const home = featureLocked('menu');
+    const slot = document.getElementById(home ? 'appearance-home' : 'appearance-menu-slot');
+    if (slot && card.parentElement !== slot) slot.appendChild(card);
+    if (wrap) wrap.classList.toggle('hidden', !home);
+  }
+  // طريقة العرض الافتراضية: قائمة أو صور كبيرة. لو التفاعلي هو الرئيسي نحفظ الاختيار ويتطبق لما يرجع العادي رئيسياً
+  const prevLayoutKey = () => `dm_prev_layout_${client.id}`;
+  function normalView() {
+    if (client.menu_layout !== 'interactive') return client.menu_layout === 'photos' ? 'photos' : 'list';
+    try { return localStorage.getItem(prevLayoutKey()) === 'photos' ? 'photos' : 'list'; } catch { return 'list'; }
+  }
+  function renderNormalView() {
+    const box = document.getElementById('normal-view');
+    if (!box) return;
+    const cur = normalView();
+    box.innerHTML = [['list', 'قائمة', 'ph-list'], ['photos', 'صور كبيرة', 'ph-squares-four']].map(([v, t, ic]) => `
+      <button type="button" role="radio" aria-checked="${cur === v}" onclick="setNormalView('${v}')" class="rounded-lg border px-2 py-2 text-[11px] font-bold transition ${cur === v ? 'border-brand bg-brand text-cream' : 'border-brand/20 bg-white text-ink hover:border-brand/40'}"><i class="ph-bold ${ic}"></i> ${t}</button>`).join('');
+  }
+  async function setNormalView(v) {
+    v = v === 'photos' ? 'photos' : 'list';
+    if (normalView() === v) return;
+    if (client.menu_layout === 'interactive') {
+      try { localStorage.setItem(prevLayoutKey(), v); } catch {}
+      renderNormalView();
+      return showToast('تم الحفظ، ويُطبَّق عند إرجاع المنيو العادي رئيسياً');
+    }
+    if (await updateClient({ menu_layout: v })) { renderNormalView(); showToast(v === 'photos' ? 'المنيو يفتح بالصور الكبيرة' : 'المنيو يفتح بعرض القائمة'); }
+    else showToast('تعذر حفظ الإعداد', true);
+  }
+  // زر «إعدادات شكل المنيو» في هوية المنشأة: يفتح إعدادات المنيو على بطاقة المنيو العادي
+  function goMenuLook() {
+    showPage('menu');
+    switchTab('msettings');
+    setTimeout(() => { const el = document.getElementById('normal-card'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 80);
+  }
+
   function renderMenuLayout() {
+    placeAppearance();
+    renderNormalView();
     if (!document.getElementById('menu-layout')) return;
     const state = ixState(), main = client.menu_layout === 'interactive' && state !== 'off';
     // بطاقة المنيو العادي: هل هو الرئيسي (اللي يطلع من رمز QR)؟
