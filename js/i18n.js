@@ -32,7 +32,9 @@
       const strict = k.startsWith('~'), body = strict ? k.slice(1) : k;
       const names = [];
       const re = new RegExp('^' + escRe(body).replace(/\\\{(\w+)\\\}/g, (_, n) => { names.push(n); return '(.+?)'; }) + '$');
-      patterns.push({ re, names, en, strict, lit: body.replace(/\{\w+\}/g, '').length });
+      // lits: الأجزاء الثابتة من القالب. لو جزء منها مو موجود في النص نتجاوز القالب بدون regex (هذا اللي كان يبطّئ الصفحات الكبيرة)
+      const lits = body.split(/\{\w+\}/).map(x => x.trim()).filter(Boolean);
+      patterns.push({ re, names, en, strict, lits, lit: body.replace(/\{\w+\}/g, '').length });
     }
     // الأطول نصاً أول: "ختم دبل {d} من {a} إلى {b}" قبل "{h} بالليل" عشان القصير ما يبلع الجملة كلها
     patterns.sort((a, b) => b.lit - a.lit);
@@ -46,10 +48,12 @@
     if (lang !== 'en' || !s || !AR.test(s)) return s;
     const k = norm(s);
     if (exact.has(k)) return exact.get(k);
-    if (memo.has(k)) return memo.get(k);
+    const mk = depth ? depth + '|' + k : k;
+    if (memo.has(mk)) return memo.get(mk);
     let res = s;
     if (depth <= MAX_DEPTH) {
       for (const p of patterns) {
+        if (!p.lits.every(l => k.includes(l))) continue;
         const m = k.match(p.re);
         if (!m) continue;
         let miss = false;
@@ -57,7 +61,8 @@
         if (!(p.strict && miss)) { res = out; break; }
       }
     }
-    if (depth === 0) { if (memo.size > 5000) memo.clear(); memo.set(k, res); }
+    if (memo.size > 8000) memo.clear();
+    memo.set(mk, res);
     return res;
   }
   function t(s, vars) {
