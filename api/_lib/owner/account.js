@@ -330,19 +330,29 @@ module.exports.post = async function post(action, req, b, env) {
     if (has('pager_quiz_need')) p.pager_quiz_need = Math.min(5, Math.max(3, int(b.pager_quiz_need) || 4));
     if (has('pager_game_moves')) p.pager_game_moves = Math.min(40, Math.max(10, int(b.pager_game_moves) || 20));
     if (has('pager_near_text')) p.pager_near_text = String(b.pager_near_text || '').replace(/\s+/g, ' ').trim().slice(0, 80) || null;
-    if (has('menu_layout')) p.menu_layout = ['photos', 'interactive'].includes(b.menu_layout) ? b.menu_layout : 'list';
+    // المنيو التفاعلي إضافة (ixpro): بدونها ما ينحفظ نوعه ولا شكله، والمحفوظ من قبل يبقى (يرجع يشتغل لو رجعت الإضافة)
+    const IX_OFF = 'المنيو التفاعلي إضافة على المنيو، أضفها لباقتك من صفحة الاشتراك';
+    if (has('menu_layout')) {
+      if (b.menu_layout === 'interactive' && !PLANS.has(store, 'ixpro')) throw new ApiError(403, IX_OFF, 'ADDON_OFF');
+      p.menu_layout = ['photos', 'interactive'].includes(b.menu_layout) ? b.menu_layout : 'list';
+    }
     if (has('menu_ix')) {
+      if (!PLANS.has(store, 'ixpro')) throw new ApiError(403, IX_OFF, 'ADDON_OFF');
       // شكل المنيو التفاعلي: القالب، ولون الخلفية ولون التمييز (فاضي = ألوان القالب)، وشكل البطاقات، والملمس، وجملة تحت الشعار
       const x = b.menu_ix && typeof b.menu_ix === 'object' ? b.menu_ix : {};
       const hex = (c) => typeof c === 'string' && /^#[0-9a-fA-F]{6}$/.test(c) ? c.toLowerCase() : null;
+      const media = (u) => { if (!u) return null; if (typeof u !== 'string' || !ownsMediaUrl(u, sid)) throw new ApiError(400, 'ملف غير تابع لمتجرك'); return u; };
       const style = PLANS.IX_TEMPLATES[x.style] ? x.style : 'grid';
-      if (!PLANS.ixAllowed(store, style)) throw new ApiError(403, PLANS.IX_TEMPLATES[style].premium ? 'هذا القالب ضمن القوالب المميزة، أضفها لباقتك لاختياره' : 'هذا القالب غير متاح لمتجرك', 'ADDON_OFF');
       const texture = x.texture === true ? 'grain' : x.texture === false ? 'none' : ['grain', 'paper', 'none'].includes(x.texture) ? x.texture : null;
       p.menu_ix = {
         style, bg: hex(x.bg), accent: hex(x.accent), texture,
         shape: ['round', 'soft', 'square'].includes(x.shape) ? x.shape : null,
-        tagline: String(x.tagline || '').replace(/\s+/g, ' ').trim().slice(0, 40) || null
+        tagline: String(x.tagline || '').replace(/\s+/g, ' ').trim().slice(0, 40) || null,
+        // الخلفية: لون، أو صورة، أو فيديو (ملفات مرفوعة لمتجره بس)
+        bg_mode: ['color', 'image', 'video'].includes(x.bg_mode) ? x.bg_mode : 'color',
+        bg_image: media(x.bg_image), bg_video: media(x.bg_video)
       };
+      if (p.menu_ix.bg_mode !== 'color' && !p.menu_ix[`bg_${p.menu_ix.bg_mode}`]) p.menu_ix.bg_mode = 'color';
     }
     if (has('google_review_url')) {
       const u = String(b.google_review_url || '').trim();
@@ -480,8 +490,8 @@ module.exports.post = async function post(action, req, b, env) {
   // ─── رابط رفع ملف (الرفع يتم مباشرة للتخزين برابط موقّع صالح لملف واحد) ───
   if (action === 'upload-url') {
     const kind = b.kind;
-    if (!['logo', 'bg_image', 'bg_video', 'links_bg_image', 'links_bg_video', 'prod', 'prod_video', 'prod_cut', 'sticker', 'stamp', 'card_bg'].includes(kind)) throw new ApiError(400, 'نوع ملف غير صحيح');
-    const isVideo = kind === 'bg_video' || kind === 'links_bg_video' || kind === 'prod_video';
+    if (!['logo', 'bg_image', 'bg_video', 'links_bg_image', 'links_bg_video', 'prod', 'prod_video', 'prod_cut', 'sticker', 'stamp', 'card_bg', 'ix_bg_image', 'ix_bg_video'].includes(kind)) throw new ApiError(400, 'نوع ملف غير صحيح');
+    const isVideo = kind === 'bg_video' || kind === 'links_bg_video' || kind === 'prod_video' || kind === 'ix_bg_video';
     const ext = (isVideo ? VIDEO_TYPES : IMAGE_TYPES)[b.type];
     if (!ext) throw new ApiError(400, isVideo ? 'الملف لازم يكون فيديو MP4' : 'صيغة الصورة غير مدعومة، استخدم JPG أو PNG أو WebP');
     const size = int(b.size);

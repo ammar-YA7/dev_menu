@@ -120,10 +120,12 @@ async function menuPayload(slug) {
   // زر المساعد: مشغّل من صاحب المحل + ضمن باقته + باقي له رصيد هالشهر
   // الزر يبقى ظاهر حتى لو خلص الرصيد: المساعد يرد رد لطيف بدل ما يختفي أو يذكر حدود
   const menu_chat = store.menu_chat === true && feats.chat;
+  // المنيو التفاعلي إضافة: بدونها (أو لو انتهت) يطلع المنيو العادي حتى في رابط التابلت. نرسل نعم/لا بس، مو مميزات الباقة
+  const ix_on = !!feats.ixpro;
   // الإضافات المربوطة بأصناف المنيو تاخذ اسمها وسعرها الحالي منها
   await require('./_lib/order').resolveExtraLinks(store.id, products);
   const order_opts = order_mode ? await require('./_lib/order').orderSettings(store.id) : null;
-  return { store: { ...store, name, menu_chat, waitlist_open, has_coupons, occasion, promos, order_mode, order_opts }, categories: categories.sort(bySort), products: products.sort(bySort), feats };
+  return { store: { ...store, name, menu_chat, ix_on, waitlist_open, has_coupons, occasion, promos, order_mode, order_opts }, categories: categories.sort(bySort), products: products.sort(bySort), feats };
 }
 // ردود جاهزة للأسئلة البسيطة. أي شي غيرها يروح للمساعد
 const AR = (t) => /[؀-ۿ]/.test(t);

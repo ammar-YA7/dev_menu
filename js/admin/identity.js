@@ -569,17 +569,21 @@
   // ─── نوع المنيو: عادي (قائمة أو صور كبيرة، يختار الزبون) أو تفاعلي ───
   function renderMenuLayout() {
     if (!document.getElementById('menu-layout')) return;
-    const cur = client.menu_layout === 'interactive' ? 'interactive' : 'normal';
-    const opt = (k, label, sub, art) => `
-      <button type="button" role="radio" aria-checked="${cur === k}" onclick="setMenuLayout('${k}')" class="rounded-xl border-2 p-2.5 text-right transition ${cur === k ? 'border-brand bg-white' : 'border-brand/15 bg-white/60 hover:border-brand/35'}">
+    const cur = client.menu_layout === 'interactive' && ixHas() ? 'interactive' : 'normal';
+    const opt = (k, label, sub, art) => {
+      const locked = k === 'interactive' && !ixHas();
+      return `
+      <button type="button" role="radio" aria-checked="${cur === k}" ${locked ? 'aria-disabled="true"' : ''} onclick="setMenuLayout('${k}')" class="relative rounded-xl border-2 p-2.5 text-right transition ${cur === k ? 'border-brand bg-white' : 'border-brand/15 bg-white/60 hover:border-brand/35'} ${locked ? 'opacity-70' : ''}">
         <span class="block h-14 rounded-lg bg-ink/[0.06] p-1.5 mb-2">${art}</span>
         <b class="block text-[12px] text-ink">${label}</b><span class="block text-[11px] text-ink leading-relaxed">${sub}</span>
+        ${locked ? ixLockBadge : ''}
       </button>`;
+    };
     const row = '<span class="flex gap-1.5 items-center mb-1"><span class="w-5 h-5 rounded bg-ink/25 shrink-0"></span><span class="flex-1 h-1.5 rounded bg-ink/20"></span></span>';
     const pill = '<span class="block w-3/5 h-2.5 rounded-full bg-ink/25 mx-auto mb-1"></span>';
     document.getElementById('menu-layout').innerHTML =
-      opt('normal', 'منيو عادي', 'قائمة بالأقسام والأصناف مع البحث، ويختار العميل بين القائمة والصور الكبيرة.', row + row) +
-      opt('interactive', 'منيو تفاعلي', 'شاشة ترحيب بأزرار الأقسام، ثم الأصناف بصور كبيرة وحركة خفيفة. مناسب للأجهزة اللوحية على الطاولات.', '<span class="block w-5 h-5 rounded-full bg-ink/25 mx-auto mb-1"></span>' + pill + pill);
+      opt('normal', 'عادي', 'قائمة بالأقسام والأصناف مع البحث، ويختار العميل بين القائمة والصور الكبيرة.', row + row) +
+      opt('interactive', 'تفاعلي', 'شاشة ترحيب بأزرار الأقسام، ثم الأصناف بصور كبيرة وحركة خفيفة، بشكل المنيو التفاعلي الذي تختاره تحت.', '<span class="block w-5 h-5 rounded-full bg-ink/25 mx-auto mb-1"></span>' + pill + pill);
     renderIxLook();
   }
 
@@ -592,8 +596,13 @@
   const ixCfg = () => {
     const o = client.menu_ix && typeof client.menu_ix === 'object' ? client.menu_ix : {};
     return { style: ixTemplates()[o.style] ? o.style : 'grid', bg: o.bg || null, accent: o.accent || null, texture: ixTexture(o.texture),
-      shape: ['round', 'soft', 'square'].includes(o.shape) ? o.shape : null, tagline: o.tagline || '' };
+      shape: ['round', 'soft', 'square'].includes(o.shape) ? o.shape : null, tagline: o.tagline || '',
+      bg_mode: ['color', 'image', 'video'].includes(o.bg_mode) ? o.bg_mode : 'color', bg_image: o.bg_image || null, bg_video: o.bg_video || null };
   };
+  // المنيو التفاعلي إضافة (ixpro): بدونها نعرض الشكل كمعاينة مقفولة مع طريقة الإضافة
+  const ixHas = () => !window.DMPlans || DMPlans.has(client, 'ixpro');
+  const ixLockBadge = '<span class="absolute top-3 left-3 inline-flex items-center gap-1 text-[10px] font-bold bg-white/95 text-ink px-2 py-0.5 rounded-full border border-brand/20"><i class="ph-bold ph-lock-simple"></i> إضافة</span>';
+  function addIxpro() { lockedKey = 'ixpro'; addFeature(); }
   function ixColors(c) {
     const th = window.DMTheme ? DMTheme.resolve(client.theme, client.accent_color).vars : { bg: '#f6f6f3', accent: '#384f3d' };
     const d = IX_DEF[c.style] || IX_DEF.grid;
@@ -634,19 +643,46 @@
     if (!box) return;
     renderTabletLink();
     const c = ixCfg(), col = ixColors(c), T = ixTemplates();
-    const ok = (k) => !window.DMPlans || !DMPlans.ixAllowed || DMPlans.ixAllowed(client, k);
+    const has = ixHas();
     const SUB = { grid: 'الأصناف في شبكة بصور كبيرة، بألوان المنيو وخلفيته.', zigzag: 'خط في المنتصف والأصناف على جانبيه بالتناوب، بصور دائرية وخلفية داكنة.', thread: 'الأطباق يمين ويسار يربطها خيط ذهبي يرتسم بحركة، بخلفية خضراء داكنة.' };
-    // القوالب: المميز يطلع بقفل لو ما عنده «القوالب المميزة»
+    // القوالب كلها ضمن الإضافة
     const keys = Object.keys(T);
     const opt = (k) => {
-      const locked = !ok(k), cur = c.style === k;
+      const cur = c.style === k;
       return `
-      <button type="button" role="radio" aria-checked="${cur}" ${locked ? 'aria-disabled="true"' : ''} onclick="setIxStyle('${k}')" class="relative rounded-xl border-2 p-2 text-right transition ${cur ? 'border-brand bg-white' : 'border-brand/15 bg-white/60 hover:border-brand/35'} ${locked ? 'opacity-70' : ''}">
+      <button type="button" role="radio" aria-checked="${cur}" onclick="setIxStyle('${k}')" class="relative rounded-xl border-2 p-2 text-right transition ${cur ? 'border-brand bg-white' : 'border-brand/15 bg-white/60 hover:border-brand/35'}">
         <span id="ix-art-${k}" class="block mb-2">${ixArt(k, cur ? col : ixColors({ style: k }))}</span>
         <b class="block text-[12px] text-ink">${T[k].name}</b><span class="block text-[11px] text-ink leading-relaxed">${SUB[k] || T[k].desc || ''}</span>
-        ${locked ? '<span class="absolute top-3 left-3 inline-flex items-center gap-1 text-[10px] font-bold bg-white/95 text-ink px-2 py-0.5 rounded-full border border-brand/20"><i class="ph-bold ph-lock-simple"></i> ضمن القوالب المميزة</span>' : ''}
       </button>`;
     };
+    // بدون الإضافة: القوالب كمعاينة مقفولة، وسطر الإضافة وزرها (نفس مسار إضافة المميزات في صفحة الاشتراك)
+    if (!has) {
+      const f = DMPlans.FEATURES.ixpro;
+      box.innerHTML = `
+        <b class="block text-xs text-ink">شكل المنيو التفاعلي</b>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 opacity-60 pointer-events-none select-none" aria-hidden="true">${keys.map(k => `
+          <div class="rounded-xl border-2 border-brand/15 bg-white p-2"><span class="block mb-2">${ixArt(k, ixColors({ style: k }))}</span><b class="block text-[12px] text-ink">${T[k].name}</b></div>`).join('')}
+        </div>
+        <div class="flex flex-col sm:flex-row sm:items-center gap-2 bg-brand/5 rounded-lg border border-brand/15 p-2.5">
+          <span class="flex-1 text-[11px] font-bold text-ink leading-relaxed"><i class="ph-bold ph-lock-simple"></i> أضف المنيو التفاعلي لباقتك: ${f.month} ر.س بالشهر أو ${f.year} ر.س بالسنة. يشمل كل القوالب، وخلفية بصورة أو فيديو أو لون، ومنيو التابلت.</span>
+          <button type="button" onclick="addIxpro()" class="shrink-0 bg-brand text-cream font-bold px-3 py-2 rounded-lg text-[12px]"><i class="ph-bold ph-plus"></i> أضف المنيو التفاعلي</button>
+        </div>`;
+      return;
+    }
+    // الخلفية: لون، أو صورة، أو فيديو (رفع ومعاينة وإزالة)
+    const bgFile = (kind) => {
+      const url = c[`bg_${kind}`], on = c.bg_mode === kind;
+      const prev = !url ? '' : kind === 'image' ? `<img src="${esc(url)}" alt="" class="w-20 h-12 object-cover rounded-lg border border-brand/15 shrink-0">` : `<video src="${esc(url)}" muted loop autoplay playsinline class="w-20 h-12 object-cover rounded-lg border border-brand/15 shrink-0"></video>`;
+      return `
+        <div class="flex items-center gap-2 bg-brand/5 rounded-lg border ${on ? 'border-brand' : 'border-brand/15'} p-2">
+          ${prev || `<span class="w-20 h-12 rounded-lg bg-white border border-dashed border-brand/25 grid place-items-center text-ink/60 shrink-0"><i class="ph-bold ${kind === 'image' ? 'ph-image' : 'ph-film-strip'}"></i></span>`}
+          <span class="flex-1 min-w-0 text-[11px] text-ink leading-relaxed">${kind === 'image' ? 'صورة (حتى 5 ميجا)' : 'فيديو قصير بدون صوت (MP4، حتى 30 ميجا)'}</span>
+          <input type="file" id="ix-bg-${kind}-file" accept="${kind === 'image' ? 'image/*' : 'video/mp4,video/webm,video/quicktime'}" class="hidden" onchange="uploadIxBg('${kind}')">
+          <button type="button" id="upl-ix_bg_${kind}" onclick="document.getElementById('ix-bg-${kind}-file').click()" class="shrink-0 bg-brand text-cream font-bold px-2.5 py-1.5 rounded-lg text-[11px]">${url ? 'تغيير' : 'رفع'}</button>
+          ${url ? `<button type="button" onclick="removeIxBg('${kind}')" class="shrink-0 text-[11px] font-bold text-red-600 underline">إزالة</button>` : ''}
+        </div>`;
+    };
+    const bgModes = [['color', 'لون'], ['image', 'صورة'], ['video', 'فيديو']];
     const color = (key, label) => `
       <div class="flex items-center gap-2 bg-brand/5 rounded-lg border border-brand/15 p-2">
         <input type="color" id="ix-${key}" value="${col[key]}" oninput="previewIxLook()" onchange="saveIxLook({ ${key}: this.value })" aria-label="${label}" class="w-9 h-9 rounded-lg border border-brand/20 cursor-pointer shrink-0 bg-white">
@@ -664,6 +700,14 @@
     box.innerHTML = `
       <b class="block text-xs text-ink">شكل المنيو التفاعلي</b>
       <div role="radiogroup" class="grid grid-cols-2 gap-2">${keys.map(opt).join('')}</div>
+      <div class="space-y-1.5">
+        <span class="block text-[11px] font-bold text-ink">الخلفية</span>
+        <div role="radiogroup" class="grid grid-cols-3 gap-1.5">${bgModes.map(([v, t]) => `
+          <button type="button" role="radio" aria-checked="${c.bg_mode === v}" onclick="setIxBgMode('${v}')" class="rounded-lg border px-2 py-2 text-[11px] font-bold transition ${c.bg_mode === v ? 'border-brand bg-brand text-cream' : 'border-brand/20 bg-white text-ink hover:border-brand/40'}">${t}</button>`).join('')}
+        </div>
+        ${c.bg_mode === 'image' ? bgFile('image') : c.bg_mode === 'video' ? bgFile('video') : ''}
+        ${c.bg_mode !== 'color' ? '<span class="block text-[11px] text-ink leading-relaxed">يظهر فوقها لون الخلفية بشفافية حتى تبقى النصوص واضحة.</span>' : ''}
+      </div>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">${color('bg', 'لون الخلفية')}${color('accent', 'لون التمييز')}</div>
       ${seg('shape', 'شكل البطاقات', [['round', 'دائري'], ['soft', 'حواف ناعمة'], ['square', 'حواف حادة']])}
       ${seg('texture', 'الملمس', [['grain', 'حبيبات'], ['paper', 'ورق'], ['none', 'بدون']])}
@@ -679,6 +723,8 @@
     const input = document.getElementById('tablet-link'), open = document.getElementById('tablet-open');
     if (!input || !client) return;
     input.value = tabletUrl(); open.href = tabletUrl();
+    const lock = document.getElementById('tablet-lock');
+    if (lock) lock.classList.toggle('hidden', ixHas());
   }
   function copyTabletLink() {
     navigator.clipboard.writeText(tabletUrl())
@@ -695,17 +741,38 @@
     if (await updateClient({ menu_ix: { ...ixCfg(), ...patch } })) { renderIxLook(); showToast('تم حفظ شكل المنيو التفاعلي'); }
     else { renderIxLook(); showToast('تعذر حفظ الإعداد', true); }
   }
+  // نوع الخلفية: الصورة أو الفيديو لو ما انرفع للحين نفتح اختيار الملف، وينحفظ النوع بعد الرفع
+  function setIxBgMode(mode) {
+    const c = ixCfg();
+    if (mode !== 'color' && !c[`bg_${mode}`]) return document.getElementById(`ix-bg-${mode}-file`) ? document.getElementById(`ix-bg-${mode}-file`).click() : (renderIxLookWith(mode));
+    saveIxLook({ bg_mode: mode });
+  }
+  // نرسم الخانة (عشان يطلع زر الرفع) قبل ما ينحفظ شي
+  function renderIxLookWith(mode) {
+    const o = client.menu_ix || {}; client.menu_ix = { ...o, bg_mode: mode }; renderIxLook(); client.menu_ix = o;
+    const f = document.getElementById(`ix-bg-${mode}-file`); if (f) f.click();
+  }
+  async function uploadIxBg(kind) {
+    const input = document.getElementById(`ix-bg-${kind}-file`), file = input && input.files[0];
+    const problem = validateFile(file, kind);
+    if (problem) return showToast(problem, true);
+    const url = await uploadFile(file, `ix_bg_${kind}`, 1920);
+    input.value = '';
+    if (!url) return showToast(`فشل رفع الملف: ${lastUploadError}`, true);
+    saveIxLook({ bg_mode: kind, [`bg_${kind}`]: url });
+  }
+  function removeIxBg(kind) { saveIxLook({ bg_mode: 'color', [`bg_${kind}`]: null }); }
   // تغيير القالب يرجّع الألوان والملمس وشكل البطاقات لافتراضي القالب الجديد
   async function setMenuLayout(k) {
     const cur = client.menu_layout === 'interactive' ? 'interactive' : 'normal';
     if (cur === k) return;
+    if (k === 'interactive' && !ixHas()) { showToast('المنيو التفاعلي إضافة على المنيو، أضفها لباقتك أولاً', true); return addIxpro(); }
     if (await updateClient({ menu_layout: k === 'interactive' ? 'interactive' : 'list' })) { renderMenuLayout(); showToast(k === 'interactive' ? 'تم اعتماد المنيو التفاعلي' : 'تم اعتماد المنيو العادي'); }
     else showToast('تعذر حفظ الإعداد', true);
   }
 
   function setIxStyle(k) {
     if (ixCfg().style === k) return;
-    if (window.DMPlans && DMPlans.ixAllowed && !DMPlans.ixAllowed(client, k)) return showToast('هذا القالب ضمن القوالب المميزة، أضفها لباقتك من صفحة الاشتراك لاختياره', true);
     saveIxLook({ style: k, bg: null, accent: null, texture: null, shape: null });
   }
 

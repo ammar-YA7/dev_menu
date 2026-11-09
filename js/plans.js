@@ -12,22 +12,19 @@
     notify:   { name: 'رسائل لزبائنك',  desc: 'إضافة للبيجر: إرسال إشعارات للعملاء الذين يحتفظون ببطاقة النداء، مثل عروض اليوم أو المنتجات الجديدة', icon: 'ph-megaphone', month: 19, year: 179, needs: 'pager', within: 'loyalty' },
     waitlist: { name: 'قائمة الانتظار', desc: 'تسجيل العملاء في قائمة الانتظار وتنبيههم تلقائياً عند حلول دورهم', icon: 'ph-hourglass-medium', month: 29, year: 249 },
     loyalty:  { name: 'بطاقة الولاء',    desc: 'بطاقة أختام ومكافآت في محفظة جوال العميل، مع إرسال الرسائل ومساعد ذكي للتواصل مع العملاء', icon: 'ph-seal-check', month: 69, year: 649 },
-    // إضافة للمنيو التفاعلي: القوالب المميزة. ما تنعرض للبيع لين يصير فيه قالب مميز واحد على الأقل (IXPRO_ON تحت)
-    ixpro:    { name: 'القوالب المميزة', desc: 'إضافة للمنيو التفاعلي: مكتبة قوالب مميزة تتجدد باستمرار، تختار منها شكل منيو محلك', icon: 'ph-palette', month: 19, year: 179, needs: 'menu' },
+    // المنيو التفاعلي إضافة على المنيو (المفتاح ixpro من أول ما انبنى، ما تغيّر): كل القوالب فيه، وبدونه يطلع المنيو العادي
+    ixpro:    { name: 'المنيو التفاعلي', desc: 'إضافة للمنيو: منيو تفاعلي بقوالب متعددة وخلفية من اختيارك (صورة أو فيديو أو لون)، تستخدمه منيو رئيسياً من رمز QR أو على جهاز لوحي أمام الكاشير', icon: 'ph-device-tablet', month: 19, year: 179, needs: 'menu' },
     // هدية من الإدارة لمشترك (مثلاً مشترك المنيو): البيجر الأساسي مجاناً، بدون بطاقة النداء والرسائل، 200 رقم بالشهر
     // ما يطلع في صفحات الاختيار (مو في ORDER)، تضيفه الإدارة بس
     freepager: { name: 'البيجر المجاني', desc: 'البيجر الأساسي مجاناً: 200 رقم بالشهر للفرع الرئيسي، بدون بطاقة النداء والرسائل', icon: 'ph-gift', month: 0, year: 0 }
   };
-  // قوالب المنيو التفاعلي (مصدر واحد: المنيو ولوحة صاحب المحل والخادم)
-  //   premium: ضمن «القوالب المميزة» (ixpro)
+  // قوالب المنيو التفاعلي (مصدر واحد للأسماء: المنيو ولوحة صاحب المحل والخادم). كلها ضمن إضافة «المنيو التفاعلي»
   const IX_TEMPLATES = {
-    grid:   { name: 'Nova', premium: false },
-    zigzag: { name: 'Sage', premium: false },
-    thread: { name: 'Amber', premium: true, desc: 'الأطباق على أطباق خزفية يمين ويسار يربطها خيط ذهبي، بخلفية خضراء داكنة.' }
+    grid:   { name: 'Nova' },
+    zigzag: { name: 'Sage' },
+    thread: { name: 'Amber', desc: 'الأطباق على أطباق خزفية يمين ويسار يربطها خيط ذهبي، بخلفية خضراء داكنة.' }
   };
-  // «القوالب المميزة» مخفية من صفحات الاختيار والأسعار لين يصير فيه قالب مميز
-  const IXPRO_ON = Object.values(IX_TEMPLATES).some(t => t.premium);
-  const ORDER = ['menu', 'chat', ...(IXPRO_ON ? ['ixpro'] : []), 'pager', 'notify', 'waitlist', 'loyalty'];
+  const ORDER = ['menu', 'chat', 'ixpro', 'pager', 'notify', 'waitlist', 'loyalty'];
   // رصيد المساعد الذكي: أسئلة الشهر للمشترك، وللتجربة، وحد كل جوال باليوم
   const CHAT = { month: 1000, trial: 100, day: 10 };
   // مدة التجربة المجانية (أيام)
@@ -107,7 +104,7 @@
       const f = [...store.plan_features];
       if (f.includes('pager')) f.push('notify');
       if (f.includes('menu')) f.push('chat');
-      if (f.includes('menu') && IXPRO_ON) f.push('ixpro');   // ويجرب «القوالب المميزة»
+      if (f.includes('menu')) f.push('ixpro');   // ويجرب «المنيو التفاعلي»
       return withFreePager(clean(f));
     }
     if (store.subscription_status === 'active') return Array.isArray(store.plan_features) && store.plan_features.length ? withFreePager(clean(store.plan_features)) : LEGACY.slice();
@@ -129,15 +126,10 @@
     return false;
   }
   const has = (store, key) => live(store) && featuresOf(store).includes(key);
-  // يقدر المحل يختار هالقالب؟ المميز يحتاج «القوالب المميزة»
-  function ixAllowed(store, key) {
-    const t = IX_TEMPLATES[key];
-    if (!t) return false;
-    if (t.premium) return has(store, 'ixpro');
-    return true;
-  }
+  // يقدر المحل يستخدم هالقالب؟ كل القوالب تحتاج إضافة «المنيو التفاعلي»
+  const ixAllowed = (store, key) => !!IX_TEMPLATES[key] && has(store, 'ixpro');
 
-  const api = { FEATURES, ORDER, CHAT, TRIAL_DAYS, FREE, isFree, pagerLite, BRANCH, BUNDLES, LEGACY, ACCOUNT_WIDE, BRANCH_KEYS, ownBranch, branchFeatures, price, branchPrice, featuresOf, has, ixAllowed, IX_TEMPLATES, IXPRO_ON, live, clean, toggle, coveredBy, coveredNote };
+  const api = { FEATURES, ORDER, CHAT, TRIAL_DAYS, FREE, isFree, pagerLite, BRANCH, BUNDLES, LEGACY, ACCOUNT_WIDE, BRANCH_KEYS, ownBranch, branchFeatures, price, branchPrice, featuresOf, has, ixAllowed, IX_TEMPLATES, live, clean, toggle, coveredBy, coveredNote };
   if (typeof module === 'object' && module.exports) module.exports = api;
   else root.DMPlans = api;
 })(typeof window !== 'undefined' ? window : globalThis);

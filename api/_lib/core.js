@@ -139,11 +139,11 @@ async function findPublicStore(rawSlug, fields) {
   return { slug, store: old };
 }
 
-// كل خدمات المحل باستعلام واحد (بدل استعلام لكل خدمة): { menu, pager, waitlist, loyalty }
+// كل خدمات المحل باستعلام واحد (بدل استعلام لكل خدمة): { menu, chat, ixpro (المنيو التفاعلي), pager, waitlist, loyalty }
 async function storeFeatures(storeId) {
   const PLANS = require('./plans');
   const s = (await rest(`clients?id=eq.${storeId}&select=subscription_status,plan_features,parent_id,is_active,trial_ends_at,subscription_end_date`))[0];
-  const out = Object.fromEntries(['menu', 'chat', 'pager', 'waitlist', 'loyalty'].map(k => [k, !!s && PLANS.has(s, k)]));
+  const out = Object.fromEntries(['menu', 'chat', 'ixpro', 'pager', 'waitlist', 'loyalty'].map(k => [k, !!s && PLANS.has(s, k)]));
   // رصيد المساعد الذكي الشهري: التجربة أقل
   out.chat_limit = s && s.subscription_status === 'trial' ? PLANS.CHAT.trial : PLANS.CHAT.month;
   return out;
@@ -154,7 +154,7 @@ async function storesFeatures(ids) {
   const PLANS = require('./plans');
   if (!ids.length) return {};
   const rows = await rest(`clients?id=in.(${ids.map(Number).join(',')})&select=id,subscription_status,plan_features,parent_id,is_active,trial_ends_at,subscription_end_date`);
-  return Object.fromEntries(rows.map(s => [s.id, Object.fromEntries(['menu', 'chat', 'pager', 'waitlist', 'loyalty'].map(k => [k, PLANS.has(s, k)]))]));
+  return Object.fromEntries(rows.map(s => [s.id, Object.fromEntries(['menu', 'chat', 'ixpro', 'pager', 'waitlist', 'loyalty'].map(k => [k, PLANS.has(s, k)]))]));
 }
 
 // عنوان الموقع: الإنتاج www.devmenu.digital، ونسخة التجربة تحط SITE_URL حقها (روابط الإيميلات والمحفظة والإشعارات)

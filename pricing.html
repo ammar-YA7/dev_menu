@@ -209,7 +209,7 @@
   .topbar a.lnk:active { color: #fff; background: var(--brand); }
   .tabs button:hover { color: var(--brand); background: rgba(56,79,61,.1); }
   .tabs button[aria-selected="true"] { background: var(--brand); color: #fff; box-shadow: var(--shadow-primary); }
-  /* المنيو التفاعلي: ثلاث مستويات */
+  /* المنيو العادي والتفاعلي */
   .ixt { position: relative; display: flex; flex-direction: column; gap: 10px; background: #fff; border-radius: 12px; padding: 24px; box-shadow: var(--shadow-card); }
   .ixt h3 { font-size: 19px; font-weight: 700; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .ixt .ixt-ic { width: 44px; height: 44px; border-radius: 12px; background: var(--brand); color: var(--gold); display: grid; place-items: center; font-size: 20px; }
@@ -217,7 +217,11 @@
   .ixt .ixt-pr b { font-size: 24px; color: var(--ink); }
   .ixt .ixt-pr small { font-size: 13px; font-weight: 600; color: var(--muted); }
   .ixt .sub { font-size: 14.5px; }
-  .ixt-soon { font-size: 11.5px; font-weight: 700; color: var(--gold-deep); background: rgba(127,182,133,.18); padding: 3px 10px; border-radius: 999px; }
+  .ixt-list { display: grid; gap: 8px; font-size: 14.5px; font-weight: 600; }
+  .ixt-list li { display: flex; gap: 8px; align-items: flex-start; line-height: 1.6; }
+  .ixt-list i { color: var(--gold-deep); margin-top: 4px; }
+  .ixt.ixt-dark .ixt-list li { color: #f6f3ec; }
+  .ixt.ixt-dark .ixt-list i { color: var(--gold); }
   .ixt.ixt-dark { background: linear-gradient(180deg, #1a3022, #10200f); color: #f6f3ec; }
   .ixt.ixt-dark .sub, .ixt.ixt-dark .ixt-pr small { color: rgba(246,243,236,.75) !important; }   /* skin-shadcn-landing يلوّن .sub بـ !important */
   .ixt.ixt-dark .ixt-pr, .ixt.ixt-dark .ixt-pr b { color: #f6f3ec; }
@@ -275,7 +279,7 @@
   </div>
 </section>
 
-<!-- ═══════════ المنيو التفاعلي: ثلاث مستويات (الأسعار من js/plans.js) ═══════════ -->
+<!-- ═══════════ المنيو العادي والمنيو التفاعلي (الأسعار من js/plans.js) ═══════════ -->
 <section id="interactive" class="pt-16 md:pt-20">
   <div class="wrap">
     <div class="text-center max-w-2xl mx-auto mb-10 reveal">
@@ -285,15 +289,24 @@
     <div class="grid md:grid-cols-2 gap-4 max-w-4xl mx-auto">
       <article class="ixt reveal">
         <span class="ixt-ic"><i class="ph-bold ph-fork-knife"></i></span>
-        <h3>المنيو التفاعلي</h3>
+        <h3>المنيو العادي</h3>
         <p class="ixt-pr">ضمن باقة المنيو</p>
-        <p class="sub">قالبان (Nova و Sage) مع ألوان محلك وملمس الخلفية وتفريغ صور الأطباق.</p>
+        <ul class="ixt-list">
+          <li><i class="ph-bold ph-check"></i> قائمة بالأقسام والأصناف مع البحث، أو بصور كبيرة</li>
+          <li><i class="ph-bold ph-check"></i> ثيمات وألوان محلك، وخلفية بصورة أو فيديو</li>
+          <li><i class="ph-bold ph-check"></i> رمز QR للطاولات، والطلب من المنيو</li>
+        </ul>
       </article>
-      <article class="ixt reveal">
-        <span class="ixt-ic"><i class="ph-bold ph-palette"></i></span>
-        <h3>القوالب المميزة <span id="ixpro-soon" class="ixt-soon">قريباً</span></h3>
+      <article class="ixt ixt-dark reveal">
+        <span class="ixt-ic"><i class="ph-bold ph-device-tablet"></i></span>
+        <h3>المنيو التفاعلي</h3>
         <p class="ixt-pr"><b dir="ltr" id="ixpro-month"></b> <small>بالشهر</small> <small>أو</small> <b dir="ltr" id="ixpro-year"></b> <small>بالسنة</small></p>
-        <p class="sub">مكتبة قوالب مميزة تتجدد باستمرار، تختار منها شكل منيو محلك.</p>
+        <ul class="ixt-list">
+          <li><i class="ph-bold ph-check"></i> كل القوالب: Nova و Sage و Amber، وما يُضاف لاحقاً</li>
+          <li><i class="ph-bold ph-check"></i> خلفية بصورة أو فيديو أو لون من اختيارك</li>
+          <li><i class="ph-bold ph-check"></i> منيو رئيسي من رمز QR، أو منيو للتابلت أمام الكاشير</li>
+          <li><i class="ph-bold ph-check"></i> تفريغ صور الأطباق</li>
+        </ul>
       </article>
     </div>
   </div>
@@ -346,10 +359,9 @@
   const money = (n) => `${SAR} ${Number(n).toLocaleString('en-US')}`;
   const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-  // ─── المنيو التفاعلي: أسعار «القوالب المميزة» من js/plans.js، و«قريباً» لين تنعرض للبيع ───
+  // ─── المنيو التفاعلي: سعر الإضافة من js/plans.js ───
   $('ixpro-month').textContent = money(DMPlans.FEATURES.ixpro.month);
   $('ixpro-year').textContent = money(DMPlans.FEATURES.ixpro.year);
-  $('ixpro-soon').hidden = DMPlans.IXPRO_ON;
 
   // ─── اختيار الباقة: يتحفظ ويروح مع التسجيل ───
   const CHOICE_KEY = 'dm_plan_choice';

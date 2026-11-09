@@ -343,7 +343,14 @@
   /* ─── شكل المنيو التفاعلي (menu_ix): خلفية بلون صاحب المحل، وملمس خفيف، وقالب «متعرج» ─── */
   #ix.ix-solid { background: var(--ix-bg); }
   /* الملمس: حبيبات ناعمة وضربات فرشاة باهتة، فوق الخلفية وتحت المحتوى */
-  #ix.ix-tex-grain::before, #ix.ix-tex-paper::before { content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  /* خلفية بصورة أو فيديو (تحت الملمس والمحتوى) */
+  #ix.ix-media { background: #000; }
+  #ix-bgm { display: none; position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+  #ix.ix-media #ix-bgm { display: block; }
+  #ix-bgm img, #ix-bgm video { display: block; width: 100%; height: 100%; object-fit: cover; }
+  #ix-bgm::after { content: ''; position: absolute; inset: 0; background: var(--ix-ov, rgba(0, 0, 0, .6)); }
+  #ix .ix-scr { z-index: 2; }
+  #ix.ix-tex-grain::before, #ix.ix-tex-paper::before { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='900' height='900'%3E%3Cfilter id='b'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.003 .022' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .16 -.04'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23b)'/%3E%3C/svg%3E"), radial-gradient(70% 45% at 15% 8%, rgba(255, 255, 255, .07), transparent 70%), radial-gradient(60% 40% at 90% 75%, rgba(0, 0, 0, .2), transparent 70%);
     background-size: 180px 180px, 900px 900px, 100% 100%, 100% 100%; }
   /* ملمس الورق: ألياف ناعمة بإضاءة خفيفة، وأطراف أغمق شوي */
@@ -574,6 +581,7 @@
       <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
     </button>
   </div>
+  <div id="ix-bgm" aria-hidden="true"></div>
   <section id="ixHome" class="ix-scr"></section>
   <section id="ixCat" class="ix-scr"></section>
   <section id="ixProd" class="ix-scr"></section>
@@ -1469,7 +1477,11 @@
   // رابط التابلت (?mode=tablet) يفتح المنيو التفاعلي دائماً بشكل المحل، مهما كان نوع منيو الطاولات، ومثله ?ix=1
   const ixTablet = new URLSearchParams(location.search).get('mode') === 'tablet';
   const ixForced = ixTablet ? '1' : new URLSearchParams(location.search).get('ix');
-  const ixMode = () => ixForced === '1' || (ixForced !== '0' && !!(project && project.menu_layout === 'interactive'));
+  // المنيو التفاعلي إضافة (ix_on من الخادم): بدونها أو لو انتهت يطلع المنيو العادي، حتى في رابط التابلت
+  // للتجربة في staging بس: ?ixon=1 أو ?ixon=0
+  const ixTestOn = DM.staging ? new URLSearchParams(location.search).get('ixon') : null;
+  const ixOn = () => ixTestOn === '1' || (ixTestOn !== '0' && !!(project && project.ix_on));
+  const ixMode = () => ixOn() && (ixForced === '1' || (ixForced !== '0' && !!(project && project.menu_layout === 'interactive')));
   const photoLayout = () => (menuView || (project && project.menu_layout === 'photos' ? 'photos' : 'list')) === 'photos';
   function renderLayoutToggle() {
     const cur = photoLayout() ? 'photos' : 'list';
@@ -2751,7 +2763,12 @@
     const sh = urlParams.get('ixshape') || (own ? o.shape : null);
     const shape = ['round', 'soft', 'square'].includes(sh) ? sh : null;
     const tagline = String(urlParams.get('ixtag') || o.tagline || '').trim().slice(0, 40);
-    return { style, bg: hex(o.bg) || d.bg, accent: hex(o.accent) || d.accent, texture, shape, tagline };
+    // الخلفية: لون (الافتراضي)، أو صورة، أو فيديو. ?ixbgimg= و ?ixbgvid= للتجربة في staging بس
+    const tImg = DM.staging && urlParams.get('ixbgimg'), tVid = DM.staging && urlParams.get('ixbgvid');
+    const bg_image = safeUrl(tImg || (own ? o.bg_image : '')), bg_video = safeUrl(tVid || (own ? o.bg_video : ''));
+    const bm = tVid ? 'video' : tImg ? 'image' : own ? o.bg_mode : 'color';
+    const bg_mode = bm === 'video' && bg_video ? 'video' : bm === 'image' && bg_image ? 'image' : 'color';
+    return { style, bg: hex(o.bg) || d.bg, accent: hex(o.accent) || d.accent, texture, shape, tagline, bg_mode, bg_image, bg_video };
   }
   // نغمق أو نفتح اللون: k سالب = أغمق
   const ixShade = (hex, k) => '#' + [1, 3, 5].map(i => { const v = parseInt(hex.slice(i, i + 2), 16); const n = k < 0 ? v * (1 + k) : v + (255 - v) * k; return Math.round(Math.max(0, Math.min(255, n))).toString(16).padStart(2, '0'); }).join('');
@@ -2781,17 +2798,39 @@
       v['ix-at'] = !L.bg || DMTheme.textOn(L.accent) !== DMTheme.textOn(L.bg) ? L.accent : (v.fg || L.accent);
     }
     el.style.cssText = Object.entries(v).map(([k, x]) => `--${k}:${x}`).join(';');
+    ixBgMedia(L);
     // شريط الجوال بلون الخلفية
     const meta = document.querySelector('meta[name="theme-color"]');
     if (meta && L.bg) meta.setAttribute('content', L.bg);
     return L;
   }
 
+  // ─── خلفية المنيو التفاعلي بصورة أو فيديو: تغطي الشاشة، وفوقها طبقة بلون القالب (70%) عشان النص ينقرأ ───
+  // الفيديو بدون صوت ويوقف لما الصفحة تختفي. مع «تقليل الحركة» أو توفير البيانات: لون بس
+  function ixBgMedia(L) {
+    const box = ixEl('ix-bgm');
+    const vid = L.bg_mode === 'video' && !calmMotion ? L.bg_video : '', img = L.bg_mode === 'image' ? L.bg_image : '';
+    const base = L.bg || getComputedStyle(document.body).getPropertyValue('--bg').trim();
+    box.style.setProperty('--ix-ov', DMTheme.isHex(base) ? ixRgba(base, .7) : 'rgba(0, 0, 0, .6)');
+    const key = vid ? `v:${vid}` : img ? `i:${img}` : '';
+    ixEl('ix').classList.toggle('ix-media', !!key);
+    if (box.dataset.key === key) return;
+    box.dataset.key = key;
+    box.innerHTML = vid ? `<video src="${esc(vid)}" muted loop playsinline autoplay preload="auto" disablepictureinpicture></video>` : img ? `<img src="${esc(img)}" alt="">` : '';
+    const v = box.querySelector('video');
+    if (v) { v.muted = true; v.play().catch(() => {}); }
+  }
+  document.addEventListener('visibilitychange', () => {
+    const v = ixEl('ix-bgm').querySelector('video');
+    if (!v) return;
+    if (document.hidden || !document.body.classList.contains('ix-mode')) v.pause(); else v.play().catch(() => {});
+  });
+
   // يتنادى مع كل رسم للمنيو: يشغّل/يطفّي التفاعلي، ويعيد الرسم بس لو تغيّرت البيانات أو اللغة (مو مع كل تغيير في السلة)
   function ixSync() {
     const on = ixMode(), was = document.body.classList.contains('ix-mode');
     document.body.classList.toggle('ix-mode', on);
-    if (!on) { clearTimeout(ixIdleT); if (was) { ixScreen = 'home'; ixDepth = 0; ixSig = ''; document.querySelectorAll('#ix .ix-scr').forEach(s => { s.classList.remove('on', 'enter'); s.querySelectorAll('video').forEach(v => { try { v.pause(); } catch {} }); }); } return; }
+    if (!on) { clearTimeout(ixIdleT); ixEl('ix-bgm').querySelectorAll('video').forEach(v => { try { v.pause(); } catch {} }); if (was) { ixScreen = 'home'; ixDepth = 0; ixSig = ''; document.querySelectorAll('#ix .ix-scr').forEach(s => { s.classList.remove('on', 'enter'); s.querySelectorAll('video').forEach(v => { try { v.pause(); } catch {} }); }); } return; }
     ixEl('ix-lang-text').textContent = currentLang === 'ar' ? 'English' : 'عربي';
     const look = ixApplyLook();
     const sig = `${menuVersion}|${currentLang}|${allProducts.length}|${allCategories.length}|${JSON.stringify(look)}`;
