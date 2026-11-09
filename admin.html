@@ -713,28 +713,42 @@
       <!-- إعدادات المنيو: تنحفظ مباشرة -->
       <section data-needs="menu" class="space-y-3">
         <h5 class="text-xs font-bold text-ink border-b border-ink/10 pb-1.5">إعدادات المنيو <span class="font-normal text-ink">(تنحفظ تلقائياً)</span></h5>
-        <!-- منيو الطاولات: عادي أو تفاعلي (يحدده صاحب المحل بس، والزبون ما يبدّل بينهم) -->
-        <div class="bg-brand/5 p-3 rounded-xl border border-brand/15 space-y-2">
-          <b class="text-xs text-ink block"><i class="ph-bold ph-qr-code text-amber-600"></i> نوع منيو الطاولات (رمز QR)</b>
-          <span class="block text-[11px] text-ink leading-relaxed">ما يظهر لعملائك عند مسح رمز QR على الطاولة أو فتح رابط المنيو.</span>
-          <div id="menu-layout" role="radiogroup" class="grid grid-cols-2 gap-2"></div>
-        </div>
-        <!-- منيو التابلت: رابط مستقل يفتح المنيو التفاعلي دائماً -->
-        <div id="tablet-card" class="bg-brand/5 p-3 rounded-xl border border-brand/15 space-y-2">
-          <b class="text-xs text-ink block"><i class="ph-bold ph-device-tablet text-amber-600"></i> منيو التابلت (تفاعلي)</b>
-          <span class="block text-[11px] text-ink leading-relaxed">افتحه على جهاز لوحي أمام الكاشير أو على الطاولات، ويتصفح العميل الأصناف باللمس.</span>
-          <div class="flex flex-col sm:flex-row gap-2">
-            <input id="tablet-link" type="text" readonly dir="ltr" onclick="this.select()" class="input-pro text-xs flex-1 min-w-0" aria-label="رابط منيو التابلت">
-            <div class="flex gap-2 shrink-0">
-              <button type="button" onclick="copyTabletLink()" class="bg-brand text-cream font-bold px-3 py-2 rounded-lg text-[12px]"><i class="ph-bold ph-copy"></i> نسخ الرابط</button>
-              <a id="tablet-open" href="#" target="_blank" rel="noopener" class="bg-white text-ink font-bold px-3 py-2 rounded-lg text-[12px] border border-brand/25"><i class="ph-bold ph-arrow-square-out"></i> فتح</a>
-            </div>
+        <!-- ═══ المنيو العادي ═══ -->
+        <div class="bg-white p-3.5 rounded-xl border border-brand/15 space-y-2">
+          <div class="flex items-center gap-2">
+            <span class="w-8 h-8 rounded-lg bg-brand/10 text-ink grid place-items-center shrink-0"><i class="ph-bold ph-list"></i></span>
+            <b class="text-[13px] text-ink">المنيو العادي</b>
           </div>
-          <span class="block text-[11px] text-ink leading-relaxed"><i class="ph-bold ph-lightbulb text-amber-600"></i> للأفضل: ثبّت الصفحة على الشاشة الرئيسية للجهاز وشغّل وضع ملء الشاشة.</span>
-          <span id="tablet-lock" class="hidden text-[11px] font-bold text-ink"><i class="ph-bold ph-lock-simple"></i> يعمل الرابط بعد إضافة «المنيو التفاعلي» لباقتك، وحتى ذلك يفتح المنيو العادي.</span>
+          <p class="text-[11px] text-ink leading-relaxed">قائمة بالأقسام والأصناف مع البحث، ويختار العميل بين عرض القائمة والصور الكبيرة.</p>
+          <div id="normal-status"></div>
         </div>
-        <!-- شكل المنيو التفاعلي: يطبَّق على منيو التابلت دائماً، وعلى منيو الطاولات لو كان تفاعلياً -->
-        <div id="menu-ix-look" class="bg-white rounded-xl border border-brand/15 p-3 space-y-2.5"></div>
+        <!-- ═══ المنيو التفاعلي (إضافة): أين يظهر، ورابط التابلت، وشكله ═══ -->
+        <div id="ix-card" class="bg-white p-3.5 rounded-xl border border-brand/15 space-y-3">
+          <div class="flex items-center gap-2">
+            <span class="w-8 h-8 rounded-lg bg-brand/10 text-ink grid place-items-center shrink-0"><i class="ph-bold ph-device-tablet"></i></span>
+            <b class="text-[13px] text-ink flex-1">المنيو التفاعلي</b>
+            <span id="ix-badge"></span>
+          </div>
+          <p id="ix-gift-note" class="hidden text-[11px] text-ink leading-relaxed"></p>
+          <div class="space-y-1.5">
+            <span class="block text-[11px] font-bold text-ink">أين يظهر؟</span>
+            <div id="menu-layout" role="radiogroup" class="space-y-1.5"></div>
+          </div>
+          <div id="tablet-card" class="space-y-2 border-t border-brand/10 pt-3">
+            <span class="block text-[11px] font-bold text-ink">رابط الجهاز اللوحي</span>
+            <div class="flex flex-col sm:flex-row gap-2">
+              <input id="tablet-link" type="text" readonly dir="ltr" onclick="this.select()" class="input-pro text-xs flex-1 min-w-0" aria-label="رابط منيو التابلت">
+              <div class="flex gap-2 shrink-0">
+                <button type="button" onclick="copyTabletLink()" class="bg-brand text-cream font-bold px-3 py-2 rounded-lg text-[12px]"><i class="ph-bold ph-copy"></i> نسخ الرابط</button>
+                <a id="tablet-open" href="#" target="_blank" rel="noopener" class="bg-white text-ink font-bold px-3 py-2 rounded-lg text-[12px] border border-brand/25"><i class="ph-bold ph-arrow-square-out"></i> فتح</a>
+              </div>
+            </div>
+            <span class="block text-[11px] text-ink leading-relaxed"><i class="ph-bold ph-lightbulb text-amber-600"></i> للأفضل: ثبّت الصفحة على الشاشة الرئيسية للجهاز وشغّل وضع ملء الشاشة.</span>
+            <span id="tablet-lock" class="hidden text-[11px] font-bold text-ink"><i class="ph-bold ph-lock-simple"></i> يعمل الرابط بعد إضافة «المنيو التفاعلي» لباقتك، وحتى ذلك يفتح المنيو العادي.</span>
+          </div>
+          <!-- شكل المنيو التفاعلي: القوالب والخلفية والألوان والشكل والملمس والجملة -->
+          <div id="menu-ix-look" class="border-t border-brand/10 pt-3 space-y-2.5"></div>
+        </div>
         <label class="flex items-start gap-2.5 bg-brand/5 p-3 rounded-xl border border-brand/15 cursor-pointer">
           <input type="checkbox" id="info-menu-chat" onchange="toggleMenuChat(this.checked)" class="w-4 h-4 mt-0.5 accent-[#384f3d] cursor-pointer">
           <span class="text-xs">

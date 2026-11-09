@@ -567,23 +567,40 @@
   }
 
   // ─── نوع المنيو: عادي (قائمة أو صور كبيرة، يختار الزبون) أو تفاعلي ───
+  // ─── المنيو العادي والمنيو التفاعلي: بطاقتين، وفي التفاعلي «أين يظهر؟» (التابلت بس، أو التابلت ورمز QR) ───
+  // حالة الإضافة: هدية (للمشتركين قبل ما يصير إضافة)، أو مفعّلة (في الباقة أو التجربة)، أو مو موجودة
+  function ixState() {
+    if (!ixHas()) return 'off';
+    const paid = !window.DMPlans || DMPlans.featuresOf(client).includes('ixpro');
+    return !paid && client.ix_gift_until && Date.parse(client.ix_gift_until) > Date.now() ? 'gift' : 'on';
+  }
+  const ixDate = (d) => new Date(d).toLocaleDateString('ar-SA-u-nu-latn-ca-gregory', { day: 'numeric', month: 'long', year: 'numeric' });
   function renderMenuLayout() {
     if (!document.getElementById('menu-layout')) return;
-    const cur = client.menu_layout === 'interactive' && ixHas() ? 'interactive' : 'normal';
-    const opt = (k, label, sub, art) => {
-      const locked = k === 'interactive' && !ixHas();
-      return `
-      <button type="button" role="radio" aria-checked="${cur === k}" ${locked ? 'aria-disabled="true"' : ''} onclick="setMenuLayout('${k}')" class="relative rounded-xl border-2 p-2.5 text-right transition ${cur === k ? 'border-brand bg-white' : 'border-brand/15 bg-white/60 hover:border-brand/35'} ${locked ? 'opacity-70' : ''}">
-        <span class="block h-14 rounded-lg bg-ink/[0.06] p-1.5 mb-2">${art}</span>
-        <b class="block text-[12px] text-ink">${label}</b><span class="block text-[11px] text-ink leading-relaxed">${sub}</span>
-        ${locked ? ixLockBadge : ''}
-      </button>`;
-    };
-    const row = '<span class="flex gap-1.5 items-center mb-1"><span class="w-5 h-5 rounded bg-ink/25 shrink-0"></span><span class="flex-1 h-1.5 rounded bg-ink/20"></span></span>';
-    const pill = '<span class="block w-3/5 h-2.5 rounded-full bg-ink/25 mx-auto mb-1"></span>';
+    const state = ixState(), main = client.menu_layout === 'interactive' && state !== 'off';
+    // بطاقة المنيو العادي: هل هو الرئيسي (اللي يطلع من رمز QR)؟
+    const ns = document.getElementById('normal-status');
+    if (ns) ns.innerHTML = main
+      ? '<p class="text-[11px] text-ink/70 leading-relaxed">المنيو التفاعلي هو الرئيسي حالياً، ويمكنك إرجاع المنيو العادي من بطاقة المنيو التفاعلي.</p>'
+      : '<span class="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-800 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full"><i class="ph-bold ph-qr-code"></i> المنيو الرئيسي حالياً: يظهر لعملائك عند مسح رمز QR.</span>';
+    // شارة المنيو التفاعلي
+    const badge = document.getElementById('ix-badge'), note = document.getElementById('ix-gift-note');
+    if (badge) badge.innerHTML = state === 'gift'
+      ? `<span class="inline-flex items-center gap-1 text-[11px] font-bold text-amber-900 bg-amber-400/20 border border-amber-500/30 px-2.5 py-1 rounded-full"><i class="ph-bold ph-gift"></i> هدية حتى ${ixDate(client.ix_gift_until)}</span>`
+      : state === 'on'
+      ? '<span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full"><i class="ph-bold ph-check-circle"></i> مفعّل</span>'
+      : '<span class="inline-flex items-center gap-1 text-[11px] font-bold text-ink bg-brand/5 border border-brand/20 px-2.5 py-1 rounded-full"><i class="ph-bold ph-lock-simple"></i> إضافة</span>';
+    if (note) { note.classList.toggle('hidden', state !== 'gift'); note.textContent = 'المنيو التفاعلي هدية لاشتراكك الحالي، وبعد التجديد يمكنك إضافته إلى باقتك.'; }
+    // أين يظهر؟
+    const off = state === 'off';
+    const opt = (k, label) => `
+      <label class="flex items-start gap-2.5 rounded-lg border p-2.5 transition ${off ? 'opacity-60 cursor-not-allowed border-brand/15' : (main ? k === 'interactive' : k === 'tablet') ? 'border-brand bg-brand/5 cursor-pointer' : 'border-brand/15 hover:border-brand/35 cursor-pointer'}">
+        <input type="radio" name="ix-where" value="${k}" ${(main ? k === 'interactive' : k === 'tablet') ? 'checked' : ''} ${off ? 'disabled' : ''} onchange="setMenuLayout(this.value)" class="w-4 h-4 mt-0.5 accent-[#384f3d] shrink-0">
+        <span class="text-[12px] font-bold text-ink leading-relaxed">${label}</span>
+      </label>`;
     document.getElementById('menu-layout').innerHTML =
-      opt('normal', 'عادي', 'قائمة بالأقسام والأصناف مع البحث، ويختار العميل بين القائمة والصور الكبيرة.', row + row) +
-      opt('interactive', 'تفاعلي', 'شاشة ترحيب بأزرار الأقسام، ثم الأصناف بصور كبيرة وحركة خفيفة، بشكل المنيو التفاعلي الذي تختاره تحت.', '<span class="block w-5 h-5 rounded-full bg-ink/25 mx-auto mb-1"></span>' + pill + pill);
+      opt('tablet', 'على الجهاز اللوحي فقط') +
+      opt('interactive', 'على الجهاز اللوحي ورمز QR للطاولات (يصبح المنيو الرئيسي)');
     renderIxLook();
   }
 
@@ -763,12 +780,16 @@
   }
   function removeIxBg(kind) { saveIxLook({ bg_mode: 'color', [`bg_${kind}`]: null }); }
   // تغيير القالب يرجّع الألوان والملمس وشكل البطاقات لافتراضي القالب الجديد
+  // «أين يظهر؟»: interactive = التابلت ورمز QR (يصير الرئيسي)، وغيره = التابلت بس (يرجع المنيو العادي بعرضه السابق: قائمة أو صور)
   async function setMenuLayout(k) {
-    const cur = client.menu_layout === 'interactive' ? 'interactive' : 'normal';
-    if (cur === k) return;
-    if (k === 'interactive' && !ixHas()) { showToast('المنيو التفاعلي إضافة على المنيو، أضفها لباقتك أولاً', true); return addIxpro(); }
-    if (await updateClient({ menu_layout: k === 'interactive' ? 'interactive' : 'list' })) { renderMenuLayout(); showToast(k === 'interactive' ? 'تم اعتماد المنيو التفاعلي' : 'تم اعتماد المنيو العادي'); }
-    else showToast('تعذر حفظ الإعداد', true);
+    const want = k === 'interactive' ? 'interactive' : 'normal', cur = client.menu_layout === 'interactive' ? 'interactive' : 'normal';
+    if (cur === want) return;
+    if (want === 'interactive' && !ixHas()) { renderMenuLayout(); showToast('المنيو التفاعلي إضافة على المنيو، أضفها لباقتك أولاً', true); return addIxpro(); }
+    const key = `dm_prev_layout_${client.id}`;
+    let back = 'list'; try { back = localStorage.getItem(key) === 'photos' ? 'photos' : 'list'; } catch {}
+    if (want === 'interactive') { try { localStorage.setItem(key, client.menu_layout === 'photos' ? 'photos' : 'list'); } catch {} }
+    if (await updateClient({ menu_layout: want === 'interactive' ? 'interactive' : back })) { renderMenuLayout(); showToast(want === 'interactive' ? 'صار المنيو التفاعلي هو الرئيسي، ويظهر عند مسح رمز QR' : 'رجع المنيو العادي رئيسياً، والتفاعلي على الجهاز اللوحي فقط'); }
+    else { renderMenuLayout(); showToast('تعذر حفظ الإعداد', true); }
   }
 
   function setIxStyle(k) {
