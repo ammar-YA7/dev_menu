@@ -411,7 +411,7 @@
         <span class="min-w-0"><b><i class="ph-bold ${f.icon}"></i> ${f.name}</b><p>${f.desc}</p>${sg ? `
           <span class="sug"><i class="ph-bold ph-sparkle"></i> مقترح مع ${P.FEATURES[sg.with].name}</span>
           <span class="sug-why block">${sg.why}</span>
-          <span class="sug-link" role="link" data-sug-link="${sg.link}">${sg.label} <i class="ph-bold ph-arrow-up-left"></i></span>` : ''}</span>
+          <span class="sug-link" role="link" data-sug-link="${sg.link}">${sg.label} <i class="ph-bold ph-arrow-square-out"></i></span>` : ''}</span>
         <span class="pr" dir="ltr">${choice.free && k === 'pager' ? 'مجاناً' : money(f[p])}<small>${choice.free && k === 'pager' ? `${DMPlans.FREE.pager} رقم شهرياً` : per()}</small></span>
       </button>`;
     }).join('');
