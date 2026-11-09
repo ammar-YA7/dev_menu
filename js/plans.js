@@ -125,7 +125,10 @@
     if (store.subscription_status === 'active') return !(t(store.subscription_end_date) + 3 * 864e5 <= now);
     return false;
   }
-  const has = (store, key) => live(store) && featuresOf(store).includes(key);
+  // هدية «المنيو التفاعلي» للمشتركين قبل ما يصير إضافة: لين نهاية اشتراكهم الحالي (ix_gift_until).
+  // تشغّل الميزة بس، وما تدخل في featuresOf عشان ما تنحسب في سعر التجديد، وبعد التجديد يحتاجون الإضافة
+  const ixGift = (store) => store.subscription_status === 'active' && !!store.ix_gift_until && Date.parse(store.ix_gift_until) > Date.now() && featuresOf(store).includes('menu');
+  const has = (store, key) => live(store) && (featuresOf(store).includes(key) || (key === 'ixpro' && ixGift(store)));
   // يقدر المحل يستخدم هالقالب؟ كل القوالب تحتاج إضافة «المنيو التفاعلي»
   const ixAllowed = (store, key) => !!IX_TEMPLATES[key] && has(store, 'ixpro');
 

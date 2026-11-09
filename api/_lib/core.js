@@ -142,7 +142,7 @@ async function findPublicStore(rawSlug, fields) {
 // كل خدمات المحل باستعلام واحد (بدل استعلام لكل خدمة): { menu, chat, ixpro (المنيو التفاعلي), pager, waitlist, loyalty }
 async function storeFeatures(storeId) {
   const PLANS = require('./plans');
-  const s = (await rest(`clients?id=eq.${storeId}&select=subscription_status,plan_features,parent_id,is_active,trial_ends_at,subscription_end_date`))[0];
+  const s = (await rest(`clients?id=eq.${storeId}&select=subscription_status,plan_features,parent_id,is_active,trial_ends_at,subscription_end_date,ix_gift_until`))[0];
   const out = Object.fromEntries(['menu', 'chat', 'ixpro', 'pager', 'waitlist', 'loyalty'].map(k => [k, !!s && PLANS.has(s, k)]));
   // رصيد المساعد الذكي الشهري: التجربة أقل
   out.chat_limit = s && s.subscription_status === 'trial' ? PLANS.CHAT.trial : PLANS.CHAT.month;
@@ -153,7 +153,7 @@ async function storeFeatures(storeId) {
 async function storesFeatures(ids) {
   const PLANS = require('./plans');
   if (!ids.length) return {};
-  const rows = await rest(`clients?id=in.(${ids.map(Number).join(',')})&select=id,subscription_status,plan_features,parent_id,is_active,trial_ends_at,subscription_end_date`);
+  const rows = await rest(`clients?id=in.(${ids.map(Number).join(',')})&select=id,subscription_status,plan_features,parent_id,is_active,trial_ends_at,subscription_end_date,ix_gift_until`);
   return Object.fromEntries(rows.map(s => [s.id, Object.fromEntries(['menu', 'chat', 'ixpro', 'pager', 'waitlist', 'loyalty'].map(k => [k, PLANS.has(s, k)]))]));
 }
 
@@ -172,7 +172,7 @@ function storeLink(slug, page = 'menu') {
 // الميزة ضمن باقة المحل؟ (التجربة فيها كل شي). الفرع ياخذ مميزات المتجر الرئيسي
 async function storeHasFeature(storeId, key) {
   const PLANS = require('./plans');
-  const s = (await rest(`clients?id=eq.${storeId}&select=subscription_status,plan_features,parent_id,is_active,trial_ends_at,subscription_end_date`))[0];
+  const s = (await rest(`clients?id=eq.${storeId}&select=subscription_status,plan_features,parent_id,is_active,trial_ends_at,subscription_end_date,ix_gift_until`))[0];
   if (!s) return false;
   return PLANS.has(s, key);
 }
