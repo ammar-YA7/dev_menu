@@ -714,26 +714,28 @@
           <button type="button" role="radio" aria-checked="${col[field] === v}" onclick="saveIxLook({ ${field}: '${v}' })" class="rounded-lg border px-2 py-2 text-[11px] font-bold transition ${col[field] === v ? 'border-brand bg-brand text-cream' : 'border-brand/20 bg-white text-ink hover:border-brand/40'}">${t}</button>`).join('')}
         </div>
       </div>`;
+    // مجموعات واضحة: القالب، الخلفية، الألوان، الشكل، النص. كل مجموعة بعنوانها وخط يفصلها
+    const group = (title, hint, body) => `
+      <div class="space-y-2 pt-3 border-t border-brand/10 first:border-t-0 first:pt-0">
+        <div><b class="block text-[12px] text-ink">${title}</b>${hint ? `<span class="block text-[11px] text-ink/70 leading-relaxed">${hint}</span>` : ''}</div>
+        ${body}
+      </div>`;
+    const bgBody = `
+      <div role="radiogroup" class="grid grid-cols-3 gap-1.5">${bgModes.map(([v, t]) => `
+        <button type="button" role="radio" aria-checked="${c.bg_mode === v}" onclick="setIxBgMode('${v}')" class="rounded-lg border px-2 py-2 text-[11px] font-bold transition ${c.bg_mode === v ? 'border-brand bg-brand text-cream' : 'border-brand/20 bg-white text-ink hover:border-brand/40'}">${t}</button>`).join('')}
+      </div>
+      ${c.bg_mode === 'image' ? bgFile('image') : c.bg_mode === 'video' ? bgFile('video') : ''}
+      ${color('bg', c.bg_mode === 'color' ? 'لون الخلفية' : 'لون فوق الصورة أو الفيديو')}
+      ${c.bg_mode !== 'color' ? '<span class="block text-[11px] text-ink/70 leading-relaxed">يظهر هذا اللون بشفافية فوق الصورة أو الفيديو حتى تبقى النصوص واضحة.</span>' : ''}`;
     box.innerHTML = `
       <b class="block text-xs text-ink">شكل المنيو التفاعلي</b>
-      <div role="radiogroup" class="grid grid-cols-2 gap-2">${keys.map(opt).join('')}</div>
-      <div class="space-y-1.5">
-        <span class="block text-[11px] font-bold text-ink">الخلفية</span>
-        <div role="radiogroup" class="grid grid-cols-3 gap-1.5">${bgModes.map(([v, t]) => `
-          <button type="button" role="radio" aria-checked="${c.bg_mode === v}" onclick="setIxBgMode('${v}')" class="rounded-lg border px-2 py-2 text-[11px] font-bold transition ${c.bg_mode === v ? 'border-brand bg-brand text-cream' : 'border-brand/20 bg-white text-ink hover:border-brand/40'}">${t}</button>`).join('')}
-        </div>
-        ${c.bg_mode === 'image' ? bgFile('image') : c.bg_mode === 'video' ? bgFile('video') : ''}
-        ${c.bg_mode !== 'color' ? '<span class="block text-[11px] text-ink leading-relaxed">يظهر فوقها لون الخلفية بشفافية حتى تبقى النصوص واضحة.</span>' : ''}
-        ${c.bg_image || c.bg_video || c.bg ? `<button type="button" onclick="clearIxBg()" class="w-full bg-white text-red-700 border border-red-500/30 hover:bg-red-500/5 font-bold px-3 py-2 rounded-lg text-[11.5px]"><i class="ph-bold ph-eraser"></i> إزالة الخلفية والرجوع لخلفية القالب</button>` : ''}
-      </div>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">${color('bg', 'لون الخلفية')}${color('accent', 'لون التمييز')}</div>
-      ${seg('shape', 'شكل البطاقات', [['round', 'دائري'], ['soft', 'حواف ناعمة'], ['square', 'حواف حادة']])}
-      ${seg('texture', 'الملمس', [['grain', 'حبيبات'], ['paper', 'ورق'], ['none', 'بدون']])}
-      <div class="space-y-1.5">
-        <label for="ix-tagline" class="block text-[11px] font-bold text-ink">جملة تحت الشعار <span class="font-normal">(اختيارية، حتى 40 حرفاً)</span></label>
-        <input id="ix-tagline" type="text" maxlength="40" value="${(c.tagline || '').replace(/"/g, '&quot;').replace(/</g, '&lt;')}" placeholder="مثال: قهوة مختصة منذ 2015" onchange="saveIxLook({ tagline: this.value })" class="input-pro text-xs">
-        <span class="block text-[11px] text-ink leading-relaxed">تظهر تحت اسم المحل في شاشة الترحيب.</span>
-      </div>`;
+      ${group('1. القالب', 'اختر تصميم المنيو، وتتغير الألوان والشكل إلى إعدادات القالب.', `<div role="radiogroup" class="grid grid-cols-2 gap-2">${keys.map(opt).join('')}</div>`)}
+      ${group('2. الخلفية', 'لون سادة، أو صورة، أو فيديو قصير.', bgBody)}
+      ${group('3. لون التمييز', 'لون العناوين والأزرار والأسعار.', color('accent', 'لون التمييز'))}
+      ${group('4. الشكل', '', seg('shape', 'شكل البطاقات', [['round', 'دائري'], ['soft', 'حواف ناعمة'], ['square', 'حواف حادة']])
+        + seg('texture', 'الملمس', [['grain', 'حبيبات'], ['paper', 'ورق'], ['none', 'بدون']]))}
+      ${group('5. جملة تحت الشعار', 'اختيارية، حتى 40 حرفاً، وتظهر تحت اسم المحل في شاشة الترحيب.', `
+        <input id="ix-tagline" type="text" maxlength="40" aria-label="جملة تحت الشعار" value="${(c.tagline || '').replace(/"/g, '&quot;').replace(/</g, '&lt;')}" placeholder="مثال: قهوة مختصة منذ 2015" onchange="saveIxLook({ tagline: this.value })" class="input-pro text-xs">`)}`;
   }
   // ─── منيو التابلت: رابط مستقل يفتح المنيو التفاعلي دائماً (?mode=tablet) ───
   const tabletUrl = () => DM.storeUrl(client.client_slug, 'menu', { mode: 'tablet' });
@@ -780,11 +782,6 @@
     saveIxLook({ bg_mode: kind, [`bg_${kind}`]: url });
   }
   function removeIxBg(kind) { saveIxLook({ bg_mode: 'color', [`bg_${kind}`]: null }); }
-  // إزالة الخلفية كاملة: بدون صورة ولا فيديو ولا لون مخصص، يرجع لخلفية القالب الافتراضية
-  async function clearIxBg() {
-    if (!(await DMDialog.confirm({ title: 'إزالة الخلفية', message: 'تُحذف الصورة والفيديو واللون المخصص، ويعود المنيو التفاعلي إلى خلفية القالب.', confirmText: 'إزالة', cancelText: 'تراجع', tone: 'danger' }))) return;
-    saveIxLook({ bg_mode: 'color', bg: null, bg_image: null, bg_video: null });
-  }
   // تغيير القالب يرجّع الألوان والملمس وشكل البطاقات لافتراضي القالب الجديد
   // «أين يظهر؟»: interactive = التابلت ورمز QR (يصير الرئيسي)، وغيره = التابلت بس (يرجع المنيو العادي بعرضه السابق: قائمة أو صور)
   async function setMenuLayout(k) {
