@@ -675,6 +675,13 @@
     else { renderIxLook(); showToast('تعذر حفظ الإعداد', true); }
   }
   // تغيير القالب يرجّع الألوان والملمس وشكل البطاقات لافتراضي القالب الجديد
+  async function setMenuLayout(k) {
+    const cur = client.menu_layout === 'interactive' ? 'interactive' : 'normal';
+    if (cur === k) return;
+    if (await updateClient({ menu_layout: k === 'interactive' ? 'interactive' : 'list' })) { renderMenuLayout(); showToast(k === 'interactive' ? 'تم اعتماد المنيو التفاعلي' : 'تم اعتماد المنيو العادي'); }
+    else showToast('تعذر حفظ الإعداد', true);
+  }
+
   function setIxStyle(k) {
     if (ixCfg().style === k) return;
     if (window.DMPlans && DMPlans.ixAllowed && !DMPlans.ixAllowed(client, k)) return showToast('هذا القالب ضمن القوالب المميزة، أضفها لباقتك من صفحة الاشتراك لاختياره', true);
