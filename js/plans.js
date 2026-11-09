@@ -12,11 +12,21 @@
     notify:   { name: 'رسائل لزبائنك',  desc: 'إضافة للبيجر: إرسال إشعارات للعملاء الذين يحتفظون ببطاقة النداء، مثل عروض اليوم أو المنتجات الجديدة', icon: 'ph-megaphone', month: 19, year: 179, needs: 'pager', within: 'loyalty' },
     waitlist: { name: 'قائمة الانتظار', desc: 'تسجيل العملاء في قائمة الانتظار وتنبيههم تلقائياً عند حلول دورهم', icon: 'ph-hourglass-medium', month: 29, year: 249 },
     loyalty:  { name: 'بطاقة الولاء',    desc: 'بطاقة أختام ومكافآت في محفظة جوال العميل، مع إرسال الرسائل ومساعد ذكي للتواصل مع العملاء', icon: 'ph-seal-check', month: 69, year: 649 },
+    // إضافة للمنيو التفاعلي: القوالب المميزة. ما تنعرض للبيع لين يصير فيه قالب مميز واحد على الأقل (IXPRO_ON تحت)
+    ixpro:    { name: 'القوالب المميزة', desc: 'إضافة للمنيو التفاعلي: مكتبة قوالب مميزة تتجدد باستمرار، تختار منها شكل منيو محلك', icon: 'ph-palette', month: 19, year: 179, needs: 'menu' },
     // هدية من الإدارة لمشترك (مثلاً مشترك المنيو): البيجر الأساسي مجاناً، بدون بطاقة النداء والرسائل، 200 رقم بالشهر
     // ما يطلع في صفحات الاختيار (مو في ORDER)، تضيفه الإدارة بس
     freepager: { name: 'البيجر المجاني', desc: 'البيجر الأساسي مجاناً: 200 رقم بالشهر للفرع الرئيسي، بدون بطاقة النداء والرسائل', icon: 'ph-gift', month: 0, year: 0 }
   };
-  const ORDER = ['menu', 'chat', 'pager', 'notify', 'waitlist', 'loyalty'];
+  // قوالب المنيو التفاعلي (مصدر واحد: المنيو ولوحة صاحب المحل والخادم)
+  //   premium: ضمن «القوالب المميزة» (ixpro)، exclusive_for: رقم المتجر اللي له القالب الحصري (يختاره هو بس)
+  const IX_TEMPLATES = {
+    grid:   { name: 'شبكة', premium: false },
+    zigzag: { name: 'متعرج', premium: false }
+  };
+  // «القوالب المميزة» مخفية من صفحات الاختيار والأسعار لين يصير فيه قالب مميز
+  const IXPRO_ON = Object.values(IX_TEMPLATES).some(t => t.premium);
+  const ORDER = ['menu', 'chat', ...(IXPRO_ON ? ['ixpro'] : []), 'pager', 'notify', 'waitlist', 'loyalty'];
   // رصيد المساعد الذكي: أسئلة الشهر للمشترك، وللتجربة، وحد كل جوال باليوم
   const CHAT = { month: 1000, trial: 100, day: 10 };
   // مدة التجربة المجانية (أيام)
@@ -24,6 +34,8 @@
   // الباقة المجانية: البيجر الأساسي بس (بدون بطاقة النداء والرسائل)، 200 رقم بالشهر، للمحل الرئيسي
   const FREE = { pager: 200 };
   const BRANCH = { month: 19, year: 199 };
+  // القالب الحصري للمنيو التفاعلي: يُصمَّم لعلامة المحل وحدها، دفعة وحدة مع اشتراك المنيو (تفعّله الإدارة يدوياً)
+  const EXCLUSIVE = { once: 799 };
   // الأسعار مبنية على السوق السعودي (2026-10): أرخص من المنافسين بـ 25% إلى 40% وفيها مميزات أكثر
   //   المنيو 39/349 (هلا أوردر 50/600)، البيجر 49/449 (بيجري 599 و699 بالهوية)، الولاء 69/649 (نقطتي 89/849)
   // خصومات الباقات: المنيو + البيجر = 73/648، ومعها الانتظار = 92/797، المنيو + الولاء = 98/908، والأربع كلها = 151/1356
@@ -117,8 +129,17 @@
     return false;
   }
   const has = (store, key) => live(store) && featuresOf(store).includes(key);
+  // يقدر المحل يختار هالقالب؟ الحصري لمتجره بس (أو المفعّل له قالب حصري بنفس المفتاح)، والمميز يحتاج «القوالب المميزة»
+  function ixAllowed(store, key) {
+    const t = IX_TEMPLATES[key];
+    if (!t) return false;
+    const ix = (store && store.menu_ix) || {};
+    if (t.exclusive_for) return !!store && [store.id, store.parent_id].map(Number).includes(Number(t.exclusive_for)) || (ix.exclusive === true && ix.exclusive_key === key);
+    if (t.premium) return has(store, 'ixpro');
+    return true;
+  }
 
-  const api = { FEATURES, ORDER, CHAT, TRIAL_DAYS, FREE, isFree, pagerLite, BRANCH, BUNDLES, LEGACY, ACCOUNT_WIDE, BRANCH_KEYS, ownBranch, branchFeatures, price, branchPrice, featuresOf, has, live, clean, toggle, coveredBy, coveredNote };
+  const api = { FEATURES, ORDER, CHAT, TRIAL_DAYS, FREE, isFree, pagerLite, BRANCH, BUNDLES, LEGACY, ACCOUNT_WIDE, BRANCH_KEYS, ownBranch, branchFeatures, price, branchPrice, featuresOf, has, ixAllowed, IX_TEMPLATES, IXPRO_ON, EXCLUSIVE, live, clean, toggle, coveredBy, coveredNote };
   if (typeof module === 'object' && module.exports) module.exports = api;
   else root.DMPlans = api;
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -332,10 +332,21 @@ module.exports.post = async function post(action, req, b, env) {
     if (has('pager_near_text')) p.pager_near_text = String(b.pager_near_text || '').replace(/\s+/g, ' ').trim().slice(0, 80) || null;
     if (has('menu_layout')) p.menu_layout = ['photos', 'interactive'].includes(b.menu_layout) ? b.menu_layout : 'list';
     if (has('menu_ix')) {
-      // شكل المنيو التفاعلي: القالب، ولون الخلفية ولون التمييز (فاضي = ألوان القالب)، والملمس
+      // شكل المنيو التفاعلي: القالب، ولون الخلفية ولون التمييز (فاضي = ألوان القالب)، وشكل البطاقات، والملمس، وجملة تحت الشعار
       const x = b.menu_ix && typeof b.menu_ix === 'object' ? b.menu_ix : {};
       const hex = (c) => typeof c === 'string' && /^#[0-9a-fA-F]{6}$/.test(c) ? c.toLowerCase() : null;
-      p.menu_ix = { style: ['grid', 'zigzag'].includes(x.style) ? x.style : 'grid', bg: hex(x.bg), accent: hex(x.accent), texture: typeof x.texture === 'boolean' ? x.texture : null };
+      // القالب الحصري تفعّله الإدارة بس: نحفظه مثل ما هو ونتجاهل أي قيمة جاية من صاحب المحل
+      const old = ((await rest(`clients?id=eq.${store.id}&select=menu_ix`).catch(() => []))[0] || {}).menu_ix || {};
+      const keep = { exclusive: old.exclusive === true, exclusive_key: typeof old.exclusive_key === 'string' ? old.exclusive_key : null };
+      const style = PLANS.IX_TEMPLATES[x.style] ? x.style : 'grid';
+      if (!PLANS.ixAllowed({ ...store, menu_ix: keep }, style)) throw new ApiError(403, PLANS.IX_TEMPLATES[style].premium ? 'هذا القالب ضمن القوالب المميزة، أضفها لباقتك لاختياره' : 'هذا القالب غير متاح لمتجرك', 'ADDON_OFF');
+      const texture = x.texture === true ? 'grain' : x.texture === false ? 'none' : ['grain', 'paper', 'none'].includes(x.texture) ? x.texture : null;
+      p.menu_ix = {
+        style, bg: hex(x.bg), accent: hex(x.accent), texture,
+        shape: ['round', 'soft', 'square'].includes(x.shape) ? x.shape : null,
+        tagline: String(x.tagline || '').replace(/\s+/g, ' ').trim().slice(0, 40) || null,
+        ...keep
+      };
     }
     if (has('google_review_url')) {
       const u = String(b.google_review_url || '').trim();

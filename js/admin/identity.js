@@ -583,34 +583,40 @@
     renderIxLook();
   }
 
-  // ─── شكل المنيو التفاعلي (menu_ix): القالب، لون الخلفية، لون التمييز، والملمس ───
+  // ─── شكل المنيو التفاعلي (menu_ix): القالب، الألوان، شكل البطاقات، الملمس، وجملة تحت الشعار ───
   // الألوان الفاضية = ألوان القالب (نفس القيم اللي في menu.html)، و«شبكة» بدون ألوان تاخذ ثيم المنيو
-  const IX_DEF = { grid: { bg: null, accent: null, texture: false }, zigzag: { bg: '#1f4d3a', accent: '#e9dfc4', texture: true } };
+  const IX_DEF = { grid: { bg: null, accent: null, texture: 'none', shape: 'soft' }, zigzag: { bg: '#1f4d3a', accent: '#e9dfc4', texture: 'grain', shape: 'round' } };
+  // سجل القوالب من js/plans.js (المميز والحصري)، وألوانها الافتراضية من IX_DEF
+  const ixTemplates = () => (window.DMPlans && DMPlans.IX_TEMPLATES) || { grid: { name: 'شبكة' }, zigzag: { name: 'متعرج' } };
+  const ixTexture = (t) => t === true ? 'grain' : t === false ? 'none' : ['grain', 'paper', 'none'].includes(t) ? t : null;
   const ixCfg = () => {
     const o = client.menu_ix && typeof client.menu_ix === 'object' ? client.menu_ix : {};
-    return { style: IX_DEF[o.style] ? o.style : 'grid', bg: o.bg || null, accent: o.accent || null, texture: typeof o.texture === 'boolean' ? o.texture : null };
+    return { style: ixTemplates()[o.style] ? o.style : 'grid', bg: o.bg || null, accent: o.accent || null, texture: ixTexture(o.texture),
+      shape: ['round', 'soft', 'square'].includes(o.shape) ? o.shape : null, tagline: o.tagline || '' };
   };
   function ixColors(c) {
     const th = window.DMTheme ? DMTheme.resolve(client.theme, client.accent_color).vars : { bg: '#f6f6f3', accent: '#384f3d' };
-    const d = IX_DEF[c.style];
-    return { bg: c.bg || d.bg || th.bg, accent: c.accent || d.accent || th.accent, texture: c.texture ?? d.texture };
+    const d = IX_DEF[c.style] || IX_DEF.grid;
+    return { bg: c.bg || d.bg || th.bg, accent: c.accent || d.accent || th.accent, texture: c.texture || d.texture, shape: c.shape || d.shape };
   }
   const ixShade = (hex, k) => '#' + [1, 3, 5].map(i => Math.round(parseInt(hex.slice(i, i + 2), 16) * (1 + k)).toString(16).padStart(2, '0')).join('');
-  // معاينة صغيرة بالألوان: «متعرج» خط بالنص ودوائر وألسنة بالتناوب، و«شبكة» مربعات
+  // معاينة صغيرة بالألوان والشكل والملمس: «متعرج» خط بالنص وصور وألسنة بالتناوب، و«شبكة» مربعات
   function ixArt(style, col) {
     const tab = ixShade(col.bg, -0.28);
-    const grain = col.texture ? 'background-image:radial-gradient(60% 50% at 20% 10%, rgba(255,255,255,.12), transparent 70%), radial-gradient(60% 50% at 90% 90%, rgba(0,0,0,.18), transparent 70%);' : '';
-    const box = (inner) => `<span style="display:block;position:relative;height:64px;border-radius:8px;overflow:hidden;background-color:${col.bg};${grain}">${inner}</span>`;
+    const r = { round: '50%', soft: '4px', square: '1px' }[col.shape] || '4px', tr = { round: '6px', soft: '3px', square: '1px' }[col.shape] || '3px';
+    const tex = col.texture === 'grain' ? 'background-image:radial-gradient(60% 50% at 20% 10%, rgba(255,255,255,.14), transparent 70%), radial-gradient(60% 50% at 90% 90%, rgba(0,0,0,.2), transparent 70%);'
+      : col.texture === 'paper' ? 'background-image:repeating-linear-gradient(115deg, rgba(255,255,255,.06) 0 2px, transparent 2px 5px), radial-gradient(120% 90% at 50% 40%, transparent 55%, rgba(0,0,0,.22));' : '';
+    const box = (inner) => `<span style="display:block;position:relative;height:64px;border-radius:8px;overflow:hidden;background-color:${col.bg};${tex}">${inner}</span>`;
     if (style === 'zigzag') {
       const rows = [0, 1, 2].map(i => {
         const y = 7 + i * 19, right = i % 2 === 0;
-        return `<span style="position:absolute;top:${y}px;${right ? 'right' : 'left'}:calc(50% - 15px);width:14px;height:14px;border-radius:50%;background:${col.accent};opacity:.85"></span>` +
-          `<span style="position:absolute;top:${y + 2}px;${right ? 'left' : 'right'}:calc(50% - 30px);width:30px;height:10px;border-radius:5px;background:${tab}"></span>`;
+        return `<span style="position:absolute;top:${y}px;${right ? 'right' : 'left'}:calc(50% - 15px);width:14px;height:14px;border-radius:${r};background:${col.accent};opacity:.85"></span>` +
+          `<span style="position:absolute;top:${y + 2}px;${right ? 'left' : 'right'}:calc(50% - 30px);width:30px;height:10px;border-radius:${tr};background:${tab}"></span>`;
       }).join('');
       return box(`<span style="position:absolute;top:4px;bottom:4px;left:50%;width:4px;margin-left:-2px;border-radius:4px;background:${col.accent}"></span>${rows}`);
     }
-    const cell = `<span style="display:block;border-radius:4px;background:${ixShade(col.bg, -0.12)}"></span>`;
-    return box(`<span style="position:absolute;inset:7px 12px;display:grid;grid-template-columns:repeat(3,1fr);gap:5px">${cell.repeat(6)}</span><span style="position:absolute;bottom:4px;left:50%;width:26px;height:5px;margin-left:-13px;border-radius:3px;background:${col.accent}"></span>`);
+    const cell = `<span style="display:block;border-radius:${r === '50%' ? '50%' : r};background:${ixShade(col.bg, -0.12)}"></span>`;
+    return box(`<span style="position:absolute;inset:7px 12px;display:grid;grid-template-columns:repeat(3,22px);justify-content:center;gap:5px">${cell.repeat(6)}</span><span style="position:absolute;bottom:4px;left:50%;width:26px;height:5px;margin-left:-13px;border-radius:3px;background:${col.accent}"></span>`);
   }
   function renderIxLook() {
     const box = document.getElementById('menu-ix-look');
@@ -618,29 +624,45 @@
     const on = client.menu_layout === 'interactive';
     box.classList.toggle('hidden', !on);
     if (!on) return;
-    const c = ixCfg(), col = ixColors(c);
-    const opt = (k, label, sub) => `
-      <button type="button" role="radio" aria-checked="${c.style === k}" onclick="setIxStyle('${k}')" class="rounded-xl border-2 p-2 text-right transition ${c.style === k ? 'border-brand bg-white' : 'border-brand/15 bg-white/60 hover:border-brand/35'}">
-        <span id="ix-art-${k}" class="block mb-2">${ixArt(k, k === c.style ? col : ixColors({ style: k }))}</span>
-        <b class="block text-[12px] text-ink">${label}</b><span class="block text-[11px] text-ink leading-relaxed">${sub}</span>
+    const c = ixCfg(), col = ixColors(c), T = ixTemplates();
+    const ok = (k) => !window.DMPlans || !DMPlans.ixAllowed || DMPlans.ixAllowed(client, k);
+    const SUB = { grid: 'الأصناف في شبكة بصور كبيرة، بألوان المنيو وخلفيته.', zigzag: 'خط في المنتصف والأصناف على جانبيه بالتناوب، بصور دائرية وخلفية داكنة.' };
+    // القوالب: الحصري يطلع بس للمحل اللي له، والمميز يطلع بقفل لو ما عنده «القوالب المميزة»
+    const keys = Object.keys(T).filter(k => !T[k].exclusive_for || ok(k));
+    const opt = (k) => {
+      const locked = !ok(k), cur = c.style === k;
+      return `
+      <button type="button" role="radio" aria-checked="${cur}" ${locked ? 'aria-disabled="true"' : ''} onclick="setIxStyle('${k}')" class="relative rounded-xl border-2 p-2 text-right transition ${cur ? 'border-brand bg-white' : 'border-brand/15 bg-white/60 hover:border-brand/35'} ${locked ? 'opacity-70' : ''}">
+        <span id="ix-art-${k}" class="block mb-2">${ixArt(k, cur ? col : ixColors({ style: k }))}</span>
+        <b class="block text-[12px] text-ink">${T[k].name}</b><span class="block text-[11px] text-ink leading-relaxed">${SUB[k] || T[k].desc || ''}</span>
+        ${locked ? '<span class="absolute top-3 left-3 inline-flex items-center gap-1 text-[10px] font-bold bg-white/95 text-ink px-2 py-0.5 rounded-full border border-brand/20"><i class="ph-bold ph-lock-simple"></i> ضمن القوالب المميزة</span>' : ''}
       </button>`;
+    };
     const color = (key, label) => `
       <div class="flex items-center gap-2 bg-brand/5 rounded-lg border border-brand/15 p-2">
         <input type="color" id="ix-${key}" value="${col[key]}" oninput="previewIxLook()" onchange="saveIxLook({ ${key}: this.value })" aria-label="${label}" class="w-9 h-9 rounded-lg border border-brand/20 cursor-pointer shrink-0 bg-white">
         <span class="flex-1 text-[11px] font-bold text-ink">${label}</span>
         ${c[key] ? `<button type="button" onclick="saveIxLook({ ${key}: null })" class="text-[11px] font-bold text-ink underline">افتراضي</button>` : ''}
       </div>`;
+    // اختيار من ثلاثة (شكل البطاقات والملمس): أزرار صغيرة
+    const seg = (field, label, opts) => `
+      <div class="space-y-1.5">
+        <span class="block text-[11px] font-bold text-ink">${label}</span>
+        <div role="radiogroup" class="grid grid-cols-3 gap-1.5">${opts.map(([v, t]) => `
+          <button type="button" role="radio" aria-checked="${col[field] === v}" onclick="saveIxLook({ ${field}: '${v}' })" class="rounded-lg border px-2 py-2 text-[11px] font-bold transition ${col[field] === v ? 'border-brand bg-brand text-cream' : 'border-brand/20 bg-white text-ink hover:border-brand/40'}">${t}</button>`).join('')}
+        </div>
+      </div>`;
     box.innerHTML = `
       <b class="block text-xs text-ink">شكل المنيو التفاعلي</b>
-      <div role="radiogroup" class="grid grid-cols-2 gap-2">
-        ${opt('grid', 'شبكة', 'الأصناف في شبكة بصور كبيرة، بألوان المنيو وخلفيته.')}
-        ${opt('zigzag', 'متعرج', 'خط في المنتصف والأصناف على جانبيه بالتناوب، بصور دائرية وخلفية داكنة.')}
-      </div>
+      <div role="radiogroup" class="grid grid-cols-2 gap-2">${keys.map(opt).join('')}</div>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">${color('bg', 'لون الخلفية')}${color('accent', 'لون التمييز')}</div>
-      <label class="flex items-start gap-2 cursor-pointer text-xs">
-        <input type="checkbox" ${col.texture ? 'checked' : ''} onchange="saveIxLook({ texture: this.checked })" class="w-4 h-4 mt-0.5 accent-green-600 cursor-pointer">
-        <span><b class="text-ink">خلفية بملمس</b><span class="block text-[11px] text-ink leading-relaxed">حبيبات ناعمة وضربات فرشاة خفيفة فوق لون الخلفية.</span></span>
-      </label>`;
+      ${seg('shape', 'شكل البطاقات', [['round', 'دائري'], ['soft', 'حواف ناعمة'], ['square', 'حواف حادة']])}
+      ${seg('texture', 'الملمس', [['grain', 'حبيبات'], ['paper', 'ورق'], ['none', 'بدون']])}
+      <div class="space-y-1.5">
+        <label for="ix-tagline" class="block text-[11px] font-bold text-ink">جملة تحت الشعار <span class="font-normal">(اختيارية، حتى 40 حرفاً)</span></label>
+        <input id="ix-tagline" type="text" maxlength="40" value="${(c.tagline || '').replace(/"/g, '&quot;').replace(/</g, '&lt;')}" placeholder="مثال: قهوة مختصة منذ 2015" onchange="saveIxLook({ tagline: this.value })" class="input-pro text-xs">
+        <span class="block text-[11px] text-ink leading-relaxed">تظهر تحت اسم المحل في شاشة الترحيب.</span>
+      </div>`;
   }
   // المعاينة الصغيرة تتلوّن وهو يختار اللون، والحفظ لما يقفل منتقي الألوان
   function previewIxLook() {
@@ -652,16 +674,11 @@
     if (await updateClient({ menu_ix: { ...ixCfg(), ...patch } })) { renderIxLook(); showToast('تم حفظ شكل المنيو التفاعلي'); }
     else { renderIxLook(); showToast('تعذر حفظ الإعداد', true); }
   }
-  // تغيير القالب يرجّع الألوان والملمس لافتراضي القالب الجديد
+  // تغيير القالب يرجّع الألوان والملمس وشكل البطاقات لافتراضي القالب الجديد
   function setIxStyle(k) {
     if (ixCfg().style === k) return;
-    saveIxLook({ style: k, bg: null, accent: null, texture: null });
-  }
-  async function setMenuLayout(k) {
-    const cur = client.menu_layout === 'interactive' ? 'interactive' : 'normal';
-    if (cur === k) return;
-    if (await updateClient({ menu_layout: k === 'interactive' ? 'interactive' : 'list' })) { renderMenuLayout(); showToast(k === 'interactive' ? 'تم اعتماد المنيو التفاعلي' : 'تم اعتماد المنيو العادي'); }
-    else showToast('تعذر حفظ الإعداد', true);
+    if (window.DMPlans && DMPlans.ixAllowed && !DMPlans.ixAllowed(client, k)) return showToast('هذا القالب ضمن القوالب المميزة، أضفها لباقتك من صفحة الاشتراك لاختياره', true);
+    saveIxLook({ style: k, bg: null, accent: null, texture: null, shape: null });
   }
 
   // ─── عرض السعرات (خيار المتجر) ───
