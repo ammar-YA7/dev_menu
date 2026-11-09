@@ -2398,7 +2398,7 @@
         ${look.style === 'thread' ? `<svg class="ix-tsq ix-pop" style="--i:2" viewBox="0 0 120 14" aria-hidden="true"><path d="M2 8 C 18 1, 30 13, 46 7 S 74 2, 88 8 S 110 12, 118 5"/></svg>` : ''}
         <div class="ix-cats">${items.map((x, i) => `<button type="button" class="ix-cat ix-pop" style="--i:${Math.min(i, 12) + 3}" data-ix-cat="${esc(x.key)}">${esc(x.label)}</button>`).join('')}</div>
         ${items.length ? '' : `<p class="ix-sub">${T('لم تتم إضافة أصناف لهذا المنيو بعد.', 'Nothing added yet.')}</p>`}
-        ${look.exclusive ? '' : `<a class="ix-mark" href="https://www.devmenu.digital/?ref=menu" target="_blank" rel="noopener">${T('صُنع بـ', 'Made with')} <span dir="ltr">DEV MENU</span></a>`}
+        ${`<a class="ix-mark" href="https://www.devmenu.digital/?ref=menu" target="_blank" rel="noopener">${T('صُنع بـ', 'Made with')} <span dir="ltr">DEV MENU</span></a>`}
       </div>`;
     ixWatchPics(ixEl('ixHome'));
   }
@@ -2751,7 +2751,7 @@
     const sh = urlParams.get('ixshape') || (own ? o.shape : null);
     const shape = ['round', 'soft', 'square'].includes(sh) ? sh : null;
     const tagline = String(urlParams.get('ixtag') || o.tagline || '').trim().slice(0, 40);
-    return { style, bg: hex(o.bg) || d.bg, accent: hex(o.accent) || d.accent, texture, shape, tagline, exclusive: o.exclusive === true };
+    return { style, bg: hex(o.bg) || d.bg, accent: hex(o.accent) || d.accent, texture, shape, tagline };
   }
   // نغمق أو نفتح اللون: k سالب = أغمق
   const ixShade = (hex, k) => '#' + [1, 3, 5].map(i => { const v = parseInt(hex.slice(i, i + 2), 16); const n = k < 0 ? v * (1 + k) : v + (255 - v) * k; return Math.round(Math.max(0, Math.min(255, n))).toString(16).padStart(2, '0'); }).join('');

@@ -247,14 +247,6 @@ module.exports = handler(['GET', 'POST'], async (req) => {
     return { ok: true };
   }
   if (action === 'featured') return patch({ is_featured: b.featured === true });
-  // القالب الحصري (يُباع بشكل منفصل): تفعّله الإدارة بس، ويشيل علامة DEV MENU من المنيو التفاعلي
-  // exclusive_key = مفتاح القالب المصمم له (اختياري، حروف إنجليزية صغيرة وأرقام و - و _)
-  if (action === 'exclusive') {
-    const cur = ((await rest(`clients?id=eq.${id}&select=menu_ix`))[0] || {}).menu_ix || {};
-    const key = String(b.key || '').trim().toLowerCase();
-    if (key && !/^[a-z0-9_-]{1,40}$/.test(key)) throw new ApiError(400, 'مفتاح القالب: حروف إنجليزية صغيرة وأرقام فقط');
-    return patch({ menu_ix: { ...(cur && typeof cur === 'object' ? cur : {}), exclusive: b.on === true, exclusive_key: b.on === true ? (key || null) : null } });
-  }
   // نوع نشاط المحل (المدير العام يعدّله)
   if (action === 'business-type') {
     if (!SECTORS.KEYS.includes(b.type)) throw new ApiError(400, 'نوع نشاط غير صحيح');

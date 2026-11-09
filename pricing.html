@@ -282,7 +282,7 @@
       <h2 class="h2">المنيو التفاعلي <em>بشكل محلك.</em></h2>
       <p class="sub mt-4">شاشة ترحيب بأزرار الأقسام، ثم الأصناف بصور كبيرة وحركة خفيفة. يناسب جوال العميل والأجهزة اللوحية على الطاولات.</p>
     </div>
-    <div class="grid md:grid-cols-3 gap-4">
+    <div class="grid md:grid-cols-2 gap-4 max-w-4xl mx-auto">
       <article class="ixt reveal">
         <span class="ixt-ic"><i class="ph-bold ph-fork-knife"></i></span>
         <h3>المنيو التفاعلي</h3>
@@ -294,13 +294,6 @@
         <h3>القوالب المميزة <span id="ixpro-soon" class="ixt-soon">قريباً</span></h3>
         <p class="ixt-pr"><b dir="ltr" id="ixpro-month"></b> <small>بالشهر</small> <small>أو</small> <b dir="ltr" id="ixpro-year"></b> <small>بالسنة</small></p>
         <p class="sub">مكتبة قوالب مميزة تتجدد باستمرار، تختار منها شكل منيو محلك.</p>
-      </article>
-      <article class="ixt ixt-dark reveal">
-        <span class="ixt-ic"><i class="ph-bold ph-crown"></i></span>
-        <h3>القالب الحصري</h3>
-        <p class="ixt-pr"><b dir="ltr" id="ixex-price"></b> <small>لمرة واحدة مع اشتراك المنيو</small></p>
-        <p class="sub">قالب يُصمَّم لعلامتك التجارية وحدها، دون علامة DEV MENU.</p>
-        <a href="https://wa.me/966561161448?text=%D8%A3%D8%B1%D8%BA%D8%A8%20%D9%81%D9%8A%20%D8%A7%D9%84%D9%82%D8%A7%D9%84%D8%A8%20%D8%A7%D9%84%D8%AD%D8%B5%D8%B1%D9%8A%20%D9%84%D9%84%D9%85%D9%86%D9%8A%D9%88%20%D8%A7%D9%84%D8%AA%D9%81%D8%A7%D8%B9%D9%84%D9%8A" target="_blank" rel="noopener" class="btn btn-gold py-3 px-5 mt-auto self-start text-[14px]"><i class="ph-bold ph-whatsapp-logo"></i> تواصل معنا</a>
       </article>
     </div>
   </div>
@@ -353,11 +346,10 @@
   const money = (n) => `${SAR} ${Number(n).toLocaleString('en-US')}`;
   const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-  // ─── المنيو التفاعلي: أسعار «القوالب المميزة» و«القالب الحصري» من js/plans.js، و«قريباً» لين تنعرض للبيع ───
+  // ─── المنيو التفاعلي: أسعار «القوالب المميزة» من js/plans.js، و«قريباً» لين تنعرض للبيع ───
   $('ixpro-month').textContent = money(DMPlans.FEATURES.ixpro.month);
   $('ixpro-year').textContent = money(DMPlans.FEATURES.ixpro.year);
   $('ixpro-soon').hidden = DMPlans.IXPRO_ON;
-  $('ixex-price').textContent = money(DMPlans.EXCLUSIVE.once);
 
   // ─── اختيار الباقة: يتحفظ ويروح مع التسجيل ───
   const CHOICE_KEY = 'dm_plan_choice';

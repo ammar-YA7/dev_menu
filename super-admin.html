@@ -754,7 +754,6 @@
         ${!c.parent_id ? `<button onclick="openTypeDlg(${id})"><i class="ph-bold ph-storefront"></i> نوع النشاط: ${esc(DMSectors.label(c))}</button>` : ''}
         <button onclick="openNotify(${id})"><i class="ph-bold ph-bell"></i> إرسال إشعار</button>
         <div class="h-px bg-brand/10 my-1"></div>
-        ${c.parent_id ? '' : `<button onclick="setExclusive(${id})"><i class="ph-bold ph-crown" ${c.menu_ix && c.menu_ix.exclusive ? 'style="color:#d97706"' : ''}></i> قالب حصري: ${c.menu_ix && c.menu_ix.exclusive ? 'مفعّل' : 'غير مفعّل'}</button>`}
         ${c.parent_id ? '' : `<button onclick="setFeatured(${id}, ${!c.is_featured})"><i class="ph-bold ph-star" ${c.is_featured ? 'style="color:#d97706"' : ''}></i> ${c.is_featured ? 'إزالة من أمثلة الرئيسية' : 'عرضه في أمثلة الرئيسية'}</button>`}
         <button onclick="setActive(${id}, ${c.is_active === false})"><i class="ph-bold ${c.is_active === false ? 'ph-play' : 'ph-pause'}"></i> ${c.is_active === false ? (c.parent_id ? 'إعادة تشغيل الفرع' : 'إعادة تشغيل المتجر') : (c.parent_id ? 'إيقاف الفرع' : 'إيقاف المتجر')}</button>
         <div class="h-px bg-brand/10 my-1"></div>
@@ -1089,26 +1088,6 @@
     const error = await post('set-active', { id, active });
     if (error) return showToast('ما اكتملت العملية. حاول مرة ثانية', true);
     showToast(active ? 'تمت إعادة تشغيل المتجر' : 'تم إيقاف المتجر'); loadClients();
-  }
-
-  // القالب الحصري (799 ر.س لمرة وحدة): يشيل علامة DEV MENU من المنيو التفاعلي، ومفتاح القالب المصمم له اختياري
-  async function setExclusive(id) {
-    openMenu = null; renderStores();
-    const c = find(id); if (!c) return;
-    const ix = c.menu_ix || {};
-    const r = await DMDialog.form({
-      title: 'القالب الحصري', subtitle: c.name, icon: 'ph-crown',
-      fields: [
-        { name: 'on', label: 'الحالة', type: 'choice', value: ix.exclusive ? 'on' : 'off', options: [
-          { value: 'on', label: 'مفعّل', desc: 'تختفي علامة «صُنع بـ DEV MENU» من المنيو التفاعلي' },
-          { value: 'off', label: 'غير مفعّل', desc: 'تظهر العلامة في أسفل شاشة الترحيب' }] },
-        { name: 'key', label: 'مفتاح القالب المصمم له (اختياري)', value: ix.exclusive_key || '', dir: 'ltr', maxlength: 40, placeholder: 'example-brand', hint: 'حروف إنجليزية صغيرة وأرقام فقط، ويطابق اسم القالب في js/plans.js' }
-      ]
-    });
-    if (!r) return;
-    const error = await post('exclusive', { id, on: r.on === 'on', key: r.key });
-    if (error) return showToast(`تعذر الحفظ: ${error.message}`, true);
-    showToast(r.on === 'on' ? 'تم تفعيل القالب الحصري' : 'تم إيقاف القالب الحصري'); loadClients();
   }
 
   async function setFeatured(id, featured) {

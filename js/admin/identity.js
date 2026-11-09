@@ -586,7 +586,7 @@
   // ─── شكل المنيو التفاعلي (menu_ix): القالب، الألوان، شكل البطاقات، الملمس، وجملة تحت الشعار ───
   // الألوان الفاضية = ألوان القالب (نفس القيم اللي في menu.html)، و«شبكة» بدون ألوان تاخذ ثيم المنيو
   const IX_DEF = { grid: { bg: null, accent: null, texture: 'none', shape: 'soft' }, zigzag: { bg: '#1f4d3a', accent: '#e9dfc4', texture: 'grain', shape: 'round' }, thread: { bg: '#1e4a3a', accent: '#d9c49a', texture: 'paper', shape: 'round' } };
-  // سجل القوالب من js/plans.js (المميز والحصري)، وألوانها الافتراضية من IX_DEF
+  // سجل القوالب من js/plans.js، وألوانها الافتراضية من IX_DEF
   const ixTemplates = () => (window.DMPlans && DMPlans.IX_TEMPLATES) || { grid: { name: 'شبكة' }, zigzag: { name: 'متعرج' } };
   const ixTexture = (t) => t === true ? 'grain' : t === false ? 'none' : ['grain', 'paper', 'none'].includes(t) ? t : null;
   const ixCfg = () => {
@@ -636,8 +636,8 @@
     const c = ixCfg(), col = ixColors(c), T = ixTemplates();
     const ok = (k) => !window.DMPlans || !DMPlans.ixAllowed || DMPlans.ixAllowed(client, k);
     const SUB = { grid: 'الأصناف في شبكة بصور كبيرة، بألوان المنيو وخلفيته.', zigzag: 'خط في المنتصف والأصناف على جانبيه بالتناوب، بصور دائرية وخلفية داكنة.', thread: 'الأطباق يمين ويسار يربطها خيط ذهبي يرتسم بحركة، بخلفية خضراء داكنة.' };
-    // القوالب: الحصري يطلع بس للمحل اللي له، والمميز يطلع بقفل لو ما عنده «القوالب المميزة»
-    const keys = Object.keys(T).filter(k => !T[k].exclusive_for || ok(k));
+    // القوالب: المميز يطلع بقفل لو ما عنده «القوالب المميزة»
+    const keys = Object.keys(T);
     const opt = (k) => {
       const locked = !ok(k), cur = c.style === k;
       return `
