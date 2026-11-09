@@ -585,7 +585,7 @@
 
   // ─── شكل المنيو التفاعلي (menu_ix): القالب، الألوان، شكل البطاقات، الملمس، وجملة تحت الشعار ───
   // الألوان الفاضية = ألوان القالب (نفس القيم اللي في menu.html)، و«شبكة» بدون ألوان تاخذ ثيم المنيو
-  const IX_DEF = { grid: { bg: null, accent: null, texture: 'none', shape: 'soft' }, zigzag: { bg: '#1f4d3a', accent: '#e9dfc4', texture: 'grain', shape: 'round' } };
+  const IX_DEF = { grid: { bg: null, accent: null, texture: 'none', shape: 'soft' }, zigzag: { bg: '#1f4d3a', accent: '#e9dfc4', texture: 'grain', shape: 'round' }, thread: { bg: '#1e4a3a', accent: '#d9c49a', texture: 'paper', shape: 'round' } };
   // سجل القوالب من js/plans.js (المميز والحصري)، وألوانها الافتراضية من IX_DEF
   const ixTemplates = () => (window.DMPlans && DMPlans.IX_TEMPLATES) || { grid: { name: 'شبكة' }, zigzag: { name: 'متعرج' } };
   const ixTexture = (t) => t === true ? 'grain' : t === false ? 'none' : ['grain', 'paper', 'none'].includes(t) ? t : null;
@@ -607,6 +607,17 @@
     const tex = col.texture === 'grain' ? 'background-image:radial-gradient(60% 50% at 20% 10%, rgba(255,255,255,.14), transparent 70%), radial-gradient(60% 50% at 90% 90%, rgba(0,0,0,.2), transparent 70%);'
       : col.texture === 'paper' ? 'background-image:repeating-linear-gradient(115deg, rgba(255,255,255,.06) 0 2px, transparent 2px 5px), radial-gradient(120% 90% at 50% 40%, transparent 55%, rgba(0,0,0,.22));' : '';
     const box = (inner) => `<span style="display:block;position:relative;height:64px;border-radius:8px;overflow:hidden;background-color:${col.bg};${tex}">${inner}</span>`;
+    if (style === 'thread') {
+      // «خيط»: خيط ذهبي متموج وأطباق يمين ويسار وجنبها سطور الاسم
+      const plate = { round: '47% 53% 50% 50% / 52% 47% 53% 48%', soft: '5px', square: '2px' }[col.shape] || '50%';
+      const rows = [0, 1, 2].map(i => {
+        const y = 6 + i * 19, right = i % 2 === 0;
+        return `<span style="position:absolute;top:${y}px;${right ? 'right' : 'left'}:22%;width:16px;height:16px;border-radius:${plate};background:${ixShade(col.bg, 0.6)};box-shadow:0 0 0 2px #efe7d4"></span>` +
+          `<span style="position:absolute;top:${y + 4}px;${right ? 'left' : 'right'}:20%;width:28px;height:4px;border-radius:2px;background:${col.accent};opacity:.9"></span>` +
+          `<span style="position:absolute;top:${y + 10}px;${right ? 'left' : 'right'}:20%;width:20px;height:3px;border-radius:2px;background:#efe7d4;opacity:.45"></span>`;
+      }).join('');
+      return box(`<svg viewBox="0 0 100 64" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%"><path d="M48 0 C 70 10, 74 14, 70 14 S 30 22, 30 33 S 72 44, 70 52 S 50 62, 52 64" fill="none" stroke="${col.accent}" stroke-width="1.2"/></svg>${rows}`);
+    }
     if (style === 'zigzag') {
       const rows = [0, 1, 2].map(i => {
         const y = 7 + i * 19, right = i % 2 === 0;
@@ -621,12 +632,10 @@
   function renderIxLook() {
     const box = document.getElementById('menu-ix-look');
     if (!box) return;
-    const on = client.menu_layout === 'interactive';
-    box.classList.toggle('hidden', !on);
-    if (!on) return;
+    renderTabletLink();
     const c = ixCfg(), col = ixColors(c), T = ixTemplates();
     const ok = (k) => !window.DMPlans || !DMPlans.ixAllowed || DMPlans.ixAllowed(client, k);
-    const SUB = { grid: 'الأصناف في شبكة بصور كبيرة، بألوان المنيو وخلفيته.', zigzag: 'خط في المنتصف والأصناف على جانبيه بالتناوب، بصور دائرية وخلفية داكنة.' };
+    const SUB = { grid: 'الأصناف في شبكة بصور كبيرة، بألوان المنيو وخلفيته.', zigzag: 'خط في المنتصف والأصناف على جانبيه بالتناوب، بصور دائرية وخلفية داكنة.', thread: 'الأطباق يمين ويسار يربطها خيط ذهبي يرتسم بحركة، بخلفية خضراء داكنة.' };
     // القوالب: الحصري يطلع بس للمحل اللي له، والمميز يطلع بقفل لو ما عنده «القوالب المميزة»
     const keys = Object.keys(T).filter(k => !T[k].exclusive_for || ok(k));
     const opt = (k) => {
@@ -663,6 +672,18 @@
         <input id="ix-tagline" type="text" maxlength="40" value="${(c.tagline || '').replace(/"/g, '&quot;').replace(/</g, '&lt;')}" placeholder="مثال: قهوة مختصة منذ 2015" onchange="saveIxLook({ tagline: this.value })" class="input-pro text-xs">
         <span class="block text-[11px] text-ink leading-relaxed">تظهر تحت اسم المحل في شاشة الترحيب.</span>
       </div>`;
+  }
+  // ─── منيو التابلت: رابط مستقل يفتح المنيو التفاعلي دائماً (?mode=tablet) ───
+  const tabletUrl = () => DM.storeUrl(client.client_slug, 'menu', { mode: 'tablet' });
+  function renderTabletLink() {
+    const input = document.getElementById('tablet-link'), open = document.getElementById('tablet-open');
+    if (!input || !client) return;
+    input.value = tabletUrl(); open.href = tabletUrl();
+  }
+  function copyTabletLink() {
+    navigator.clipboard.writeText(tabletUrl())
+      .then(() => showToast('تم نسخ رابط منيو التابلت'))
+      .catch(() => { const i = document.getElementById('tablet-link'); if (i) i.select(); showToast('تعذر النسخ، انسخ الرابط من الخانة', true); });
   }
   // المعاينة الصغيرة تتلوّن وهو يختار اللون، والحفظ لما يقفل منتقي الألوان
   function previewIxLook() {

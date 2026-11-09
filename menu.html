@@ -360,7 +360,7 @@
   #ix.ix-sh-round .ix-zrow.rev .ix-ztab { padding-inline-start: clamp(20px, 4.4vw, 36px); }
   /* جملة تحت الشعار، وعلامة «صُنع بـ DEV MENU» تحت شاشة الترحيب */
   .ix-tag { margin: -6px 0 0; max-width: 90%; font-size: clamp(15px, 2.6vmin, 22px); font-weight: 500; color: var(--fg2); }
-  .ix-mark { position: absolute !important; left: 0; right: 0; bottom: calc(40px + env(safe-area-inset-bottom)); text-align: center; font-size: 12px; font-weight: 600; color: var(--ix-ac, var(--fg)); opacity: .55; transition: bottom .25s; }
+  .ix-mark { position: absolute !important; left: 0; right: 0; bottom: calc(40px + env(safe-area-inset-bottom)); text-align: center; font-size: 12px; font-weight: 600; color: var(--ix-at, var(--ix-ac, var(--fg))); opacity: .55; transition: bottom .25s; }
   body.ix-cart .ix-mark { bottom: calc(88px + env(safe-area-inset-bottom)); }
   .ix-scr { overflow-x: hidden; }
   .ix-home > *, .ix-list > *, .ix-hero > * { position: relative; z-index: 1; }
@@ -368,11 +368,11 @@
   /* الكلمة الكبيرة الباهتة ورا العنوان */
   .ix-giant { display: none; }
   #ix.ix-st-zigzag .ix-giant { display: block; position: absolute; z-index: 0; top: 46px; left: 50%; transform: translateX(-50%); white-space: nowrap; pointer-events: none;
-    font-size: clamp(120px, 36vw, 360px); font-weight: 700; line-height: 1; letter-spacing: -.02em; color: var(--ix-ac, var(--fg)); opacity: .07; }
+    font-size: clamp(120px, 36vw, 360px); font-weight: 700; line-height: 1; letter-spacing: -.02em; color: var(--ix-at, var(--ix-ac, var(--fg))); opacity: .07; }
   #ix.ix-st-zigzag .ix-home .ix-giant { top: 50%; transform: translate(-50%, -50%); }
-  #ix.ix-st-zigzag .ix-title { margin-top: clamp(16px, 4vmin, 40px); font-size: clamp(46px, 13vw, 124px); line-height: 1.02; letter-spacing: -.01em; color: var(--ix-ac, var(--fg)); }
-  #ix.ix-st-zigzag .ix-hi { font-size: clamp(40px, 11vw, 96px); color: var(--ix-ac, var(--fg)); }
-  #ix.ix-st-zigzag .ix-hname { color: var(--ix-ac, var(--fg)); }
+  #ix.ix-st-zigzag .ix-title { margin-top: clamp(16px, 4vmin, 40px); font-size: clamp(46px, 13vw, 124px); line-height: 1.02; letter-spacing: -.01em; color: var(--ix-at, var(--ix-ac, var(--fg))); }
+  #ix.ix-st-zigzag .ix-hi { font-size: clamp(40px, 11vw, 96px); color: var(--ix-at, var(--ix-ac, var(--fg))); }
+  #ix.ix-st-zigzag .ix-hname { color: var(--ix-at, var(--ix-ac, var(--fg))); }
   #ix.ix-st-zigzag .ix-logo { box-shadow: 0 0 0 3px var(--ix-ac, var(--line2)), 0 24px 60px -24px rgba(0, 0, 0, .6); }
   #ix.ix-st-zigzag .ix-cat { box-shadow: 0 14px 30px -16px rgba(0, 0, 0, .55); }
   /* صورة الطبق بالكبير: دائرية بحلقة بلون التمييز */
@@ -405,6 +405,43 @@
   .ix-ztab .ix-price { margin-top: 2px; font-size: clamp(15px, 3.8vw, 22px); }
   #ix.ix-st-zigzag .ix-chip { background: var(--ix-tab); border-color: transparent; }
   #ix.ix-st-zigzag .ix-chip.on { background: var(--accent); }
+  /* ─── قالب «خيط» (مميز): أطباق متفرقة يمين ويسار يربطها خيط ذهبي رفيع، بخلفية خضراء داكنة ─── */
+  /* شكل الطبق: حافة عضوية غير منتظمة (دائري)، أو حواف ناعمة، أو حادة */
+  #ix.ix-st-thread { --ix-blob: 47% 53% 50% 50% / 52% 47% 53% 48%; }
+  #ix.ix-st-thread .ix-title { font-size: clamp(38px, 10vw, 92px); font-weight: 600; line-height: 1.1; color: var(--ix-at, var(--ix-ac, var(--fg))); margin-top: 4px; }
+  .ix-tstore { margin: clamp(10px, 3vmin, 28px) 0 0; text-align: center; font-size: clamp(13px, 2vmin, 17px); font-weight: 500; letter-spacing: .04em; color: var(--fg2); }
+  #ix.ix-st-thread .ix-hi, #ix.ix-st-thread .ix-hname { color: var(--ix-at, var(--ix-ac, var(--fg))); font-weight: 600; }
+  #ix.ix-st-thread .ix-logo { box-shadow: 0 0 0 2px var(--ix-ac, var(--line2)), 0 24px 60px -24px rgba(0, 0, 0, .6); }
+  #ix.ix-st-thread .ix-cat { background: transparent; color: var(--ix-ac, var(--fg)); border: 1.5px solid var(--ix-ac, var(--line2)); box-shadow: none; font-weight: 600; }
+  #ix.ix-st-thread .ix-cat:active { background: var(--ix-ac); color: var(--ix-bg); }
+  #ix.ix-st-thread .ix-chip { background: transparent; border-color: rgba(217, 196, 154, .35); }
+  #ix.ix-st-thread .ix-chip.on { background: var(--ix-ac); color: var(--ix-bg); border-color: transparent; }
+  .ix-tsq { width: clamp(90px, 22vmin, 150px); height: auto; margin-top: -4px; fill: none; stroke: var(--ix-ac, var(--fg)); stroke-width: 1.6; stroke-linecap: round; opacity: .8; }
+  .ix-th { position: relative; max-width: 760px; margin: 0 auto; padding: 40px 0 70px; }
+  .ix-thread { position: absolute; top: 0; left: 0; z-index: 0; overflow: visible; pointer-events: none; }
+  .ix-thread path { fill: none; stroke: var(--ix-ac, var(--fg)); stroke-width: 1.5; stroke-linecap: round; opacity: .85; }
+  .ix-trow { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); align-items: center; gap: clamp(14px, 4vw, 40px); width: 100%; margin: 0 0 clamp(34px, 8vw, 70px); padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: start; }
+  .ix-trow:last-child { margin-bottom: 0; }
+  .ix-trow.rev { grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); }
+  .ix-trow.rev .ix-tpic { order: 2; }
+  .ix-trow.off { opacity: .45; filter: grayscale(1); }
+  .ix-tpic { display: block; width: min(100%, 300px); justify-self: center; transform: rotate(var(--tilt, 0deg)); transition: transform .2s; }
+  .ix-trow:nth-child(4n+1) .ix-tpic { width: min(92%, 280px); }
+  .ix-trow:active .ix-tpic { transform: rotate(var(--tilt, 0deg)) scale(.96); }
+  /* الصورة العادية داخل «طبق» بحافة كريمية وظل ناعم، والمفرّغة حرة بظلها */
+  #ix.ix-st-thread .ix-tpic .ix-pic.frame img, #ix.ix-st-thread .ix-tpic .ix-pic.probe img, #ix.ix-st-thread .ix-tpic .ix-pic.frame video,
+  #ix.ix-st-thread .ix-heropic .ix-pic.frame img, #ix.ix-st-thread .ix-heropic .ix-pic.probe img, #ix.ix-st-thread .ix-heropic .ix-pic.frame video,
+  #ix.ix-st-thread .ix-mini .ix-pic.frame img, #ix.ix-st-thread .ix-mini .ix-pic.probe img {
+    border-radius: var(--ix-blob); box-shadow: 0 0 0 clamp(4px, 1.2vw, 7px) rgba(239, 231, 212, .92), 0 0 0 clamp(5px, 1.4vw, 8px) rgba(0, 0, 0, .08), 0 26px 40px -18px rgba(0, 0, 0, .6); }
+  #ix.ix-st-thread .ix-mini .ix-pic.frame img, #ix.ix-st-thread .ix-mini .ix-pic.probe img { box-shadow: 0 0 0 3px rgba(239, 231, 212, .92); }
+  #ix.ix-st-thread .ix-pic.cut img { filter: drop-shadow(0 22px 22px rgba(0, 0, 0, .42)); }
+  #ix.ix-st-thread .ix-tpic .ix-pic.txt { padding: 0; overflow: hidden; border-radius: var(--ix-blob); border: 5px solid rgba(239, 231, 212, .92); background: rgba(0, 0, 0, .15); }
+  #ix.ix-st-thread.ix-sh-round .ix-tpic .ix-pic.frame img, #ix.ix-st-thread.ix-sh-round .ix-tpic .ix-pic.probe img, #ix.ix-st-thread.ix-sh-round .ix-tpic .ix-pic.txt,
+  #ix.ix-st-thread.ix-sh-round .ix-heropic .ix-pic.frame img, #ix.ix-st-thread.ix-sh-round .ix-heropic .ix-pic.probe img { border-radius: var(--ix-blob) !important; }
+  .ix-ttext { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .ix-tname { font-size: clamp(17px, 4.6vw, 28px); font-weight: 500; line-height: 1.3; color: var(--ix-at, var(--ix-ac, var(--fg))); }
+  .ix-tdesc { font-size: clamp(12.5px, 3.2vw, 16px); line-height: 1.65; color: var(--fg2); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .ix-ttext .ix-price { font-size: clamp(15px, 3.9vw, 22px); color: var(--ix-at, var(--ix-ac, var(--price))); }
   @media (prefers-reduced-motion: reduce) {
     .ix-scr, .ix-scr.on { transform: none; transition: opacity .2s, visibility 0s; }
     .ix-scr.enter .ix-pop, .ix-float, .ix-slide { animation: none; }
@@ -531,6 +568,10 @@
   <div class="ix-top">
     <button type="button" onclick="toggleLanguage()" class="bg-black/60 text-white px-4 py-2 rounded-full text-xs font-bold border border-white/20 transition flex items-center gap-2 backdrop-blur-md">
       <i class="fa-solid fa-globe"></i> <span id="ix-lang-text">English</span>
+    </button>
+    <!-- ملء الشاشة: في رابط التابلت بس، وعلى شاشة الترحيب، وفي الأجهزة اللي تدعمه (الآيفون ما يدعمه) -->
+    <button type="button" id="ix-fs" onclick="ixFullscreen()" aria-label="ملء الشاشة" title="ملء الشاشة" class="hidden w-9 h-9 rounded-full bg-black/60 text-white border border-white/20 backdrop-blur-md items-center justify-center">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
     </button>
   </div>
   <section id="ixHome" class="ix-scr"></section>
@@ -1425,7 +1466,9 @@
   // نوع المنيو: عادي (قائمة أو صور كبيرة) أو تفاعلي. الافتراضي اختيار صاحب المحل، والزبون يقدر يبدّل
   // نوع المنيو (عادي أو تفاعلي) يحدده صاحب المحل بس. ?ix=1 لتجربة التفاعلي بدون حفظ
   try { localStorage.removeItem(`dm_ix_${clientSlug}`); } catch {}
-  const ixForced = new URLSearchParams(location.search).get('ix');
+  // رابط التابلت (?mode=tablet) يفتح المنيو التفاعلي دائماً بشكل المحل، مهما كان نوع منيو الطاولات، ومثله ?ix=1
+  const ixTablet = new URLSearchParams(location.search).get('mode') === 'tablet';
+  const ixForced = ixTablet ? '1' : new URLSearchParams(location.search).get('ix');
   const ixMode = () => ixForced === '1' || (ixForced !== '0' && !!(project && project.menu_layout === 'interactive'));
   const photoLayout = () => (menuView || (project && project.menu_layout === 'photos' ? 'photos' : 'list')) === 'photos';
   function renderLayoutToggle() {
@@ -2352,6 +2395,7 @@
         <div class="ix-logo ix-pop" style="--i:0"><img src="${esc(logo)}" alt=""></div>
         ${p.name ? `<h1 class="ix-hi ix-pop" style="--i:1">${esc(p.name)}</h1>` : ''}
         ${look.tagline ? `<p class="ix-tag ix-pop" style="--i:2">${esc(look.tagline)}</p>` : ''}
+        ${look.style === 'thread' ? `<svg class="ix-tsq ix-pop" style="--i:2" viewBox="0 0 120 14" aria-hidden="true"><path d="M2 8 C 18 1, 30 13, 46 7 S 74 2, 88 8 S 110 12, 118 5"/></svg>` : ''}
         <div class="ix-cats">${items.map((x, i) => `<button type="button" class="ix-cat ix-pop" style="--i:${Math.min(i, 12) + 3}" data-ix-cat="${esc(x.key)}">${esc(x.label)}</button>`).join('')}</div>
         ${items.length ? '' : `<p class="ix-sub">${T('لم تتم إضافة أصناف لهذا المنيو بعد.', 'Nothing added yet.')}</p>`}
         ${look.exclusive ? '' : `<a class="ix-mark" href="https://www.devmenu.digital/?ref=menu" target="_blank" rel="noopener">${T('صُنع بـ', 'Made with')} <span dir="ltr">DEV MENU</span></a>`}
@@ -2385,25 +2429,75 @@
         </span>
       </button>`;
   }
+  // صف في قالب «خيط»: الطبق (المفرّغ حر بظله، أو الصورة داخل طبق بحافة كريمية) وجنبه الاسم والوصف والسعر
+  function ixTRow(p, i) {
+    const off = p.is_available === false, desc = productDesc(p);
+    const logo = safeUrl(project && project.logo_url) || 'images/logo.jpeg?v=2';
+    const pic = ixImg(p) || safeUrl(p.video_url) ? ixPic(p, false) : `<div class="ix-pic txt ix-zlogo ready"><img src="${esc(logo)}" alt=""></div>`;
+    return `
+      <button type="button" class="ix-trow ${i % 2 ? 'rev' : ''} ${off ? 'off' : ''} ix-pop" style="--i:${Math.min(i, 14) + 1};--tilt:${[-4, 3, -2, 5, -3][i % 5]}deg" ${off ? 'disabled' : `data-ix-prod="${esc(p.id)}"`}>
+        <span class="ix-tpic">${pic}</span>
+        <span class="ix-ttext">
+          <b class="ix-tname">${esc(productName(p))}</b>
+          ${desc ? `<span class="ix-tdesc">${esc(desc)}</span>` : ''}
+          <span class="ix-price">${ixPrice(p)}</span>
+          ${off ? `<span class="ix-off">${T('غير متوفر حالياً', 'Currently unavailable')}</span>` : ''}
+        </span>
+      </button>`;
+  }
+  // الخيط الذهبي: مسار واحد ناعم يمر على مراكز الأطباق بالترتيب، بانحناءات خفيفة كأنه مرسوم باليد
+  // نحسبه من مواقع العناصر (offset، ما تتأثر بحركة الظهور)، ونعيده لو تغيّر المقاس. draw = يرتسم بحركة
+  function ixThreads(root, draw) {
+    root.querySelectorAll('.ix-th').forEach(box => {
+      const svg = box.querySelector('.ix-thread'), path = svg && svg.querySelector('path');
+      const pts = [...box.querySelectorAll('.ix-trow')].map(r => { const pic = r.querySelector('.ix-tpic'); return [r.offsetLeft + pic.offsetLeft + pic.offsetWidth / 2, r.offsetTop + pic.offsetTop + pic.offsetHeight / 2]; });
+      if (!path || !pts.length) return;
+      const w = box.clientWidth, h = box.scrollHeight;
+      svg.setAttribute('viewBox', `0 0 ${w} ${h}`); svg.setAttribute('width', w); svg.setAttribute('height', h);
+      const f = (n) => n.toFixed(1);
+      // يبدأ من فوق أول طبق شوي، ويطلع من تحت آخر واحد
+      const start = [w / 2 + (pts[0][0] < w / 2 ? 30 : -30), Math.max(0, pts[0][1] - 90)];
+      let d = `M ${f(start[0])} ${f(start[1])}`, prev = start;
+      [...pts, [w / 2, pts[pts.length - 1][1] + 90]].forEach(([x, y], k) => {
+        // نقاط التحكم تميل لجهة النص شوي، مع اهتزاز ثابت لكل مقطع (ما يتغير مع كل رسم)
+        const wob = [42, -30, 26, -46, 34][k % 5], dy = y - prev[1];
+        d += ` C ${f(prev[0] + wob)} ${f(prev[1] + dy * .45)}, ${f(x - wob * 1.4)} ${f(y - dy * .5)}, ${f(x)} ${f(y)}`;
+        prev = [x, y];
+      });
+      path.setAttribute('d', d);
+      if (!draw || calmMotion || !path.getTotalLength) { path.style.strokeDasharray = ''; path.style.strokeDashoffset = ''; return; }
+      const len = path.getTotalLength();
+      path.style.transition = 'none'; path.style.strokeDasharray = `${len}`; path.style.strokeDashoffset = `${len}`;
+      void path.getBoundingClientRect();
+      path.style.transition = 'stroke-dashoffset 1.8s cubic-bezier(.45, .05, .3, 1) .25s'; path.style.strokeDashoffset = '0';
+    });
+  }
+  // المقاس يتغير (تدوير الجهاز أو تحميل الخط): نعيد حساب الخيط بدون حركة
+  if ('ResizeObserver' in window) new ResizeObserver(() => { if (ixScreen === 'cat' && ixLook().style === 'thread') ixThreads(ixEl('ixCat'), false); }).observe(ixEl('ixCat'));
+  window.addEventListener('resize', () => { if (document.body.classList.contains('ix-mode') && ixLook().style === 'thread') ixThreads(ixEl('ixCat'), false); });
   // الكلمة الكبيرة الباهتة ورا العنوان (قالب «متعرج» بس)
   const ixGiant = (t) => t ? `<span class="ix-giant" aria-hidden="true">${esc(t)}</span>` : '';
   // step = جهة الانتقال لما يبدّل القسم من الشريط أو بالسحب (0 = أول دخول)
   function ixRenderCat(key, step = 0) {
     const cats = ixCatsOf(key), items = ixHomeItems();
     let i = 0;
-    const zz = ixLook().style === 'zigzag';
-    // قالب «متعرج»: خط بالنص والأصناف يمين ويسار بالتناوب، وإلا الشبكة
-    const grid = (c) => zz
+    const style = ixLook().style;
+    // «متعرج»: خط بالنص والأصناف يمين ويسار بالتناوب، و«خيط»: أطباق متفرقة يربطها خيط ذهبي، وإلا الشبكة
+    const grid = (c) => style === 'zigzag'
       ? `<div class="ix-zz">${productsIn(c, allProducts).map(p => ixZRow(p, i++)).join('')}</div>`
+      : style === 'thread'
+      ? `<div class="ix-th"><svg class="ix-thread" aria-hidden="true"><path/></svg>${productsIn(c, allProducts).map(p => ixTRow(p, i++)).join('')}</div>`
       : `<div class="ix-grid">${productsIn(c, allProducts).map(p => ixCard(p, i++)).join('')}</div>`;
     ixEl('ixCat').innerHTML = `
       <div class="ix-list ${step ? 'ix-slide' : ''}" style="--sx:${ixSx(step)}">
         ${ixGiant(ixTitle(key, cats))}
+        ${style === 'thread' && project && project.name ? `<p class="ix-tstore ix-pop" style="--i:0">${esc(project.name)}</p>` : ''}
         <h2 class="ix-title ix-pop" style="--i:0">${esc(ixTitle(key, cats))}</h2>
         ${items.length > 1 ? `<div class="ix-chips" role="tablist">${items.map(x => `<button type="button" role="tab" aria-selected="${x.key === key}" class="ix-chip ${x.key === key ? 'on' : ''}" data-ix-chip="${esc(x.key)}">${esc(x.label)}</button>`).join('')}</div>` : ''}
         ${cats.length > 1 ? cats.map(c => `<h3 class="ix-sec">${esc(catName(c))}</h3>${grid(c)}`).join('') : cats.map(grid).join('')}
       </div>`;
     ixWatchPics(ixEl('ixCat'));
+    if (style === 'thread') ixThreads(ixEl('ixCat'), true);
     // القسم الحالي في نص الشريط (نحرّك الشريط بس، مو الصفحة)
     const bar = ixEl('ixCat').querySelector('.ix-chips'), on = bar && bar.querySelector('.on');
     if (on) bar.scrollLeft += (on.getBoundingClientRect().left + on.offsetWidth / 2) - (bar.getBoundingClientRect().left + bar.clientWidth / 2);
@@ -2507,6 +2601,7 @@
     next.classList.add('on');
     if (!calmMotion) next.querySelectorAll('video[src]').forEach(v => v.play().catch(() => {}));
     ixScreen = name;
+    ixFsBtn();
     ixNav();
   }
   // from = صورة البطاقة اللي انضغطت (تطير لشاشة الطبق)
@@ -2640,18 +2735,20 @@
 
   // ─── شكل المنيو التفاعلي: القالب والألوان والملمس (يختارها صاحب المحل، menu_ix) ───
   // ?ixstyle=zigzag للتجربة بس
-  const IX_STYLES = { grid: { bg: null, accent: null, texture: false }, zigzag: { bg: '#1f4d3a', accent: '#e9dfc4', texture: true } };
+  const IX_STYLES = { grid: { bg: null, accent: null, texture: 'none' }, zigzag: { bg: '#1f4d3a', accent: '#e9dfc4', texture: 'grain' }, thread: { bg: '#1e4a3a', accent: '#d9c49a', texture: 'paper' } };
   function ixLook() {
     const o = (project && project.menu_ix && typeof project.menu_ix === 'object') ? project.menu_ix : {};
     const t = urlParams.get('ixstyle');
     const style = IX_STYLES[t] ? t : IX_STYLES[o.style] ? o.style : 'grid';
-    const hex = (c) => window.DMTheme && DMTheme.isHex(c) ? c.toLowerCase() : null;
+    // قالب التجربة غير قالب المحل: نعرضه بألوانه وإعداداته الافتراضية
+    const own = !IX_STYLES[t] || t === o.style;
+    const hex = (c) => own && window.DMTheme && DMTheme.isHex(c) ? c.toLowerCase() : null;
     const d = IX_STYLES[style];
     // الملمس: grain حبيبات، paper ورق، none بدون (القيم القديمة true/false = grain/none)، وفاضي = افتراضي القالب
-    const tx = urlParams.get('ixtex') || o.texture;
-    const texture = tx === true ? 'grain' : tx === false ? 'none' : ['grain', 'paper', 'none'].includes(tx) ? tx : (d.texture ? 'grain' : 'none');
+    const tx = urlParams.get('ixtex') || (own ? o.texture : null);
+    const texture = tx === true ? 'grain' : tx === false ? 'none' : ['grain', 'paper', 'none'].includes(tx) ? tx : d.texture;
     // شكل البطاقات: round دائري، soft حواف ناعمة، square حواف صغيرة. فاضي = شكل القالب الأصلي
-    const sh = urlParams.get('ixshape') || o.shape;
+    const sh = urlParams.get('ixshape') || (own ? o.shape : null);
     const shape = ['round', 'soft', 'square'].includes(sh) ? sh : null;
     const tagline = String(urlParams.get('ixtag') || o.tagline || '').trim().slice(0, 40);
     return { style, bg: hex(o.bg) || d.bg, accent: hex(o.accent) || d.accent, texture, shape, tagline, exclusive: o.exclusive === true };
@@ -2662,6 +2759,7 @@
   function ixApplyLook() {
     const L = ixLook(), el = ixEl('ix');
     el.classList.toggle('ix-st-zigzag', L.style === 'zigzag');
+    el.classList.toggle('ix-st-thread', L.style === 'thread');
     el.classList.toggle('ix-solid', !!L.bg);
     el.classList.toggle('ix-tex-grain', L.texture === 'grain');
     el.classList.toggle('ix-tex-paper', L.texture === 'paper');
@@ -2670,7 +2768,8 @@
     if (L.bg) {
       const dark = DMTheme.textOn(L.bg) === '#ffffff';
       // النص: لون التمييز لو كان واضح على الخلفية، وإلا أبيض أو أسود
-      const ink = L.accent && L.style === 'zigzag' && DMTheme.textOn(L.accent) !== DMTheme.textOn(L.bg) ? L.accent : (dark ? '#f7f3ea' : '#1c1b18');
+      // («خيط»: النص كريمي هادي، والذهبي للعناوين والأسعار)
+      const ink = L.accent && L.style === 'zigzag' && DMTheme.textOn(L.accent) !== DMTheme.textOn(L.bg) ? L.accent : (dark ? (L.style === 'thread' ? '#efe7d4' : '#f7f3ea') : '#1c1b18');
       const tab = ixShade(L.bg, dark ? -0.28 : -0.07);
       Object.assign(v, { 'ix-bg': L.bg, 'ix-tab': tab, fg: ink, 'body-fg': ink, fg2: ixRgba(ink, .82), fg3: ixRgba(ink, .62), modal: tab, surface: tab, 'surface-line': ixRgba(ink, .14),
         line: ixRgba(ink, .2), line2: ixRgba(ink, .32), chip: ixRgba(ink, .09), chip2: ixRgba(ink, .16), 'img-line': ixRgba(ink, .16), 'input-bg': ixRgba(tab, .75), 'ring-bg': tab, price: ink });
@@ -2678,6 +2777,8 @@
     if (L.accent) {
       Object.assign(v, { 'ix-ac': L.accent, accent: L.accent, 'accent-fg': DMTheme.textOn(L.accent) === '#ffffff' ? '#ffffff' : (L.bg && DMTheme.textOn(L.bg) === '#ffffff' ? L.bg : '#111111'), 'accent-glow': ixRgba(L.accent, .3) });
       if (!L.bg || DMTheme.textOn(L.accent) !== DMTheme.textOn(L.bg)) v.price = L.accent;
+      // نص بلون التمييز (العناوين والأسماء): لو ما ينقرأ على الخلفية (فاتح على فاتح) ناخذ لون النص بداله
+      v['ix-at'] = !L.bg || DMTheme.textOn(L.accent) !== DMTheme.textOn(L.bg) ? L.accent : (v.fg || L.accent);
     }
     el.style.cssText = Object.entries(v).map(([k, x]) => `--${k}:${x}`).join(';');
     // شريط الجوال بلون الخلفية
@@ -2708,10 +2809,24 @@
     ixIdle();
   }
 
+  // ─── ملء الشاشة (رابط التابلت): زر صغير في شاشة الترحيب ───
+  const ixFsOk = () => { const d = document.documentElement; return !!(document.fullscreenEnabled || document.webkitFullscreenEnabled) && !!(d.requestFullscreen || d.webkitRequestFullscreen); };
+  function ixFsBtn() {
+    const b = ixEl('ix-fs'), show = ixTablet && ixScreen === 'home' && ixFsOk();
+    b.classList.toggle('hidden', !show); b.classList.toggle('flex', show);
+  }
+  function ixFullscreen() {
+    const d = document.documentElement;
+    try {
+      if (document.fullscreenElement || document.webkitFullscreenElement) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+      else { const r = (d.requestFullscreen || d.webkitRequestFullscreen).call(d); if (r && r.catch) r.catch(() => {}); }
+    } catch {}
+  }
+
   // ─── الخمول: على التابلت لو ما أحد لمس الشاشة 90 ثانية يرجع للترحيب (للزبون اللي بعده) ───
   // ?idle=5 للتجربة (بالثواني). في الجوال ما نرجّعه، الزبون يمكن يقرأ على راحته
   const IX_IDLE = Math.max(3, Number(urlParams.get('idle')) || 90) * 1000;
-  const ixIdleOn = () => urlParams.has('idle') || Math.min(innerWidth, innerHeight) >= 600;
+  const ixIdleOn = () => ixTablet || urlParams.has('idle') || Math.min(innerWidth, innerHeight) >= 600;
   let ixIdleT = null;
   function ixIdle() {
     clearTimeout(ixIdleT);

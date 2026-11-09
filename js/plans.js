@@ -22,7 +22,8 @@
   //   premium: ضمن «القوالب المميزة» (ixpro)، exclusive_for: رقم المتجر اللي له القالب الحصري (يختاره هو بس)
   const IX_TEMPLATES = {
     grid:   { name: 'شبكة', premium: false },
-    zigzag: { name: 'متعرج', premium: false }
+    zigzag: { name: 'متعرج', premium: false },
+    thread: { name: 'خيط', premium: true, desc: 'الأطباق على أطباق خزفية يمين ويسار يربطها خيط ذهبي، بخلفية خضراء داكنة.' }
   };
   // «القوالب المميزة» مخفية من صفحات الاختيار والأسعار لين يصير فيه قالب مميز
   const IXPRO_ON = Object.values(IX_TEMPLATES).some(t => t.premium);
@@ -108,6 +109,7 @@
       const f = [...store.plan_features];
       if (f.includes('pager')) f.push('notify');
       if (f.includes('menu')) f.push('chat');
+      if (f.includes('menu') && IXPRO_ON) f.push('ixpro');   // ويجرب «القوالب المميزة»
       return withFreePager(clean(f));
     }
     if (store.subscription_status === 'active') return Array.isArray(store.plan_features) && store.plan_features.length ? withFreePager(clean(store.plan_features)) : LEGACY.slice();
