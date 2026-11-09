@@ -96,6 +96,38 @@
   .prod li i { color: #047857; margin-top: 4px; font-size: 13px; }
   .prod .from { margin-top: auto; padding-top: 14px; border-top: 1px dashed var(--line); font-size: 13px; font-weight: 600; color: var(--muted); }
   .prod .from b { font-size: 20px; color: var(--ink); }
+  /* شرائح الخدمات في الواجهة */
+  .svc-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .svc-chips a { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 999px; background: #fff; box-shadow: var(--shadow-card); font-size: 13px; font-weight: 700; color: var(--ink); transition: background .15s, color .15s; }
+  .svc-chips a:hover { background: var(--brand); color: #fff; }
+  .svc-chips a i { color: var(--gold-deep); }
+  .svc-chips a:hover i { color: inherit; }
+  /* إعلان الخدمة: الصورة على جهة والكلام على الثانية، وبالتناوب */
+  .svc { scroll-margin-top: 96px; display: grid; gap: 24px; align-items: center; background: #fff; border-radius: 16px; box-shadow: var(--shadow-card); padding: 24px 20px; overflow: hidden; }
+  @media (min-width: 900px) { .svc { grid-template-columns: .9fr 1.1fr; gap: 48px; padding: 36px 44px; } .svc:nth-child(even) .svc-media { order: 2; } }
+  .svc-media { display: flex; justify-content: center; background: radial-gradient(70% 70% at 50% 50%, rgba(127,182,133,.16), transparent 70%); border-radius: 14px; padding: 8px 0; }
+  .svc .phone { width: 240px; }
+  .svc .phone img { width: 100%; height: 100%; object-fit: cover; object-position: top; display: block; }
+  .svc-pair { display: flex; justify-content: center; }
+  .svc-pair .phone { width: 200px; }
+  .svc-pair .phone + .phone { margin-inline-start: -46px; margin-top: 46px; }
+  .svc-tag { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 700; color: var(--gold-deep); }
+  .svc-ic { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; font-size: 19px; background: var(--brand); color: #fff; }
+  .svc-add { font-size: 11.5px; font-weight: 700; color: #8a6d0f; background: rgba(201,162,39,.16); padding: 3px 10px; border-radius: 999px; }
+  .svc-h { font-size: clamp(22px, 2.6vw, 30px); line-height: 1.35; font-weight: 700; margin-top: 12px; }
+  .svc-list { margin-top: 16px; display: grid; gap: 10px; }
+  .svc-list li { display: flex; gap: 10px; font-size: 15px; font-weight: 600; line-height: 1.7; }
+  .svc-list li i { color: #047857; margin-top: 5px; font-size: 14px; flex-shrink: 0; }
+  .svc-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-top: 22px; padding-top: 18px; border-top: 1px dashed var(--line); }
+  .svc-price { font-size: 14px; font-weight: 600; color: var(--muted); }
+  .svc-price b { font-size: 22px; color: var(--ink); }
+  /* الأسعار باختصار */
+  .tease { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14); border-radius: 14px; padding: 18px; text-align: center; }
+  .tease i { font-size: 22px; color: var(--gold); }
+  .tease p { font-size: 14px; font-weight: 700; margin-top: 6px; }
+  .tease b { display: block; font-size: 30px; font-weight: 700; margin-top: 4px; }
+  .tease small { font-size: 12px; font-weight: 600; opacity: .7; }
+  @media (max-width: 767px) { .svc .phone { width: 210px; } .svc-pair .phone { width: 160px; } .svc-pair .phone + .phone { margin-inline-start: -36px; margin-top: 36px; } }
   /* يناسب كل نشاط */
   .biz { background: #fff; border-radius: 12px; box-shadow: var(--shadow-card); padding: 20px; display: flex; gap: 14px; align-items: flex-start; }
   .biz-ic { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; font-size: 21px; flex-shrink: 0; background: #f2efe8; color: var(--ink); }
@@ -240,8 +272,8 @@
 <header class="topbar">
   <nav aria-label="القائمة">
     <a href="#" class="logo" aria-label="DEV MENU"><img src="images/logo-mark.png" alt="DEV MENU" width="56" height="38" class="h-[38px] w-auto"></a>
-    <a href="#products" class="lnk">المميزات</a>
-    <a href="#how" class="lnk">كيف يعمل</a>
+    <a href="#products" class="lnk">الخدمات</a>
+    <a href="#how" class="lnk">كيف تبدأ</a>
     <a href="/pricing.html" class="lnk">الأسعار</a>
     <a href="#faq" class="lnk">الأسئلة</a>
     <button type="button" data-lang-toggle class="lnk"></button>
@@ -252,21 +284,26 @@
 
 <main>
 <!-- ═══════════ الواجهة ═══════════ -->
-<section class="pt-32 md:pt-36 pb-16">
+<section class="pt-32 md:pt-36 pb-12">
   <div class="wrap grid lg:grid-cols-[1.08fr_.92fr] gap-12 lg:gap-14 items-center">
     <div class="space-y-7 reveal">
-      <p class="pill"><i class="ph-bold ph-storefront"></i> <span><b class="text-[15px]">أكثر من منيو</b>، لكل منشأة تخدم عملاء: مطعم، مقهى، عيادة، صالون، متجر</span></p>
-      <h1 class="hero-h">منيو، بيجر،<br>وبطاقة ولاء.<br><em>جميعها في جوال عميلك.</em></h1>
-      <p class="lead max-w-xl">يمسح عميلك الرمز ويتصفح المنيو بالصور، ويحصل على رقمه فيصله التنبيه عند جاهزية طلبه، ويجمع أختامه في محفظة جواله فيعود إليك. دون تطبيق ودون أجهزة.</p>
-      <div class="grid grid-cols-2 gap-3 max-w-md">
-        <div class="price-chip"><small>الباقة الكاملة</small><b dir="ltr" id="chip-full">&#x20C1; 151</b> <span class="text-[12px] font-semibold text-[color:var(--muted)]">بالشهر</span></div>
-        <div class="price-chip"><small>بطاقة الولاء</small><b dir="ltr" id="chip-loyalty">&#x20C1; 69</b> <span class="text-[12px] font-semibold text-[color:var(--muted)]">بالشهر</span></div>
-      </div>
+      <p class="pill"><i class="ph-bold ph-storefront"></i> <span>لكل منشأة تخدم عملاء: مقهى، مطعم، صالون، عيادة، متجر</span></p>
+      <h1 class="hero-h">خدمة أسرع،<br>وعملاء يعودون.<br><em>من جوال عميلك مباشرة.</em></h1>
+      <p class="lead max-w-xl">منيو رقمي ومنيو تفاعلي، وبيجر يرن في جوال العميل، وبطاقة ولاء في محفظته، وقائمة انتظار، ومساعد ذكي، وصفحة روابط بهويتك. دون تطبيق ودون أجهزة.</p>
+      <nav class="svc-chips" aria-label="الخدمات">
+        <a href="#svc-menu"><i class="ph-bold ph-fork-knife"></i> المنيو الرقمي</a>
+        <a href="#svc-ix"><i class="ph-bold ph-device-tablet"></i> المنيو التفاعلي</a>
+        <a href="#svc-pager"><i class="ph-bold ph-bell-ringing"></i> البيجر</a>
+        <a href="#svc-loyalty"><i class="ph-bold ph-seal-check"></i> بطاقة الولاء</a>
+        <a href="#svc-waitlist"><i class="ph-bold ph-hourglass-medium"></i> قائمة الانتظار</a>
+        <a href="#svc-chat"><i class="ph-bold ph-sparkle"></i> المساعد الذكي</a>
+        <a href="#svc-links"><i class="ph-bold ph-link-simple"></i> صفحة الروابط</a>
+      </nav>
       <div class="flex flex-wrap gap-3">
-        <a href="/pricing.html" class="btn btn-main px-7 py-4 text-[15px]">اختر باقتك وابدأ مجاناً</a>
-        <a href="#try" class="btn btn-soft px-6 py-4 text-[15px]"><i class="ph-bold ph-bell-ringing"></i> جرّب البيجر بنفسك</a>
+        <a href="#register" class="btn btn-main px-7 py-4 text-[15px]">ابدأ تجربتك المجانية 14 يوماً</a>
+        <a href="/pricing.html" class="btn btn-soft px-6 py-4 text-[15px]"><i class="ph-bold ph-tag"></i> الأسعار</a>
       </div>
-      <p class="text-[13px] font-semibold text-[color:var(--muted)]"><i class="ph-bold ph-check-circle text-emerald-700"></i> تجربة مجانية لمدة 14 يوماً دون بطاقة بنكية، ثم نتواصل معك لإتمام الاشتراك.</p>
+      <p class="text-[13px] font-semibold text-[color:var(--muted)]"><i class="ph-bold ph-check-circle text-emerald-700"></i> دون بطاقة بنكية، ثم نتواصل معك لإتمام الاشتراك.</p>
       <div id="trust" class="hidden pt-2">
         <p class="text-[13px] font-semibold text-[color:var(--muted)] mb-3">منشآت تستخدم DEV MENU</p>
         <div id="trust-logos" class="logos flex flex-wrap gap-3"></div>
@@ -294,109 +331,153 @@
   </div>
 </section>
 
-<!-- ═══════════ المنتجات ═══════════ -->
-<section id="products" class="py-16 md:py-24">
+<!-- ═══════════ الخدمات: إعلان لكل خدمة (صورة حقيقية، ثلاث نقاط، السعر من js/plans.js) ═══════════ -->
+<section id="products" class="py-12 md:py-20">
   <div class="wrap">
     <div class="max-w-2xl mb-10 reveal">
-      <p class="pill mb-3"><i class="ph-bold ph-squares-four"></i> المميزات</p>
-      <h2 class="h2">أربع أدوات. <em>اختر منها ما تحتاجه.</em></h2>
-      <p class="sub mt-4">تعمل كل أداة بشكل مستقل، وعند الجمع بينها تتكامل: يضيف البيجر ختم الولاء تلقائياً، ويعرض المنيو قائمة الانتظار.</p>
+      <p class="pill mb-3"><i class="ph-bold ph-squares-four"></i> الخدمات</p>
+      <h2 class="h2">سبع خدمات. <em>اختر منها ما تحتاجه.</em></h2>
+      <p class="sub mt-4">تعمل كل خدمة وحدها، وعند الجمع بينها تتكامل: يضيف البيجر ختم الولاء تلقائياً، ويعرض المنيو قائمة الانتظار.</p>
     </div>
-    <div class="grid md:grid-cols-2 gap-4">
-      <article class="prod reveal">
-        <span class="prod-ic" style="background:#eaf3ec;color:#233d2c"><i class="ph-bold ph-fork-knife"></i></span>
-        <h3>المنيو الرقمي</h3>
-        <p>منيو بصور أطباقك وأسعارها يُفتح برمز QR، ويمكنك تعديل أي سعر من جوالك ليظهر التحديث فوراً.</p>
-        <ul class="space-y-1.5">
-          <li><i class="ph-bold ph-check"></i> عرض بشكل قائمة أو بصور كبيرة، مع إمكانية تكبير الصورة</li>
-          <li><i class="ph-bold ph-check"></i> إضافة المنيو التفاعلي: شاشة ترحيب وصور كبيرة وحركة خفيفة، بقوالب وخلفية تختارها لمحلك، منيو رئيسي من رمز QR أو على جهاز لوحي أمام الكاشير <a href="/pricing.html#interactive" class="font-bold underline">التفاصيل</a></li>
-          <li><i class="ph-bold ph-check"></i> يطلب العميل من المنيو فيصل طلبه مباشرة إلى شاشة الكاشير (محلي أو سفري)، أو عبر واتساب، مع كوبونات وخصومات</li>
-          <li><i class="ph-bold ph-check"></i> باللغتين العربية والإنجليزية، مع ثيمات وخلفية بصورة أو فيديو</li>
-          <li><i class="ph-bold ph-check"></i> صوّر المنيو الورقي، ويقرأ الذكاء الاصطناعي الأقسام والأطباق والأسعار والأحجام، فتراجعها ثم تضيفها بضغطة واحدة</li>
-        </ul>
-        <p class="from"><b dir="ltr" data-price="menu">&#x20C1; 39</b> بالشهر</p>
+    <div class="space-y-6 md:space-y-8">
+
+      <article id="svc-menu" class="svc reveal">
+        <div class="svc-media"><div class="phone"><video data-src="videos/menu-v4.mp4" poster="videos/menu-v4.jpg" muted loop playsinline preload="none" aria-label="المنيو الرقمي في جوال العميل"></video></div></div>
+        <div class="svc-body">
+          <p class="svc-tag"><span class="svc-ic"><i class="ph-bold ph-fork-knife"></i></span> المنيو الرقمي</p>
+          <h3 class="svc-h">منيو بصور أصنافك يُفتح برمز QR على الطاولة.</h3>
+          <ul class="svc-list">
+            <li><i class="ph-bold ph-check"></i> صور وأسعار وأحجام وإضافات لكل صنف، وتعديل فوري من جوالك.</li>
+            <li><i class="ph-bold ph-check"></i> يطلب العميل من المنيو فيصل طلبه إلى شاشة الكاشير.</li>
+            <li><i class="ph-bold ph-check"></i> بالعربية والإنجليزية، مع عرض السعرات الحرارية.</li>
+          </ul>
+          <div class="svc-foot"><p class="svc-price">من <b dir="ltr" data-price="menu">&#x20C1; 39</b> بالشهر</p><a href="#register" class="btn btn-main px-5 py-3 text-[14px]">جرّبه مجاناً</a></div>
+        </div>
       </article>
-      <article class="prod reveal">
-        <span class="prod-ic" style="background:#e3f1ef;color:#0f766e"><i class="ph-bold ph-bell-ringing"></i></span>
-        <h3>البيجر في جوال عميلك</h3>
-        <p>يمسح العميل الرمز ويحصل على رقمه، وعند جاهزية طلبه يصله التنبيه على جواله حتى لو كانت الشاشة مقفلة، دون أجهزة معرّضة للتلف أو الضياع.</p>
-        <ul class="space-y-1.5">
-          <li><i class="ph-bold ph-check"></i> بطاقة نداء بشعار منشأتك مشمولة في اشتراك البيجر دون رسوم إضافية، تُحفظ في محفظة جوال العميل، ويصله منها التنبيه حتى أثناء استخدام تطبيق آخر</li>
-          <li><i class="ph-bold ph-check"></i> شاشة كاشير تعمل على أي جوال أو جهاز لوحي، مع رابط مستقل لكل فرع دون الحاجة إلى حسابك</li>
-          <li><i class="ph-bold ph-check"></i> شاشة للعملاء على أي جهاز لوحي تعرض أرقام الطلبات الجاهزة بخط كبير</li>
-          <li><i class="ph-bold ph-check"></i> إحصائيات لمتوسط وقت الانتظار وأوقات الذروة، واسأل عن أرقامك بلغتك لتصلك الإجابة فوراً</li>
-          <li><i class="ph-bold ph-check"></i> تقييم بعد الاستلام، ودعوة العملاء الراضين لتقييم منشأتك على قوقل</li>
-        </ul>
-        <p class="from"><b dir="ltr" data-price="pager">&#x20C1; 49</b> بالشهر</p>
+
+      <article id="svc-ix" class="svc reveal">
+        <div class="svc-media"><div class="svc-pair">
+          <div class="phone"><img src="images/landing/ix-sage.webp" alt="المنيو التفاعلي بقالب Sage" width="600" height="1298" loading="lazy" decoding="async"></div>
+          <div class="phone"><img src="images/landing/ix-amber.webp" alt="المنيو التفاعلي بقالب Amber" width="600" height="1298" loading="lazy" decoding="async"></div>
+        </div></div>
+        <div class="svc-body">
+          <p class="svc-tag"><span class="svc-ic"><i class="ph-bold ph-device-tablet"></i></span> المنيو التفاعلي <span class="svc-add">إضافة</span></p>
+          <h3 class="svc-h">منيو بشكل محلك على الجوال والجهاز اللوحي.</h3>
+          <ul class="svc-list">
+            <li><i class="ph-bold ph-check"></i> قوالب جاهزة: Nova و Sage و Amber.</li>
+            <li><i class="ph-bold ph-check"></i> خلفية بصورة أو فيديو أو لون من اختيارك.</li>
+            <li><i class="ph-bold ph-check"></i> منيو رئيسي من رمز QR، أو على جهاز لوحي أمام الكاشير.</li>
+          </ul>
+          <div class="svc-foot"><p class="svc-price">إضافة للمنيو <b dir="ltr" data-price="ixpro">&#x20C1; 19</b> بالشهر</p><a href="#register" class="btn btn-main px-5 py-3 text-[14px]">جرّبه مجاناً</a></div>
+        </div>
       </article>
-      <article class="prod reveal">
-        <span class="prod-ic" style="background:#f1ecfb;color:#6d28d9"><i class="ph-bold ph-seal-check"></i></span>
-        <h3>بطاقة الولاء</h3>
-        <p>بطاقة أختام باسم عميلك في محفظة جواله، يُضاف إليها ختم بعد كل عملية شراء، وعند اكتمالها يحصل على مكافأته.</p>
-        <ul class="space-y-1.5">
-          <li><i class="ph-bold ph-check"></i> يمسح الكاشير رمز العميل، أو يُضاف الختم تلقائياً مع البيجر</li>
-          <li><i class="ph-bold ph-check"></i> بطاقة واحدة لجميع فروعك: يجمع العميل أختامه ويصرف مكافأته من أي فرع</li>
-          <li><i class="ph-bold ph-check"></i> مساعد ذكي يرسل لعميلك رسالة باسمه عند انقطاع زيارته</li>
-          <li><i class="ph-bold ph-check"></i> نقل رصيد العميل من بطاقتك السابقة بضغطة واحدة من الكاشير</li>
-        </ul>
-        <p class="from"><b dir="ltr" data-price="loyalty">&#x20C1; 69</b> بالشهر</p>
+
+      <article id="svc-pager" class="svc reveal">
+        <div class="svc-media"><div class="phone"><video data-src="videos/pager-live.mp4" poster="videos/pager-live.jpg" muted loop playsinline preload="none" aria-label="تنبيه البيجر في جوال العميل"></video></div></div>
+        <div class="svc-body">
+          <p class="svc-tag"><span class="svc-ic"><i class="ph-bold ph-bell-ringing"></i></span> البيجر</p>
+          <h3 class="svc-h">يأخذ العميل رقمه، ويرن جواله عند جاهزية طلبه.</h3>
+          <ul class="svc-list">
+            <li><i class="ph-bold ph-check"></i> دون أجهزة نداء: جوال العميل يكفي، ويصله التنبيه حتى والشاشة مقفلة.</li>
+            <li><i class="ph-bold ph-check"></i> بطاقة نداء بشعارك في محفظة جواله، مشمولة في الاشتراك.</li>
+            <li><i class="ph-bold ph-check"></i> تسليم الطلب للسيارة: يحدد العميل لون سيارته ونوعها، فتظهر للموظف مع الرقم.</li>
+          </ul>
+          <div class="svc-foot"><p class="svc-price">من <b dir="ltr" data-price="pager">&#x20C1; 49</b> بالشهر</p><a href="#register" class="btn btn-main px-5 py-3 text-[14px]">جرّبه مجاناً</a></div>
+        </div>
       </article>
-      <article class="prod reveal">
-        <span class="prod-ic" style="background:#e8f2fa;color:#0369a1"><i class="ph-bold ph-hourglass-medium"></i></span>
-        <h3>قائمة الانتظار</h3>
-        <p>يسجّل ضيوفك دورهم من جوالاتهم، ويصلهم تنبيه عند حلول دورهم، دون ازدحام عند المدخل.</p>
-        <ul class="space-y-1.5">
-          <li><i class="ph-bold ph-check"></i> عرض الأدوار وأعداد الضيوف على شاشة واحدة</li>
-          <li><i class="ph-bold ph-check"></i> تنبيه عبر الجوال والبريد الإلكتروني عند حلول الدور</li>
-          <li><i class="ph-bold ph-check"></i> تظهر في المنيو لمن ينتظر دوره</li>
-        </ul>
-        <p class="from"><b dir="ltr" data-price="waitlist">&#x20C1; 29</b> بالشهر</p>
+
+      <article id="svc-loyalty" class="svc reveal">
+        <div class="svc-media"><div class="phone"><video data-src="videos/loyalty-live.mp4" poster="videos/loyalty-live.jpg" muted loop playsinline preload="none" aria-label="بطاقة الولاء في محفظة الجوال"></video></div></div>
+        <div class="svc-body">
+          <p class="svc-tag"><span class="svc-ic"><i class="ph-bold ph-seal-check"></i></span> بطاقة الولاء</p>
+          <h3 class="svc-h">بطاقة أختام في محفظة جوال عميلك، تعيده إليك.</h3>
+          <ul class="svc-list">
+            <li><i class="ph-bold ph-check"></i> أختام ومكافآت في Apple Wallet و Google Wallet.</li>
+            <li><i class="ph-bold ph-check"></i> رسائل لعملائك، ورسالة باسم العميل عند انقطاع زيارته.</li>
+            <li><i class="ph-bold ph-check"></i> تظهر البطاقة على شاشة قفل الآيفون عند اقتراب العميل من محلك.</li>
+          </ul>
+          <div class="svc-foot"><p class="svc-price">من <b dir="ltr" data-price="loyalty">&#x20C1; 69</b> بالشهر</p><a href="#register" class="btn btn-main px-5 py-3 text-[14px]">جرّبه مجاناً</a></div>
+        </div>
+      </article>
+
+      <article id="svc-waitlist" class="svc reveal">
+        <div class="svc-media"><div class="phone"><img src="images/landing/waitlist.webp" alt="صفحة التسجيل في قائمة الانتظار" width="600" height="1298" loading="lazy" decoding="async"></div></div>
+        <div class="svc-body">
+          <p class="svc-tag"><span class="svc-ic"><i class="ph-bold ph-hourglass-medium"></i></span> قائمة الانتظار</p>
+          <h3 class="svc-h">يسجّل الضيف دوره من جواله، ويصله التنبيه عند حلول دوره.</h3>
+          <ul class="svc-list">
+            <li><i class="ph-bold ph-check"></i> يرى الضيف عدد المنتظرين والوقت التقريبي قبل التسجيل.</li>
+            <li><i class="ph-bold ph-check"></i> تنبيه على الجوال والبريد الإلكتروني عند حلول الدور.</li>
+            <li><i class="ph-bold ph-check"></i> شاشة واحدة لإدارة الأدوار وأعداد الضيوف.</li>
+          </ul>
+          <div class="svc-foot"><p class="svc-price">من <b dir="ltr" data-price="waitlist">&#x20C1; 29</b> بالشهر</p><a href="#register" class="btn btn-main px-5 py-3 text-[14px]">جرّبه مجاناً</a></div>
+        </div>
+      </article>
+
+      <article id="svc-chat" class="svc reveal">
+        <div class="svc-media"><div class="phone"><img src="images/landing/assistant.webp" alt="المساعد الذكي داخل المنيو" width="600" height="1298" loading="lazy" decoding="async"></div></div>
+        <div class="svc-body">
+          <p class="svc-tag"><span class="svc-ic"><i class="ph-bold ph-sparkle"></i></span> المساعد الذكي <span class="svc-add">إضافة</span></p>
+          <h3 class="svc-h">مساعد داخل المنيو يجيب عملاءك على مدار الساعة.</h3>
+          <ul class="svc-list">
+            <li><i class="ph-bold ph-check"></i> يجيب عن الأصناف والأسعار والسعرات والمكونات.</li>
+            <li><i class="ph-bold ph-check"></i> يقترح على العميل حسب ذوقه وميزانيته.</li>
+            <li><i class="ph-bold ph-check"></i> يجيب من منيو محلك فقط، ويعتذر عن غيره.</li>
+          </ul>
+          <div class="svc-foot"><p class="svc-price">إضافة للمنيو <b dir="ltr" data-price="chat">&#x20C1; 19</b> بالشهر</p><a href="#register" class="btn btn-main px-5 py-3 text-[14px]">جرّبه مجاناً</a></div>
+        </div>
+      </article>
+
+      <article id="svc-links" class="svc reveal">
+        <div class="svc-media"><div class="phone"><img src="images/landing/links.webp" alt="صفحة الروابط بهوية المنشأة" width="600" height="1298" loading="lazy" decoding="async"></div></div>
+        <div class="svc-body">
+          <p class="svc-tag"><span class="svc-ic"><i class="ph-bold ph-link-simple"></i></span> صفحة الروابط</p>
+          <h3 class="svc-h">كل روابط محلك في صفحة واحدة بهويتك.</h3>
+          <ul class="svc-list">
+            <li><i class="ph-bold ph-check"></i> المنيو والبيجر وبطاقة الولاء وقائمة الانتظار في مكان واحد.</li>
+            <li><i class="ph-bold ph-check"></i> حساباتك في التواصل الاجتماعي وفروعك وروابطك الخاصة.</li>
+            <li><i class="ph-bold ph-check"></i> رابط مختصر باسم منشأتك تضعه في حسابك على إنستقرام.</li>
+          </ul>
+          <div class="svc-foot"><p class="svc-price">ضمن كل الباقات المدفوعة</p><a href="#register" class="btn btn-main px-5 py-3 text-[14px]">جرّبه مجاناً</a></div>
+        </div>
       </article>
     </div>
   </div>
 </section>
 
-<!-- ═══════════ يناسب كل نشاط ═══════════ -->
-<section id="sectors" class="pb-16 md:pb-24">
+<!-- ═══════════ كيف تبدأ ═══════════ -->
+<section id="how" class="py-12 md:py-20">
   <div class="wrap">
     <div class="max-w-2xl mb-8 reveal">
-      <p class="pill mb-3"><i class="ph-bold ph-storefront"></i> لكل نشاط</p>
-      <h2 class="h2">ليس للمطاعم فقط. <em>يناسب كل منشأة تخدم عملاء.</em></h2>
+      <p class="pill mb-3"><i class="ph-bold ph-play-circle"></i> كيف تبدأ</p>
+      <h2 class="h2">ثلاث خطوات <em>وتبدأ.</em></h2>
     </div>
-    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      <article class="biz reveal"><span class="biz-ic"><i class="ph-bold ph-coffee"></i></span><div><h3>المطاعم والمقاهي</h3><p>منيو بالصور، وطلبات تصل إلى شاشة الكاشير، وتنبيه العميل على جواله عند جاهزية طلبه.</p></div></article>
-      <article class="biz reveal"><span class="biz-ic"><i class="ph-bold ph-scissors"></i></span><div><h3>الصالونات ومراكز التجميل</h3><p>قائمة الخدمات وأسعارها، وقائمة انتظار تنبّه العميل عند حلول دوره، وبطاقة ولاء تعيده إليك.</p></div></article>
-      <article class="biz reveal"><span class="biz-ic"><i class="ph-bold ph-car"></i></span><div><h3>مغاسل السيارات</h3><p>باقات الغسيل وأسعارها، ويصل التنبيه إلى جوال العميل عند جاهزية سيارته، فينتظر براحته.</p></div></article>
-      <article class="biz reveal"><span class="biz-ic"><i class="ph-bold ph-flower-tulip"></i></span><div><h3>محلات الورود والهدايا</h3><p>كتالوج منتجاتك بالصور والأسعار، ويصلك الطلب مرتباً للاستلام من المحل أو عبر واتساب.</p></div></article>
-      <article class="biz reveal"><span class="biz-ic"><i class="ph-bold ph-basket"></i></span><div><h3>الأسر المنتجة</h3><p>قائمة منتجاتك في رابط واحد تضعه في حسابك على إنستقرام، بدلاً من الرد على كل عميل بالأسعار.</p></div></article>
-      <article class="biz reveal"><span class="biz-ic"><i class="ph-bold ph-first-aid"></i></span><div><h3>العيادات والمغاسل ومراكز الخدمة</h3><p>قائمة الخدمات والأسعار، وتنظيم الانتظار، وتنبيه العميل عند حلول دوره أو جاهزية طلبه.</p></div></article>
+    <div class="grid md:grid-cols-3 gap-4">
+      <div class="after reveal"><span class="n">1</span><h3 class="text-[18px] font-bold mt-4">اختر خدماتك وسجّل</h3><p class="sub !text-[14.5px] mt-1">اختر ما تحتاجه من الخدمات، وأنشئ حسابك خلال دقيقة.</p></div>
+      <div class="after reveal"><span class="n">2</span><h3 class="text-[18px] font-bold mt-4">جهّز المنيو ورموز QR</h3><p class="sub !text-[14.5px] mt-1">أضف أصنافك أو صوّر المنيو الورقي، واطبع رموز QR الجاهزة.</p></div>
+      <div class="after reveal"><span class="n">3</span><h3 class="text-[18px] font-bold mt-4">ابدأ مع عملائك</h3><p class="sub !text-[14.5px] mt-1">جرّب كل الخدمات 14 يوماً مجاناً، ثم نتواصل معك لإتمام الاشتراك.</p></div>
     </div>
   </div>
 </section>
 
-<!-- ═══════════ كيف يعمل ═══════════ -->
-<section id="how" class="py-16 md:py-24">
-  <div class="wrap grid lg:grid-cols-[.95fr_1.05fr] gap-12 items-center">
-    <div class="reveal order-last lg:order-first">
-      <div class="flex justify-center gap-4">
-        <div class="phone !w-[220px] !m-0" style="margin-top:40px !important"><video src="videos/pager-live.mp4" poster="videos/pager-live.jpg" autoplay muted loop playsinline preload="none" aria-label="تنبيه البيجر في جوال العميل"></video></div>
-        <div class="phone !w-[220px] !m-0 hidden sm:block"><video src="videos/loyalty-live.mp4" poster="videos/loyalty-live.jpg" autoplay muted loop playsinline preload="none" aria-label="بطاقة الولاء من DEV MENU"></video></div>
+<!-- ═══════════ الأسعار باختصار (من js/plans.js) ═══════════ -->
+<section id="prices" class="py-12 md:py-16">
+  <div class="wrap">
+    <div class="dark !m-0 px-5 py-10 md:px-10 md:py-12 reveal">
+      <div class="text-center max-w-2xl mx-auto mb-8">
+        <h2 class="h2">أسعار واضحة <span class="text-[color:var(--gold)]">بالشهر أو بالسنة.</span></h2>
+        <p class="sub mt-3">تدفع مقابل الخدمات التي تختارها فقط، والاشتراك السنوي يوفر عليك شهرين.</p>
       </div>
-    </div>
-    <div class="reveal">
-      <p class="pill mb-3"><i class="ph-bold ph-play-circle"></i> كيف يعمل</p>
-      <h2 class="h2">من أول زيارة <em>حتى عودته.</em></h2>
-      <div class="mt-6">
-        <div class="step-row"><span class="step-n">01</span><div><h3>يمسح الرمز ويطلب</h3><p>يفتح العميل المنيو من الطاولة أو عند الكاشير، ويتصفح الأطباق بصورها ثم يطلب.</p></div></div>
-        <div class="step-row"><span class="step-n">02</span><div><h3>يحصل على رقمه وينتظر براحة</h3><p>يُحفظ رقم البيجر في جواله، وعند الضغط على "جاهز" يصله التنبيه أينما كان.</p></div></div>
-        <div class="step-row"><span class="step-n">03</span><div><h3>يحصل على ختمه ويقيّم تجربته</h3><p>يُضاف الختم إلى بطاقته تلقائياً، وبعد الاستلام يشاركك رأيه.</p></div></div>
-        <div class="step-row"><span class="step-n">04</span><div><h3>يعود إليك</h3><p>إذا انقطعت زيارته تصله رسالة باسمه، وعند اكتمال أختامه يحصل على مكافأته.</p></div></div>
+      <div class="grid sm:grid-cols-3 gap-3 max-w-3xl mx-auto">
+        <div class="tease"><i class="ph-bold ph-fork-knife"></i><p>المنيو الرقمي</p><b dir="ltr" data-price="menu">&#x20C1; 39</b><small>بالشهر</small></div>
+        <div class="tease"><i class="ph-bold ph-bell-ringing"></i><p>البيجر</p><b dir="ltr" data-price="pager">&#x20C1; 49</b><small>بالشهر</small></div>
+        <div class="tease"><i class="ph-bold ph-seal-check"></i><p>بطاقة الولاء</p><b dir="ltr" data-price="loyalty">&#x20C1; 69</b><small>بالشهر</small></div>
       </div>
+      <p class="text-center text-[13.5px] font-semibold mt-5 opacity-80">وخصم عند الجمع بين الخدمات، والإضافات تبدأ من <span dir="ltr" data-price="ixpro">&#x20C1; 19</span> بالشهر.</p>
+      <div class="text-center mt-6"><a href="/pricing.html" class="btn btn-gold px-7 py-3.5 text-[15px]">احسب سعر باقتك</a></div>
     </div>
   </div>
 </section>
-
-
 
 <!-- ═══════════ التسجيل ═══════════ -->
 <section id="register" class="py-16 md:py-20">
@@ -492,24 +573,6 @@
   </div>
 </section>
 
-<!-- ═══════════ المقارنة ═══════════ -->
-<section class="py-16 md:py-20">
-  <div class="wrap max-w-4xl">
-    <h2 class="h2 text-center mb-3 reveal">DEV MENU <em>أم الطريقة التقليدية؟</em></h2>
-    <p class="sub text-center mb-10 reveal">منيو ورقي، وأجهزة بيجر، وبطاقة أختام ورقية، ولكلٍّ منها تكلفة وعناء.</p>
-    <div class="cmp reveal">
-      <div class="cmp-head"><div></div><div>مع DEV MENU</div><div>الطريقة التقليدية</div></div>
-      <div class="cmp-row"><div>تغيير الأسعار</div><div class="yes"><i class="ph-bold ph-check-circle"></i> من جوالك ويظهر التحديث فوراً</div><div class="no"><i class="ph-bold ph-x-circle"></i> طباعة منيو جديد</div></div>
-      <div class="cmp-row"><div>نداء العميل</div><div class="yes"><i class="ph-bold ph-check-circle"></i> تنبيه على جواله وإشعار من محفظته حتى أثناء استخدام تطبيق آخر</div><div class="no"><i class="ph-bold ph-x-circle"></i> أجهزة بمدى محدود تحتاج إلى شحن</div></div>
-      <div class="cmp-row"><div>الأجهزة والصيانة</div><div class="yes"><i class="ph-bold ph-check-circle"></i> لا حاجة لأي جهاز، جوال العميل يكفي</div><div class="no"><i class="ph-bold ph-x-circle"></i> معرّضة للضياع والتلف وتحتاج إلى تنظيف</div></div>
-      <div class="cmp-row"><div>ولاء العميل</div><div class="yes"><i class="ph-bold ph-check-circle"></i> بطاقة محفوظة في محفظة جواله لا تضيع</div><div class="no"><i class="ph-bold ph-x-circle"></i> بطاقة ورقية تُنسى أو تضيع</div></div>
-      <div class="cmp-row"><div>معرفة عملائك</div><div class="yes"><i class="ph-bold ph-check-circle"></i> من يعود، ومتى، وما رأيه</div><div class="no"><i class="ph-bold ph-x-circle"></i> لا تتوفر أي بيانات</div></div>
-      <div class="cmp-row"><div>أكثر من فرع</div><div class="yes"><i class="ph-bold ph-check-circle"></i> بطاقة ولاء واحدة تعمل في جميع فروعك</div><div class="no"><i class="ph-bold ph-x-circle"></i> لكل فرع أوراقه الخاصة</div></div>
-      <div class="cmp-row"><div>هوية منشأتك</div><div class="yes"><i class="ph-bold ph-check-circle"></i> شعارك وألوانك في كل شاشة</div><div class="no"><i class="ph-bold ph-x-circle"></i> أجهزة وأوراق عامة</div></div>
-    </div>
-  </div>
-</section>
-
 <!-- ═══════════ الأسئلة ═══════════ -->
 <section id="faq" class="py-16 md:py-20">
   <div class="wrap max-w-3xl">
@@ -559,7 +622,7 @@
       <p class="text-[color:var(--muted)] leading-relaxed">منيو رقمي وبيجر وقائمة انتظار وبطاقة ولاء، لكل منشأة تخدم عملاء.</p>
     </div>
     <ul class="space-y-2.5 font-semibold text-[color:var(--muted)]">
-      <li><a href="#products" class="hover:text-[color:var(--ink)]">المميزات</a></li>
+      <li><a href="#products" class="hover:text-[color:var(--ink)]">الخدمات</a></li>
       <li><a href="/pricing.html" class="hover:text-[color:var(--ink)]">الأسعار</a></li>
       <li><a href="#faq" class="hover:text-[color:var(--ink)]">الأسئلة</a></li>
       <li><a href="login.html" class="hover:text-[color:var(--ink)]">دخول المشتركين</a></li>
@@ -599,9 +662,6 @@
   if (window.DMPlans) {
     // سعر كل خدمة في بطاقتها
     document.querySelectorAll('[data-price]').forEach(el => { const f = DMPlans.FEATURES[el.dataset.price]; if (f) el.innerHTML = `&#x20C1; ${f.month}`; });
-    const full = DMPlans.price(['menu', 'pager', 'loyalty'], 'month').total, ly = DMPlans.FEATURES.loyalty.month;
-    if (full) document.getElementById('chip-full').innerHTML = `&#x20C1; ${full}`;
-    if (ly) document.getElementById('chip-loyalty').innerHTML = `&#x20C1; ${ly}`;
   }
   // ─── بطاقة التجربة: فيديو للمنيو والولاء، وتجربة حية للبيجر ───
   const DEMOS = { menu: ['videos/menu-v4.mp4', 'videos/menu-v4.jpg', 0], loyalty: ['videos/loyalty-live.mp4', 'videos/loyalty-live.jpg', 0] };
@@ -916,6 +976,14 @@
       $('trust').classList.remove('hidden');
     } catch {}
   })();
+
+  // ─── فيديوهات الخدمات: تتحمّل وتشتغل لما تقرب من الشاشة وتوقف لما تطلع، ومع «تقليل الحركة» تبقى الصورة بس ───
+  const calm = matchMedia('(prefers-reduced-motion: reduce)').matches || !!(navigator.connection && navigator.connection.saveData);
+  const vio = 'IntersectionObserver' in window ? new IntersectionObserver((entries) => entries.forEach(({ target: v, isIntersecting }) => {
+    if (isIntersecting) { if (!v.getAttribute('src')) v.src = v.dataset.src; if (!calm) v.play().catch(() => {}); }
+    else if (!v.paused) v.pause();
+  }), { rootMargin: '200px 0px' }) : null;
+  document.querySelectorAll('.svc video[data-src]').forEach(v => { v.muted = true; if (vio) vio.observe(v); else if (!calm) { v.src = v.dataset.src; v.play().catch(() => {}); } });
 
   const io = new IntersectionObserver((entries) => entries.forEach(en => { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } }), { threshold: .08 });
   document.querySelectorAll('.reveal').forEach(el => io.observe(el));
