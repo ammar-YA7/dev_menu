@@ -132,7 +132,7 @@
   // يقدر المحل يستخدم هالقالب؟ كل القوالب تحتاج إضافة «المنيو التفاعلي»
   const ixAllowed = (store, key) => !!IX_TEMPLATES[key] && has(store, 'ixpro');
 
-  const api = { FEATURES, ORDER, CHAT, TRIAL_DAYS, FREE, isFree, pagerLite, BRANCH, BUNDLES, LEGACY, ACCOUNT_WIDE, BRANCH_KEYS, ownBranch, branchFeatures, price, branchPrice, featuresOf, has, ixAllowed, IX_TEMPLATES, live, clean, toggle, coveredBy, coveredNote };
+  const api = { FEATURES, ORDER, CHAT, TRIAL_DAYS, FREE, isFree, pagerLite, BRANCH, BUNDLES, LEGACY, ACCOUNT_WIDE, BRANCH_KEYS, ownBranch, branchFeatures, price, branchPrice, featuresOf, has, ixGift, ixAllowed, IX_TEMPLATES, live, clean, toggle, coveredBy, coveredNote };
   if (typeof module === 'object' && module.exports) module.exports = api;
   else root.DMPlans = api;
 })(typeof window !== 'undefined' ? window : globalThis);

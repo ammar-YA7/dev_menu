@@ -535,7 +535,7 @@
   }
 
   const FEAT_COLOR = { freepager: 'text-emerald-700', menu: 'text-emerald-700', chat: 'text-fuchsia-700', ixpro: 'text-teal-700', pager: 'text-amber-600', notify: 'text-orange-600', waitlist: 'text-sky-700', loyalty: 'text-violet-700' };
-  const FEAT_BADGE = { freepager: 'bg-emerald-500/10 text-emerald-800 border-emerald-500/20', menu: 'bg-emerald-500/10 text-emerald-800 border-emerald-500/20', ixpro: 'bg-teal-500/10 text-teal-800 border-teal-500/20', pager: 'bg-amber-400/15 text-amber-900 border-amber-500/25', waitlist: 'bg-sky-500/10 text-sky-700 border-sky-500/20', loyalty: 'bg-violet-500/10 text-violet-700 border-violet-500/20' };
+  const FEAT_BADGE = { freepager: 'bg-emerald-500/10 text-emerald-800 border-emerald-500/20', menu: 'bg-emerald-500/10 text-emerald-800 border-emerald-500/20', chat: 'bg-fuchsia-500/10 text-fuchsia-800 border-fuchsia-500/20', notify: 'bg-orange-500/10 text-orange-800 border-orange-500/20', ixpro: 'bg-teal-500/10 text-teal-800 border-teal-500/20', pager: 'bg-amber-400/15 text-amber-900 border-amber-500/25', waitlist: 'bg-sky-500/10 text-sky-700 border-sky-500/20', loyalty: 'bg-violet-500/10 text-violet-700 border-violet-500/20' };
   function renderKpis() {
     const n = counts();
     document.getElementById('stores-count').textContent = n.all;
@@ -679,6 +679,8 @@
             <div class="flex flex-wrap gap-1.5 mt-2">
               <span class="text-[10px] font-black px-2 py-0.5 rounded-full border ${s.cls}">${s.label}${s.key === 'paid' && c.subscription_plan ? ` ${c.subscription_plan === 'month' ? 'شهري' : 'سنوي'}` : ''}</span>
               ${s.key === 'trial' ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border border-brand/15 text-ink/60">التجربة فيها كل المميزات</span>' : planFeats(c).map(k => `<span class="text-[10px] font-black px-2 py-0.5 rounded-full border ${FEAT_BADGE[k]} ${s.key === 'paid' ? '' : 'opacity-50'}"><i class="ph-bold ${DMPlans.FEATURES[k].icon}"></i> ${DMPlans.FEATURES[k].name}</span>`).join('')}
+              ${DMPlans.ixGift(c) && !planFeats(c).includes('ixpro') ? `<span class="text-[10px] font-black px-2 py-0.5 rounded-full border ${FEAT_BADGE.ixpro}"><i class="ph-bold ph-gift"></i> المنيو التفاعلي هدية حتى ${new Date(c.ix_gift_until).toLocaleDateString('ar-SA-u-ca-gregory-nu-latn')}</span>` : ''}
+              ${c.menu_layout === 'interactive' && DMPlans.has(c, 'ixpro') ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border border-teal-500/20 text-teal-700"><i class="ph-bold ph-qr-code"></i> منيو QR تفاعلي</span>` : ''}
               ${c.loyalty_enabled && (s.key === 'trial' || planFeats(c).includes('loyalty')) ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border border-violet-500/20 text-violet-700"><i class="ph-bold ph-power"></i> الولاء شغّال</span>' : ''}
             </div>
             <div class="flex flex-wrap gap-1.5 mt-1.5">
