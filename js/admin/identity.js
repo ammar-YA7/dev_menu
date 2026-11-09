@@ -696,7 +696,7 @@
           <span class="flex-1 min-w-0 text-[11px] text-ink leading-relaxed">${kind === 'image' ? 'صورة (حتى 5 ميجا)' : 'فيديو قصير بدون صوت (MP4، حتى 30 ميجا)'}</span>
           <input type="file" id="ix-bg-${kind}-file" accept="${kind === 'image' ? 'image/*' : 'video/mp4,video/webm,video/quicktime'}" class="hidden" onchange="uploadIxBg('${kind}')">
           <button type="button" id="upl-ix_bg_${kind}" onclick="document.getElementById('ix-bg-${kind}-file').click()" class="shrink-0 bg-brand text-cream font-bold px-2.5 py-1.5 rounded-lg text-[11px]">${url ? 'تغيير' : 'رفع'}</button>
-          ${url ? `<button type="button" onclick="removeIxBg('${kind}')" class="shrink-0 text-[11px] font-bold text-red-600 underline">إزالة</button>` : ''}
+          ${url ? `<button type="button" onclick="removeIxBg('${kind}')" class="shrink-0 bg-red-500/10 text-red-700 border border-red-500/25 hover:bg-red-500/15 font-bold px-2.5 py-1.5 rounded-lg text-[11px]"><i class="ph-bold ph-trash"></i> إزالة</button>` : ''}
         </div>`;
     };
     const bgModes = [['color', 'لون'], ['image', 'صورة'], ['video', 'فيديو']];
@@ -724,6 +724,7 @@
         </div>
         ${c.bg_mode === 'image' ? bgFile('image') : c.bg_mode === 'video' ? bgFile('video') : ''}
         ${c.bg_mode !== 'color' ? '<span class="block text-[11px] text-ink leading-relaxed">يظهر فوقها لون الخلفية بشفافية حتى تبقى النصوص واضحة.</span>' : ''}
+        ${c.bg_image || c.bg_video || c.bg ? `<button type="button" onclick="clearIxBg()" class="w-full bg-white text-red-700 border border-red-500/30 hover:bg-red-500/5 font-bold px-3 py-2 rounded-lg text-[11.5px]"><i class="ph-bold ph-eraser"></i> إزالة الخلفية والرجوع لخلفية القالب</button>` : ''}
       </div>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">${color('bg', 'لون الخلفية')}${color('accent', 'لون التمييز')}</div>
       ${seg('shape', 'شكل البطاقات', [['round', 'دائري'], ['soft', 'حواف ناعمة'], ['square', 'حواف حادة']])}
@@ -779,6 +780,11 @@
     saveIxLook({ bg_mode: kind, [`bg_${kind}`]: url });
   }
   function removeIxBg(kind) { saveIxLook({ bg_mode: 'color', [`bg_${kind}`]: null }); }
+  // إزالة الخلفية كاملة: بدون صورة ولا فيديو ولا لون مخصص، يرجع لخلفية القالب الافتراضية
+  async function clearIxBg() {
+    if (!(await DMDialog.confirm({ title: 'إزالة الخلفية', message: 'تُحذف الصورة والفيديو واللون المخصص، ويعود المنيو التفاعلي إلى خلفية القالب.', confirmText: 'إزالة', cancelText: 'تراجع', tone: 'danger' }))) return;
+    saveIxLook({ bg_mode: 'color', bg: null, bg_image: null, bg_video: null });
+  }
   // تغيير القالب يرجّع الألوان والملمس وشكل البطاقات لافتراضي القالب الجديد
   // «أين يظهر؟»: interactive = التابلت ورمز QR (يصير الرئيسي)، وغيره = التابلت بس (يرجع المنيو العادي بعرضه السابق: قائمة أو صور)
   async function setMenuLayout(k) {
