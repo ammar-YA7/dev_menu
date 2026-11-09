@@ -467,7 +467,7 @@ module.exports.post = async function post(action, req, b, env) {
   // ─── رابط رفع ملف (الرفع يتم مباشرة للتخزين برابط موقّع صالح لملف واحد) ───
   if (action === 'upload-url') {
     const kind = b.kind;
-    if (!['logo', 'bg_image', 'bg_video', 'links_bg_image', 'links_bg_video', 'prod', 'prod_video', 'sticker', 'stamp', 'card_bg'].includes(kind)) throw new ApiError(400, 'نوع ملف غير صحيح');
+    if (!['logo', 'bg_image', 'bg_video', 'links_bg_image', 'links_bg_video', 'prod', 'prod_video', 'prod_cut', 'sticker', 'stamp', 'card_bg'].includes(kind)) throw new ApiError(400, 'نوع ملف غير صحيح');
     const isVideo = kind === 'bg_video' || kind === 'links_bg_video' || kind === 'prod_video';
     const ext = (isVideo ? VIDEO_TYPES : IMAGE_TYPES)[b.type];
     if (!ext) throw new ApiError(400, isVideo ? 'الملف لازم يكون فيديو MP4' : 'صيغة الصورة غير مدعومة، استخدم JPG أو PNG أو WebP');

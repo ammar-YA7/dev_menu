@@ -67,14 +67,6 @@ async function storage(path, { method = 'POST', body } = {}) {
   return data;
 }
 const encodePath = (p) => p.split('/').map(encodeURIComponent).join('/');
-// رفع ملف من الخادم نفسه للتخزين (مثل الصورة المفرّغة)
-async function uploadObject(path, buf, type) {
-  const r = await fetch(`${SUPABASE_URL}/storage/v1/object/${BUCKET}/${encodePath(path)}`, {
-    method: 'POST', headers: keyHeaders(SERVICE_KEY, { 'Content-Type': type, 'x-upsert': 'true' }), body: buf
-  });
-  if (!r.ok) throw new ApiError(502, `Storage upload error ${r.status}`);
-  return publicUrl(path);
-}
 const publicUrl = (path) => `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${encodePath(path)}`;
 const PUBLIC_PREFIX = () => `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/`;
 const ownsMediaUrl = (url, clientId) => typeof url === 'string' && url.startsWith(`${PUBLIC_PREFIX()}${clientId}/`);
@@ -245,7 +237,7 @@ const GOOGLE_RE = /^https:\/\/(g\.page|search\.google\.com|www\.google\.com|maps
 const googleReviewLink = (x) => [x && x.google_review_url, x && x.location_url].find(u => u && GOOGLE_RE.test(u) && u.length < 500) || null;
 
 module.exports = {
-  googleReviewLink, reqLang, SUPABASE_URL, BUCKET, ApiError, rest, rpc, q, storage, uploadObject, publicUrl, ownsMediaUrl, storagePathFromUrl,
+  googleReviewLink, reqLang, SUPABASE_URL, BUCKET, ApiError, rest, rpc, q, storage, publicUrl, ownsMediaUrl, storagePathFromUrl,
   getUser, isSuperAdmin, str, httpUrl, waNumber, int, readBody, handler,
   SLUG_RE, RESERVED_SLUGS, findPublicStore, CURRENCIES, storeHasFeature, storeFeatures, storesFeatures, SITE, storeLink, loyaltyHome, later
 };

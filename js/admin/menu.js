@@ -945,16 +945,59 @@
     document.getElementById('cutout-clear').classList.toggle('hidden', !cut);
   }
   document.getElementById('prod-image-file').addEventListener('change', renderCutout);
+  // التفريغ في المتصفح بموديل مجاني (ormbg، رخصة Apache 2.0): أول مرة يتحمّل الموديل (~45 ميجا) وبعدها من الكاش
+  let cutoutModel = null;
+  function loadCutoutModel(onProgress) {
+    if (!cutoutModel) cutoutModel = import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.7.5')
+      .then(({ pipeline }) => pipeline('background-removal', 'onnx-community/ormbg-ONNX', {
+        dtype: 'uint8',
+        progress_callback: (e) => { if (e.status === 'progress' && /\.onnx$/.test(e.file || '')) onProgress(Math.round(e.progress || 0)); }
+      }))
+      .catch(e => { cutoutModel = null; throw e; });
+    return cutoutModel;
+  }
+  // ننظّف بقايا الخلفية الباهتة، ونقص الفراغ الشفاف حول الطبق، ونطلعها WebP شفافة
+  async function tidyCutout(blob) {
+    const bmp = await createImageBitmap(blob);
+    const c = document.createElement('canvas'); c.width = bmp.width; c.height = bmp.height;
+    const x = c.getContext('2d'); x.drawImage(bmp, 0, 0);
+    const im = x.getImageData(0, 0, c.width, c.height), d = im.data;
+    let minX = c.width, minY = c.height, maxX = -1, maxY = -1;
+    for (let y = 0; y < c.height; y++) for (let xx = 0; xx < c.width; xx++) {
+      const k = (y * c.width + xx) * 4 + 3;
+      if (d[k] < 70) d[k] = 0;
+      else { if (xx < minX) minX = xx; if (xx > maxX) maxX = xx; if (y < minY) minY = y; if (y > maxY) maxY = y; }
+    }
+    if (maxX < 0) return null;   // ما لقى شي في الصورة
+    x.putImageData(im, 0, 0);
+    const pad = Math.round(Math.max(maxX - minX, maxY - minY) * 0.04);
+    minX = Math.max(0, minX - pad); minY = Math.max(0, minY - pad); maxX = Math.min(c.width - 1, maxX + pad); maxY = Math.min(c.height - 1, maxY + pad);
+    const w = maxX - minX + 1, h = maxY - minY + 1, scale = Math.min(1, 1200 / Math.max(w, h));
+    const o = document.createElement('canvas'); o.width = Math.round(w * scale); o.height = Math.round(h * scale);
+    o.getContext('2d').drawImage(c, minX, minY, w, h, 0, 0, o.width, o.height);
+    const webp = await new Promise(r => o.toBlob(r, 'image/webp', 0.9));
+    return webp && webp.type === 'image/webp' ? webp : await new Promise(r => o.toBlob(r, 'image/png'));
+  }
   document.getElementById('cutout-btn').addEventListener('click', async () => {
-    const p = loadedProducts.find(x => x.id === editingProductId); if (!p) return;
+    const p = loadedProducts.find(x => x.id === editingProductId); if (!p || !p.image_url) return;
     const btn = document.getElementById('cutout-btn'), label = btn.querySelector('span');
-    btn.disabled = true; label.textContent = 'جاري التفريغ...';
+    btn.disabled = true; label.textContent = 'جاري التجهيز...';
     try {
-      const r = await api('product-cutout', { id: p.id });
-      p.cutout_url = r.cutout_url;
-      showToast(`تم تفريغ الصورة${Number.isFinite(r.left) ? `، باقي لك ${r.left} صورة هالشهر` : ''}`);
-    } catch (e) { showToast(lastApiError || 'تعذر تفريغ الصورة', true); }
-    finally { btn.disabled = false; renderCutout(); }
+      const seg = await loadCutoutModel(pct => { label.textContent = `تجهيز الأداة ${pct}%`; });
+      label.textContent = 'جاري التفريغ...';
+      const out = await seg(p.image_url);
+      const blob = await tidyCutout(await out[0].toBlob());
+      if (!blob) throw new Error('empty');
+      const ext = blob.type === 'image/webp' ? 'webp' : 'png';
+      const url = await uploadFile(new File([blob], `cut.${ext}`, { type: blob.type }), 'prod_cut', 1200, () => {});
+      if (!url) throw new Error(lastUploadError || 'upload');
+      await api('product-cutout-save', { id: p.id, cutout_url: url });
+      p.cutout_url = url;
+      showToast('تم تفريغ الصورة، وتظهر الحين في المنيو التفاعلي');
+    } catch (e) {
+      console.error('cutout', e);
+      showToast(lastApiError || (String(e && e.message) === 'empty' ? 'ما قدرنا نحدد الطبق في الصورة، جرّب صورة أوضح بخلفية سادة' : 'تعذر تفريغ الصورة، جرّب مرة ثانية'), true);
+    } finally { btn.disabled = false; renderCutout(); }
   });
   document.getElementById('cutout-clear').addEventListener('click', async () => {
     const p = loadedProducts.find(x => x.id === editingProductId); if (!p) return;

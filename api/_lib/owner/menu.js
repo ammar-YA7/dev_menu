@@ -5,7 +5,6 @@
 // =====================================================================
 /* eslint-disable no-unused-vars */
 const { crypto, handler, rest, rpc, q, storage, publicUrl, ownsMediaUrl, SUPABASE_URL, BUCKET, ApiError, getUser, isSuperAdmin, str, httpUrl, waNumber, int, readBody, SLUG_RE, RESERVED_SLUGS, CURRENCIES, SITE, storeLink, loyaltyHome, later, followParentFeatures, FIELDS, normalizeSettings, riyadhDayStart, positionOf, emailTemplate, statusUrlFor, sendMail, mailConfigured, sendPush, pushPublicKey, cleanSubscription, topic, storeTopics, poke, normalizeLoyalty, validPoint, PLANS, tr, wallet, queue, pushWalletCards, runAssistant, pagerReadyNotice, walletNotice, loyaltyMessages, loyaltyNearLines, stampPagerTicket, purchaseStamp, tagBranch, newStampCode, parseMemberQr, cooldownLeft, leftText, bySort, COFFEE_TYPES, SECTORS, LINKS_SECTIONS, BUSINESS_TYPES, ALLERGENS, PROCESS, ROAST, METHODS, DELIVERY, THEMES, MAX_SIZES, MAX_COUPONS, OCCASION_PRESETS, STICKER_POSITIONS, STICKER_LIB, STICKER_SIZES, STICKER_ANIMS, MAX_OCCASIONS, MAX_STICKERS, isDay, cleanOccasions, validPrice, round2, cleanSizes, cleanExtras, riyadhDate, MAX_ORDER_NUMBERS, MAX_CUSTOM_LINKS, phoneNumber, DESK_ACTIONS, DESK_KEY_RE, MENU_ONLY, context, familyIds, storeContext, familyOf, categoryIn, nextOrderIn, SHARED_PRODUCT_FIELDS, guestKeysOf, guestHistory, patchStore, cleanCoffee, IMAGE_TYPES, VIDEO_TYPES, PAGER_MAX_RINGS, ringTicket, refreshWalletCards, PAGER_MSG_GAP, winbackSettings, redeemMessage, FEEDBACK_REASONS, absenceDue, readyRewards } = require('./shared');
-const { uploadObject } = require('../core');
 const NEXT = require('./next');
 
 module.exports.pre = async function pre(action, req, b) {
@@ -377,36 +376,24 @@ module.exports.post = async function post(action, req, b, env) {
     return { product: rows[0] };
   }
 
-  // ─── «فرّغ الصورة»: نسخة PNG بدون خلفية للمنيو التفاعلي (الأصلية تبقى للعادي) ───
-  if (action === 'product-cutout' || action === 'product-cutout-clear') {
-    const cut = require('../cutout');
+  // ─── «فرّغ الصورة»: التفريغ يصير في متصفح صاحب المحل (موديل مجاني)، والخادم يحفظ الرابط بس ───
+  //   الأصلية تبقى للمنيو العادي، والمفرّغة (cutout_url) للمنيو التفاعلي
+  if (action === 'product-cutout-save' || action === 'product-cutout-clear') {
     const id = int(b.id);
-    const p = (await rest(`products?id=eq.${id}&client_id=eq.${sid}&select=id,image_url,cutout_url,link_id`))[0];
+    const p = (await rest(`products?id=eq.${id}&client_id=eq.${sid}&select=id,image_url,link_id`))[0];
     if (!p) throw new ApiError(404, 'الطبق غير موجود');
-    const family = async (patch) => {
-      if (!p.link_id) return;
-      const others = (await familyOf(store)).map(f => f.id).filter(x => x !== sid);
-      if (others.length) await rest(`products?link_id=eq.${q(p.link_id)}&client_id=in.(${others.join(',')})`, { method: 'PATCH', body: patch });
-    };
-    if (action === 'product-cutout-clear') {
-      await rest(`products?id=eq.${id}&client_id=eq.${sid}`, { method: 'PATCH', body: { cutout_url: null } });
-      await family({ cutout_url: null });
-      return { ok: true };
+    let url = null;
+    if (action === 'product-cutout-save') {
+      if (!p.image_url) throw new ApiError(400, 'أضف صورة للطبق أولاً');
+      if (!b.cutout_url || !ownsMediaUrl(b.cutout_url, sid)) throw new ApiError(400, 'الصورة غير تابعة لمتجرك');
+      url = b.cutout_url;
     }
-    if (!p.image_url) throw new ApiError(400, 'أضف صورة للطبق أولاً');
-    if (!cut.configured()) throw new ApiError(503, 'خدمة تفريغ الصور غير مفعّلة حالياً', 'CUTOUT_OFF');
-    // العدّاد على المتجر الرئيسي، عشان الفروع ما تضاعف الحد
-    const rootId = Number(store.parent_id || sid);
-    const root = (await rest(`clients?id=eq.${rootId}&select=cutout_usage`))[0] || {};
-    const month = new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 7);
-    const { n, left } = cut.usageLeft(root.cutout_usage, month);
-    if (!left) throw new ApiError(429, `وصلت حد التفريغ هالشهر (${cut.CUTOUT_MONTHLY} صورة)`, 'CUTOUT_LIMIT');
-    const png = await cut.removeBackground(p.image_url);
-    const url = await uploadObject(`${sid}/prod_cut_${id}_${Date.now()}.png`, png, 'image/png');
-    await rest(`clients?id=eq.${rootId}`, { method: 'PATCH', body: { cutout_usage: { month, n: n + 1 } } });
     const rows = await rest(`products?id=eq.${id}&client_id=eq.${sid}`, { method: 'PATCH', body: { cutout_url: url }, prefer: 'return=representation' });
-    await family({ cutout_url: url });
-    return { product: rows[0], cutout_url: url, left: left - 1 };
+    if (p.link_id) {
+      const others = (await familyOf(store)).map(f => f.id).filter(x => x !== sid);
+      if (others.length) await rest(`products?link_id=eq.${q(p.link_id)}&client_id=in.(${others.join(',')})`, { method: 'PATCH', body: { cutout_url: url } });
+    }
+    return { product: rows[0] };
   }
 
   if (action === 'product-toggle') {
