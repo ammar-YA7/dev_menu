@@ -348,5 +348,12 @@
   "صفحة التسجيل في قائمة الانتظار": "The waitlist sign-up page",
   "المساعد الذكي داخل المنيو": "The AI assistant inside the menu",
   "صفحة الروابط بهوية المنشأة": "The links page in the business brand",
-  "المنيو الرقمي بالصور الكبيرة في جوال العميل": "The digital menu with large photos on the customer's phone"
+  "المنيو الرقمي بالصور الكبيرة في جوال العميل": "The digital menu with large photos on the customer's phone",
+  "يعرض أصنافك بصور كبيرة وحركة، ويعمل على جهاز لوحي أمام الكاشير.": "Shows your items with large photos and motion, and runs on a tablet at the counter.",
+  "يجيب عملاءك عن الأصناف والأسعار والسعرات، ويقترح عليهم حسب ذوقهم.": "Answers your customers about items, prices and calories, and suggests based on their taste.",
+  "ترسل لعملائك الذين يحتفظون ببطاقة النداء عروضك ومنتجاتك الجديدة.": "Send your offers and new products to customers who keep the call card.",
+  "شاهد المنيو التفاعلي": "See the interactive menu",
+  "شاهد مثالاً من المساعد": "See an assistant example",
+  "شاهد البيجر": "See the pager",
+  "مقترح مع {x}": "Suggested with {x}"
 }

@@ -122,6 +122,11 @@
   .feat-pick .pr { margin-inline-start: auto; text-align: left; white-space: nowrap; font-weight: 700; font-size: 17px; }
   .feat-pick .pr small { display: block; font-size: 11px; font-weight: 600; color: rgba(246,243,236,.55); }
   .feat-pick.covered { opacity: .7; cursor: default; border-style: dashed; }
+  /* إضافة مقترحة مع اللي اختاره (مثل المنيو التفاعلي مع المنيو): إطار ذهبي متقطع وشارة وسبب ورابط مثال */
+  .feat-pick.suggest { border-style: dashed; border-color: var(--gold); background: rgba(201,162,39,.08); }
+  .feat-pick .sug { display: inline-flex; align-items: center; gap: 5px; margin-top: 8px; font-size: 11.5px; font-weight: 700; color: #15271b; background: var(--gold); padding: 3px 10px; border-radius: 999px; }
+  .feat-pick .sug-why { font-size: 12.5px; color: rgba(246,243,236,.85); margin-top: 6px; line-height: 1.7; }
+  .feat-pick .sug-link { cursor: pointer; display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; font-size: 12.5px; font-weight: 700; color: var(--gold); text-decoration: underline; text-underline-offset: 3px; }
   .feat-pick.covered .box { border-color: rgba(255,255,255,.35); color: rgba(246,243,236,.7); }
   .summary { background: #f6f3ec; color: var(--ink); border-radius: 28px; padding: 26px; }
   .summary .line { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; font-weight: 600; padding: 5px 0; }
@@ -382,6 +387,13 @@
   ];
   const per = () => choice.period === 'month' ? 'بالشهر' : 'بالسنة';
   function saveChoice() { try { localStorage.setItem(CHOICE_KEY, JSON.stringify(choice)); } catch {} }
+  // إضافات نقترحها مع الخدمة الأساسية: تطلع مميزة لما يختار الأساس وهي مو مختارة، مع السبب ورابط مثال من الصفحة الرئيسية
+  const SUGGEST = {
+    ixpro:  { with: 'menu', why: 'يعرض أصنافك بصور كبيرة وحركة، ويعمل على جهاز لوحي أمام الكاشير.', link: '/#svc-ix', label: 'شاهد المنيو التفاعلي' },
+    chat:   { with: 'menu', why: 'يجيب عملاءك عن الأصناف والأسعار والسعرات، ويقترح عليهم حسب ذوقهم.', link: '/#svc-chat', label: 'شاهد مثالاً من المساعد' },
+    notify: { with: 'pager', why: 'ترسل لعملائك الذين يحتفظون ببطاقة النداء عروضك ومنتجاتك الجديدة.', link: '/#svc-pager', label: 'شاهد البيجر' }
+  };
+  const suggested = (k) => { const s = SUGGEST[k]; return !!s && choice.features.includes(s.with) && !choice.features.includes(k) && !choice.free; };
   function renderPricing() {
     const P = DMPlans, p = choice.period;
     document.querySelectorAll('[data-period]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.period === p)));
@@ -393,9 +405,13 @@
         <span class="box"><i class="ph-bold ph-check"></i></span>
         <span class="min-w-0"><b><i class="ph-bold ${f.icon}"></i> ${f.name}</b><p>${covered}.</p></span>
       </button>`;
-      return `<button type="button" role="checkbox" aria-checked="${on}" data-feat="${k}" class="feat-pick">
+      const sg = suggested(k) ? SUGGEST[k] : null;
+      return `<button type="button" role="checkbox" aria-checked="${on}" data-feat="${k}" class="feat-pick${sg ? ' suggest' : ''}">
         <span class="box">${on ? '<i class="ph-bold ph-check"></i>' : ''}</span>
-        <span class="min-w-0"><b><i class="ph-bold ${f.icon}"></i> ${f.name}</b><p>${f.desc}</p></span>
+        <span class="min-w-0"><b><i class="ph-bold ${f.icon}"></i> ${f.name}</b><p>${f.desc}</p>${sg ? `
+          <span class="sug"><i class="ph-bold ph-sparkle"></i> مقترح مع ${P.FEATURES[sg.with].name}</span>
+          <span class="sug-why block">${sg.why}</span>
+          <span class="sug-link" role="link" data-sug-link="${sg.link}">${sg.label} <i class="ph-bold ph-arrow-up-left"></i></span>` : ''}</span>
         <span class="pr" dir="ltr">${choice.free && k === 'pager' ? 'مجاناً' : money(f[p])}<small>${choice.free && k === 'pager' ? `${DMPlans.FREE.pager} رقم شهرياً` : per()}</small></span>
       </button>`;
     }).join('');
@@ -424,6 +440,8 @@
     $('sum-go').classList.toggle('opacity-50', !pr.features.length);
   }
   $('picks').addEventListener('click', (e) => {
+    const lk = e.target.closest('[data-sug-link]');   // رابط المثال يفتح بس، ما يختار الإضافة
+    if (lk) { window.open(lk.dataset.sugLink, '_blank', 'noopener'); return; }
     const b = e.target.closest('[data-feat]'); if (!b) return;
     choice.features = DMPlans.toggle(choice.features, b.dataset.feat); choice.free = false; saveChoice(); renderPricing();
   });
