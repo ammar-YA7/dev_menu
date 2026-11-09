@@ -21,9 +21,9 @@
   // قوالب المنيو التفاعلي (مصدر واحد: المنيو ولوحة صاحب المحل والخادم)
   //   premium: ضمن «القوالب المميزة» (ixpro)
   const IX_TEMPLATES = {
-    grid:   { name: 'Classic', premium: false },
-    zigzag: { name: 'Modern', premium: false },
-    thread: { name: 'Luxe', premium: true, desc: 'الأطباق على أطباق خزفية يمين ويسار يربطها خيط ذهبي، بخلفية خضراء داكنة.' }
+    grid:   { name: 'Nova', premium: false },
+    zigzag: { name: 'Sage', premium: false },
+    thread: { name: 'Amber', premium: true, desc: 'الأطباق على أطباق خزفية يمين ويسار يربطها خيط ذهبي، بخلفية خضراء داكنة.' }
   };
   // «القوالب المميزة» مخفية من صفحات الاختيار والأسعار لين يصير فيه قالب مميز
   const IXPRO_ON = Object.values(IX_TEMPLATES).some(t => t.premium);
