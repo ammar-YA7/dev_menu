@@ -1640,5 +1640,9 @@
   "وين سمعت عنا؟ (اختياري)": "Where did you hear about us? (optional)",
   "حفظ": "Save",
   "شكراً لك": "Thank you",
-  "ما انحفظ الجواب، بنسألك مرة ثانية": "Couldn't save your answer, we'll ask again next time"
+  "ما انحفظ الجواب، بنسألك مرة ثانية": "Couldn't save your answer, we'll ask again next time",
+  "مستخدم الآن": "In use",
+  "اضغط لاستخدامه": "Tap to use it",
+  "القالب المستخدم الآن: {n}": "Template in use: {n}",
+  "لتغييره اختر قالباً آخر، وتتغير الألوان والشكل إلى إعدادات القالب الجديد.": "To change it, pick another template. Colors and shape switch to the new template's settings."
 }

@@ -710,9 +710,11 @@
     const opt = (k) => {
       const cur = c.style === k;
       return `
-      <button type="button" role="radio" aria-checked="${cur}" onclick="setIxStyle('${k}')" class="relative rounded-xl border-2 p-2 text-right transition ${cur ? 'border-brand bg-white' : 'border-brand/15 bg-white/60 hover:border-brand/35'}">
+      <button type="button" role="radio" aria-checked="${cur}" onclick="setIxStyle('${k}')" class="relative rounded-xl border-2 p-2 text-right transition ${cur ? 'ix-tpl-on border-brand bg-white' : 'border-brand/15 bg-white/60 hover:border-brand/35'}">
+        ${cur ? '<span class="absolute top-1.5 left-1.5 z-[1] inline-flex items-center gap-1 rounded-full bg-brand text-cream text-[10px] font-bold px-2 py-0.5"><i class="ph-bold ph-check-circle"></i> مستخدم الآن</span>' : ''}
         <span id="ix-art-${k}" class="block mb-2">${ixArt(k, cur ? col : ixColors({ style: k }))}</span>
         <b class="block text-[12px] text-ink">${T[k].name}</b><span class="block text-[11px] text-ink leading-relaxed">${SUB[k] || T[k].desc || ''}</span>
+        ${cur ? '' : '<span class="block mt-1.5 text-[11px] font-bold text-brand">اضغط لاستخدامه</span>'}
       </button>`;
     };
     // بدون الإضافة: القوالب كمعاينة مقفولة، وسطر الإضافة وزرها (نفس مسار إضافة المميزات في صفحة الاشتراك)
@@ -772,7 +774,7 @@
       ${c.bg_mode !== 'color' ? '<span class="block text-[11px] text-ink/70 leading-relaxed">يظهر هذا اللون بشفافية فوق الصورة أو الفيديو حتى تبقى النصوص واضحة.</span>' : ''}`;
     box.innerHTML = `
       <b class="block text-xs text-ink">شكل المنيو التفاعلي</b>
-      ${group(1, 'القالب', 'اختر تصميم المنيو، وتتغير الألوان والشكل إلى إعدادات القالب.', `<div role="radiogroup" class="grid grid-cols-2 gap-2">${keys.map(opt).join('')}</div>`)}
+      ${group(1, `القالب المستخدم الآن: ${T[c.style].name}`, 'لتغييره اختر قالباً آخر، وتتغير الألوان والشكل إلى إعدادات القالب الجديد.', `<div role="radiogroup" class="grid grid-cols-2 gap-2">${keys.map(opt).join('')}</div>`)}
       ${group(2, 'الخلفية', 'لون سادة، أو صورة، أو فيديو قصير.', bgBody)}
       ${group(3, 'لون التمييز', 'لون العناوين والأزرار والأسعار.', color('accent', 'لون التمييز'))}
       ${group(4, 'الشكل', '', seg('shape', 'شكل البطاقات', [['round', 'دائري'], ['soft', 'حواف ناعمة'], ['square', 'حواف حادة']])
