@@ -2300,19 +2300,12 @@
   const ixList = () => ixKey ? ixCatsOf(ixKey).flatMap(c => productsIn(c, allProducts)).filter(p => p.is_available !== false) : [];
   // القسم (أو الفئة) اللي فيه الصنف: للصنف اللي ينفتح من الترحيب مباشرة
   const ixKeyOf = (p) => (ixHomeItems().find(x => ixCatsOf(x.key).some(c => productsIn(c, allProducts).some(q => q.id === p.id))) || {}).key || null;
-  // أصناف مختارة تتحرك بهدوء حول الترحيب: المميزة أول، وبعدها أول الأصناف اللي لها صور
-  function ixFeatured() {
-    const pics = allProducts.filter(p => p.is_available !== false && ixImg(p));
-    const rank = (p) => (p.is_bestseller === true ? 0 : 2) + (safeUrl(p.cutout_url) ? 0 : 1);   // المميزة والمفرّغة أول
-    return pics.map((p, i) => [p, rank(p), i]).sort((a, b) => a[1] - b[1] || a[2] - b[2]).map(x => x[0]).slice(0, 4);
-  }
   function ixRenderHome() {
     const p = project || {};
     const logo = safeUrl(p.logo_url) || 'images/logo.jpeg?v=2';
     const items = ixHomeItems();
     ixEl('ixHome').innerHTML = `
       <div class="ix-home">
-        <div class="ix-floats">${ixFeatured().map((f, i) => `<button type="button" class="ix-fl ix-fl${i}" data-ix-feat="${esc(f.id)}" aria-label="${esc(productName(f))}">${ixPic(f, false)}</button>`).join('')}</div>
         <div class="ix-logo ix-pop" style="--i:0"><img src="${esc(logo)}" alt=""></div>
         ${p.name ? `<h1 class="ix-hi ix-pop" style="--i:1">${esc(p.name)}</h1>` : ''}
         <div class="ix-cats">${items.map((x, i) => `<button type="button" class="ix-cat ix-pop" style="--i:${Math.min(i, 12) + 3}" data-ix-cat="${esc(x.key)}">${esc(x.label)}</button>`).join('')}</div>
@@ -2559,7 +2552,6 @@
     const ch = e.target.closest('[data-ix-chip]');
     if (ch) { const items = ixHomeItems(); return ixSwitchCat(ch.dataset.ixChip, items.findIndex(x => x.key === ch.dataset.ixChip) > items.findIndex(x => x.key === ixKey) ? 1 : -1); }
     const pr = e.target.closest('[data-ix-prod]'); if (pr) return ixGo('prod', pr.dataset.ixProd, pr.querySelector('.ix-pic'));
-    const ft = e.target.closest('[data-ix-feat]'); if (ft) return ixGo('prod', ft.dataset.ixFeat, ft.querySelector('.ix-pic'));
     const st = e.target.closest('[data-ix-step]'); if (st) return ixStepProd(Number(st.dataset.ixStep));
     const sw = e.target.closest('[data-ix-swap]');
     if (sw) { const list = ixList(); return ixSwap(sw.dataset.ixSwap, list.findIndex(x => String(x.id) === sw.dataset.ixSwap) < list.findIndex(x => x.id === ixProd) ? -1 : 1); }
