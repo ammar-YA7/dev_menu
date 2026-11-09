@@ -126,7 +126,7 @@
         reject(fail('انقطع الاتصال أثناء الرفع. تأكد من الإنترنت وجرّب مرة ثانية', 0));
       };
       const fd = new FormData();
-      fd.append('cacheControl', '3600');
+      fd.append('cacheControl', '31536000');   // كل ملف باسم جديد وما ينكتب فوقه، فيتحفظ عند الزبون سنة
       fd.append('', file);
       xhr.send(fd);
     });

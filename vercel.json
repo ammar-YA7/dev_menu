@@ -73,5 +73,31 @@
     "api/owner.js": {
       "maxDuration": 300
     }
+  },
+  "images": {
+    "sizes": [
+      128,
+      256,
+      384,
+      640,
+      828,
+      1080
+    ],
+    "remotePatterns": [
+      {
+        "protocol": "https",
+        "hostname": "czdoamcgxgkicrbufpcn.supabase.co",
+        "pathname": "/storage/v1/object/public/**"
+      },
+      {
+        "protocol": "https",
+        "hostname": "mftyikgclynjmcufnamw.supabase.co",
+        "pathname": "/storage/v1/object/public/**"
+      }
+    ],
+    "minimumCacheTTL": 2678400,
+    "formats": [
+      "image/webp"
+    ]
   }
 }

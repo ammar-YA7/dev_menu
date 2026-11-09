@@ -768,6 +768,19 @@
     try { const x = new URL(u); return (x.protocol === 'https:' || x.protocol === 'http:') ? x.href : ''; }
     catch { return ''; }
   }
+  // صور المخزن تنحمّل بحجم مكانها من شبكة Vercel (ملف أصغر ومن سيرفر قريب)، ولو تعطّل التصغير ترجع الصورة الأصلية
+  const IMG_SIZES = [128, 256, 384, 640, 828, 1080];
+  const IMG_CDN = /(^|\.)devmenu\.digital$|\.vercel\.app$/.test(location.hostname);
+  function sized(u, w) {
+    if (!IMG_CDN || !u || !/^https:\/\/[a-z0-9]+\.supabase\.co\/storage\/v1\/object\/public\//.test(u)) return u;
+    const need = w * Math.min(2, window.devicePixelRatio || 1);
+    return `/_vercel/image?url=${encodeURIComponent(u)}&w=${IMG_SIZES.find(x => x >= need) || 1080}&q=75`;
+  }
+  const imgSrc = (u, w) => { const s = sized(u, w); return s === u ? `src="${esc(u)}"` : `src="${esc(s)}" data-orig="${esc(u)}"`; };
+  document.addEventListener('error', (e) => {
+    const im = e.target;
+    if (im && im.tagName === 'IMG' && im.dataset.orig) { const o = im.dataset.orig; delete im.dataset.orig; im.src = o; }
+  }, true);
   const urlParams = new URLSearchParams(window.location.search);
   const clientSlug = (urlParams.get('client') || DM.hostSlug()).trim().toLowerCase();
   // ما نسمح بحفظ صور المنيو: قائمة الزر اليمين والسحب على أي صورة
@@ -1443,8 +1456,8 @@
       : 'glass-card p-3 flex gap-3 items-center opacity-45 grayscale';
     return `
       <article ${available ? `data-product="${esc(p.id)}" role="button" tabindex="0"` : ''} class="${cls}">
-        ${vid ? dishVideo(vid, img, 'product-img') : img
-          ? `<img src="${esc(img)}" alt="" loading="lazy" class="product-img">`
+        ${vid ? dishVideo(vid, sized(img, 90), 'product-img') : img
+          ? `<img ${imgSrc(img, 90)} alt="" loading="lazy" decoding="async" class="product-img">`
           : `<div class="w-[90px] h-[90px] bg-white/10 rounded-2xl flex items-center justify-center shrink-0"><i class="fa-solid fa-utensils text-gray-400"></i></div>`}
         ${canOrder ? `<button type="button" data-add="${esc(p.id)}" aria-label="${currentLang === 'ar' ? 'أضف للطلب' : 'Add to order'}"
             class="absolute bottom-2.5 left-2.5 z-10 min-w-[34px] h-[34px] px-2 rounded-full ${inCart ? 'bg-[#25d366] text-black' : 'bg-white/15 text-white border border-white/25'} text-sm font-black flex items-center justify-center active:scale-90 transition">
@@ -1508,7 +1521,7 @@
     const inCart = canOrder ? cartQty(p.id) : 0;
     return `
       <article ${available ? `data-product="${esc(p.id)}" role="button" tabindex="0"` : ''} class="photo-card ${available ? '' : 'off'}">
-        ${vid ? dishVideo(vid, img, '') : `<img src="${esc(img)}" alt="" loading="lazy">`}
+        ${vid ? dishVideo(vid, sized(img, 420), '') : `<img ${imgSrc(img, 420)} alt="" loading="lazy" decoding="async">`}
         <span class="pc-shade"></span>
         ${canOrder ? `<button type="button" data-add="${esc(p.id)}" aria-label="${currentLang === 'ar' ? 'أضف للطلب' : 'Add to order'}"
             class="absolute top-3 left-3 z-10 min-w-[38px] h-[38px] px-2 rounded-full ${inCart ? 'bg-[#25d366] text-black' : 'text-white keep-c'} text-sm font-black flex items-center justify-center active:scale-90 transition backdrop-blur" style="${inCart ? '' : 'background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.3)'}">
@@ -1637,10 +1650,12 @@
     modalImg.parentElement.classList.toggle('hidden', !img && !vid);
     modalImg.classList.toggle('hidden', !!vid);
     modalVid.classList.toggle('hidden', !vid);
-    modalImg.src = img || '';
-    if (vid) { modalVid.poster = img || ''; if (modalVid.getAttribute('src') !== vid) modalVid.src = vid; modalVid.muted = true; if (!calmMotion) modalVid.play().catch(() => {}); }
+    const big = sized(img, 520);
+    if (big !== img) modalImg.dataset.orig = img; else delete modalImg.dataset.orig;
+    modalImg.src = big || '';
+    if (vid) { modalVid.poster = big || ''; if (modalVid.getAttribute('src') !== vid) modalVid.src = vid; modalVid.muted = true; if (!calmMotion) modalVid.play().catch(() => {}); }
     else { modalVid.pause(); modalVid.removeAttribute('src'); modalVid.load(); }
-    document.getElementById('modalImgBlur').style.backgroundImage = img ? `url("${img.replace(/"/g, '%22')}")` : '';
+    document.getElementById('modalImgBlur').style.backgroundImage = img ? `url("${sized(img, 128).replace(/"/g, '%22')}")` : '';
     document.getElementById('modalTitle').closest('.p-5').classList.toggle('pt-14', !img && !vid);
     document.getElementById('modalTitle').textContent = productName(p);
     modalSize = sizesOf(p).length ? sizesOf(p)[0].name : null;
@@ -2360,14 +2375,14 @@
   function ixPic(p, hero) {
     const cut = safeUrl(p.cutout_url), img = cut || safeUrl(p.image_url), vid = safeUrl(p.video_url);
     // فيديو الطبق: في الشاشة الكبيرة يشتغل على طول (بدون صوت) والصورة الأصلية غلافه
-    if (vid && hero) { const poster = safeUrl(p.image_url) || img; return `<div class="ix-pic frame ready"><video src="${esc(vid)}" ${poster ? `poster="${esc(poster)}"` : ''} muted loop playsinline ${calmMotion ? '' : 'autoplay'} disablepictureinpicture aria-hidden="true"></video></div>`; }
+    if (vid && hero) { const poster = sized(safeUrl(p.image_url) || img, 520); return `<div class="ix-pic frame ready"><video src="${esc(vid)}" ${poster ? `poster="${esc(poster)}"` : ''} muted loop playsinline ${calmMotion ? '' : 'autoplay'} disablepictureinpicture aria-hidden="true"></video></div>`; }
     // المفرّغة معروف إنها شفافة: بدون فحص
-    if (cut) return `<div class="ix-pic cut"><img src="${esc(cut)}" alt="" decoding="async" ${hero ? '' : 'loading="lazy"'}></div>`;
+    if (cut) return `<div class="ix-pic cut"><img ${imgSrc(cut, hero ? 520 : 300)} alt="" decoding="async" ${hero ? '' : 'loading="lazy"'}></div>`;
     if (vid && !img) return `<div class="ix-pic frame ready">${dishVideo(vid, '', 'ix-v')}</div>`;
     if (!img) return `<div class="ix-pic txt"><b>${esc(productName(p))}</b></div>`;
     const known = ixCut[img];
     const cls = known === 1 ? 'cut' : (known === 0 || !ixMaybeCut(img)) ? 'frame' : 'probe';
-    return `<div class="ix-pic ${cls}"><img src="${esc(img)}" alt="" decoding="async" ${hero ? '' : 'loading="lazy"'} ${cls === 'probe' ? 'crossorigin="anonymous"' : ''}></div>`;
+    return `<div class="ix-pic ${cls}"><img ${imgSrc(img, hero ? 520 : 300)} data-k="${esc(img)}" alt="" decoding="async" ${hero ? '' : 'loading="lazy"'} ${cls === 'probe' ? 'crossorigin="anonymous"' : ''}></div>`;
   }
   function ixWatchPics(root) {
     root.querySelectorAll('.ix-pic img').forEach(im => {
@@ -2376,7 +2391,7 @@
         if (box.classList.contains('probe')) {
           const cut = ixIsCut(im);
           box.classList.replace('probe', cut ? 'cut' : 'frame');
-          ixCut[im.getAttribute('src')] = cut ? 1 : 0; ixSaveCut();
+          ixCut[im.dataset.k || im.getAttribute('src')] = cut ? 1 : 0; ixSaveCut();
         }
         box.classList.add('ready');
       };
