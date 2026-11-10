@@ -89,7 +89,7 @@
   }
 
   async function togglePagerUpsell(on) {
-    if (await updateClient({ pager_upsell: on })) { renderPagerStatus(); showToast(on ? 'الزبون يقدر يضيف لطلبه وهو ينتظر' : 'تم إيقاف «أضف لطلبك»'); }
+    if (await updateClient({ pager_upsell: on })) { renderPagerStatus(); showToast(on ? 'يستطيع العميل الإضافة إلى طلبه أثناء الانتظار' : 'تم إيقاف «أضف لطلبك»'); }
     else { document.getElementById('info-pager-upsell').checked = !on; showToast('تعذر حفظ الإعداد', true); }
   }
   async function togglePagerFlag(key, box) {
@@ -103,7 +103,7 @@
     else showToast('تعذر حفظ الجائزة', true);
   }
   async function toggleKioskCall(on) {
-    if (await updateClient({ kiosk_call: on })) showToast(on ? 'الأرقام الجاهزة تظهر على شاشة الزبون' : 'شاشة الزبون تعرض الأكواد بس');
+    if (await updateClient({ kiosk_call: on })) showToast(on ? 'الأرقام الجاهزة تظهر على شاشة الزبون' : 'شاشة العميل تعرض الأكواد فقط');
     else { document.getElementById('info-kiosk-call').checked = !on; showToast('تعذر حفظ الإعداد', true); }
   }
   async function toggleCalories(on) {
@@ -131,7 +131,7 @@
     const num = (n) => Number(n || 0).toLocaleString('en-US');
     const tile = (label, value, sub) => `<div class="pro-card p-4"><p class="text-[12px] font-semibold text-ink/70">${label}</p><p class="text-2xl font-black text-ink mt-1" dir="ltr" style="text-align:right">${value}</p>${sub ? `<p class="text-[11px] text-ink/60 mt-1">${sub}</p>` : ''}</div>`;
     if (!r.orders) {
-      box.innerHTML = `<div class="pro-card p-8 text-center"><i class="ph-bold ph-chart-bar text-3xl text-brand/40"></i><p class="font-bold text-ink mt-2">ما فيه طلبات من المنيو في هالفترة</p><p class="text-[12px] text-ink/60 mt-1">أول ما يطلب العملاء من المنيو تطلع أرقامهم هنا.</p></div>`;
+      box.innerHTML = `<div class="pro-card p-8 text-center"><i class="ph-bold ph-chart-bar text-3xl text-brand/40"></i><p class="font-bold text-ink mt-2">ما فيه طلبات من المنيو في هالفترة</p><p class="text-[12px] text-ink/60 mt-1">عندما يطلب العملاء من المنيو تظهر أرقامهم هنا.</p></div>`;
       return;
     }
     const bars = (vals, labels, fmt) => {

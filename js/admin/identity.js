@@ -9,7 +9,7 @@
     contact:  ['الطلبات والتواصل', 'أرقام الطلبات وواتساب', 'ph-phone'],
     delivery: ['تطبيقات التوصيل', 'روابط تطبيقات التوصيل', 'ph-moped'],
     social:   ['تابعنا', 'انستجرام، تيك توك، سناب شات، الموقع', 'ph-instagram-logo'],
-    custom:   ['روابط أخرى', 'الروابط اللي أضفتها بنفسك', 'ph-link-simple'],
+    custom:   ['روابط أخرى', 'الروابط التي أضفتها بنفسك', 'ph-link-simple'],
     location: ['زورونا', 'موقعك على الخريطة', 'ph-map-pin']
   };
   // هل القسم فيه روابط تظهر في الصفحة؟
@@ -230,6 +230,7 @@
       document.body.appendChild(a); a.click(); a.remove();
       setTimeout(() => URL.revokeObjectURL(a.href), 3000);
       showToast('تم تحميل بطاقة QR، اطبعها بمقاس A6 أو A5');
+      if (!opts.filePrefix) setupMark('qr');
     } catch (e) {
       console.error(e);
       showToast('تعذر إنشاء بطاقة الطباعة', true);
@@ -531,8 +532,8 @@
     document.getElementById('custom-links-count').textContent = `${customLinks.length}/${MAX_CUSTOM_LINKS}`;
     // وين تطلع: اللي بدون منيو تطلع له في صفحة الروابط بس، فننبهه يحطها في البايو
     document.getElementById('custom-links-where').textContent = featureLocked('menu')
-      ? 'تطلع لزبائنك في صفحة روابطك (الرابط الرئيسي). حطه في البايو عشان يشوفونها.'
-      : 'تطلع لزبائنك أسفل المنيو وفي صفحة روابطك (الرابط الرئيسي).';
+      ? 'تظهر لعملائك في صفحة روابطك (الرابط الرئيسي). ضعه في البايو ليروها.'
+      : 'تظهر لعملائك أسفل المنيو وفي صفحة روابطك (الرابط الرئيسي).';
     if (client) document.getElementById('custom-links-open').href = DM.storeUrl(client.client_slug, 'links');
     renderPagerStatus();
     document.getElementById('custom-links-add').disabled = customLinks.length >= MAX_CUSTOM_LINKS;
@@ -864,7 +865,7 @@
     renderPagerStatus();
     document.getElementById('calories-field').classList.toggle('hidden', !showCalories());
   }
-  // حالة كل إعداد في البيجر: جاهز / مو مفعّل / ناقص
+  // حالة كل إعداد في البيجر: جاهز / غير مفعّل / ناقص
   function pgChip(id, kind, text) {
     const el = document.getElementById(id); if (!el) return;
     const cls = { ok: 'bg-emerald-50 text-emerald-800 border-emerald-200', off: 'bg-ink/5 text-ink border-ink/15', warn: 'bg-amber-50 text-amber-800 border-amber-300' }[kind];
@@ -878,16 +879,16 @@
     if (prev) prev.href = DM.storeUrl(client.client_slug, 'pager');
     const pin = client.loyalty_lat != null && client.loyalty_lng != null;
     pgChip('pg-st-pin', pin ? 'ok' : 'off', pin ? 'محدد' : 'اختياري');
-    pgChip('pg-st-car', client.pager_car ? 'ok' : 'off', client.pager_car ? 'مفعّل' : 'مو مفعّل');
-    pgChip('pg-st-kiosk', client.kiosk_call ? 'ok' : 'off', client.kiosk_call ? 'مفعّل' : 'مو مفعّل');
-    pgChip('pg-st-upsell', client.pager_upsell ? 'ok' : 'off', client.pager_upsell ? 'مفعّل' : 'مو مفعّل');
+    pgChip('pg-st-car', client.pager_car ? 'ok' : 'off', client.pager_car ? 'مفعّل' : 'غير مفعّل');
+    pgChip('pg-st-kiosk', client.kiosk_call ? 'ok' : 'off', client.kiosk_call ? 'مفعّل' : 'غير مفعّل');
+    pgChip('pg-st-upsell', client.pager_upsell ? 'ok' : 'off', client.pager_upsell ? 'مفعّل' : 'غير مفعّل');
     pgChip('pg-st-game', client.pager_game_reward ? 'ok' : 'off', client.pager_game_reward ? 'مفعّلة' : 'بدون جائزة');
-    pgChip('pg-st-chat', client.pager_chat ? 'ok' : 'off', client.pager_chat ? 'مفعّل' : 'مو مفعّل');
+    pgChip('pg-st-chat', client.pager_chat ? 'ok' : 'off', client.pager_chat ? 'مفعّل' : 'غير مفعّل');
     pgChip('pg-st-gameon', client.pager_game !== false ? 'ok' : 'off', client.pager_game !== false ? 'مفعّلة' : 'موقفة');
     const gb = document.getElementById('info-game-box'); if (gb) gb.classList.toggle('hidden', client.pager_game === false);
     if (client.google_review_url) pgChip('pg-st-review', 'ok', 'جاهز');
     else if (client.location_url) pgChip('pg-st-review', 'ok', 'يفتح موقعك في الخريطة');
-    else pgChip('pg-st-review', 'warn', 'ناقص: زبائنك ما يقدرون يقيّمونك');
+    else pgChip('pg-st-review', 'warn', 'ناقص: لا يستطيع عملاؤك تقييمك');
     const n = ['instagram_url', 'tiktok_url', 'snapchat_url', 'website_url'].filter(k => client[k]).length;
     pgChip('pg-st-social', n ? 'ok' : 'warn', n ? `${n} ${n === 1 ? 'حساب' : 'حسابات'}` : 'ناقص');
     const cl = (client.custom_links || []).filter(l => l && l.title && l.url).length;
@@ -900,7 +901,7 @@
     else showToast('تعذر حفظ الرابط', true);
   }
   async function togglePagerCar(on) {
-    if (await updateClient({ pager_car: on })) showToast(on ? 'الزبون يقدر يحدد سيارته بعد ما ياخذ رقم' : 'تم إيقاف تسليم الطلب للسيارة');
+    if (await updateClient({ pager_car: on })) showToast(on ? 'يستطيع العميل تحديد سيارته بعد أخذ الرقم' : 'تم إيقاف تسليم الطلب للسيارة');
     else { document.getElementById('info-pager-car').checked = !on; showToast('تعذر حفظ الإعداد', true); }
   }
   // معاينة صفحة الانتظار في الجوال (شاشة كبيرة بس)
@@ -914,7 +915,7 @@
     f.src = `${menu ? 'menu' : 'pager'}.html?client=${encodeURIComponent(client.client_slug)}&preview=1&v=${Date.now()}`;
     document.getElementById('pg-phone-title').innerHTML = `<i class="ph-bold ph-device-mobile"></i> ${menu ? 'كما يراه الزبون في المنيو' : 'كما يراها الزبون وهو ينتظر'}`;
     document.getElementById('pg-phone-note').textContent = menu
-      ? (client.menu_order_mode ? 'جرّب تضيف صنف وتفتح الطلب. في المعاينة الطلب ما ينرسل للكاشير.' : 'المنيو كما يظهر للزبون الحين.')
+      ? (client.menu_order_mode ? 'جرّب تضيف صنف وتفتح الطلب. في المعاينة الطلب ما ينرسل للكاشير.' : 'المنيو كما يظهر للعميل الآن.')
       : 'رقم تجريبي للمعاينة فقط، ولا يُسجَّل عندك.';
   }
   function setPhoneView(v) { if (v !== phoneView) { phoneView = v; reloadPagerPhone(); } }

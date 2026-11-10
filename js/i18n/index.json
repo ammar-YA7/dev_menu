@@ -355,5 +355,12 @@
   "شاهد المنيو التفاعلي": "See the interactive menu",
   "شاهد مثالاً من المساعد": "See an assistant example",
   "شاهد البيجر": "See the pager",
-  "مقترح مع {x}": "Suggested with {x}"
+  "مقترح مع {x}": "Suggested with {x}",
+  "الخدمات التي تحتاجها": "Services you need",
+  "{n} / شهر": "{n} / month",
+  "{n} / سنة": "{n} / year",
+  "{n} يوماً مجاناً. بعدها": "{n} days free. Then",
+  "{n} يوماً مجاناً، ومعها: {x}. بعدها": "{n} days free, including: {x}. Then",
+  "الإضافات وتفاصيل الأسعار": "Add-ons and pricing details",
+  "اختر خدمة واحدة على الأقل. التجربة {n} يوماً مجاناً دون بطاقة بنكية.": "Choose at least one service. The trial is {n} days free, no card needed."
 }

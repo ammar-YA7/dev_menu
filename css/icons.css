@@ -1,6 +1,6 @@
 /* DEV MENU — أيقونات (Phosphor, MIT). مولّد بـ tools/icons.js، لا تعدّله يدوياً */
-@font-face { font-family: "Phosphor-Bold"; src: url("/fonts/Phosphor-Bold.woff2?v=704a8f58") format("woff2"); font-display: block; }
-@font-face { font-family: "Phosphor-Fill"; src: url("/fonts/Phosphor-Fill.woff2?v=6f2b24e5") format("woff2"); font-display: block; }
+@font-face { font-family: "Phosphor-Bold"; src: url("/fonts/Phosphor-Bold.woff2?v=9c984378") format("woff2"); font-display: block; }
+@font-face { font-family: "Phosphor-Fill"; src: url("/fonts/Phosphor-Fill.woff2?v=f79caba5") format("woff2"); font-display: block; }
 .ph-bold { font-family: "Phosphor-Bold" !important; font-style: normal; font-weight: normal; font-variant: normal; text-transform: none; line-height: 1; display: inline-block; vertical-align: -.125em; speak: never; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
 .ph-bold.ph-star, .ph-bold.ph-star-half, .ph-bold.ph-circle { font-family: "Phosphor-Fill" !important; }
 .ph-address-book:before { content: "\e6f8"; }
@@ -8,6 +8,7 @@
 .ph-arrow-clockwise:before { content: "\e036"; }
 .ph-arrow-counter-clockwise:before { content: "\e038"; }
 .ph-arrow-down:before { content: "\e03e"; }
+.ph-arrow-left:before { content: "\e058"; }
 .ph-arrow-right:before { content: "\e06c"; }
 .ph-arrow-square-out:before { content: "\e5de"; }
 .ph-arrow-up:before { content: "\e08e"; }
@@ -127,7 +128,6 @@
 .ph-moped:before { content: "\e824"; }
 .ph-music-notes:before { content: "\e340"; }
 .ph-note:before { content: "\e348"; }
-.ph-note-pencil:before { content: "\e34c"; }
 .ph-orange-slice:before { content: "\ed36"; }
 .ph-package:before { content: "\e390"; }
 .ph-paint-brush:before { content: "\e6f0"; }
@@ -183,6 +183,7 @@
 .ph-trophy:before { content: "\e67e"; }
 .ph-truck:before { content: "\e4b4"; }
 .ph-upload-simple:before { content: "\e4c0"; }
+.ph-user-circle:before { content: "\e4c4"; }
 .ph-user-plus:before { content: "\e4d0"; }
 .ph-users:before { content: "\e4d6"; }
 .ph-users-three:before { content: "\e68e"; }

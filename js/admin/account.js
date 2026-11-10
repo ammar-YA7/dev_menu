@@ -67,7 +67,7 @@
           <span class="block text-[11px] text-ink mt-1">${when(n.created_at)}</span>
         </span>
       </button>
-      </div>`).join('') : '<p class="text-[12px] text-ink text-center py-10 px-6">ما فيه إشعارات للحين. لما ترد الإدارة على طلبك أو يوصلك إشعار منها، يطلع هنا.</p>';
+      </div>`).join('') : '<p class="text-[12px] text-ink text-center py-10 px-6">لا توجد إشعارات بعد. عندما ترد الإدارة على طلبك أو يصلك إشعار منها، يظهر هنا.</p>';
   }
   async function toggleNotifs(on = !notifOpen) {
     notifOpen = on;
@@ -90,7 +90,7 @@
   }
   async function readAllNotifs() {
     notifs = notifs.map(n => ({ ...n, read_at: n.read_at || new Date().toISOString() })); renderNotifs();
-    try { await api('notifications-read', {}); } catch { showToast('ما انحفظ، تأكد من الإنترنت', true); }
+    try { await api('notifications-read', {}); } catch { showToast('لم يُحفظ، تأكد من الاتصال بالإنترنت', true); }
   }
   // حذف إشعار واحد، أو الكل (بعد تأكيد)
   async function deleteNotif(id) {
@@ -120,17 +120,17 @@
       await api('support-send', { kind: 'plan', body: 'طلب ترقية الاشتراك من الشهري إلى السنوي (الحساب وفروعه).' });
       showToast('وصل طلب الترقية للإدارة، وبنتواصل معك قريب');
       loadSupport();
-    } catch (e) { showToast(e.message || 'ما انرسل. تأكد من الإنترنت وحاول مرة ثانية', true); }
+    } catch (e) { showToast(e.message || 'لم يُرسل. تأكد من الاتصال بالإنترنت وحاول مرة أخرى', true); }
   }
   async function contactAdmin(kind = 'contact', prefill = '', title = 'راسل إدارة DEV MENU') {
-    const v = await DMDialog.form({ title, subtitle: 'توصل لإدارة DEV MENU، والرد يطلع لك هنا تحت "اشتراكك"', icon: 'ph-chat-circle-text',
+    const v = await DMDialog.form({ title, subtitle: 'تصل إلى إدارة DEV MENU، ويظهر لك الرد هنا تحت "اشتراكك"', icon: 'ph-chat-circle-text',
       fields: [{ name: 'body', label: 'رسالتك', value: prefill, maxlength: 1000, required: true, multiline: true }], confirmText: 'أرسل' });
     if (!v) return;
     try {
       await api('support-send', { kind, body: v.body });
-      showToast('وصل طلبك للإدارة، والرد يطلع لك تحت "اشتراكك"');
+      showToast('وصل طلبك إلى الإدارة، ويظهر لك الرد تحت "اشتراكك"');
       loadSupport();
-    } catch (e) { showToast(e.message || 'ما انرسل. تأكد من الإنترنت وحاول مرة ثانية', true); }
+    } catch (e) { showToast(e.message || 'لم يُرسل. تأكد من الاتصال بالإنترنت وحاول مرة أخرى', true); }
   }
   let supportRows = [];
   async function loadSupport() {
@@ -153,7 +153,7 @@
           </div>
           <p class="text-[12px] text-ink whitespace-pre-line">${esc(x.body)}</p>
           ${x.reply ? `<p class="text-[12px] bg-white rounded-lg border border-brand/10 px-2.5 py-2"><b class="text-brand">رد الإدارة:</b> ${esc(x.reply)}</p>` : ''}
-        </div>`).join('') || '<p class="text-[11px] text-ink">التجديد وتغيير الباقة وأي استفسار: راسلنا من هنا، والرد يطلع لك في نفس المكان.</p>'}`;
+        </div>`).join('') || '<p class="text-[11px] text-ink">للتجديد وتغيير الباقة وأي استفسار: راسلنا من هنا، ويظهر لك الرد في المكان نفسه.</p>'}`;
   }
 
   // ─── اختيار الباقة: العميل يختار المميزات والمدة، والطلب يوصل للإدارة (لوحة المشتركين + بريد) ───
@@ -176,7 +176,7 @@
       // في التجربة الخدمات تتفعّل على طول
       if (client.subscription_status === 'trial') { client.plan_features = r.requested_features; client.waitlist_enabled = r.requested_features.includes('waitlist'); applyFeatureLocks(); }
       showToast(`وصلنا طلبك، بنتواصل معك للدفع والتفعيل`);
-    } catch (e) { showToast(e.message || 'تعذر إرسال الطلب، جرّب مرة ثانية', true); }
+    } catch (e) { showToast(e.message || 'تعذّر إرسال الطلب، حاول مرة أخرى', true); }
     planSending = false; renderSubscriptionStatus();
   }
   function goToPlans() {
@@ -252,7 +252,7 @@
             <li><i class="ph-bold ph-check text-emerald-600"></i> صفحة الروابط السريعة والمظهر وروابط التواصل</li>
             <li><i class="ph-bold ph-check text-emerald-600"></i> إضافة فروع</li>
           </ul>
-        </div>` : '<p class="text-[12px] font-bold text-ink">اختر اللي تحتاجه:</p>'}
+        </div>` : '<p class="text-[12px] font-bold text-ink">اختر ما تحتاجه:</p>'}
         <div class="space-y-2">${(freeShort ? ['pager', 'notify'] : DMPlans.ORDER).map(row).join('')}</div>
         ${freeShort ? `<button type="button" onclick="freeAllPlans = true; renderSubscriptionStatus()" class="text-[12px] font-bold text-brand hover:underline"><i class="ph-bold ph-plus"></i> تبي المنيو أو الولاء؟ اعرض كل الخدمات</button>` : ''}
         ${pr.discounts.map(d => `<p class="text-[12px] font-bold text-emerald-800 flex justify-between"><span><i class="ph-bold ph-tag"></i> ${d.label}</span><span>- ${sar(d.amount)}</span></p>`).join('')}
@@ -274,7 +274,7 @@
     const pct = Math.min(100, Math.round(r.used / r.limit * 100));
     const html = `
       <div class="flex items-baseline justify-between gap-2">
-        <p class="text-[13px] text-ink"><b class="text-[18px]">${left}</b> رقم باقي لك هالشهر</p>
+        <p class="text-[13px] text-ink"><b class="text-[18px]">${left}</b> رقم متبقٍ لك هذا الشهر</p>
         <p class="text-[11px] text-ink">استخدمت ${r.used} من ${r.limit}</p>
       </div>
       <div class="h-1.5 rounded-full bg-brand/10 mt-2 overflow-hidden"><div class="h-full rounded-full ${full ? 'bg-brick' : low ? 'bg-amber-500' : 'bg-brand'}" style="width:${Math.max(4, pct)}%"></div></div>
@@ -283,8 +283,8 @@
     const banner = document.getElementById('renew-banner');
     if (!full && !low) return banner.classList.add('hidden');
     const text = full
-      ? `البيجر متوقف: خلصت الـ ${r.limit} رقم المجانية لهالشهر، فالزبون اللي يمسح الرمز يطلع له إنه يطلب من الموظف. يرجع يشتغل يوم ${reset}، أو اشترك في البيجر ويرجع على طول بدون حد.`
-      : `باقي لك ${left} رقم بس من البيجر المجاني لهالشهر. إذا خلصت يتوقف البيجر لين ${reset}، واشترك عشان ما يوقف.`;
+      ? `البيجر متوقف: خلصت الـ ${r.limit} رقم المجانية لهذا الشهر، لذلك يظهر لمن يمسح الرمز أن يطلب من الموظف. يعود للعمل يوم ${reset}، أو اشترك في البيجر ويرجع على طول بدون حد.`
+      : `باقي لك ${left} رقم فقط من البيجر المجاني لهذا الشهر. إذا انتهت يتوقف البيجر حتى ${reset}، واشترك حتى لا يتوقف.`;
     banner.className = `rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3 border ${full ? 'bg-red-500/10 border-red-500/40' : 'bg-amber-500/10 border-amber-500/40'}`;
     banner.innerHTML = `<p class="text-xs font-bold ${full ? 'text-red-800' : 'text-amber-800'} flex items-center gap-2"><i class="ph-bold ${full ? 'ph-warning-circle' : 'ph-clock'}"></i> ${esc(text)}</p>
       <button type="button" onclick="openPlan()" class="${full ? 'bg-red-600 hover:bg-red-700' : 'bg-amber-500 hover:bg-amber-600'} text-white px-4 py-2 rounded-xl text-xs font-bold transition">اشترك في البيجر</button>`;
@@ -309,8 +309,8 @@
     let pill, pillCls, note = '';
     if (suspended)               { pill = 'موقوف'; pillCls = 'bg-brick/10 text-brick'; note = 'المتجر موقوف من الإدارة، والمنيو ما يظهر للزبائن.'; }
     else if (expired)            { pill = 'منتهي'; pillCls = 'bg-brick/10 text-brick'; note = 'انتهى اشتراكك، والمنيو ما يظهر للزبائن. اختر باقتك ويرجع على طول.'; }
-    else if (free)               { pill = 'الباقة المجانية'; pillCls = 'bg-emerald-600/10 text-emerald-800'; note = `البيجر شغال لك مجاناً (${DMPlans.FREE.pager} رقم بالشهر لفرع واحد). اشترك عشان تضيف بطاقة النداء والرسائل وباقي الخدمات.`; }
-    else if (inGrace)            { pill = 'مهلة'; pillCls = 'bg-amber-400/20 text-amber-900'; note = `انتهى اشتراكك، وأعطيناك مهلة: المنيو شغال لزبائنك لين ${graceText}. جدّد قبلها عشان ما يوقف.`; }
+    else if (free)               { pill = 'الباقة المجانية'; pillCls = 'bg-emerald-600/10 text-emerald-800'; note = `البيجر شغال لك مجاناً (${DMPlans.FREE.pager} رقم بالشهر لفرع واحد). اشترك لتضيف بطاقة النداء والرسائل وبقية الخدمات.`; }
+    else if (inGrace)            { pill = 'مهلة'; pillCls = 'bg-amber-400/20 text-amber-900'; note = `انتهى اشتراكك، ومنحناك مهلة: المنيو يعمل لعملائك حتى ${graceText}. جدّد قبلها حتى لا يتوقف.`; }
     else if (status === 'trial') { pill = 'تجربة مجانية'; pillCls = 'bg-sky-500/10 text-sky-800';
       if (staysFree) note = onlyPager ? `بعد التجربة يكمل البيجر لك مجاناً (${DMPlans.FREE.pager} رقم بالشهر لفرع واحد)، وتتوقف بطاقة النداء والرسائل إلا إذا اشتركت.`
         : `بعد التجربة يكمل البيجر لك مجاناً (${DMPlans.FREE.pager} رقم بالشهر)، وتتوقف باقي خدماتك وبطاقة النداء إلا إذا اشتركت.`; }
@@ -350,8 +350,8 @@
       const danger = !live || inGrace;
       const text = suspended ? 'متجرك موقوف من الإدارة، والمنيو لا يظهر للزبائن حالياً.'
         : !live ? 'انتهى اشتراكك، والمنيو لا يظهر للزبائن حالياً. جدّد الآن ليعود فوراً.'
-        : inGrace ? `انتهى اشتراكك. المنيو شغال لزبائنك لين ${graceText} بس، جدّد الحين عشان ما يوقف.`
-        : staysFree ? `تنتهي تجربتك المجانية خلال ${daysText(left)}. بعدها يكمل البيجر مجاناً، واشترك عشان ما تتوقف ${onlyPager ? 'بطاقة النداء والرسائل' : 'باقي خدماتك'}.`
+        : inGrace ? `انتهى اشتراكك. المنيو يعمل لعملائك حتى ${graceText} فقط، جدّد الآن حتى لا يتوقف.`
+        : staysFree ? `تنتهي تجربتك المجانية خلال ${daysText(left)}. بعدها يستمر البيجر مجاناً، واشترك حتى لا تتوقف ${onlyPager ? 'بطاقة النداء والرسائل' : 'باقي خدماتك'}.`
         : `${status === 'trial' ? 'تنتهي تجربتك المجانية' : 'ينتهي اشتراكك'} خلال ${daysText(left)}. جدّد الآن حتى لا يتوقف المنيو.`;
       banner.className = `rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3 border ${danger ? 'bg-red-500/10 border-red-500/40' : 'bg-amber-500/10 border-amber-500/40'}`;
       banner.innerHTML = `
@@ -510,7 +510,7 @@
   function closeLyMember() { const box = document.getElementById('ly-member'); box.classList.add('hidden'); box.classList.remove('flex'); ly.member = null; }
   async function giveLyStamp() {
     if (!ly.member) return;
-    const at = await askLyBranch({ title: 'إعطاء ختم', message: `تعطي ${memberName(ly.member)} ختم الحين؟`, confirmText: 'أعطه ختم' });
+    const at = await askLyBranch({ title: 'إعطاء ختم', message: `تعطي ${memberName(ly.member)} ختم الآن؟`, confirmText: 'أعطه ختم' });
     if (!at) return;
     const btn = document.getElementById('lm-stamp'); btn.disabled = true;
     try { await api('loyalty-give-stamp', { card_id: ly.member.id, ...at }); showToast('انضاف الختم'); const id = ly.member.id; await onLoyaltyPage(); openLyMember(id); }
@@ -525,7 +525,7 @@
       document.getElementById('lm-msg').value = '';
       showToast(r.message.wallet_sent ? 'انرسلت ووصلته إشعار' : 'انرسلت، وتطلع له في صفحة بطاقته');
       openLyMember(ly.member.id);
-    } catch (e) { showToast(e.message || 'ما انرسل. تأكد من الإنترنت وحاول مرة ثانية', true); }
+    } catch (e) { showToast(e.message || 'لم يُرسل. تأكد من الاتصال بالإنترنت وحاول مرة أخرى', true); }
     btn.disabled = false;
   }
 
@@ -533,14 +533,14 @@
   const AI_KINDS = { welcome: 'ترحيب', miss: 'لما يغيب', second: 'بعد أول زيارة', almost: 'باقي له ختم', ready: 'مكافأته جاهزة', near: 'لما يقرب من المحل' };
   async function toggleLyAi() {
     try { const r = await api('loyalty-ai', { enabled: !ly.data.ai }); ly.data.ai = r.ai; renderLoyalty(); showToast(r.ai ? 'المساعد الذكي شغّال، يبدأ يكتب لزبائنك كل يوم' : 'المساعد الذكي متوقف'); }
-    catch (e) { showToast(e.message || 'ما انحفظ التعديل. تأكد من الإنترنت وحاول مرة ثانية', true); }
+    catch (e) { showToast(e.message || 'لم يُحفظ التعديل. تأكد من الاتصال بالإنترنت وحاول مرة أخرى', true); }
   }
   async function previewLyAi() {
     const btn = document.getElementById('ly-ai-preview'), html = btn.innerHTML;
     btn.disabled = true; btn.innerHTML = '<i class="ph-bold ph-spinner-gap ph-spin"></i> يكتب...';
     try {
       const r = await api('loyalty-ai-preview', {});
-      document.getElementById('ly-ai-out').innerHTML = `<p class="text-[11px] text-ink">أمثلة (ما انرسلت لأحد). كل مرة تضغط يطلع لك كلام غير:</p>` + Object.entries(r.examples).map(([k, t]) => `
+      document.getElementById('ly-ai-out').innerHTML = `<p class="text-[11px] text-ink">أمثلة (لم تُرسل لأحد). في كل مرة تضغط يظهر لك كلام مختلف:</p>` + Object.entries(r.examples).map(([k, t]) => `
         <div class="rounded-xl bg-brand/[0.04] border border-brand/10 p-3"><p class="text-[11px] font-bold text-ink mb-0.5">${AI_KINDS[k] || k}</p><p class="leading-relaxed">${esc(t)}</p></div>`).join('');
     } catch (e) { showToast(e.message || 'تعذر كتابة الأمثلة', true); }
     btn.disabled = false; btn.innerHTML = html;
@@ -559,7 +559,7 @@
   async function toggleLoyalty() {
     const next = !(ly.data && ly.data.enabled);
     try { const r = await api('loyalty-settings', { enabled: next }); ly.data.enabled = r.enabled; renderLoyalty(); showToast(r.enabled ? 'بطاقة الولاء شغّالة' : 'بطاقة الولاء متوقفة'); }
-    catch (e) { showToast(e.message || 'ما انحفظ التعديل. تأكد من الإنترنت وحاول مرة ثانية', true); }
+    catch (e) { showToast(e.message || 'لم يُحفظ التعديل. تأكد من الاتصال بالإنترنت وحاول مرة أخرى', true); }
   }
   async function saveLoyalty(ev) {
     ev.preventDefault();
@@ -575,8 +575,8 @@
         gifts: { enabled: document.getElementById('ly-gifts').checked },
         pager_stamp: document.getElementById('ly-pager-stamp').checked
       } });
-      ly.data.settings = r.settings; renderLoyalty(); showToast('تم حفظ إعدادات البطاقة');
-    } catch (e) { showToast(e.message || 'ما انحفظ التعديل. تأكد من الإنترنت وحاول مرة ثانية', true); }
+      ly.data.settings = r.settings; renderLoyalty(); showToast('تم حفظ إعدادات البطاقة'); setupMark('loyalty');
+    } catch (e) { showToast(e.message || 'لم يُحفظ التعديل. تأكد من الاتصال بالإنترنت وحاول مرة أخرى', true); }
     btn.disabled = false;
   }
   // موقع المحل: نجمع قراءات لثواني ونختار الأدق
@@ -584,12 +584,12 @@
     return new Promise((resolve, reject) => {
       if (!navigator.geolocation) return reject(new Error('المتصفح ما يدعم تحديد الموقع'));
       let best = null, done = false;
-      const end = () => { if (done) return; done = true; navigator.geolocation.clearWatch(id); best ? resolve(best) : reject(new Error('ما قدرنا نحدد الموقع، حاول مرة ثانية')); };
+      const end = () => { if (done) return; done = true; navigator.geolocation.clearWatch(id); best ? resolve(best) : reject(new Error('تعذّر تحديد الموقع، حاول مرة أخرى')); };
       const id = navigator.geolocation.watchPosition(p => {
         const c = { lat: p.coords.latitude, lng: p.coords.longitude, acc: p.coords.accuracy };
         if (!best || c.acc < best.acc) best = c;
         if (c.acc <= 15) end();
-      }, e => { if (done) return; done = true; navigator.geolocation.clearWatch(id); reject(new Error(e.code === 1 ? 'ما سمحت بالموقع، فعّله من إعدادات المتصفح' : 'ما قدرنا نحدد الموقع، حاول مرة ثانية')); },
+      }, e => { if (done) return; done = true; navigator.geolocation.clearWatch(id); reject(new Error(e.code === 1 ? 'ما سمحت بالموقع، فعّله من إعدادات المتصفح' : 'تعذّر تحديد الموقع، حاول مرة أخرى')); },
       { enableHighAccuracy: true, maximumAge: 0, timeout: 20000 });
       setTimeout(end, ms);
     });
@@ -701,7 +701,7 @@
   async function saveBizLabel() {
     const label = document.getElementById('biz-label').value.trim();
     if (await updateClient({ business_type: 'other', business_label: label })) showToast('تم حفظ نوع النشاط');
-    else showToast('ما انحفظ التعديل. تأكد من الإنترنت وحاول مرة ثانية', true);
+    else showToast('لم يُحفظ التعديل. تأكد من الاتصال بالإنترنت وحاول مرة أخرى', true);
   }
   async function setBusinessType(type) {
     if (!BUSINESS_TYPES[type] || type === client.business_type) return;

@@ -12,7 +12,7 @@
     if (locked) { info.innerHTML = '<i class="ph-bold ph-lock-simple"></i> أضف "المساعد الذكي" لباقتك من صفحة الاشتراك (19 ر.س بالشهر)'; return; }
     try {
       const r = await api('chat-usage');
-      info.innerHTML = `<i class="ph-bold ph-chat-circle-dots"></i> أسئلة زبائنك للمساعد هالشهر: ${r.used.toLocaleString('en')}`;
+      info.innerHTML = `<i class="ph-bold ph-chat-circle-dots"></i> أسئلة عملائك للمساعد هذا الشهر: ${r.used.toLocaleString('en')}`;
     } catch { info.textContent = ''; }
   }
   async function toggleMenuChat(on) {
@@ -120,7 +120,7 @@
       sizes: (it.sizes || []).map(z => ({ name: String(z.name).trim(), price: Number(digitsEn(String(z.price))) })),
       description: String(it.description || '').trim(), calories: it.calories ? String(it.calories) : '', name_en: String(it.name_en || '').trim(), image_url: it.image_url || '' }));
     if (!rows.length) return showToast('ما فيه أطباق', true);
-    if (mpItems.some(it => it.uploading)) return showToast('انتظر لين تخلص الصور تنرفع', true);
+    if (mpItems.some(it => it.uploading)) return showToast('انتظر حتى يكتمل رفع الصور', true);
     const btn = document.getElementById('mp-go'); btn.disabled = true; btn.innerHTML = '<i class="ph-bold ph-spinner-gap ph-spin"></i> نضيف الأطباق…';
     try {
       const r = await api('products-import', { rows });
@@ -164,7 +164,7 @@
       document.getElementById('pi-sub').textContent = `${file.name}: ${PI.rows.length} صف`;
       renderProductImport();
       const box = document.getElementById('pi-import'); box.classList.remove('hidden'); box.classList.add('flex');
-    } catch (e) { showToast('ما قدرنا نقرأ الملف. احفظه Excel أو CSV وجرب مرة ثانية', true); }
+    } catch (e) { showToast('تعذّرت قراءة الملف. احفظه بصيغة Excel أو CSV وحاول مرة أخرى', true); }
   }
   function productImportRows() {
     const col = (k) => +document.getElementById('pi-' + k).value;
@@ -380,7 +380,7 @@
     const c = loadedCategories.find(x => x.id === id); if (!c) return;
     const groups = categoryGroups();
     const r = await DMDialog.form({
-      title: 'الفئة الرئيسية', subtitle: `لقسم "${c.name}". الأقسام اللي لها نفس الفئة تظهر تحت تبويب واحد أعلى المنيو.`, icon: 'ph-stack',
+      title: 'الفئة الرئيسية', subtitle: `لقسم "${c.name}". الأقسام التي لها الفئة نفسها تظهر تحت تبويب واحد أعلى المنيو.`, icon: 'ph-stack',
       fields: [{ name: 'group', label: 'الفئة', value: c.group_name || '', maxlength: 40, placeholder: 'مثال: فطور، غداء، عشاء', suggestions: groups, hint: 'اتركها فاضية لإزالة الفئة.' }]
     });
     if (!r) return;
@@ -389,7 +389,7 @@
       c.group_name = res.category.group_name;
       renderCategories();
       showToast(c.group_name ? `صار القسم تحت "${c.group_name}"` : 'تمت إزالة الفئة الرئيسية');
-    } catch { showToast('ما انحفظ التعديل. تأكد من الإنترنت وحاول مرة ثانية', true); }
+    } catch { showToast('لم يُحفظ التعديل. تأكد من الاتصال بالإنترنت وحاول مرة أخرى', true); }
   }
 
   function renderCategories() {
@@ -499,7 +499,7 @@
         ? '<p class="text-sm text-ink text-center py-8">ما فيه طبق بهذا الاسم أو في هذا القسم.</p>'
         : `<div class="text-center py-10 space-y-3">
             <span class="w-14 h-14 mx-auto rounded-2xl bg-brand/10 text-brand grid place-items-center text-2xl"><i class="ph-bold ph-fork-knife"></i></span>
-            <p class="text-[15px] font-bold text-ink">المنيو فاضي للحين</p>
+            <p class="text-[15px] font-bold text-ink">المنيو فارغ حتى الآن</p>
             <p class="text-[12.5px] text-ink max-w-xs mx-auto leading-relaxed">${loadedCategories.length ? 'أضف أول طبق من النموذج: الاسم والسعر والقسم يكفون، والباقي تضيفه بعدين.' : 'ابدأ بإضافة قسم (مثل: المشروبات الحارة)، بعدها أضف أطباقك فيه.'}</p>
             ${loadedCategories.length ? '<button type="button" onclick="goAddDish()" class="bg-brand text-cream px-5 py-2.5 rounded-xl text-[13px] font-bold"><i class="ph-bold ph-plus"></i> أضف أول طبق</button>'
               : '<button type="button" onclick="switchTab(\'categories\')" class="bg-brand text-cream px-5 py-2.5 rounded-xl text-[13px] font-bold"><i class="ph-bold ph-stack"></i> أضف قسم</button>'}
@@ -679,7 +679,7 @@
     const box = document.createElement('div');
     box.className = 'fixed inset-0 z-[80] bg-black/50 flex items-center justify-center p-4';
     box.innerHTML = `<div class="bg-white rounded-2xl w-full max-w-md max-h-[80vh] flex flex-col">
-      <div class="p-4 border-b border-ink/10"><b class="text-sm text-ink">${g.required ? `اختر خيارات «${esc(g.name || 'الاختيار')}» من المنيو` : 'اختر الإضافات من المنيو'}</b><p class="text-[11px] text-ink mt-1 leading-relaxed">الاسم والسعر يجون من الصنف نفسه: لو غيّرت سعره في المنيو يتغير هنا، ولو صار غير متوفر يختفي من الإضافات. تقدر تخفي قسم الإضافات من المنيو لو ما تبيه يظهر كأطباق.</p></div>
+      <div class="p-4 border-b border-ink/10"><b class="text-sm text-ink">${g.required ? `اختر خيارات «${esc(g.name || 'الاختيار')}» من المنيو` : 'اختر الإضافات من المنيو'}</b><p class="text-[11px] text-ink mt-1 leading-relaxed">الاسم والسعر يأتيان من الصنف نفسه: إذا غيّرت سعره في المنيو يتغير هنا، وإذا أصبح غير متوفر يختفي من الإضافات. يمكنك إخفاء قسم الإضافات من المنيو إذا لم ترد ظهوره كأطباق.</p></div>
       <div class="p-3 overflow-y-auto space-y-3">${cats.map(c => `<div><p class="text-[11px] font-black text-ink/70 mb-1">${esc(catName(c))}</p>${list.filter(x => x.category === c).map(o => `<label class="flex items-center gap-2 p-2 rounded-lg hover:bg-brand/5 cursor-pointer text-xs"><input type="checkbox" value="${o.id}" ${picked.has(o.id) ? 'checked' : ''} class="accent-green-600"><span class="flex-1 font-bold text-ink">${esc(o.name)}</span><span class="text-[11px] text-ink" dir="ltr">${esc(money(exLinkedPrice({ pid: o.id })))}</span></label>`).join('')}</div>`).join('') || '<p class="text-xs text-ink p-2">ما فيه أصناف في المنيو.</p>'}</div>
       <div class="p-3 border-t border-ink/10 flex gap-2"><button type="button" data-x="go" class="flex-1 bg-brand text-cream font-bold rounded-xl py-2.5 text-sm">تم</button><button type="button" data-x="no" class="flex-1 border border-ink/15 font-bold rounded-xl py-2.5 text-sm">إلغاء</button></div></div>`;
     document.body.appendChild(box);
@@ -718,14 +718,14 @@
     box.className = 'fixed inset-0 z-[80] bg-black/50 flex items-center justify-center p-4';
     box.innerHTML = `<div class="bg-white rounded-2xl w-full max-w-md max-h-[80vh] flex flex-col">
       <div class="p-4 border-b border-ink/10"><b class="text-sm text-ink">انسخ إضافات «${esc(me.name)}» إلى:</b><p class="text-[11px] text-ink mt-1">تنحفظ الإضافات الحالية في الطبق أولاً، والأطباق المختارة تنستبدل إضافاتها بهذي.</p></div>
-      <div class="p-3 overflow-y-auto space-y-1">${others.map(o => `<label class="flex items-center gap-2 p-2 rounded-lg hover:bg-brand/5 cursor-pointer text-xs"><input type="checkbox" value="${o.id}" ${o.category === me.category ? 'checked' : ''} class="accent-green-600"><span class="flex-1 font-bold text-ink">${esc(o.name)}</span><span class="text-[10.5px] text-ink/70">${esc(catName(o.category))}</span></label>`).join('') || '<p class="text-xs text-ink p-2">ما فيه أطباق ثانية.</p>'}</div>
+      <div class="p-3 overflow-y-auto space-y-1">${others.map(o => `<label class="flex items-center gap-2 p-2 rounded-lg hover:bg-brand/5 cursor-pointer text-xs"><input type="checkbox" value="${o.id}" ${o.category === me.category ? 'checked' : ''} class="accent-green-600"><span class="flex-1 font-bold text-ink">${esc(o.name)}</span><span class="text-[10.5px] text-ink/70">${esc(catName(o.category))}</span></label>`).join('') || '<p class="text-xs text-ink p-2">لا توجد أطباق أخرى.</p>'}</div>
       <div class="p-3 border-t border-ink/10 flex gap-2"><button type="button" data-x="go" class="flex-1 bg-brand text-cream font-bold rounded-xl py-2.5 text-sm">انسخ</button><button type="button" data-x="no" class="flex-1 border border-ink/15 font-bold rounded-xl py-2.5 text-sm">إلغاء</button></div></div>`;
     document.body.appendChild(box);
     box.addEventListener('click', async (e) => {
       if (e.target === box || e.target.closest('[data-x="no"]')) return box.remove();
       if (!e.target.closest('[data-x="go"]')) return;
       const to = [...box.querySelectorAll('input:checked')].map(i => Number(i.value));
-      if (!to.length) return showToast('اختر الأطباق اللي تنسخ لها', true);
+      if (!to.length) return showToast('اختر الأطباق التي تنسخ لها', true);
       const extras = cleanFormExtras(); if (extras === null) return;
       try {
         await api('product-save', { ...productPayloadForExtras(me), extras, id: me.id });
@@ -791,7 +791,7 @@
             <button onclick="deleteCoupon(${Number(c.id)})" aria-label="حذف" class="px-2.5 py-1.5 rounded-lg text-[11px] font-bold border bg-red-500/10 text-red-600 border-red-500/20"><i class="ph-bold ph-trash"></i></button>
           </div>
         </div>`;
-    }).join('') : '<p class="text-xs text-ink text-center py-6">ما عندك كوبونات للحين. أنشئ أول كوبون من النموذج.</p>';
+    }).join('') : '<p class="text-xs text-ink text-center py-6">لا توجد كوبونات بعد. أنشئ أول كوبون من النموذج.</p>';
   }
 
   // الأقسام والأصناف المختارة في النموذج
@@ -858,7 +858,7 @@
     const scope = document.querySelector('input[name="cp-scope"]:checked').value;
     const auto = cpAuto();
     if (!auto && !/^[A-Z0-9-]{3,20}$/.test(code)) return showToast('رمز الكوبون من 3 إلى 20 حرف: حروف إنجليزية وأرقام وشرطة', true);
-    if (!auto && code.startsWith('AUTO-')) return showToast('الرموز اللي تبدأ بـ AUTO- محجوزة', true);
+    if (!auto && code.startsWith('AUTO-')) return showToast('الرموز التي تبدأ بـ AUTO- محجوزة', true);
     if (isNaN(value) || value <= 0 || (type === 'percent' && value > 100)) return showToast(type === 'percent' ? 'النسبة من 1 إلى 100' : 'اكتب مبلغ خصم صحيح', true);
     if (scope === 'selected' && !cpCats.size && !cpProducts.size) return showToast('اختر قسم أو صنف واحد على الأقل', true);
     if (v('cp-start') && v('cp-end') && v('cp-end') < v('cp-start')) return showToast('تاريخ النهاية قبل تاريخ البداية', true);
@@ -993,10 +993,10 @@
       if (!url) throw new Error(lastUploadError || 'upload');
       await api('product-cutout-save', { id: p.id, cutout_url: url });
       p.cutout_url = url;
-      showToast('تم تفريغ الصورة، وتظهر الحين في المنيو التفاعلي');
+      showToast('تم تفريغ الصورة، وتظهر الآن في المنيو التفاعلي');
     } catch (e) {
       console.error('cutout', e);
-      showToast(lastApiError || (String(e && e.message) === 'empty' ? 'ما قدرنا نحدد الطبق في الصورة، جرّب صورة أوضح بخلفية سادة' : 'تعذر تفريغ الصورة، جرّب مرة ثانية'), true);
+      showToast(lastApiError || (String(e && e.message) === 'empty' ? 'ما قدرنا نحدد الطبق في الصورة، جرّب صورة أوضح بخلفية سادة' : 'تعذّر تفريغ الصورة، حاول مرة أخرى'), true);
     } finally { btn.disabled = false; renderCutout(); }
   });
   document.getElementById('cutout-clear').addEventListener('click', async () => {
@@ -1034,6 +1034,9 @@
     setDishImagePreview(p.image_url || null, p.image_url ? 'الصورة الحالية (اضغط لتغييرها)' : null);
     setDishVideo(p.video_url);
     renderCutout();
+    // «تفاصيل أكثر» تنفتح لو الطبق فيه شي منها، عشان يشوفه وهو يعدّل
+    document.getElementById('prod-more').open = !!(p.description || p.extra_info || p.note || p.name_en || p.description_en || p.video_url || p.is_bestseller
+      || (Array.isArray(p.sizes) && p.sizes.length) || (Array.isArray(p.extras) && p.extras.length) || (Array.isArray(p.allergens) && p.allergens.length) || p.coffee);
     document.getElementById('form-title').textContent = `تعديل: ${p.name}`;
     document.getElementById('form-icon').className = 'ph-bold ph-pencil-simple text-amber-600';
     document.getElementById('submit-btn').textContent = 'حفظ التعديلات';
@@ -1058,6 +1061,7 @@
   function cancelEdit() {
     editingProductId = null;
     document.getElementById('add-product-form').reset();
+    document.getElementById('prod-more').open = false;
     setDishImagePreview(null);
     setDishVideo(null);
     renderCutout();

@@ -203,6 +203,11 @@
   .type-chip { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 11px 6px; border-radius: 14px; border: 1.5px solid #dcd6c8; background: #faf8f3; font-size: 13px; font-weight: 700; color: var(--muted); cursor: pointer; }
   .peer:checked + .type-chip { background: var(--brand); border-color: var(--brand); color: #fff; }
   .peer:focus-visible + .type-chip { outline: 3px solid var(--gold); outline-offset: 2px; }
+  .svc-chip { flex-direction: column; gap: 2px; padding: 12px 8px; }
+  .svc-chip small { font-size: 11px; font-weight: 600; opacity: .8; }
+  .svc-chip .svc-tick { display: none; }
+  .peer:checked + .svc-chip .svc-tick { display: inline; }
+  #reg-svc-wrap.need .type-chip { border-color: #c70a24; }
   .sector { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 4px; border-radius: 14px; border: 1.5px solid #dcd6c8; background: #faf8f3; font-size: 12px; font-weight: 700; color: var(--muted); }
   .sector i { font-size: 18px; }
   .sector[aria-checked="true"] { background: var(--brand); border-color: var(--brand); color: #fff; }
@@ -507,6 +512,12 @@
           <p class="font-bold"><i class="ph-bold ph-check-circle text-[color:var(--brand)]"></i> تم الدخول بحساب <span id="signed-email" dir="ltr"></span></p>
           <p class="text-[color:var(--muted)] font-semibold mt-0.5">أكمل بيانات منشأتك واختر خدماتك، ثم أنشئ حسابك. <button type="button" onclick="useAnotherAccount()" class="underline font-bold text-[color:var(--brand)]">استخدم حساباً آخر</button></p>
         </div>
+        <!-- الخدمات: أول شي في النموذج، والحساب يتفعّل بها (بدون ما يطلع لصفحة الأسعار ويضيع اللي كتبه) -->
+        <div id="reg-svc-wrap">
+          <span class="lbl">الخدمات التي تحتاجها</span>
+          <div id="reg-svc" class="grid grid-cols-2 gap-2"></div>
+          <p id="reg-svc-note" class="text-[12px] text-[color:var(--muted)] font-semibold mt-2 leading-relaxed"></p>
+        </div>
         <div>
           <label for="reg-name" class="lbl">اسم المنشأة</label>
           <input type="text" id="reg-name" placeholder="مثال: جولت كوفي" required class="field">
@@ -738,8 +749,22 @@
   function saveChoice() { try { localStorage.setItem(CHOICE_KEY, JSON.stringify(choice)); } catch {} }
   // الأسعار صارت في صفحة لحالها (pricing.html)، والاختيار يوصل هنا من التخزين المحلي.
   // هنا نعرض بس الباقة المختارة في صندوق «باقتك» فوق نموذج التسجيل
+  // الخدمات الأساسية تنختار هنا مباشرة، والإضافات (التفاعلي، المساعد، الرسائل) من صفحة الأسعار
+  const REG_SVC = ['menu', 'pager', 'loyalty', 'waitlist'];
+  function renderSvcPicker() {
+    const P = DMPlans, p = choice.period;
+    $('reg-svc-wrap').classList.toggle('hidden', choice.free);
+    $('chosen').classList.toggle('hidden', !choice.free);
+    if (choice.free) return;
+    $('reg-svc').innerHTML = REG_SVC.map(k => `<label><input type="checkbox" value="${k}" class="peer sr-only" ${choice.features.includes(k) ? 'checked' : ''}><span class="type-chip svc-chip"><span><i class="ph-bold ${P.FEATURES[k].icon}"></i> ${P.FEATURES[k].name} <i class="ph-bold ph-check svc-tick"></i></span><small dir="ltr">${money(P.FEATURES[k][p])} ${p === 'month' ? '/ شهر' : '/ سنة'}</small></span></label>`).join('');
+    const pr = P.price(choice.features, p), extra = pr.features.filter(k => !REG_SVC.includes(k));
+    $('reg-svc-note').innerHTML = pr.features.length
+      ? `${P.TRIAL_DAYS} يوماً مجاناً${extra.length ? `، ومعها: ${extra.map(k => P.FEATURES[k].name).join(' + ')}` : ''}. بعدها <b dir="ltr">${money(pr.total)}</b> ${per()}. <a href="/pricing.html" class="underline underline-offset-4">الإضافات وتفاصيل الأسعار</a>`
+      : `اختر خدمة واحدة على الأقل. التجربة ${P.TRIAL_DAYS} يوماً مجاناً دون بطاقة بنكية.`;
+  }
   function renderPricing() {
     const P = DMPlans, p = choice.period, more = document.querySelector('[name="reg-type"][value="more"]');
+    renderSvcPicker();
     if (choice.free) {
       $('chosen-name').textContent = 'البيجر المجاني';
       $('chosen-price').textContent = money(0);
@@ -754,6 +779,12 @@
     if (more && noMenu && !more.checked && !typeTouched) { more.checked = true; more.dispatchEvent(new Event('change')); }
   }
   renderPricing();
+  $('reg-svc').addEventListener('change', (e) => {
+    if (!e.target.matches('input[type=checkbox]')) return;
+    choice.features = DMPlans.toggle(choice.features, e.target.value);
+    $('reg-svc-wrap').classList.remove('need');
+    saveChoice(); renderPricing();
+  });
   const planPayload = () => choice.features.length ? { plan: choice.period, features: choice.features, ...(choice.free ? { free: true } : {}) } : {};
 
   // ─── نوع المنشأة: مطعم/مقهى، أو "أخرى" وتطلع المنشآت اللي تحتاج البيجر والانتظار والولاء ───
@@ -804,7 +835,8 @@
   function needFeatures() {
     if (choice.features.length) return false;
     showToast('اختر الخدمات التي تحتاجها أولاً، ويتفعّل حسابك بها', 'error');
-    setTimeout(() => { location.href = '/pricing.html'; }, 1200);
+    $('reg-svc-wrap').classList.add('need');
+    $('reg-svc-wrap').scrollIntoView({ behavior: 'smooth', block: 'center' });
     return true;
   }
   $('register-form').addEventListener('submit', async (e) => {

@@ -231,6 +231,23 @@
   .avail[aria-checked="true"] .avail-track::after { inset-inline-start: 19px; }
   .avail-label { width: 3.2em; color: var(--brick); }
   .avail[aria-checked="true"] .avail-label { color: var(--ok); }
+  /* «تفاصيل أكثر» في نموذج الطبق */
+  .prod-more { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: #fafafa; }
+  .prod-more > summary { cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 13px; color: var(--ink); }
+  .prod-more > summary::-webkit-details-marker { display: none; }
+  .prod-more > summary small { display: block; font-size: 11.5px; color: var(--ink-2); font-weight: 400; margin-top: 2px; }
+  /* خطوات إعدادات البيجر */
+  .ps-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; background: #f3f3f3; border-radius: 12px; padding: 4px; }
+  .ps-steps button { padding: 9px 4px; border-radius: 9px; font-size: 12px; font-weight: 700; color: var(--ink-2); }
+  .ps-steps button b { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 99px; font-size: 11px; background: rgba(0, 0, 0, .08); margin-inline-end: 4px; }
+  .ps-steps button[aria-selected="true"] { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(0, 0, 0, .12); }
+  .ps-steps button[aria-selected="true"] b { background: #233d2c; color: #fff; }
+  .ps-next { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 11px; border-radius: 12px; border: 1px solid var(--line); background: #fff; font-size: 13px; font-weight: 700; color: var(--ink); }
+  .ps-next:hover { background: var(--surface-hover); }
+  .ps-saved { font-size: 11.5px; font-weight: 700; color: var(--ok); }
+  /* إيقاف بطاقة الولاء مو خطأ: رمادي بدل الأحمر */
+  #ly-enabled[aria-checked="false"] .avail-track { background: #b5b5b5; }
+  #ly-enabled[aria-checked="false"] .avail-label { color: var(--ink-3); }
   .more-btn { width: 40px; height: 44px; border-radius: 10px; color: var(--ink-2); flex-shrink: 0; }
   .more-btn:hover, .more-btn[aria-expanded="true"] { background: rgba(56, 79, 61, .08); color: var(--ink); }
   #dish-menu { position: fixed; z-index: 55; min-width: 200px; background: #fff; border: 1px solid var(--line-2); border-radius: 12px; padding: 6px; box-shadow: 0 12px 32px -12px rgba(34, 54, 42, .35); }
@@ -328,6 +345,24 @@
   .qa-main:hover { background: #1a2e21; }
   .qa-main i { background: rgba(255, 255, 255, .15); color: #fff; }
   @media (max-width: 640px) { .qa-row { grid-template-columns: 1fr 1fr; } .qa { min-height: 52px; padding: 0 12px; font-size: 13px; } }
+  /* ابدأ هنا: خطوات تجهيز المحل الجديد */
+  .setup-card { padding: 20px; border: 1.5px solid #233d2c !important; }
+  .setup-card h3 { font-size: 17px; font-weight: 800; color: var(--ink); }
+  .setup-card .su-sub { font-size: 13px; color: var(--ink-2); margin-top: 4px; }
+  .setup-card .su-bar { height: 6px; border-radius: 99px; background: rgba(35, 61, 44, .1); overflow: hidden; margin: 14px 0 6px; }
+  .setup-card .su-bar > i { display: block; height: 100%; background: #233d2c; border-radius: 99px; transition: width .3s; }
+  .su-step { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); }
+  .su-num { width: 30px; height: 30px; border-radius: 99px; display: grid; place-items: center; flex-shrink: 0; font-size: 13px; font-weight: 800; border: 1.5px solid #233d2c; color: #233d2c; }
+  .su-step.done .su-num { background: #047b5d; border-color: #047b5d; color: #fff; }
+  .su-step.done .su-title { color: var(--ink-3); text-decoration: line-through; text-decoration-color: rgba(0, 0, 0, .25); }
+  .su-title { font-size: 14px; font-weight: 700; color: var(--ink); }
+  .su-hint { font-size: 12px; color: var(--ink-2); margin-top: 2px; }
+  .su-go { margin-inline-start: auto; flex-shrink: 0; background: #233d2c; color: #fff; font-size: 13px; font-weight: 700; padding: 8px 14px; border-radius: 10px; }
+  .su-go:hover { background: #1a2e21; }
+  .su-step.next { background: rgba(35, 61, 44, .04); margin: 0 -20px; padding-inline: 20px; }
+  .su-hide { font-size: 12px; color: var(--ink-3); text-decoration: underline; }
+  /* المحل الجديد: الإحصائيات الفاضية تنخفي لين يكمل التجهيز */
+  section.new-store [data-new-hide] { display: none !important; }
   #quick-counts .grid { grid-template-columns: 1fr 1fr !important; }
   /* «كيف سمعت عنا؟» */
   .heard-opt { background: #fff; border-color: var(--line); }
@@ -338,6 +373,8 @@
 <link rel="stylesheet" href="/css/skin-shadcn.css">
 <style>
   /* القالب المستخدم الآن في المنيو التفاعلي: إطار واضح يتغلب على السكن */
+  /* ابدأ هنا: إطار داكن واضح فوق إطار السكن */
+  #setup-card.setup-card { border: 1.5px solid #233d2c !important; }
   #menu-ix-look button.ix-tpl-on { border: 2px solid var(--sh-primary, #233d2c) !important; box-shadow: 0 0 0 3px rgba(35, 61, 44, .16) !important; background: #fff !important; }
 </style>
 </head>
@@ -465,14 +502,11 @@
             <i class="ph-bold ph-bell"></i>
             <span id="notif-badge" class="hidden absolute -top-1.5 -left-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-red-600 text-white text-[11px] font-black leading-[18px] text-center"></span>
           </button>
-          <button type="button" onclick="openAccount()" aria-label="معلومات الحساب" title="معلومات الحساب" class="bg-cream hover:bg-brand/5 text-ink w-9 h-9 rounded-xl border border-brand/25 flex items-center justify-center"><i class="ph-bold ph-identification-card text-sm"></i></button>
+          <button type="button" onclick="openAccount()" aria-label="معلومات الحساب" title="معلومات الحساب" class="bg-cream hover:bg-brand/5 text-ink w-9 h-9 rounded-xl border border-brand/25 hidden lg:flex items-center justify-center"><i class="ph-bold ph-identification-card text-sm"></i></button>
           <button type="button" data-lang-toggle class="text-xs bg-cream border border-brand/25 text-ink font-bold px-3 py-2 rounded-xl"></button>
           <a id="preview-menu-btn" data-needs="menu" href="#" target="_blank" rel="noopener" class="text-xs bg-brand text-cream font-bold px-3.5 py-2 rounded-xl transition hover:bg-brand-dark flex items-center gap-1.5">
-            <i class="ph-bold ph-eye text-[11px]"></i> <span class="hidden sm:inline">معاينة المنيو</span>
+            <i class="ph-bold ph-eye text-[11px]"></i> <span class="sm:hidden">معاينة</span><span class="hidden sm:inline">معاينة المنيو</span>
           </a>
-          <button onclick="logout()" aria-label="خروج" class="lg:hidden bg-brand/10 hover:bg-brand/15 text-ink w-9 h-9 rounded-xl border border-brand/25 flex items-center justify-center">
-            <i class="ph-bold ph-sign-out text-xs"></i>
-          </button>
         </div>
       </div>
     </header>
@@ -515,6 +549,9 @@
           </div>
         </div>
 
+        <!-- ابدأ هنا: خطوات تجهيز المحل الجديد حسب خدماته، أول شي في الصفحة لين تكتمل -->
+        <div id="setup-card" class="hidden pro-card setup-card"></div>
+
         <!-- شغل اليوم: أكثر شي يستخدمه صاحب المحل، أول شي في الصفحة -->
         <div id="quick-actions" class="qa-row">
           <button type="button" data-needs="loyalty" onclick="openLyTool('scan')" class="qa qa-main"><i class="ph-bold ph-camera"></i><span>امسح بطاقة زبون</span></button>
@@ -542,31 +579,31 @@
         <div id="renew-banner" class="hidden rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3 border"></div>
 
             <!-- ملخص الخدمات: لكل خدمة مفعّلة أرقامها اليوم -->
-            <div id="svc-summary" class="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr))]"></div>
+            <div id="svc-summary" data-new-hide class="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr))]"></div>
         <!-- اسأل عن أرقامك: مساعد ذكي يقرأ أرقام المحل (البيجر، المنيو، آراء الزبائن) ويجاوب. مو في البيجر المجاني -->
-        <div id="insights-card" class="pro-card p-5 space-y-3">
+        <div id="insights-card" data-new-hide class="pro-card p-5 space-y-3">
           <div class="flex items-center justify-between gap-2">
             <h3 class="text-xs font-bold text-ink flex items-center gap-2"><i class="ph-bold ph-sparkle text-amber-600"></i> اسأل عن أرقامك</h3>
             <span class="text-[11px] text-ink">يقرأ أرقام محلك ويجاوبك</span>
           </div>
           <div id="ins-chips" class="flex flex-wrap gap-1.5"></div>
           <form onsubmit="askInsights(event)" class="flex gap-2">
-            <input id="ins-q" maxlength="300" placeholder="مثلاً: وش أزحم ساعة عندي؟" class="input-pro text-xs flex-1 min-w-0">
+            <input id="ins-q" maxlength="300" placeholder="مثلاً: ما أكثر ساعة ازدحاماً لدي؟" class="input-pro text-xs flex-1 min-w-0">
             <button id="ins-send" class="bg-brand text-cream hover:bg-brand-dark px-4 rounded-xl text-xs font-bold transition disabled:opacity-60">اسأل</button>
           </form>
           <div id="ins-out" class="hidden text-[13px] leading-7 text-ink bg-brand/5 border border-brand/15 rounded-xl p-3.5 whitespace-pre-wrap"></div>
         </div>
         <!-- أكثر أسئلة الزبائن لمساعد المنيو (يطلع لو المساعد مفعّل) -->
-        <div id="chat-top-card" class="hidden pro-card p-5 space-y-3">
+        <div id="chat-top-card" data-new-hide class="hidden pro-card p-5 space-y-3">
           <div class="flex items-center justify-between gap-2">
-            <h3 class="text-xs font-bold text-ink flex items-center gap-2"><i class="ph-bold ph-chats-circle text-violet-600"></i> وش يسأل زبائنك المساعد؟</h3>
+            <h3 class="text-xs font-bold text-ink flex items-center gap-2"><i class="ph-bold ph-chats-circle text-violet-600"></i> ماذا يسأل عملاؤك المساعد؟</h3>
             <span id="chat-top-count" class="text-[11px] text-ink"></span>
           </div>
-          <p class="text-[11px] text-ink">أكثر الأسئلة تكراراً من زبائنك في مساعد المنيو. اضغط على السؤال تشوف وش جاوب المساعد.</p>
+          <p class="text-[11px] text-ink">أكثر أسئلة عملائك تكراراً في مساعد المنيو. اضغط على السؤال لترى إجابة المساعد.</p>
           <div id="chat-top-list" class="space-y-1.5"></div>
         </div>
   <!-- إحصائيات المنيو -->
-            <div data-needs="menu" class="pro-card p-5 space-y-5">
+            <div data-needs="menu" data-new-hide class="pro-card p-5 space-y-5">
               <div class="flex flex-wrap items-center justify-between gap-3 border-b border-brand/20 pb-3">
                 <h3 class="text-xs font-bold text-ink flex items-center gap-2"><i class="ph-bold ph-chart-bar text-emerald-600"></i> إحصائيات المنيو</h3>
                 <div class="flex items-center gap-2">
@@ -587,7 +624,7 @@
     <!-- روابط الخدمات: رابط لكل خدمة مفعّلة (مو في البيجر المجاني) -->
             <div data-free-hide class="pro-card p-5 space-y-3">
               <h3 class="text-xs font-bold text-ink flex items-center gap-2"><i class="ph-bold ph-link-simple text-emerald-600"></i> روابطك</h3>
-              <p id="svc-links-hint" class="text-[11px] text-ink">الرابط الرئيسي يفتح صفحة الروابط السريعة اللي فيها كل خدماتك، حطه في بايو انستجرام وتيك توك. وتحته رابط كل خدمة لحالها.</p>
+              <p id="svc-links-hint" class="text-[11px] text-ink">الرابط الرئيسي يفتح صفحة الروابط السريعة التي تضم كل خدماتك، ضعه في بايو انستجرام وتيك توك. وتحته رابط كل خدمة على حدة.</p>
               <div id="svc-links" class="space-y-2"></div>
             </div>
     <!-- تنبيهات الإدارة -->
@@ -619,17 +656,8 @@
               </div>
               <div id="qrcode" class="bg-white p-2 rounded-xl shrink-0 [&_img]:w-24 [&_img]:h-24 [&_canvas]:w-24 [&_canvas]:h-24"></div>
             </div>
-            <!-- أرقام المنيو: ما تتغير كل يوم، فمكانها تحت جنب جاهزية المنيو -->
+            <!-- أرقام المنيو: ما تتغير كل يوم، فمكانها تحت -->
             <div id="quick-counts" data-needs="menu" class="pro-card p-5"></div>
-            <!-- جاهزية المنيو -->
-            <div data-needs="menu" class="pro-card p-5 space-y-3">
-              <div class="flex items-center justify-between">
-                <h3 class="text-xs font-bold text-ink flex items-center gap-2"><i class="ph-bold ph-list-checks text-emerald-600"></i> جاهزية المنيو</h3>
-                <span id="checklist-pct" class="text-[11px] font-black text-emerald-700">0%</span>
-              </div>
-              <div class="h-2 bg-brand/5 rounded-full overflow-hidden"><div id="checklist-bar" class="h-full bg-brand rounded-full transition-all" style="width:0%"></div></div>
-              <ul id="checklist-body" class="space-y-1.5"></ul>
-            </div>
         </div>
       </section>
 
@@ -697,7 +725,7 @@
               <p class="sm:col-span-2 text-[11px] text-ink leading-relaxed">يُدخل العميل رقم جواله وعنوانه، ويستطيع إرسال موقعه، فتظهر لك مع الطلب مع زر الاتصال ورابط الخريطة.</p>
             </div>
             <label class="flex items-start gap-2 cursor-pointer text-xs"><input type="checkbox" id="mo-o-schedule" class="accent-green-600 mt-0.5">
-              <span><b class="text-ink">الطلب المسبق</b><span class="block text-[11px] text-ink leading-relaxed">يختار العميل «جهّزوه الحين» أو يحدد يوماً ووقتاً خلال شهر، مثل كيكة لبكرة أو ورد لمناسبة، ويظهر لك الموعد بوضوح مع الطلب.</span></span></label>
+              <span><b class="text-ink">الطلب المسبق</b><span class="block text-[11px] text-ink leading-relaxed">يختار العميل «جهّزوه الآن» أو يحدد يوماً ووقتاً خلال شهر، مثل كيكة للغد أو ورد لمناسبة، ويظهر لك الموعد بوضوح مع الطلب.</span></span></label>
             <button type="button" onclick="saveOrderOpts(this)" class="bg-brand text-cream font-bold px-3 py-2 rounded-lg text-[12px]"><i class="ph-bold ph-floppy-disk"></i> حفظ طرق الاستلام</button>
           </div>
           <div id="mo-status" class="text-[11px]"></div>
@@ -805,7 +833,7 @@
           <input type="checkbox" id="info-menu-chat" onchange="toggleMenuChat(this.checked)" class="w-4 h-4 mt-0.5 accent-[#384f3d] cursor-pointer">
           <span class="text-xs">
             <b class="text-ink"><i class="ph-bold ph-sparkle text-amber-600"></i> المساعد الذكي في المنيو <span class="text-[11px] font-bold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded">تجريبي</span></b>
-            <span class="block text-[11px] text-ink mt-0.5 leading-relaxed">زر "اسأل المساعد" في المنيو: يجاوب زبونك عن الأسعار والسعرات والمكونات، ويقترح عليه حسب ذوقه وميزانيته، ويعرف أوقات عملك. يجاوب من منيو محلك بس، وأي سؤال ثاني يعتذر عنه.</span>
+            <span class="block text-[11px] text-ink mt-0.5 leading-relaxed">زر "اسأل المساعد" في المنيو: يجيب عميلك عن الأسعار والسعرات والمكونات، ويقترح عليه حسب ذوقه وميزانيته، ويعرف أوقات عملك. يجيب من منيو محلك فقط، ويعتذر عن أي سؤال آخر.</span>
             <span id="chat-usage" class="block text-[11px] font-bold text-ink mt-1.5"></span>
           </span>
         </label>
@@ -830,7 +858,7 @@
       <div id="promo-status" class="flex items-center gap-2 text-[11px]"></div>
       <div class="flex flex-col sm:flex-row gap-2">
         <div class="relative flex-1">
-          <input type="text" id="promo-message-input" maxlength="120" placeholder="مثال: خصم 20% على كل شي اليوم!" class="input-pro text-xs pl-14">
+          <input type="text" id="promo-message-input" maxlength="120" placeholder="مثال: خصم 20% على كل شيء اليوم!" class="input-pro text-xs pl-14">
           <span id="promo-counter" class="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] text-ink font-mono" dir="ltr">0/120</span>
         </div>
         <div class="flex gap-2 shrink-0">
@@ -880,9 +908,9 @@
               </div>
               <button type="button" onclick="startOccasionToday()" class="text-[11px] font-bold bg-brand/10 border border-brand/45 hover:bg-brand/10 text-ink px-2.5 py-1.5 rounded-lg"><i class="ph-bold ph-lightning text-amber-600"></i> ابدأ من اليوم</button>
               <div id="occ-branches-wrap" class="hidden bg-emerald-500/5 border border-emerald-600/20 rounded-xl p-2.5">
-                <p class="text-[11px] font-bold text-ink mb-1"><i class="ph-bold ph-copy text-emerald-700"></i> انسخها لفروع ثانية عند الحفظ</p>
+                <p class="text-[11px] font-bold text-ink mb-1"><i class="ph-bold ph-copy text-emerald-700"></i> انسخها لفروع أخرى عند الحفظ</p>
                 <div id="occ-branches" class="flex flex-wrap gap-1.5"></div>
-                <p class="text-[11px] text-ink mt-1">تنسخ بنفس الإعدادات والملصقات، وبعدها تعدّلها في كل فرع لحاله. النسخ مرة ثانية يستبدل النسخة السابقة.</p>
+                <p class="text-[11px] text-ink mt-1">تُنسخ بالإعدادات والملصقات نفسها، ثم تعدّلها في كل فرع على حدة. النسخ مرة أخرى يستبدل النسخة السابقة.</p>
               </div>
               <p id="occ-date-hint" class="hidden text-[11px] text-amber-800 bg-amber-500/10 border border-amber-500/25 rounded-lg px-2.5 py-1.5"><i class="ph-bold ph-info"></i> التاريخ مقترح حسب تقويم أم القرى، وممكن يختلف يوم حسب رؤية الهلال. عدّله إذا لزم.</p>
               <div class="space-y-2">
@@ -942,9 +970,8 @@
           <div class="flex items-center gap-3">
             <span class="w-10 h-10 rounded-xl bg-brand text-cream grid place-items-center shrink-0"><i id="form-icon" class="ph-bold ph-plus"></i></span>
             <div><h3 class="text-[15px] font-bold text-ink"><span id="form-title">إضافة طبق أو منتج جديد</span></h3>
-              <p class="text-[11.5px] text-ink">الحقول المعلّمة بـ * مطلوبة، والباقي اختياري.</p></div>
+              <p class="text-[11.5px] text-ink">الاسم والقسم والسعر تكفي، والباقي اختياري.</p></div>
           </div>
-          <p class="f-sec"><i class="ph-bold ph-tag"></i> الأساسيات</p>
           <div>
             <label class="text-xs font-semibold text-ink block mb-1">اسم الطبق / المنتج *</label>
             <input type="text" id="prod-name" placeholder="مثال: ستيك لحم فاخر" required class="input-pro">
@@ -959,23 +986,13 @@
               <input type="number" step="any" min="0" id="prod-price" placeholder="0.00" class="input-pro">
             </div>
           </div>
-          <!-- أحجام وأسعار متعددة -->
-          <div class="bg-brand/5 rounded-xl border border-brand/15 p-2.5 space-y-2">
-            <div class="flex items-center justify-between gap-2">
-              <span class="text-[11px] font-bold text-ink"><i class="ph-bold ph-arrows-out text-emerald-600"></i> أحجام وأسعار <span class="text-ink font-normal">(اختياري)</span></span>
-              <button type="button" id="size-add-btn" onclick="addSize()" class="text-[11px] font-bold bg-brand/10 border border-brand/45 hover:bg-brand/10 text-ink px-2.5 py-1 rounded-lg transition disabled:opacity-40"><i class="ph-bold ph-plus text-[10px]"></i> إضافة حجم</button>
+          <div id="calories-field">
+            <label class="text-xs font-semibold text-ink block mb-1">السعرات الحرارية <span class="text-ink">(مطلوبة من هيئة الغذاء والدواء)</span></label>
+            <div class="relative">
+              <input type="number" min="0" step="1" id="prod-calories" placeholder="مثال: 450" class="input-pro pl-14" dir="ltr">
+              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] text-ink">سعرة</span>
             </div>
-            <div id="sizes-list" class="space-y-1.5"></div>
-            <p id="sizes-hint" class="hidden text-[11px] text-ink">مع الأحجام يتحدد السعر من كل حجم، ويظهر في المنيو "من" أقل سعر.</p>
           </div>
-          <!-- إضافات الطبق: قائمة مباشرة (يكتبها أو يختارها من المنيو)، واختيارات إجبارية لحالها (مثل نوع الخبز) -->
-          <div class="bg-brand/5 rounded-xl border border-brand/15 p-2.5 space-y-2">
-            <span class="text-[11px] font-bold text-ink"><i class="ph-bold ph-list-plus text-emerald-600"></i> الإضافات <span class="text-ink font-normal">(اختياري)</span></span>
-            <p class="text-[11px] text-ink leading-relaxed">مثل الصوصات والمخلل: يختار العميل منها ما يشاء. اكتب الاسم والسعر، أو اخترها من المنيو. السعر 0 يعني مجاناً.</p>
-            <div id="extras-list" class="space-y-2"></div>
-            <button type="button" id="extras-copy-btn" onclick="openExtrasCopy()" class="hidden text-[11px] font-bold text-ink underline"><i class="ph-bold ph-copy"></i> انسخ هذي الإضافات لأطباق ثانية</button>
-          </div>
-          <p class="f-sec"><i class="ph-bold ph-image"></i> الصورة</p>
           <div>
             <label for="prod-image-file" class="img-drop">
               <span class="ph" id="img-drop-ph"><i class="ph-bold ph-camera"></i></span>
@@ -998,17 +1015,13 @@
               </span>
             </div>
           </div>
-          <!-- فيديو الطبق (اختياري): يتحرك في المنيو مكان الصورة، والصورة تبقى غلافه -->
-          <div>
-            <label for="prod-video-file" class="img-drop">
-              <span class="ph" id="vid-drop-ph"><i class="ph-bold ph-video-camera"></i></span>
-              <span class="min-w-0"><b class="block text-[13px] text-ink" id="vid-drop-name">أضف فيديو قصير للطبق (اختياري)</b>
-                <span class="block text-[11.5px] text-ink">يتحرك في المنيو مكان الصورة، والصورة تبقى غلافه. فيديو أفقي من 3 إلى 8 ثوانٍ، وحجمه أقل من 15 ميجابايت، ويُعرض بدون صوت.</span></span>
-            </label>
-            <button type="button" id="prod-video-remove" class="hidden mt-1.5 text-[11.5px] font-bold text-red-700 underline"><i class="ph-bold ph-trash"></i> حذف فيديو الطبق</button>
-            <input type="file" id="prod-video-file" accept="video/mp4,video/webm,video/quicktime" class="sr-only">
-          </div>
-          <p class="f-sec"><i class="ph-bold ph-note-pencil"></i> التفاصيل</p>
+          <!-- كل شي اختياري تحت «تفاصيل أكثر»: النموذج يبدأ قصير (الاسم والقسم والسعر والصورة) -->
+          <details id="prod-more" class="prod-more group">
+            <summary>
+              <span><b>تفاصيل أكثر</b> <span class="font-normal">(اختياري)</span><small>الوصف، الأحجام، الإضافات، الفيديو، الاسم بالإنجليزي، الحساسية</small></span>
+              <i class="ph-bold ph-caret-down group-open:rotate-180 transition"></i>
+            </summary>
+            <div class="space-y-4 pt-3">
           <div>
             <label class="text-xs font-semibold text-ink block mb-1">وصف المكونات</label>
             <textarea id="prod-desc" placeholder="وصف موجز للمكونات..." class="input-pro h-16 resize-none"></textarea>
@@ -1021,14 +1034,32 @@
             <label class="text-xs font-semibold text-ink block mb-1">ملاحظة <span class="text-ink">(اختياري)</span></label>
             <input type="text" id="prod-note" maxlength="200" placeholder="مثال: يتوفر من 6 صباحاً إلى 2 مساءً" class="input-pro">
           </div>
-          <div id="calories-field">
-            <label class="text-xs font-semibold text-ink block mb-1">السعرات الحرارية <span class="text-ink">(مطلوبة من هيئة الغذاء والدواء)</span></label>
-            <div class="relative">
-              <input type="number" min="0" step="1" id="prod-calories" placeholder="مثال: 450" class="input-pro pl-14" dir="ltr">
-              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] text-ink">سعرة</span>
+          <!-- أحجام وأسعار متعددة -->
+          <div class="bg-brand/5 rounded-xl border border-brand/15 p-2.5 space-y-2">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-[11px] font-bold text-ink"><i class="ph-bold ph-arrows-out text-emerald-600"></i> أحجام وأسعار <span class="text-ink font-normal">(اختياري)</span></span>
+              <button type="button" id="size-add-btn" onclick="addSize()" class="text-[11px] font-bold bg-brand/10 border border-brand/45 hover:bg-brand/10 text-ink px-2.5 py-1 rounded-lg transition disabled:opacity-40"><i class="ph-bold ph-plus text-[10px]"></i> إضافة حجم</button>
             </div>
+            <div id="sizes-list" class="space-y-1.5"></div>
+            <p id="sizes-hint" class="hidden text-[11px] text-ink">مع الأحجام يتحدد السعر من كل حجم، ويظهر في المنيو "من" أقل سعر.</p>
           </div>
-          <p class="f-sec"><i class="ph-bold ph-plus-circle"></i> إضافات اختيارية</p>
+          <!-- إضافات الطبق: قائمة مباشرة (يكتبها أو يختارها من المنيو)، واختيارات إجبارية لحالها (مثل نوع الخبز) -->
+          <div class="bg-brand/5 rounded-xl border border-brand/15 p-2.5 space-y-2">
+            <span class="text-[11px] font-bold text-ink"><i class="ph-bold ph-list-plus text-emerald-600"></i> الإضافات <span class="text-ink font-normal">(اختياري)</span></span>
+            <p class="text-[11px] text-ink leading-relaxed">مثل الصوصات والمخلل: يختار العميل منها ما يشاء. اكتب الاسم والسعر، أو اخترها من المنيو. السعر 0 يعني مجاناً.</p>
+            <div id="extras-list" class="space-y-2"></div>
+            <button type="button" id="extras-copy-btn" onclick="openExtrasCopy()" class="hidden text-[11px] font-bold text-ink underline"><i class="ph-bold ph-copy"></i> انسخ هذه الإضافات لأطباق أخرى</button>
+          </div>
+          <!-- فيديو الطبق (اختياري): يتحرك في المنيو مكان الصورة، والصورة تبقى غلافه -->
+          <div>
+            <label for="prod-video-file" class="img-drop">
+              <span class="ph" id="vid-drop-ph"><i class="ph-bold ph-video-camera"></i></span>
+              <span class="min-w-0"><b class="block text-[13px] text-ink" id="vid-drop-name">أضف فيديو قصير للطبق (اختياري)</b>
+                <span class="block text-[11.5px] text-ink">يتحرك في المنيو مكان الصورة، والصورة تبقى غلافه. فيديو أفقي من 3 إلى 8 ثوانٍ، وحجمه أقل من 15 ميجابايت، ويُعرض بدون صوت.</span></span>
+            </label>
+            <button type="button" id="prod-video-remove" class="hidden mt-1.5 text-[11.5px] font-bold text-red-700 underline"><i class="ph-bold ph-trash"></i> حذف فيديو الطبق</button>
+            <input type="file" id="prod-video-file" accept="video/mp4,video/webm,video/quicktime" class="sr-only">
+          </div>
           <details id="coffee-details" class="bg-amber-100/60 rounded-xl border border-amber-700/25 group">
             <summary class="cursor-pointer select-none p-2.5 text-[11px] font-bold text-amber-900 flex items-center justify-between">
               <span><i class="ph-bold ph-coffee text-amber-600"></i> تفاصيل القهوة المختصة <span class="text-amber-800/60 font-normal">(للمقاهي، اختياري)</span></span>
@@ -1108,13 +1139,15 @@
               <i class="ph-bold ph-fire text-amber-600"></i> تمييز كـ "طبق مميز / الأكثر مبيعاً"
             </label>
           </div>
+            </div>
+          </details>
           <div id="also-branches" class="hidden bg-emerald-500/5 border border-emerald-600/20 rounded-xl p-2.5 space-y-1.5">
             <p class="text-[11px] font-bold text-ink"><i class="ph-bold ph-git-branch text-emerald-700"></i> يظهر الطبق أيضاً في:</p>
             <div id="also-branches-list" class="flex flex-wrap gap-1.5"></div>
           </div>
           <p id="linked-note" class="hidden text-[11px] leading-relaxed text-emerald-800 bg-emerald-500/5 border border-emerald-600/20 rounded-xl px-2.5 py-2">
             <i class="ph-bold ph-link-simple"></i> الطبق مربوط بكل الفروع: الاسم والوصف والصورة والقسم والسعرات تتعدل في الكل.
-            <b>السعر والإخفاء والحذف والتوفر لكل فرع لحاله.</b>
+            <b>السعر والإخفاء والحذف والتوفر لكل فرع على حدة.</b>
           </p>
           <div class="form-actions space-y-2">
             <button type="submit" id="submit-btn" class="w-full bg-brand text-cream hover:bg-brand-dark font-bold py-3.5 rounded-xl text-[13.5px] transition shadow-lg">حفظ وإضافة الطبق</button>
@@ -1174,7 +1207,7 @@
         <button type="button" data-srange="7" onclick="loadSales('7')" class="sr-btn px-4 py-2 rounded-lg text-[13px] font-bold">آخر 7 أيام</button>
         <button type="button" data-srange="30" onclick="loadSales('30')" class="sr-btn px-4 py-2 rounded-lg text-[13px] font-bold">آخر 30 يوم</button>
       </div>
-      <p class="text-[12px] text-ink/70"><i class="ph-bold ph-info"></i> تقرير بطلبات المنيو فقط، وليس فاتورة ضريبية. الطلبات اللي تنطلب من الكاشير مباشرة ما تنحسب هنا.</p>
+      <p class="text-[12px] text-ink/70"><i class="ph-bold ph-info"></i> تقرير بطلبات المنيو فقط، وليس فاتورة ضريبية. الطلبات التي تُطلب من الكاشير مباشرة لا تُحسب هنا.</p>
     </div>
     <div id="sales-off" class="hidden rounded-2xl p-3.5 border bg-amber-500/10 border-amber-500/30 text-[12px] font-bold text-amber-800 flex flex-wrap items-center justify-between gap-2">
       <span><i class="ph-bold ph-info"></i> الطلب من المنيو مطفي، فما فيه طلبات جديدة تنحسب هنا.</span>
@@ -1295,7 +1328,7 @@
             <label class="text-xs font-semibold text-ink block mb-1">الفئة الرئيسية <span class="text-ink">(اختياري)</span></label>
             <input type="text" id="cat-group" list="cat-groups" maxlength="40" placeholder="مثال: فطور، غداء، عشاء" class="input-pro">
             <datalist id="cat-groups"></datalist>
-            <p class="text-[11px] text-ink mt-1">الأقسام اللي لها نفس الفئة تظهر تحت تبويب واحد أعلى المنيو.</p>
+            <p class="text-[11px] text-ink mt-1">الأقسام التي لها الفئة نفسها تظهر تحت تبويب واحد أعلى المنيو.</p>
           </div>
           <button type="submit" class="w-full bg-brand text-cream hover:bg-brand-dark font-bold py-2.5 rounded-xl text-xs transition shadow-lg">حفظ القسم</button>
         </form>
@@ -1329,7 +1362,7 @@
               <li class="flex gap-2"><i class="ph-bold ph-check text-green-600 mt-0.5"></i> تختار البيانات المطلوبة: الاسم، الجوال، عدد الأشخاص...</li>
               <li class="flex gap-2"><i class="ph-bold ph-check text-green-600 mt-0.5"></i> رقم دور ووقت انتظار تقريبي يتحدث تلقائياً</li>
               <li class="flex gap-2"><i class="ph-bold ph-check text-green-600 mt-0.5"></i> بريد تأكيد، وبريد "جاء دورك" بضغطة زر</li>
-              <li class="flex gap-2"><i class="ph-bold ph-check text-green-600 mt-0.5"></i> إحصائيات: متوسط الانتظار، اللي جلسوا، اللي ما حضروا</li>
+              <li class="flex gap-2"><i class="ph-bold ph-check text-green-600 mt-0.5"></i> إحصائيات: متوسط الانتظار، من جلسوا، من لم يحضروا</li>
             </ul>
             <div class="text-center space-y-3 bg-brand/5 border border-brand/15 rounded-2xl p-5">
               <p class="text-xs font-bold text-ink">غير مفعّلة لمتجرك حالياً</p>
@@ -1402,11 +1435,11 @@
             <div class="pro-card p-5 space-y-4">
               <div class="flex items-center justify-between gap-2">
                 <h3 class="text-xs font-black flex items-center gap-2"><i class="ph-bold ph-sliders-horizontal text-ink"></i> إعدادات قائمة الانتظار</h3>
-                <a id="wl-preview" target="_blank" rel="noopener" class="text-[11px] font-bold text-ink underline"><i class="ph-bold ph-arrow-square-out"></i> شوف كيف يطلع للضيف</a>
+                <a id="wl-preview" target="_blank" rel="noopener" class="text-[11px] font-bold text-ink underline"><i class="ph-bold ph-arrow-square-out"></i> شاهد كيف يظهر للضيف</a>
               </div>
               <div>
-                <p class="text-[11px] font-bold text-ink">اللي يعبّيه الضيف</p>
-                <p class="text-[11px] text-ink mt-1 leading-relaxed mb-2">يطلع للضيف في: نموذج التسجيل. كل ما قلّت الخانات، سجّل أسرع.</p>
+                <p class="text-[11px] font-bold text-ink">ما يعبّئه الضيف</p>
+                <p class="text-[11px] text-ink mt-1 leading-relaxed mb-2">يظهر للضيف في: نموذج التسجيل. كلما قلّت الخانات، سجّل أسرع.</p>
                 <div class="rounded-xl border border-brand/15 overflow-hidden">
                   <div class="grid grid-cols-[1fr_auto_auto] gap-x-4 px-3 py-2 bg-brand/5 text-[11px] font-bold text-ink">
                     <span>الحقل</span><span>يظهر</span><span>إلزامي</span>
@@ -1428,12 +1461,12 @@
                 <div>
                   <label for="wl-max-party" class="text-[11px] font-bold text-ink block mb-1">أكبر مجموعة تستقبلها</label>
                   <input id="wl-max-party" type="number" min="1" max="100" class="input-pro text-xs" dir="ltr">
-                  <p class="text-[11px] text-ink mt-1 leading-relaxed">الضيف ما يقدر يختار عدد أشخاص أكثر من كذا.</p>
+                  <p class="text-[11px] text-ink mt-1 leading-relaxed">لا يستطيع الضيف اختيار عدد أشخاص أكثر من هذا.</p>
                 </div>
                 <div>
                   <label for="wl-message" class="text-[11px] font-bold text-ink block mb-1">رسالة للضيوف <span class="font-normal">(اختياري)</span></label>
                   <input id="wl-message" type="text" maxlength="200" placeholder="مثال: الانتظار التقريبي 15 دقيقة" class="input-pro text-xs">
-                  <p class="text-[11px] text-ink mt-1 leading-relaxed">يطلع للضيف في: أعلى صفحة التسجيل.</p>
+                  <p class="text-[11px] text-ink mt-1 leading-relaxed">يظهر للضيف في: أعلى صفحة التسجيل.</p>
                 </div>
               </div>
               <button onclick="saveWaitlistSettings()" class="w-full bg-brand hover:bg-brand-dark text-cream font-bold py-2.5 rounded-xl text-xs transition">حفظ الإعدادات</button>
@@ -1502,7 +1535,7 @@
         <div class="pro-card p-5 md:p-6 flex flex-wrap items-center justify-between gap-4">
           <div class="space-y-1 max-w-xl">
             <h2 class="text-base font-bold">بطاقة الولاء بالأختام</h2>
-            <p class="text-[13px] text-ink leading-relaxed">الزبون يمسح كرت التسجيل ويسجل مرة وحدة. بعد كل شراء يعرض كود بطاقته للكاشير، والكاشير يمسحه من شاشة الكاشير ويختم له.</p>
+            <p class="text-[13px] text-ink leading-relaxed">يمسح العميل كرت التسجيل ويسجل مرة واحدة. بعد كل شراء يعرض كود بطاقته للكاشير، والكاشير يمسحه من شاشة الكاشير ويختم له.</p>
           </div>
           <div class="flex flex-wrap items-center gap-3">
           <a href="kiosk.html" onclick="this.href='kiosk.html'+location.search" target="_blank" class="inline-flex items-center gap-2 bg-brand/10 text-[13px] font-bold rounded-xl border border-brand/45 px-3.5 py-2 text-brand"><i class="ph-bold ph-device-tablet"></i> شاشة الختم للزبون</a>
@@ -1517,7 +1550,7 @@
           <button type="button" role="tab" data-lyt="design"><i class="ph-bold ph-palette"></i> تصميم البطاقة</button>
           <button type="button" role="tab" data-lyt="settings"><i class="ph-bold ph-sliders-horizontal"></i> الإعدادات</button>
         </div>
-        <p id="ly-shared" class="hidden text-[12px] font-bold text-emerald-800 bg-emerald-500/5 border border-emerald-600/20 rounded-xl px-3 py-2.5"><i class="ph-bold ph-git-branch"></i> بطاقة الولاء وحدة لكل فروعك: الزبون يجمع أختامه ويصرف مكافأته من أي فرع، والأعضاء والإعدادات مشتركة. موقع المحل بس لكل فرع لحاله.</p>
+        <p id="ly-shared" class="hidden text-[12px] font-bold text-emerald-800 bg-emerald-500/5 border border-emerald-600/20 rounded-xl px-3 py-2.5"><i class="ph-bold ph-git-branch"></i> بطاقة الولاء واحدة لكل فروعك: يجمع العميل أختامه ويصرف مكافأته من أي فرع، والأعضاء والإعدادات مشتركة. موقع المحل فقط لكل فرع على حدة.</p>
         <div id="ly-grid" class="grid lg:grid-cols-[1.1fr_.9fr] gap-5 items-start">
           <div class="space-y-5">
             <!-- الإعدادات -->
@@ -1535,29 +1568,29 @@
                 <label class="block"><span class="text-xs font-semibold text-ink block mb-1.5">ختم وحد كل</span>
                   <select id="ly-cooldown" class="input-pro">
                     <option value="1">ساعة</option><option value="2">ساعتين</option><option value="3">3 ساعات</option><option value="4">4 ساعات</option><option value="6">6 ساعات</option><option value="12">12 ساعة</option><option value="24">يوم كامل</option>
-                  </select><span class="block text-[11px] text-ink mt-1 leading-relaxed">عشان الزبون ما ياخذ أكثر من ختم في نفس الزيارة.</span></label>
+                  </select><span class="block text-[11px] text-ink mt-1 leading-relaxed">حتى لا يأخذ العميل أكثر من ختم في الزيارة نفسها.</span></label>
                 <label class="hidden"><span class="text-xs font-semibold text-ink block mb-1.5">المسافة المسموحة لاستخدام المكافأة</span>
                   <select id="ly-radius" class="input-pro">
                     <option value="25">25 متر</option><option value="50">50 متر</option><option value="100">100 متر (مول أو مبنى كبير)</option><option value="200">200 متر</option>
                   </select></label>
               </div>
               <div class="space-y-2 pt-3">
-                <h4 class="text-xs font-bold text-ink border-b border-ink/10 pb-1.5">طريقة الختم: مع الشراء بس</h4>
+                <h4 class="text-xs font-bold text-ink border-b border-ink/10 pb-1.5">طريقة الختم: مع الشراء فقط</h4>
                 <p class="text-[12px] text-ink leading-relaxed">الكاشير يضغط <b>"كود ختم"</b> في شاشة الكاشير بعد الدفع، والزبون يمسحه. والختم يلتزم بإعداد "ختم واحد كل" فوق.</p>
-                <label class="flex items-center justify-between gap-3 pt-1"><span class="text-[12px] text-ink"><i class="ph-bold ph-bell"></i> اللي ياخذ رقم بيجر ينختم له تلقائياً لما يستلم طلبه</span>
+                <label class="flex items-center justify-between gap-3 pt-1"><span class="text-[12px] text-ink"><i class="ph-bold ph-bell"></i> من يأخذ رقم بيجر يُختم له تلقائياً عند استلام طلبه</span>
                   <input type="checkbox" id="ly-pager-stamp" class="w-4 h-4 accent-[#384f3d]"></label>
-                <p class="text-[11px] text-ink ps-5">الختم ينضاف لما الكاشير يضغط «استلم» في شاشة البيجر. واللي أخذ رقم وما طلب، يحذفه الكاشير وما ينختم له.</p>
+                <p class="text-[11px] text-ink ps-5">يُضاف الختم عندما يضغط الكاشير «استلم» في شاشة البيجر. ومن أخذ رقماً ولم يطلب، يحذفه الكاشير ولا يُختم له.</p>
                 <a href="pager-desk.html" onclick="this.href='pager-desk.html'+location.search" class="inline-block text-[12px] font-bold text-brand underline underline-offset-4">افتح شاشة الكاشير (فيها زر "كود ختم")</a>
                 <div class="rounded-xl border border-brand/15 bg-brand/5 p-3 mt-2 space-y-1.5">
                   <p class="text-[12px] font-bold"><i class="ph-bold ph-device-tablet"></i> شاشة الختم للزبون</p>
-                  <p class="text-[11.5px] text-ink leading-relaxed">افتحها على تابلت عند الكاشير وسجّل دخولك فيه. الزبون يقرّب كود بطاقته من الكاميرا وينضاف ختمه تلقائياً (مرة وحدة حسب "ختم واحد كل"). الشاشة ثابتة ما فيها أزرار.</p>
+                  <p class="text-[11.5px] text-ink leading-relaxed">افتحها على تابلت عند الكاشير وسجّل دخولك فيه. يقرّب العميل كود بطاقته من الكاميرا فيُضاف ختمه تلقائياً (مرة واحدة حسب "ختم واحد كل"). الشاشة ثابتة بلا أزرار.</p>
                   <a href="kiosk.html" onclick="this.href='kiosk.html'+location.search" target="_blank" class="inline-block text-[12px] font-bold text-brand underline underline-offset-4">افتح شاشة الختم</a>
                 </div>
               </div>
               <div class="space-y-2 pt-3">
                 <h4 class="text-xs font-bold text-ink border-b border-ink/10 pb-1.5">رسائل للزبون</h4>
                 <p class="text-xs font-semibold text-ink">رسالة الترحيب</p>
-                <p class="text-[11px] text-ink mt-1 leading-relaxed -mt-1">يطلع للزبون في: إشعار على بطاقته في المحفظة، أول ما يسجل.</p>
+                <p class="text-[11px] text-ink mt-1 leading-relaxed -mt-1">يظهر للعميل في: إشعار على بطاقته في المحفظة، فور تسجيله.</p>
                 <div class="grid sm:grid-cols-3 gap-2" id="ly-welcome-modes">
                   <label class="cursor-pointer"><input type="radio" name="ly-welcome" value="ai" class="peer sr-only"><span class="block rounded-xl border border-brand/20 p-3 text-[13px] peer-checked:border-brand peer-checked:bg-brand/5"><b class="block"><i class="ph-bold ph-sparkle"></i> المساعد يكتبها</b><span class="text-[11px] text-ink">كل زبون تجيه رسالة مختلفة باسمه</span></span></label>
                   <label class="cursor-pointer"><input type="radio" name="ly-welcome" value="custom" class="peer sr-only"><span class="block rounded-xl border border-brand/20 p-3 text-[13px] peer-checked:border-brand peer-checked:bg-brand/5"><b class="block"><i class="ph-bold ph-pen-nib"></i> أكتبها بنفسي</b><span class="text-[11px] text-ink">نفس الرسالة للكل</span></span></label>
@@ -1567,7 +1600,7 @@
               </div>
               <div class="space-y-2 pt-1">
                 <p class="text-xs font-semibold text-ink">رسالة تسليم المكافأة</p>
-                <p class="text-[11px] text-ink mt-1 leading-relaxed -mt-1">يطلع للزبون في: إشعار على بطاقته في المحفظة، لما الموظف يصرف له المكافأة.</p>
+                <p class="text-[11px] text-ink mt-1 leading-relaxed -mt-1">يظهر للعميل في: إشعار على بطاقته في المحفظة، عندما يصرف له الموظف المكافأة.</p>
                 <div class="grid sm:grid-cols-3 gap-2">
                   <label class="cursor-pointer"><input type="radio" name="ly-redeem" value="ai" class="peer sr-only"><span class="block rounded-xl border border-brand/20 p-3 text-[13px] peer-checked:border-brand peer-checked:bg-brand/5"><b class="block"><i class="ph-bold ph-sparkle"></i> المساعد يكتبها</b><span class="text-[11px] text-ink">تهنئة مختلفة لكل زبون باسمه</span></span></label>
                   <label class="cursor-pointer"><input type="radio" name="ly-redeem" value="custom" class="peer sr-only"><span class="block rounded-xl border border-brand/20 p-3 text-[13px] peer-checked:border-brand peer-checked:bg-brand/5"><b class="block"><i class="ph-bold ph-pen-nib"></i> أكتبها بنفسي</b><span class="text-[11px] text-ink">نفس الرسالة للكل</span></span></label>
@@ -1577,19 +1610,19 @@
               </div>
               <div class="space-y-3 pt-3">
                 <h4 class="text-xs font-bold text-ink border-b border-ink/10 pb-1.5">مميزات إضافية</h4>
-                <label class="flex items-center justify-between gap-3"><span><b class="text-[13px] block"><i class="ph-bold ph-clock"></i> ساعات الهدوء: الختم فيها دبل</b><span class="text-[11px] text-ink">املأ الوقت اللي يكون فيه المحل فاضي، بدل ما تعطي خصم للكل</span></span>
+                <label class="flex items-center justify-between gap-3"><span><b class="text-[13px] block"><i class="ph-bold ph-clock"></i> ساعات الهدوء: الختم فيها دبل</b><span class="text-[11px] text-ink">املأ الأوقات التي يكون فيها المحل هادئاً، بدلاً من خصم للجميع</span></span>
                   <input type="checkbox" id="ly-happy" class="w-5 h-5 accent-[#384f3d]"></label>
                 <div id="ly-happy-box" class="space-y-2 hidden">
                   <div class="flex flex-wrap items-center gap-2 text-[13px]">من <select id="ly-happy-from" class="input-pro !w-auto !min-h-0 !py-1.5"></select> إلى <select id="ly-happy-to" class="input-pro !w-auto !min-h-0 !py-1.5"></select></div>
                   <div id="ly-happy-days" class="flex flex-wrap gap-1.5"></div>
                 </div>
-                <label class="flex items-center justify-between gap-3"><span><b class="text-[13px] block"><i class="ph-bold ph-question"></i> "ليش ما رجعت؟"</b><span class="text-[11px] text-ink">اللي رجع بعد غياب ومسح كوده في شاشة الختم، يطلع له سؤال "وش أخّرك؟" قبل الختم، وتشوف جوابه باسمه في "نظرة عامة"</span></span>
+                <label class="flex items-center justify-between gap-3"><span><b class="text-[13px] block"><i class="ph-bold ph-question"></i> "لماذا لم تعد؟"</b><span class="text-[11px] text-ink">من يعود بعد غياب ويمسح كوده في شاشة الختم، يظهر له سؤال "ما الذي أخّرك؟" قبل الختم، وترى إجابته باسمه في "نظرة عامة"</span></span>
                   <input type="checkbox" id="ly-fb" class="w-5 h-5 accent-[#384f3d]"></label>
                 <label class="flex items-center justify-between gap-3 ps-5"><span class="text-[12px] text-ink">نسأله إذا غاب</span>
                   <select id="ly-fb-days" class="input-pro !w-auto !min-h-0 !py-1.5"><option value="14">14 يوم</option><option value="21">21 يوم</option><option value="30">30 يوم</option><option value="45">45 يوم</option><option value="60">60 يوم</option></select></label>
                 <label class="flex items-center justify-between gap-3 ps-5"><span class="text-[12px] text-ink">أعطه ختم هدية على جوابه (ختمين بدل ختم)</span>
                   <input type="checkbox" id="ly-fb-gift" class="w-4 h-4 accent-[#384f3d]"></label>
-                <label class="flex items-center justify-between gap-3"><span><b class="text-[13px] block"><i class="ph-bold ph-heart"></i> "أهدها لصديق"</b><span class="text-[11px] text-ink">اللي يكمّل بطاقته يهدي مكافأته برابط، وصديقه يجيك زبون جديد</span></span>
+                <label class="flex items-center justify-between gap-3"><span><b class="text-[13px] block"><i class="ph-bold ph-heart"></i> "أهدها لصديق"</b><span class="text-[11px] text-ink">من يكمل بطاقته يهدي مكافأته برابط، ويأتيك صديقه عميلاً جديداً</span></span>
                   <input type="checkbox" id="ly-gifts" class="w-5 h-5 accent-[#384f3d]"></label>
               </div>
               <button type="submit" id="ly-save" class="w-full bg-brand hover:bg-brand-dark text-cream px-5 py-2.5 rounded-xl text-sm font-bold transition shadow-md"><i class="ph-bold ph-floppy-disk"></i> حفظ إعدادات البطاقة</button>
@@ -1599,7 +1632,7 @@
             <div data-lytab="settings" class="pro-card p-5 md:p-6 space-y-3">
               <h3 class="text-sm font-bold flex items-center gap-2"><i class="ph-bold ph-map-pin"></i> موقع المحل<span id="ly-loc-branch" class="text-ink"></span></h3>
               <p id="ly-loc-status" class="text-[13px]"></p>
-              <p class="text-[12px] text-ink leading-relaxed">اضغط الزر وأنت <b>واقف داخل المحل</b> بجوالك. كذا الموقع يطابق اللي يشوفه جوال الزبون داخل المحل، ويقل الخطأ.</p>
+              <p class="text-[12px] text-ink leading-relaxed">اضغط الزر وأنت <b>واقف داخل المحل</b> بجوالك. بذلك يطابق الموقع ما يراه جوال العميل داخل المحل، ويقل الخطأ.</p>
               <button type="button" id="ly-loc-btn" onclick="setLoyaltyLocation()" class="bg-brand/10 hover:bg-brand/10 border border-brand/45 text-ink px-4 py-2.5 rounded-xl text-sm font-bold transition"><i class="ph-bold ph-crosshair"></i> حدد موقع المحل من هنا</button>
             </div>
 
@@ -1622,14 +1655,14 @@
         <div data-lytab="design" class="grid lg:grid-cols-[1fr_minmax(300px,360px)] gap-5 items-start">
           <div class="space-y-5 order-2 lg:order-1">
             <div class="pro-card p-5 md:p-6 space-y-4">
-              <div><h3 class="text-sm font-bold flex items-center gap-2"><i class="ph-bold ph-palette"></i> الخلفية والألوان</h3><p class="text-[12px] text-ink mt-1">أول شي يشوفه الزبون. اختر لون محلك أو صورة.</p></div>
+              <div><h3 class="text-sm font-bold flex items-center gap-2"><i class="ph-bold ph-palette"></i> الخلفية والألوان</h3><p class="text-[12px] text-ink mt-1">أول ما يراه العميل. اختر لون محلك أو صورة.</p></div>
               <div class="space-y-2">
                 <p class="text-xs font-semibold text-ink">خلفية البطاقة</p>
                 <div id="ly-bg" class="grid grid-cols-2 gap-2"></div>
                 <input type="file" id="ly-bg-file" accept="image/png,image/jpeg,image/webp" class="hidden" onchange="uploadCardBg(this)">
                 <div id="ly-bg-up" class="flex flex-wrap items-center gap-2 pt-1 hidden">
                   <label for="ly-bg-file" class="cursor-pointer bg-brand/5 hover:bg-brand/10 border border-brand/20 text-ink px-3.5 py-2 rounded-xl text-[13px] font-bold transition"><i class="ph-bold ph-upload-simple"></i> غيّر الصورة</label>
-                  <span class="text-[11px] text-ink">تغطي البطاقة كلها، وفي المحفظة تطلع ورا الأختام.</span>
+                  <span class="text-[11px] text-ink">تغطي البطاقة كلها، وفي المحفظة تظهر خلف الأختام.</span>
                 </div>
               </div>
               <div class="space-y-2" id="ly-style-box">
@@ -1656,7 +1689,7 @@
               </div>
             </div>
             <div class="pro-card p-5 md:p-6 space-y-4">
-              <div><h3 class="text-sm font-bold flex items-center gap-2"><i class="ph-bold ph-seal-check"></i> الأختام</h3><p class="text-[12px] text-ink mt-1">شكل الختم اللي ينضاف للزبون مع كل زيارة.</p></div>
+              <div><h3 class="text-sm font-bold flex items-center gap-2"><i class="ph-bold ph-seal-check"></i> الأختام</h3><p class="text-[12px] text-ink mt-1">شكل الختم الذي يُضاف للعميل مع كل زيارة.</p></div>
               <div class="space-y-2">
                 <p class="text-xs font-semibold text-ink">صورة الختم</p>
                 <div id="ly-icons" class="flex flex-wrap gap-2"></div>
@@ -1679,7 +1712,7 @@
                       <input type="file" accept="image/png,image/jpeg,image/webp" class="hidden" onchange="uploadLyImage(this, 'logo')"></label>
                     <button type="button" id="ly-logo-clear" onclick="setLyDesign({ logo: null })" class="hidden text-[13px] font-bold text-brick px-2 py-2"><i class="ph-bold ph-trash"></i> شيله</button>
                   </div>
-                  <p class="text-[11px] text-ink">يطلع على البطاقة وفي المحفظة بدل شعار المنيو. الأفضل مربع.</p>
+                  <p class="text-[11px] text-ink">يظهر على البطاقة وفي المحفظة بدلاً من شعار المنيو. يُفضّل أن يكون مربعاً.</p>
                 </div>
                 <div class="space-y-2">
                   <p class="text-xs font-semibold text-ink">صورة المكافأة (آخر خانة)</p>
@@ -1695,7 +1728,7 @@
             </div>
           </div>
           <div class="order-1 lg:order-2 lg:sticky lg:top-24 space-y-3">
-            <div class="ly-views" role="tablist" aria-label="وين يشوفها الزبون">
+            <div class="ly-views" role="tablist" aria-label="أين يراها العميل">
               <button type="button" role="tab" data-lyv="page" aria-selected="true">صفحة البطاقة</button>
               <button type="button" role="tab" data-lyv="wallet" aria-selected="false">المحفظة</button>
               <button type="button" role="tab" data-lyv="lock" aria-selected="false">الإشعار</button>
@@ -1740,7 +1773,7 @@
                 <div data-lyv-pane="lock" class="pv-lock hidden">
                   <p class="pv-time" dir="ltr">9:41</p>
                   <div class="pv-notice"><img id="pv-n-logo" alt="" class="hidden"><span id="pv-n-icon" class="pv-n-icon"><i class="ph-bold ph-wallet"></i></span>
-                    <div class="min-w-0"><p class="flex justify-between gap-2"><b id="pv-n-name" class="truncate"></b><span>الحين</span></p><p id="pv-n-stamp"></p></div></div>
+                    <div class="min-w-0"><p class="flex justify-between gap-2"><b id="pv-n-name" class="truncate"></b><span>الآن</span></p><p id="pv-n-stamp"></p></div></div>
                   <div class="pv-notice"><span class="pv-n-icon"><i class="ph-bold ph-wallet"></i></span>
                     <div class="min-w-0"><p class="flex justify-between gap-2"><b id="pv-n-name2" class="truncate"></b><span>أمس</span></p><p>اليوم الختم دبل، نشوفك؟</p></div></div>
                 </div>
@@ -1769,7 +1802,7 @@
           <div id="ly-branches-card" class="hidden pro-card p-5 space-y-3">
             <div class="flex flex-wrap items-center justify-between gap-2"><h3 class="text-sm font-bold"><i class="ph-bold ph-git-branch text-emerald-600"></i> عملاؤك في كل فرع</h3><span class="text-[11px] text-ink">آخر 30 يوم</span></div>
             <div id="ly-branches" class="space-y-3"></div>
-            <p class="text-[11px] text-ink">الزبون اللي زار أكثر من فرع ينحسب في كل فرع زاره، وبطاقته وأختامه وحدة في كل فروعك.</p>
+            <p class="text-[11px] text-ink">العميل الذي زار أكثر من فرع يُحسب في كل فرع زاره، وبطاقته وأختامه واحدة في كل فروعك.</p>
           </div>
           <div class="grid lg:grid-cols-[1.4fr_1fr] gap-5 items-start">
             <div class="pro-card p-5 space-y-4">
@@ -1787,7 +1820,7 @@
           </div>
           <div class="pro-card p-5"><p class="text-sm font-bold mb-3"><i class="ph-bold ph-users text-ink"></i> مين عملاؤك</p><div id="ly-gender" class="space-y-3 text-sm"></div></div>
           <div class="grid md:grid-cols-2 gap-5">
-            <div class="pro-card p-5"><p class="text-sm font-bold mb-3"><i class="ph-bold ph-question text-ink"></i> ليش ما رجعوا؟ <span class="font-normal text-ink text-xs">(آخر 3 شهور)</span></p><div id="ly-fb-stats" class="space-y-2.5 text-sm"></div></div>
+            <div class="pro-card p-5"><p class="text-sm font-bold mb-3"><i class="ph-bold ph-question text-ink"></i> لماذا لم يعودوا؟ <span class="font-normal text-ink text-xs">(آخر 3 شهور)</span></p><div id="ly-fb-stats" class="space-y-2.5 text-sm"></div></div>
             <div class="pro-card p-5"><p class="text-sm font-bold mb-3"><i class="ph-bold ph-heart text-ink"></i> الهدايا لأصدقائهم</p><div id="ly-gift-stats" class="grid grid-cols-2 gap-2"></div></div>
           </div>
         </div>
@@ -1837,18 +1870,18 @@
               </div>
               <p id="nt-trial" class="hidden text-[11px] font-bold text-amber-800 bg-amber-50 border border-amber-300/60 rounded-lg px-2.5 py-1.5"></p>
               <div id="nt-box" class="hidden space-y-3">
-                <h4 class="text-xs font-bold text-ink border-b border-ink/10 pb-1.5">أرسل رسالة الحين</h4>
+                <h4 class="text-xs font-bold text-ink border-b border-ink/10 pb-1.5">أرسل رسالة الآن</h4>
                 <label id="nt-to-box" class="hidden block space-y-1">
                   <span class="text-[11px] font-bold text-ink">لمين ترسل؟</span>
                   <select id="nt-to" onchange="ntToChanged()" class="input-pro bg-cream text-xs"></select>
                 </label>
                 <label class="block space-y-1">
                   <span class="flex items-center justify-between text-[11px] font-bold text-ink">رسالتك <span id="nt-count" class="font-normal text-ink">0/150</span></span>
-                  <textarea id="nt-body" rows="2" maxlength="150" oninput="ntPreview()" class="input-pro" placeholder="مثلاً: اليوم القهوة الثانية بنص السعر لين الساعة 6"></textarea>
+                  <textarea id="nt-body" rows="2" maxlength="150" oninput="ntPreview()" class="input-pro" placeholder="مثلاً: اليوم القهوة الثانية بنصف السعر حتى الساعة 6"></textarea>
                 </label>
                 <!-- معاينة: كذا يطلع الإشعار على جوال الزبون -->
                 <div class="rounded-2xl bg-[#1c1c1e] p-3 space-y-2">
-                  <p class="text-[11px] font-bold text-white/55">كذا تطلع على جوال زبونك</p>
+                  <p class="text-[11px] font-bold text-white/55">هكذا تظهر على جوال عميلك</p>
                   <div dir="ltr" class="flex items-start gap-2.5 rounded-2xl bg-white/[0.12] p-2.5">
                     <img id="nt-pv-logo" alt="" class="w-9 h-9 rounded-lg bg-white object-cover shrink-0">
                     <div class="flex-1 min-w-0">
@@ -1858,7 +1891,7 @@
                   </div>
                 </div>
                 <button type="button" id="nt-send" onclick="sendNotify()" class="w-full bg-brand hover:bg-brand-dark text-cream px-5 py-2.5 rounded-xl text-sm font-bold transition"><i class="ph-bold ph-paper-plane-tilt"></i> <span id="nt-send-label">أرسل</span></button>
-                <p class="text-[11px] text-ink">نصيحة: لا تكثر الرسائل، عشان زبائنك ما ينزعجون ويحذفون البطاقة من محفظتهم.</p>
+                <p class="text-[11px] text-ink">نصيحة: لا تُكثر الرسائل، حتى لا ينزعج عملاؤك ويحذفوا البطاقة من محفظتهم.</p>
                 <div id="nt-list" class="text-[12px] pt-2"></div>
                 <div class="pt-3 space-y-2">
                   <h4 class="text-xs font-bold text-ink border-b border-ink/10 pb-1.5">رسالة «وحشتنا» التلقائية</h4>
@@ -1866,7 +1899,7 @@
                     <input type="checkbox" id="nt-wb-on" class="w-4 h-4 mt-0.5 accent-[#384f3d] cursor-pointer">
                     <span class="text-xs">
                       <b class="text-ink"><i class="ph-bold ph-hand-waving text-amber-600"></i> شغّلها</b>
-                      <span class="block text-[11px] text-ink mt-0.5">توصل لحالها للزبون اللي غاب، مرة وحدة لكل غيبة. ما تنعاد عليه لين يرجع لك ويغيب من جديد.</span>
+                      <span class="block text-[11px] text-ink mt-0.5">تصل تلقائياً للعميل الغائب، مرة واحدة لكل غياب. ولا تتكرر عليه حتى يعود ثم يغيب من جديد.</span>
                     </span>
                   </label>
                   <div class="flex flex-wrap items-center gap-2 text-xs">
@@ -1889,7 +1922,7 @@
             <!-- رسالة للأعضاء -->
             <div class="pro-card p-5 md:p-6 space-y-3">
               <h3 class="text-sm font-bold flex items-center gap-2"><i class="ph-bold ph-megaphone"></i> أرسل رسالة لأعضاء البطاقة</h3>
-              <p class="text-[12px] text-ink leading-relaxed">توصل إشعار على جوال اللي حافظين البطاقة في المحفظة، وتطلع للكل في صفحة البطاقة لما يفتحونها.</p>
+              <p class="text-[12px] text-ink leading-relaxed">تصل إشعاراً على جوال من يحفظ البطاقة في المحفظة، وتظهر للجميع في صفحة البطاقة عند فتحها.</p>
               <label class="block"><span class="text-xs font-semibold text-ink block mb-1.5">لمين؟</span>
                 <select id="ly-msg-to" class="input-pro"></select></label>
               <label class="block"><span class="text-xs font-semibold text-ink block mb-1.5">الرسالة</span>
@@ -1912,15 +1945,15 @@
                 </button>
               </div>
               <ul class="text-[12px] text-ink space-y-1.5">
-                <li class="flex gap-2"><i class="ph-bold ph-map-pin text-ink mt-0.5"></i> <span><b>لما يقرب من المحل:</b> جملة حلوة تطلع على شاشة قفل الآيفون تغريه يدخل (تتجدد كل أسبوع)</span></li>
-                <li class="flex gap-2"><i class="ph-bold ph-heart text-ink mt-0.5"></i> <span><b>لما يغيب:</b> رسالة اشتياق، حسب عادته هو (اللي يجي كل يومين يختلف عن اللي يجي كل أسبوعين)</span></li>
+                <li class="flex gap-2"><i class="ph-bold ph-map-pin text-ink mt-0.5"></i> <span><b>لما يقرب من المحل:</b> جملة جذابة تظهر على شاشة قفل الآيفون تشجعه على الزيارة (تتجدد كل أسبوع)</span></li>
+                <li class="flex gap-2"><i class="ph-bold ph-heart text-ink mt-0.5"></i> <span><b>لما يغيب:</b> رسالة اشتياق حسب عادته (من يأتي كل يومين يختلف عمن يأتي كل أسبوعين)</span></li>
                 <li class="flex gap-2"><i class="ph-bold ph-seal-check text-ink mt-0.5"></i> <span><b>باقي له ختم، أو مكافأته جاهزة:</b> تشجيع وتذكير</span></li>
                 <li class="flex gap-2"><i class="ph-bold ph-user-plus text-ink mt-0.5"></i> <span><b>جا مرة وحدة وما رجع:</b> رسالة تخلي الزيارة الثانية طبيعية</span></li>
               </ul>
-              <p class="text-[11px] text-ink">يشتغل كل يوم الساعة 4 العصر. ما يرسل لنفس الزبون أكثر من مرة كل أسبوع أو أسبوعين.</p>
+              <p class="text-[11px] text-ink">يعمل يومياً الساعة 4 عصراً. ولا يرسل للعميل نفسه أكثر من مرة كل أسبوع أو أسبوعين.</p>
               <div class="flex flex-wrap gap-2">
-                <button type="button" id="ly-ai-preview" onclick="previewLyAi()" class="bg-brand/10 hover:bg-brand/10 border border-brand/45 text-ink px-4 py-2.5 rounded-xl text-[13px] font-bold transition"><i class="ph-bold ph-eye"></i> شوف أمثلة على أسلوبه</button>
-                <button type="button" id="ly-ai-run" onclick="runLyAi()" class="bg-brand hover:bg-brand-dark text-cream px-4 py-2.5 rounded-xl text-[13px] font-bold transition"><i class="ph-bold ph-paper-plane-tilt"></i> شغّله الحين</button>
+                <button type="button" id="ly-ai-preview" onclick="previewLyAi()" class="bg-brand/10 hover:bg-brand/10 border border-brand/45 text-ink px-4 py-2.5 rounded-xl text-[13px] font-bold transition"><i class="ph-bold ph-eye"></i> اعرض أمثلة على أسلوبه</button>
+                <button type="button" id="ly-ai-run" onclick="runLyAi()" class="bg-brand hover:bg-brand-dark text-cream px-4 py-2.5 rounded-xl text-[13px] font-bold transition"><i class="ph-bold ph-paper-plane-tilt"></i> شغّله الآن</button>
               </div>
               <div id="ly-ai-out" class="space-y-2"></div>
             </div>
@@ -1947,7 +1980,7 @@
             <div data-free-hide id="desk-card" class="hidden pro-card p-5 space-y-3">
               <div class="space-y-1">
                 <h3 class="text-xs font-bold text-ink"><i class="ph-bold ph-cash-register text-emerald-600"></i> رابط الكاشير<span id="desk-branch" class="text-ink"></span></h3>
-                <p class="text-[11px] text-ink leading-relaxed">افتحه على جهاز الكاشير مرة وحدة. يفتح شاشة البيجر وشاشة الختم بس، بدون إيميلك وكلمة المرور، وما يقدر الموظف يدخل لوحة التحكم ولا يشوف الأسعار وجوالات الزبائن.</p>
+                <p class="text-[11px] text-ink leading-relaxed">افتحه على جهاز الكاشير مرة واحدة. يفتح شاشة البيجر وشاشة الختم فقط، دون بريدك وكلمة المرور، ولا يستطيع الموظف دخول لوحة التحكم أو رؤية الأسعار وأرقام جوالات العملاء.</p>
               </div>
               <div id="desk-link-box" class="hidden space-y-2">
                 <input id="desk-link" readonly dir="ltr" class="w-full text-[11px] bg-brand/5 border border-brand/15 rounded-xl px-3 py-2.5 text-ink" onclick="this.select()">
@@ -1973,7 +2006,7 @@
                 </div>
                 <p class="text-[11px] text-ink">"غيّر الرابط" في رابط الكاشير يغيّر هذا الرابط معه.</p>
               </div>
-              <button id="kiosk-show" type="button" onclick="showKioskLink()" class="text-[11px] font-bold px-3 py-2 rounded-lg bg-brand/10 border border-brand/45 text-ink"><i class="ph-bold ph-link-simple"></i> اطلع رابط شاشة الزبون</button>
+              <button id="kiosk-show" type="button" onclick="showKioskLink()" class="text-[11px] font-bold px-3 py-2 rounded-lg bg-brand/10 border border-brand/45 text-ink"><i class="ph-bold ph-link-simple"></i> أنشئ رابط شاشة العميل</button>
             </div>
         </div>
       </section>
@@ -2001,7 +2034,7 @@
               <div><h3 class="text-base font-bold">استيراد الأعضاء من نظامك السابق</h3><p id="li-sub" class="text-xs text-ink mt-0.5"></p></div>
               <button type="button" onclick="closeLyImport()" class="text-ink hover:text-ink text-xl" aria-label="إغلاق"><i class="ph-bold ph-x"></i></button>
             </div>
-            <p class="text-[12px] text-ink leading-relaxed">تأكد إن كل عمود يطابق معناه. الجوال لازم، والأختام تنحفظ لين حد المكافأة. اللي جواله مسجل عندك من قبل ما يتغير. بعدها، أي عميل يمسح كود التسجيل ويكتب نفس جواله تطلع له بطاقته بأختامه.</p>
+            <p class="text-[12px] text-ink leading-relaxed">تأكد أن كل عمود يطابق معناه. الجوال مطلوب، وتُحفظ الأختام حتى حد المكافأة. من كان جواله مسجلاً لديك مسبقاً لا يتغير. بعد ذلك، أي عميل يمسح كود التسجيل ويكتب جواله نفسه تظهر له بطاقته بأختامه.</p>
             <div class="grid sm:grid-cols-3 gap-3">
               <label class="block"><span class="text-xs font-semibold text-ink block mb-1.5">عمود الجوال</span><select id="li-phone" class="input-pro" onchange="renderLyImport()"></select></label>
               <label class="block"><span class="text-xs font-semibold text-ink block mb-1.5">عمود الاسم</span><select id="li-name" class="input-pro" onchange="renderLyImport()"></select></label>
@@ -2030,8 +2063,8 @@
               <a id="lm-wa" target="_blank" rel="noopener" class="hidden bg-[#25d366]/10 hover:bg-[#25d366]/20 text-[#128c7e] px-4 py-2.5 rounded-xl text-[13px] font-bold transition"><i class="ph-bold ph-whatsapp-logo"></i> واتساب</a>
             </div>
             <div class="space-y-2">
-              <p class="text-xs font-bold text-ink">رسالة له لحاله</p>
-              <textarea id="lm-msg" rows="2" maxlength="200" class="input-pro" placeholder="تطلع له إشعار في المحفظة وفي صفحة بطاقته"></textarea>
+              <p class="text-xs font-bold text-ink">رسالة له وحده</p>
+              <textarea id="lm-msg" rows="2" maxlength="200" class="input-pro" placeholder="تظهر له إشعاراً في المحفظة وفي صفحة بطاقته"></textarea>
               <button type="button" id="lm-send" onclick="sendLyMemberMsg()" class="bg-brand/10 hover:bg-brand/10 border border-brand/45 text-ink px-4 py-2 rounded-xl text-[13px] font-bold transition"><i class="ph-bold ph-paper-plane-tilt"></i> أرسل له</button>
             </div>
             <div>
@@ -2046,23 +2079,29 @@
         <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_auto] gap-6 items-start">
           <div class="pro-card p-5 space-y-3 min-w-0">
             <div class="flex flex-wrap items-center justify-between gap-2">
-              <p class="text-[11px] text-ink leading-relaxed flex-1 min-w-[200px]">كل إعدادات البيجر مرتبة حسب رحلة العميل، وكل إعداد يوضح وين يطلع له.</p>
+              <p class="text-[11px] text-ink leading-relaxed flex-1 min-w-[200px]">إعدادات البيجر في ثلاث خطوات حسب رحلة العميل، وكل تعديل يُحفظ تلقائياً.</p>
               <a href="pager-desk.html" onclick="this.href='pager-desk.html'+location.search" target="_blank" rel="noopener" class="bg-brand text-cream font-bold px-3 py-2 rounded-lg text-[12px]"><i class="ph-bold ph-cash-register"></i> افتح شاشة الكاشير</a>
             </div>
       <!-- البيجر: مرتبة حسب رحلة الزبون، وكل إعداد عليه حالته ووين يطلع للزبون -->
       <section data-needs="pager" data-free-hide class="space-y-3">
         <div class="flex items-center justify-between gap-2 border-b border-ink/10 pb-1.5">
           <h5 class="text-xs font-bold text-ink">البيجر</h5>
-          <a id="pg-preview" target="_blank" rel="noopener" class="text-[11px] font-bold text-ink underline"><i class="ph-bold ph-arrow-square-out"></i> شوف كيف يطلع للزبون</a>
+          <a id="pg-preview" target="_blank" rel="noopener" class="text-[11px] font-bold text-ink underline"><i class="ph-bold ph-arrow-square-out"></i> شاهد كيف يظهر للعميل</a>
         </div>
 
-        <p class="text-[11px] font-black text-ink/70">قبل ما ياخذ رقم</p>
+        <!-- خطوات البيجر حسب رحلة الزبون: خطوة وحدة تطلع في كل مرة، وكل إعداد ينحفظ لحاله -->
+        <div class="ps-steps" role="tablist">
+          <button type="button" role="tab" data-ps="1" onclick="psStep(1)"><b>1</b> قبل أخذ الرقم</button>
+          <button type="button" role="tab" data-ps="2" onclick="psStep(2)"><b>2</b> أثناء الانتظار</button>
+          <button type="button" role="tab" data-ps="3" onclick="psStep(3)"><b>3</b> بعد الاستلام</button>
+        </div>
+        <div data-ps-step="1" class="space-y-3">
         <!-- بطاقة النداء: تختفي لو الولاء شغّال ويختم مع البيجر (النداء يوصل من بطاقة الولاء) -->
         <div id="info-pager-card" class="bg-brand/5 p-3 rounded-xl border border-brand/15 space-y-3">
           <div class="flex flex-wrap items-start justify-between gap-2">
             <span class="text-xs">
               <b class="text-ink"><i class="ph-bold ph-map-pin text-amber-600"></i> موقع المحل</b>
-              <span class="block text-[11px] text-ink mt-0.5 leading-relaxed">يطلع للزبون في: شاشة القفل، لما يقرب من محلك تطلع له بطاقة النداء.</span>
+              <span class="block text-[11px] text-ink mt-0.5 leading-relaxed">يظهر للعميل في: شاشة القفل، عندما يقترب من محلك تظهر له بطاقة النداء.</span>
             </span>
             <span id="pg-st-pin"></span>
           </div>
@@ -2071,18 +2110,19 @@
             <label for="info-near" class="text-xs font-semibold text-ink block mb-1">رسالة شاشة القفل <span id="info-near-count" class="text-ink font-normal">0/80</span></label>
             <div class="flex gap-2">
               <input type="text" id="info-near" maxlength="80" class="input-pro text-xs flex-1" oninput="document.getElementById('info-near-count').textContent = this.value.length + '/80'">
-              <button type="button" onclick="saveNearText()" class="bg-brand text-cream hover:bg-brand-dark px-3.5 py-2 rounded-xl text-xs font-bold transition shadow-sm"><i class="ph-bold ph-floppy-disk"></i> احفظ</button>
             </div>
-            <p class="text-[11px] text-ink mt-1 leading-relaxed">لو تركتها فاضية تطلع الرسالة الرمادية اللي في الخانة.</p>
+            <p class="text-[11px] text-ink mt-1 leading-relaxed">إذا تركتها فارغة تظهر الرسالة الرمادية الموجودة في الخانة.</p>
           </div>
         </div>
 
-        <p class="text-[11px] font-black text-ink/70 pt-1">وهو ينتظر طلبه</p>
+          <button type="button" onclick="psStep(2)" class="ps-next">التالي: أثناء الانتظار <i class="ph-bold ph-arrow-left"></i></button>
+        </div>
+        <div data-ps-step="2" class="hidden space-y-3">
         <label class="flex items-start gap-2.5 bg-brand/5 p-3 rounded-xl border border-brand/15 cursor-pointer">
           <input type="checkbox" id="info-pager-car" onchange="togglePagerCar(this.checked)" class="w-4 h-4 mt-0.5 accent-[#384f3d] cursor-pointer">
           <span class="text-xs flex-1">
             <b class="text-ink"><i class="ph-bold ph-car text-amber-600"></i> تسليم الطلب للسيارة</b>
-            <span class="block text-[11px] text-ink mt-0.5 leading-relaxed">يطلع للزبون في: صفحة رقمه، يختار لون سيارته ونوعها. وتطلع للموظف تحت الرقم في شاشة الكاشير.</span>
+            <span class="block text-[11px] text-ink mt-0.5 leading-relaxed">يظهر للعميل في: صفحة رقمه، فيختار لون سيارته ونوعها. وتظهر للموظف تحت الرقم في شاشة الكاشير.</span>
           </span>
           <span id="pg-st-car"></span>
         </label>
@@ -2090,7 +2130,7 @@
           <input type="checkbox" id="info-kiosk-call" onchange="toggleKioskCall(this.checked)" class="w-4 h-4 mt-0.5 accent-[#384f3d] cursor-pointer">
           <span class="text-xs flex-1">
             <b class="text-ink"><i class="ph-bold ph-device-tablet text-amber-600"></i> الأرقام الجاهزة على شاشة الزبون</b>
-            <span class="block text-[11px] text-ink mt-0.5 leading-relaxed">يطلع للزبون في: شاشة التابلت عندك، رقمه كبير لما يجهز طلبه.</span>
+            <span class="block text-[11px] text-ink mt-0.5 leading-relaxed">يظهر للعميل في: شاشة التابلت لديك، برقمه كبيراً عندما يجهز طلبه.</span>
           </span>
           <span id="pg-st-kiosk"></span>
         </label>
@@ -2099,7 +2139,7 @@
           <input type="checkbox" id="info-pager-upsell" onchange="togglePagerUpsell(this.checked)" class="w-4 h-4 mt-0.5 accent-[#384f3d] cursor-pointer">
           <span class="text-xs flex-1">
             <b class="text-ink"><i class="ph-bold ph-plus-circle text-amber-600"></i> أضف لطلبك</b>
-            <span class="block text-[11px] text-ink mt-0.5 leading-relaxed">يظهر للزبون في صفحة رقمه أثناء الانتظار زر «تبي تزيد على طلبك؟» يفتح المنيو، فيختار الحجم والعدد ويكتب ملاحظة، ثم يعرض على الكاشير شاشة واضحة بالأصناف والمجموع ليضيفها في نظام المبيعات. ولا يحتاج ذلك جهازاً إضافياً، وإن كانت شاشة الكاشير مفتوحة تظهر الإضافة تحت الرقم أيضاً.</span>
+            <span class="block text-[11px] text-ink mt-0.5 leading-relaxed">يظهر للعميل في صفحة رقمه أثناء الانتظار زر «تريد أن تضيف إلى طلبك؟» يفتح المنيو، فيختار الحجم والعدد ويكتب ملاحظة، ثم يعرض على الكاشير شاشة واضحة بالأصناف والمجموع ليضيفها في نظام المبيعات. ولا يحتاج ذلك جهازاً إضافياً، وإن كانت شاشة الكاشير مفتوحة تظهر الإضافة تحت الرقم أيضاً.</span>
           </span>
           <span id="pg-st-upsell"></span>
         </label>
@@ -2139,31 +2179,32 @@
             <select id="info-game-moves" class="input-pro text-xs !w-auto">
               <option value="14">14 (صعبة)</option><option value="16">16</option><option value="18">18</option><option value="20">20 (متوسطة)</option><option value="24">24</option><option value="28">28 (سهلة)</option>
             </select>
-            <button type="button" onclick="saveGameReward()" class="bg-brand text-cream hover:bg-brand-dark px-3.5 py-2 rounded-xl text-xs font-bold transition shadow-sm"><i class="ph-bold ph-floppy-disk"></i> احفظ</button>
           </div>
         </div>
 
-        <p class="text-[11px] font-black text-ink/70 pt-1">بعد ما يستلم طلبه</p>
+          <button type="button" onclick="psStep(3)" class="ps-next">التالي: بعد الاستلام <i class="ph-bold ph-arrow-left"></i></button>
+        </div>
+        <div data-ps-step="3" class="hidden space-y-3">
         <div class="bg-brand/5 p-3 rounded-xl border border-brand/15 space-y-2.5">
           <div class="flex flex-wrap items-start justify-between gap-2">
             <span class="text-xs">
               <b class="text-ink"><i class="ph-bold ph-star text-amber-600"></i> تقييمك في قوقل ماب</b>
-              <span class="block text-[11px] text-ink mt-0.5 leading-relaxed">يطلع للزبون في: شاشة "بالعافية"، زر "قيّمنا على قوقل ماب". تلقى الرابط في Google Business ← "اطلب تقييمات".</span>
+              <span class="block text-[11px] text-ink mt-0.5 leading-relaxed">يظهر للعميل في: شاشة "بالعافية"، زر "قيّمنا على قوقل ماب". تجد الرابط في Google Business ← "اطلب تقييمات".</span>
             </span>
             <span id="pg-st-review"></span>
           </div>
           <div class="flex gap-2">
             <input type="url" id="info-review" placeholder="https://g.page/r/.../review" class="input-pro text-xs flex-1" dir="ltr">
-            <button type="button" onclick="saveReviewLink()" class="bg-brand text-cream hover:bg-brand-dark px-3.5 py-2 rounded-xl text-xs font-bold transition shadow-sm"><i class="ph-bold ph-floppy-disk"></i> احفظ</button>
           </div>
         </div>
         <div class="flex flex-wrap items-start justify-between gap-2 bg-brand/5 p-3 rounded-xl border border-brand/15">
           <span class="text-xs flex-1">
             <b class="text-ink"><i class="ph-bold ph-share-network text-amber-600"></i> حساباتك في التواصل</b>
-            <span class="block text-[11px] text-ink mt-0.5 leading-relaxed">يطلع للزبون في: شاشة "بالعافية" تحت التقييم، "تابعنا" بانستقرام وتيك توك وسناب وموقعك.</span>
+            <span class="block text-[11px] text-ink mt-0.5 leading-relaxed">يظهر للعميل في: شاشة "بالعافية" تحت التقييم، "تابعنا" بانستقرام وتيك توك وسناب وموقعك.</span>
             <button type="button" onclick="location.hash='settings'; setTimeout(() => document.getElementById('social-card').scrollIntoView({ behavior: 'smooth', block: 'center' }), 150)" class="mt-2 text-[11px] font-bold text-ink underline">عدّل حساباتك (هوية المنشأة)</button>
           </span>
           <span id="pg-st-social"></span>
+        </div>
         </div>
       </section>
 
@@ -2207,11 +2248,11 @@
         <div data-hide-always class="pro-card p-5 space-y-3">
           <div class="flex flex-wrap items-center justify-between gap-2">
             <h3 class="text-xs font-bold text-ink flex items-center gap-2"><i class="ph-bold ph-storefront text-ink"></i> نوع النشاط</h3>
-            <span class="text-[11px] text-ink">يحدد الحقول اللي تظهر لك عند إضافة الأطباق</span>
+            <span class="text-[11px] text-ink">يحدد الحقول التي تظهر لك عند إضافة الأطباق</span>
           </div>
           <div id="biz-type" class="grid grid-cols-2 md:grid-cols-4 gap-2"></div>
           <div id="biz-other" class="hidden flex gap-2">
-            <input id="biz-label" maxlength="60" class="input-pro text-xs flex-1" placeholder="وش نشاطك؟ مثلاً: مركز تدريب">
+            <input id="biz-label" maxlength="60" class="input-pro text-xs flex-1" placeholder="ما نشاطك؟ مثلاً: مركز تدريب">
             <button type="button" onclick="saveBizLabel()" class="bg-brand hover:bg-brand-dark text-cream px-4 rounded-xl text-xs font-bold">حفظ</button>
           </div>
         </div>
@@ -2223,14 +2264,14 @@
       <div class="bg-brand/5 p-3.5 rounded-2xl border border-brand/15 space-y-2">
         <label class="text-[11px] font-bold text-ink">اسم المنشأة</label>
         <input type="text" id="setting-name" placeholder="اسم المنشأة" class="input-pro text-xs">
-        <p class="text-[11px] text-ink leading-relaxed">يطلع للزبون في: أعلى كل صفحاتك (المنيو، الروابط، البيجر، الولاء)، وفي بطاقات المحفظة.</p>
+        <p class="text-[11px] text-ink leading-relaxed">يظهر للعميل في: أعلى كل صفحاتك (المنيو، الروابط، البيجر، الولاء)، وفي بطاقات المحفظة.</p>
         <button onclick="updateRestaurantName()" class="w-full bg-brand text-cream hover:bg-brand-dark text-xs font-bold py-2 rounded-xl transition">حفظ الاسم</button>
       </div>
 
       <div class="bg-brand/5 p-3.5 rounded-2xl border border-brand/15 space-y-2">
         <div class="flex items-center justify-between">
           <label class="text-[11px] font-bold text-ink">شعار المنشأة (Logo)</label>
-          <p class="text-[11px] text-ink leading-relaxed">يطلع للزبون في: كل صفحاتك، وبطاقات المحفظة، وظهر بطاقات لعبة البيجر.</p>
+          <p class="text-[11px] text-ink leading-relaxed">يظهر للعميل في: كل صفحاتك، وبطاقات المحفظة، وظهر بطاقات لعبة البيجر.</p>
           <img id="logo-preview" src="images/logo.jpeg?v=2" class="w-7 h-7 object-cover rounded-full border border-brand/30" onerror="this.onerror=null;this.src='images/logo.jpeg?v=2'">
         </div>
         <input type="file" id="logo-file" accept="image/*" class="input-pro text-[11px]">
@@ -2299,12 +2340,12 @@
           <div data-free-hide>
             <label for="info-hours" class="text-xs font-semibold text-ink block mb-1">ساعات العمل</label>
             <input type="text" id="info-hours" maxlength="80" placeholder="مثال: يومياً من 1 ظهراً حتى 1 فجراً" class="input-pro text-xs">
-            <p class="text-[11px] text-ink leading-relaxed mt-1">يطلع للزبون في: المنيو وصفحة الروابط، والمساعد الذكي يجاوب منها لو سألوه متى تفتحون.</p>
+            <p class="text-[11px] text-ink leading-relaxed mt-1">يظهر للعميل في: المنيو وصفحة الروابط، ويجيب منها المساعد الذكي إذا سُئل عن مواعيد العمل.</p>
           </div>
           <div>
             <label for="info-location" class="text-xs font-semibold text-ink block mb-1">رابط الموقع على خرائط Google</label>
             <input type="url" id="info-location" placeholder="https://maps.app.goo.gl/..." class="input-pro text-xs" dir="ltr">
-            <p class="text-[11px] text-ink leading-relaxed mt-1">يطلع للزبون في: زر "موقعنا" في المنيو، و"زورونا" في صفحة الروابط. ولو ما حطيت رابط تقييم، زر التقييم في البيجر يفتحه.</p>
+            <p class="text-[11px] text-ink leading-relaxed mt-1">يظهر للعميل في: زر "موقعنا" في المنيو، و"زورونا" في صفحة الروابط. وإذا لم تضع رابط تقييم، يفتحه زر التقييم في البيجر.</p>
           </div>
         </div>
         <button onclick="updateRestaurantInfo()" class="w-full bg-brand text-cream hover:bg-brand-dark font-bold py-2.5 rounded-xl text-sm transition shadow-md"><i class="ph-bold ph-floppy-disk"></i> حفظ بيانات المحل</button>
@@ -2318,7 +2359,7 @@
         <h4 class="text-xs font-bold text-ink flex items-center gap-1.5">
           <i class="ph-bold ph-share-network text-blue-600"></i> حساباتك في التواصل
         </h4>
-        <p class="text-[11px] text-ink mt-1 leading-relaxed">تطلع للزبون في صفحة روابطك (الرابط الرئيسي)، وفي البيجر بعد ما يستلم طلبه، وفي المنيو لو عندك.</p>
+        <p class="text-[11px] text-ink mt-1 leading-relaxed">تظهر للعميل في صفحة روابطك (الرابط الرئيسي)، وفي البيجر بعد استلام طلبه، وفي المنيو إن وُجد.</p>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-3">
         <div>
@@ -2348,7 +2389,7 @@
         <div data-needs="menu" class="pro-card p-5 space-y-4">
           <div class="flex flex-wrap items-center justify-between gap-2">
             <h3 class="text-xs font-bold text-ink flex items-center gap-2"><i class="ph-bold ph-moped text-amber-600"></i> تطبيقات التوصيل</h3>
-            <span class="text-[11px] text-ink">اختر التطبيقات اللي منشأتك موجودة فيها. يطلع للزبون في: أعلى المنيو "اطلب توصيل عبر"، وفي صفحة الروابط.</span>
+            <span class="text-[11px] text-ink">اختر التطبيقات التي توجد فيها منشأتك. يظهر للعميل في: أعلى المنيو "اطلب توصيل عبر"، وفي صفحة الروابط.</span>
           </div>
           <div id="delivery-picker" class="grid grid-cols-3 sm:grid-cols-5 gap-2"></div>
           <div id="delivery-list" class="space-y-2"></div>
@@ -2361,7 +2402,7 @@
               <h3 class="text-xs font-bold text-ink flex items-center gap-2"><i class="ph-bold ph-phone text-emerald-600"></i> أرقام الطلبات</h3>
               <span id="order-numbers-count" class="text-[11px] text-ink"></span>
             </div>
-            <p class="text-[11px] text-ink -mt-2">يطلع للزبون في: أزرار اتصال أعلى المنيو وفي صفحة الروابط. مثال: "الطلبات الخارجية".</p>
+            <p class="text-[11px] text-ink -mt-2">يظهر للعميل في: أزرار اتصال أعلى المنيو وفي صفحة الروابط. مثال: "الطلبات الخارجية".</p>
             <div id="order-numbers-list" class="space-y-2"></div>
             <button type="button" id="order-numbers-add" onclick="addOrderNumber()" class="w-full bg-brand/5 hover:bg-brand/10 text-ink border border-dashed border-brand/30 font-bold py-2 rounded-xl text-xs transition disabled:opacity-40 disabled:cursor-not-allowed"><i class="ph-bold ph-plus text-[11px]"></i> إضافة رقم</button>
             <button onclick="saveOrderNumbers()" class="w-full bg-brand text-cream hover:bg-brand-dark font-bold py-2.5 rounded-xl text-xs transition">حفظ أرقام الطلبات</button>
@@ -2372,7 +2413,7 @@
               <h3 class="text-xs font-bold text-ink flex items-center gap-2"><i class="ph-bold ph-link-simple text-blue-600"></i> روابط إضافية</h3>
               <span class="flex items-center gap-2"><span id="custom-links-count" class="text-[11px] text-ink"></span><span id="cl-st"></span></span>
             </div>
-            <p class="text-[11px] text-ink -mt-2 leading-relaxed">أي رابط تبيه: حجز، استبيان، فرع ثاني، توظيف... <span id="custom-links-where"></span> <a id="custom-links-open" target="_blank" rel="noopener" class="font-bold underline">شوف صفحة روابطك</a></p>
+            <p class="text-[11px] text-ink -mt-2 leading-relaxed">أي رابط تريده: حجز، استبيان، فرع آخر، توظيف... <span id="custom-links-where"></span> <a id="custom-links-open" target="_blank" rel="noopener" class="font-bold underline">اعرض صفحة روابطك</a></p>
             <div id="custom-links-list" class="space-y-2"></div>
             <button type="button" id="custom-links-add" onclick="addCustomLink()" class="w-full bg-brand/5 hover:bg-brand/10 text-ink border border-dashed border-brand/30 font-bold py-2 rounded-xl text-xs transition disabled:opacity-40 disabled:cursor-not-allowed"><i class="ph-bold ph-plus text-[11px]"></i> إضافة رابط</button>
             <button onclick="saveCustomLinks()" class="w-full bg-brand text-cream hover:bg-brand-dark font-bold py-2.5 rounded-xl text-xs transition">حفظ الروابط</button>
@@ -2400,6 +2441,8 @@
       <button data-nav="branches" class="more-item"><i class="ph-bold ph-git-branch"></i><span>الفروع</span></button>
       <button data-nav="settings" class="more-item"><i class="ph-bold ph-palette"></i><span>هوية المنشأة</span></button>
       <button data-nav="account" class="more-item"><i class="ph-bold ph-identification-card"></i><span>الاشتراك</span></button>
+      <button type="button" onclick="toggleMore(false); openAccount()" class="more-item"><i class="ph-bold ph-user-circle"></i><span>معلومات الحساب</span></button>
+      <button type="button" onclick="logout()" class="more-item"><i class="ph-bold ph-sign-out"></i><span>تسجيل الخروج</span></button>
     </div>
   </div>
 </div>
@@ -2415,10 +2458,10 @@
     <div id="mp-wait" class="py-10 text-center space-y-3">
       <i class="ph-bold ph-spinner-gap ph-spin text-3xl text-brand"></i>
       <p class="text-sm font-bold">جاري قراءة المنيو…</p>
-      <p class="text-[12px] text-ink">المنيو الطويل ياخذ دقيقة أو دقيقتين. لا تقفل الصفحة.</p>
+      <p class="text-[12px] text-ink">المنيو الطويل يستغرق دقيقة أو دقيقتين. لا تغلق الصفحة.</p>
     </div>
     <div id="mp-body" class="hidden space-y-3">
-      <p class="text-[12px] text-ink leading-relaxed">راجع الأطباق قبل الإضافة: عدّل أي خانة، واحذف اللي انقرأ غلط. الأقسام اللي مو موجودة تنضاف لحالها.</p>
+      <p class="text-[12px] text-ink leading-relaxed">راجع الأطباق قبل الإضافة: عدّل أي خانة، واحذف ما قُرئ خطأً. الأقسام غير الموجودة تُضاف تلقائياً.</p>
       <div id="mp-rows" class="space-y-2"></div>
       <button type="button" onclick="mpAddRow()" class="text-[12px] font-bold text-ink hover:text-ink"><i class="ph-bold ph-plus"></i> أضف طبق</button>
       <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
@@ -2449,7 +2492,7 @@
       <div><h3 class="text-base font-bold">استيراد الأطباق من Excel</h3><p id="pi-sub" class="text-xs text-ink mt-0.5"></p></div>
       <button type="button" onclick="closeProductImport()" class="text-ink hover:text-ink text-xl" aria-label="إغلاق"><i class="ph-bold ph-x"></i></button>
     </div>
-    <p class="text-[12px] text-ink leading-relaxed">تأكد إن كل عمود يطابق معناه. الاسم والسعر لازمة، والأقسام اللي مو موجودة تنضاف بأسمائها. الصور تضيفها بعدين من تعديل كل طبق.</p>
+    <p class="text-[12px] text-ink leading-relaxed">تأكد أن كل عمود يطابق معناه. الاسم والسعر مطلوبان، والأقسام غير الموجودة تُضاف بأسمائها. تضيف الصور لاحقاً من تعديل كل طبق.</p>
     <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
       <label class="block"><span class="text-xs font-semibold text-ink block mb-1.5">القسم</span><select id="pi-category" class="input-pro" onchange="renderProductImport()"></select></label>
       <label class="block"><span class="text-xs font-semibold text-ink block mb-1.5">اسم الطبق</span><select id="pi-name" class="input-pro" onchange="renderProductImport()"></select></label>

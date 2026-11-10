@@ -29,7 +29,7 @@
     wrap.querySelector('h3').textContent = T('كيف سمعت عن ديف منيو؟');
     wrap.querySelector('p').textContent = T('سؤال واحد ويساعدنا نوصل لمحلات مثلك.');
     const grid = wrap.querySelector('[role="radiogroup"]'), note = wrap.querySelector('input'), save = wrap.querySelector('[data-save]');
-    note.placeholder = T('وين سمعت عنا؟ (اختياري)');
+    note.placeholder = T('كيف عرفت عنا؟ (اختياري)');
     save.textContent = T('حفظ');
     OPTIONS.forEach(([v, icon, label]) => {
       const b = document.createElement('button');
@@ -59,7 +59,7 @@
       } catch {
         // ما نعلّق صاحب المحل برا لوحته لو الحفظ فشل: تتسكّر، وتطلع له مرة ثانية أول ما يدخل
         close();
-        if (typeof showToast === 'function') showToast(T('ما انحفظ الجواب، بنسألك مرة ثانية'), true);
+        if (typeof showToast === 'function') showToast(T('لم تُحفظ الإجابة، سنسألك مرة أخرى'), true);
       }
     };
     document.body.appendChild(wrap);

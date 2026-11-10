@@ -124,7 +124,7 @@
     if (/mime type/i.test(m)) return 'صيغة الملف غير مدعومة، استخدم JPG أو PNG أو MP4';
     if (/exceed|too large|maximum allowed size/i.test(m)) return 'حجم الملف أكبر من المسموح';
     if (/row-level security|policy|unauthori/i.test(m)) return 'لا تملك صلاحية الرفع لهذا المتجر';
-    if (/failed to fetch|network|load failed|timeout/i.test(m)) return 'انقطع الاتصال أثناء الرفع. تأكد من الإنترنت وجرّب مرة ثانية';
+    if (/failed to fetch|network|load failed|timeout/i.test(m)) return 'انقطع الاتصال أثناء الرفع. تأكد من الاتصال بالإنترنت وحاول مرة أخرى';
     return m;
   }
 
@@ -297,12 +297,12 @@
         document.getElementById('bg-before').src = before;
         document.getElementById('bg-after').src = after;
         show('bg-progress', false); show('bg-compare', true); show('bg-actions', true);
-        status.innerHTML = '<i class="ph-bold ph-magic-wand text-emerald-600"></i> تمت إزالة الخلفية، اختر النسخة اللي تبيها';
+        status.innerHTML = '<i class="ph-bold ph-magic-wand text-emerald-600"></i> تمت إزالة الخلفية، اختر النسخة التي تريدها';
       }).catch((e) => {
         console.warn('background removal failed', e);
         if (done) return;
         show('bg-progress', false);
-        status.innerHTML = '<i class="ph-bold ph-warning text-amber-600"></i> تعذر إزالة الخلفية على هذا الجهاز. تقدر ترفع الصورة الأصلية.';
+        status.innerHTML = '<i class="ph-bold ph-warning text-amber-600"></i> تعذرت إزالة الخلفية على هذا الجهاز. يمكنك رفع الصورة الأصلية.';
         document.getElementById('bg-before').src = before;
         show('bg-compare', false); show('bg-actions', true);
         panel.querySelector('[data-bg="cut"]').classList.add('hidden');

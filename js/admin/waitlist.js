@@ -85,7 +85,7 @@
     t.setAttribute('aria-checked', open ? 'true' : 'false');
     t.className = `relative w-14 h-8 rounded-full transition shrink-0 ${open ? 'bg-green-600' : 'bg-brand/25'}`;
     t.firstElementChild.style.right = open ? '4px' : '28px';
-    document.getElementById('wl-open-text').textContent = open ? 'مفتوحة — الضيوف يقدرون يسجلون' : 'مغلقة — ما يقبل تسجيلات جديدة';
+    document.getElementById('wl-open-text').textContent = open ? 'مفتوحة: يستطيع الضيوف التسجيل' : 'مغلقة — ما يقبل تسجيلات جديدة';
 
     // زر المنيو
     const inMenu = wl.settings && wl.settings.show_in_menu !== false;
@@ -95,7 +95,7 @@
     m.firstElementChild.style.right = inMenu ? '4px' : '28px';
     document.getElementById('wl-menu-text').textContent = !inMenu
       ? 'مخفي — الضيوف يسجلون من الرابط أو QR فقط'
-      : open ? 'ظاهر — يشوفه الزبون أعلى المنيو' : 'ظاهر لما تفتح القائمة';
+      : open ? 'ظاهر: يراه العميل أعلى المنيو' : 'ظاهر لما تفتح القائمة';
   }
 
   async function toggleWaitlistInMenu() {
@@ -269,22 +269,22 @@
   // مثال حي لصاحب المحل: كيف يقرا الزبون عدد الأختام والمكافأة
   function sayLoyaltyBasics() {
     const n = +document.getElementById('ly-needed').value || 0, r = document.getElementById('ly-reward').value.trim();
-    document.getElementById('ly-basics-say').innerHTML = `<b>يطلع للزبون في بطاقته:</b> «بعد ${n} أختام تاخذ ${r ? esc(r) : '...'}»`;
+    document.getElementById('ly-basics-say').innerHTML = `<b>يظهر للعميل في بطاقته:</b> «بعد ${n} أختام تاخذ ${r ? esc(r) : '...'}»`;
   }
   document.getElementById('ly-needed').addEventListener('change', sayLoyaltyBasics);
   document.getElementById('ly-reward').addEventListener('input', sayLoyaltyBasics);
   // مثال حي لوقت الانتظار
   function sayWaitlist() {
     const m = +document.getElementById('wl-minutes').value || 0, h = +document.getElementById('wl-hold').value || 0;
-    document.getElementById('wl-say-eta').innerHTML = `مثال: لو قدّام الضيف 3 مجموعات، يطلع له <b>~${m * 3} دقيقة</b>.`;
-    document.getElementById('wl-say-hold').innerHTML = `لما يجي دوره يطلع له: <b>«عندك ${h} دقايق تحضر»</b>، وبعدها تقدر تعطي دوره للي بعده.`;
+    document.getElementById('wl-say-eta').innerHTML = `مثال: إذا كانت أمام الضيف 3 مجموعات، يظهر له <b>~${m * 3} دقيقة</b>.`;
+    document.getElementById('wl-say-hold').innerHTML = `عندما يحين دوره يظهر له: <b>«عندك ${h} دقايق تحضر»</b>، وبعدها يمكنك إعطاء دوره لمن بعده.`;
   }
   ['wl-minutes', 'wl-hold'].forEach(id => document.getElementById(id).addEventListener('input', sayWaitlist));
   // مثال حي لرسالة "وحشتنا"
   function sayWinback() {
     const el = document.getElementById('nt-wb-say'); if (!el) return;
     const d = document.getElementById('nt-wb-days').value, t = document.getElementById('nt-wb-text').value.trim();
-    el.innerHTML = `<b>مثال:</b> زبون آخر رقم أخذه قبل ${d} يوم، يوصله على شاشة القفل من بطاقة النداء: «${t ? esc(t) : '...'}». ومرة وحدة بس لين يرجع.`;
+    el.innerHTML = `<b>مثال:</b> زبون آخر رقم أخذه قبل ${d} يوم، يصله على شاشة القفل من بطاقة النداء: «${t ? esc(t) : '...'}». ومرة واحدة فقط حتى يعود.`;
   }
   ['nt-wb-days', 'nt-wb-text'].forEach(id => { const el = document.getElementById(id); if (el) el.addEventListener(id === 'nt-wb-days' ? 'change' : 'input', sayWinback); });
   async function saveWaitlistSettings() {
@@ -397,7 +397,7 @@
         <td class="px-3 py-2">${esc(WL_STATUS_AR[e.status] || e.status)}</td>
       </tr>`).join('') : '<tr><td colspan="8" class="text-center py-6 text-ink">لا توجد تسجيلات في هذه الفترة</td></tr>';
     document.getElementById('wlh-note').textContent = wlhView === 'guests'
-      ? `مرات الحضور = عدد المرات اللي جلس فيها الضيف فعلاً${groups.length > 300 ? ` · يظهر أول 300 ضيف من ${groups.length}` : ''}. الضيف ينعرف بجواله أو بريده.`
+      ? `مرات الحضور = عدد المرات التي جلس فيها الضيف فعلاً${groups.length > 300 ? ` · يظهر أول 300 ضيف من ${groups.length}` : ''}. الضيف ينعرف بجواله أو بريده.`
       : (list.length > 200 ? `يظهر أحدث 200 تسجيل من ${list.length}. الملف المصدَّر يحتوي على الكل.` : '');
   }
   document.getElementById('wlh-range').addEventListener('change', () => loadGuestHistory(true));

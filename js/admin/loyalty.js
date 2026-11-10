@@ -65,7 +65,7 @@
     document.getElementById('ly-shared').classList.toggle('hidden', branches.length < 2);
     document.getElementById('ly-loc-status').innerHTML = d.location_set
       ? '<span class="text-emerald-700 font-semibold"><i class="ph-bold ph-check-circle"></i> موقع المحل محدد</span>'
-      : '<span class="text-ink font-semibold"><i class="ph-bold ph-info"></i> اختياري: لو حددته، تطلع بطاقة الزبون على شاشة قفل جواله لما يقرب من المحل. الختم والصرف والإشعارات ما تعتمد عليه.</span>';
+      : '<span class="text-ink font-semibold"><i class="ph-bold ph-info"></i> اختياري: إذا حددته، تظهر بطاقة العميل على شاشة قفل جواله عندما يقترب من المحل. الختم والصرف والإشعارات لا تعتمد عليه.</span>';
     // الكود
     const url = loyaltyUrl();
     document.getElementById('ly-link').value = url.replace(/^https?:\/\//, '');
@@ -96,7 +96,7 @@
     const ph = document.getElementById('ly-phone'); ph.classList.add('flash');
     clearTimeout(flashPhone.t); flashPhone.t = setTimeout(() => ph.classList.remove('flash'), 600);
   }
-  // وين يشوفها الزبون: صفحة البطاقة، المحفظة، شاشة القفل
+  // أين يراها العميل: صفحة البطاقة، المحفظة، شاشة القفل
   document.querySelectorAll('[data-lyv]').forEach(b => b.addEventListener('click', () => {
     document.querySelectorAll('[data-lyv]').forEach(x => x.setAttribute('aria-selected', String(x === b)));
     document.querySelectorAll('[data-lyv-pane]').forEach(el => el.classList.toggle('hidden', el.dataset.lyvPane !== b.dataset.lyv));
@@ -149,7 +149,7 @@
     document.getElementById('pv-n-stamp').textContent = s >= n ? `مكافأتك جاهزة: ${st.reward}` : `صار عندك ${s} ختم`;
     // ملخص التعديلات
     const ch = lyChanges();
-    document.getElementById('ly-changes-text').textContent = ch.length ? 'عدّلت هذي، والجوال فوق يعرضها. احفظ عشان توصل لزبائنك:' : 'كل شي محفوظ. أي تعديل تسويه يطلع في الجوال على طول.';
+    document.getElementById('ly-changes-text').textContent = ch.length ? 'عدّلت هذه، ويعرضها الجوال في الأعلى. احفظ لتصل إلى عملائك:' : 'كل شيء محفوظ. أي تعديل تجريه يظهر في الجوال مباشرة.';
     document.getElementById('ly-changes-list').innerHTML = ch.map(c => `<span class="ly-chip">${c}</span>`).join('');
     document.getElementById('ly-design-undo').classList.toggle('hidden', !ch.length);
     ly.dirty = ch.length > 0;
@@ -225,7 +225,7 @@
       const r = await api('loyalty-settings', { settings: { design: ly.design } });
       ly.data.settings = r.settings; ly.design = { ...r.settings.design }; ly.dirty = false;
       showToast(r.wallet_updated ? `تم حفظ الشكل، وتحدّثت ${r.wallet_updated} بطاقة في المحفظة` : 'تم حفظ شكل البطاقة، ويطلع للزبائن على طول');
-    } catch (e) { showToast(e.message || 'ما انحفظ التعديل. تأكد من الإنترنت وحاول مرة ثانية', true); }
+    } catch (e) { showToast(e.message || 'لم يُحفظ التعديل. تأكد من الاتصال بالإنترنت وحاول مرة أخرى', true); }
     renderDesign();
   }
 
@@ -236,7 +236,7 @@
     // أكثر من فرع: زبائن فرع واحد (سجّلوا فيه أو انختم لهم فيه)
     const lyBr = (d.branches || []).filter(x => x.id != null);
     const brOpts = lyBr.length > 1 ? `<optgroup label="زبائن فرع">${lyBr.map(x => `<option value="b:${x.id}">${esc(x.name || '')} (${x.visitors || 0})</option>`).join('')}</optgroup>` : '';
-    sel.innerHTML = `<option value="">كل الأعضاء (${d.stats.members})</option>${brOpts}<option value="away">اللي ما جوا من أكثر من 30 يوم (${d.stats.away30 || 0})</option>` + (d.cards.length ? `<optgroup label="عضو واحد">${d.cards.map(c => `<option value="${c.id}">${esc(lyCardLabel(c))}</option>`).join('')}</optgroup>` : '');
+    sel.innerHTML = `<option value="">كل الأعضاء (${d.stats.members})</option>${brOpts}<option value="away">من لم يزوروا منذ أكثر من 30 يوماً (${d.stats.away30 || 0})</option>` + (d.cards.length ? `<optgroup label="عضو واحد">${d.cards.map(c => `<option value="${c.id}">${esc(lyCardLabel(c))}</option>`).join('')}</optgroup>` : '');
     if ([...sel.options].some(o => o.value === keep)) sel.value = keep;
     const byId = Object.fromEntries(d.cards.map(c => [c.id, c]));
     const when = (iso) => new Date(iso).toLocaleString('ar-SA-u-ca-gregory-nu-latn', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
@@ -261,7 +261,7 @@
     const to = document.getElementById('ly-msg-to').value;
     if (body.length < 2) return showToast('اكتب الرسالة', true);
     const br = to.startsWith('b:') ? (ly.data.branches || []).find(x => String(x.id) === to.slice(2)) : null;
-    const target = br ? `زبائن ${br.name} (${br.visitors || 0})` : to === 'away' ? `اللي ما جوا من أكثر من 30 يوم (${ly.data.stats.away30 || 0})` : to ? lyCardLabel(ly.data.cards.find(c => String(c.id) === to)) : `كل الأعضاء (${ly.data.stats.members})`;
+    const target = br ? `زبائن ${br.name} (${br.visitors || 0})` : to === 'away' ? `من لم يزوروا منذ أكثر من 30 يوماً (${ly.data.stats.away30 || 0})` : to ? lyCardLabel(ly.data.cards.find(c => String(c.id) === to)) : `كل الأعضاء (${ly.data.stats.members})`;
     if (!(await DMDialog.confirm({ title: 'إرسال الرسالة', message: `لـ ${target}:\n${body}`, confirmText: 'أرسل', cancelText: 'تراجع' }))) return;
     const btn = document.getElementById('ly-msg-send'); btn.disabled = true;
     try {
@@ -285,7 +285,7 @@
         showToast(sent ? 'انرسلت، ووصلت إشعار لجواله' : 'انرسلت، وتطلع له في صفحة البطاقة');
       }
       await onLoyaltyPage();
-    } catch (e) { showToast(e.message || 'ما انرسل. تأكد من الإنترنت وحاول مرة ثانية', true); }
+    } catch (e) { showToast(e.message || 'لم يُرسل. تأكد من الاتصال بالإنترنت وحاول مرة أخرى', true); }
     btn.disabled = false;
   }
 
@@ -345,21 +345,21 @@
     document.getElementById('ly-recent').innerHTML = R.length ? R.map(r => `<button type="button" onclick="openLyMember(${r.id})" class="w-full flex items-center gap-3 py-2.5 text-right hover:bg-brand/[0.03] rounded-lg px-1">
       <span class="ly-av bg-brand/10 text-brand">${esc((r.name || '#').trim().charAt(0))}</span>
       <span class="flex-1 min-w-0"><span class="block font-semibold text-[13px] truncate">${esc(r.name || `عضو #${r.no}`)}</span><span class="block text-[11px] text-ink">${hrsAgo(r.at)}</span></span>
-      <span class="text-[12px] font-bold text-ink tnum" dir="ltr">${Math.min(r.stamps || 0, n)} / ${n}</span></button>`).join('') : '<p class="text-xs text-ink py-6 text-center">أول ما ينختم لأحد تطلع زيارته هنا.</p>';
+      <span class="text-[12px] font-bold text-ink tnum" dir="ltr">${Math.min(r.stamps || 0, n)} / ${n}</span></button>`).join('') : '<p class="text-xs text-ink py-6 text-center">عند أول ختم لأي عميل تظهر زيارته هنا.</p>';
     const top = [...M].sort((a, b) => b.visits - a.visits).slice(0, 5).filter(c => c.visits > 0);
     const line = (c, right) => `<button type="button" onclick="openLyMember(${c.id})" class="w-full flex items-center justify-between gap-2 py-1.5 hover:bg-brand/[0.03] rounded-lg px-1 text-right"><span class="truncate font-semibold">${esc(memberName(c))}</span><span class="text-xs text-ink shrink-0">${right}</span></button>`;
-    document.getElementById('ly-top').innerHTML = top.length ? top.map((c, i) => line(c, `${['🥇', '🥈', '🥉', '', ''][i]} ${c.visits} زيارة`)).join('') : '<p class="text-xs text-ink py-2">للحين ما فيه زيارات.</p>';
-    document.getElementById('ly-once').innerHTML = once.length ? once.slice(0, 5).map(c => line(c, `آخر مرة ${agoText(c.last_stamp_at)}`)).join('') + (once.length > 5 ? `<p class="text-[11px] text-ink pt-1">و${once.length - 5} غيرهم</p>` : '') : '<p class="text-xs text-ink py-2">ممتاز، كل اللي جوا رجعوا.</p>';
+    document.getElementById('ly-top').innerHTML = top.length ? top.map((c, i) => line(c, `${['🥇', '🥈', '🥉', '', ''][i]} ${c.visits} زيارة`)).join('') : '<p class="text-xs text-ink py-2">لا توجد زيارات بعد.</p>';
+    document.getElementById('ly-once').innerHTML = once.length ? once.slice(0, 5).map(c => line(c, `آخر مرة ${agoText(c.last_stamp_at)}`)).join('') + (once.length > 5 ? `<p class="text-[11px] text-ink pt-1">و${once.length - 5} غيرهم</p>` : '') : '<p class="text-xs text-ink py-2">ممتاز، كل من زاروا عادوا.</p>';
     // الفئات: عدد الأعضاء، ومجموع الزيارات، ومتوسط الزيارة لكل فئة
     const g = (k) => { const L = M.filter(c => c.gender === k); const v = L.reduce((a, c) => a + c.visits, 0); return { n: L.length, v, avg: L.length ? (v / L.length).toFixed(1) : '0' }; };
     const gm = g('m'), gf = g('f'), gu = M.filter(c => !c.gender).length, totalV = gm.v + gf.v || 1;
     const bar = (label, x, color) => `<div><div class="flex justify-between text-[13px] mb-1"><span class="font-semibold">${label}</span><span class="text-ink">${x.n} عضو · ${x.v} زيارة · متوسط ${x.avg} زيارة</span></div><div class="h-2.5 rounded-full bg-brand/10 overflow-hidden"><div class="h-full rounded-full" style="width:${Math.round(x.v / totalV * 100)}%;background:${color}"></div></div></div>`;
     const lead = gm.v === gf.v ? '' : `<p class="text-[12px] text-ink"><i class="ph-bold ph-crown text-[#c9a227]"></i> ${gm.v > gf.v ? 'الرجال' : 'النساء'} أكثر زيارة: ${Math.round(Math.max(gm.v, gf.v) / totalV * 100)}% من الزيارات</p>`;
-    document.getElementById('ly-gender').innerHTML = M.length ? bar('رجال', gm, '#384f3d') + bar('نساء', gf, '#c9a227') + lead + (gu ? `<p class="text-[11px] text-ink">${gu} عضو قديم ما كمّل بياناته</p>` : '') : '<p class="text-xs text-ink">لما يسجلون الأعضاء تطلع هنا.</p>';
+    document.getElementById('ly-gender').innerHTML = M.length ? bar('رجال', gm, '#384f3d') + bar('نساء', gf, '#c9a227') + lead + (gu ? `<p class="text-[11px] text-ink">${gu} عضو قديم ما كمّل بياناته</p>` : '') : '<p class="text-xs text-ink">عندما يسجل الأعضاء يظهرون هنا.</p>';
     // ليش ما رجعوا + الهدايا
     if (ly.data) {
       const fb = ly.data.feedback || { total: 0, reasons: {}, notes: [] };
-      const RS = { wait: 'الانتظار طويل', price: 'الأسعار', quality: 'الطعم أو الجودة', far: 'المكان بعيد', busy: 'ما صار عندهم وقت', other: 'شي ثاني' };
+      const RS = { wait: 'الانتظار طويل', price: 'الأسعار', quality: 'الطعم أو الجودة', far: 'المكان بعيد', busy: 'ما صار عندهم وقت', other: 'شيء آخر' };
       const sorted = Object.entries(fb.reasons).sort((a, b) => b[1] - a[1]);
       document.getElementById('ly-fb-stats').innerHTML = fb.total ? sorted.map(([k, v]) => `
         <div><div class="flex justify-between text-[13px] mb-1"><span class="font-semibold">${RS[k] || k}</span><span class="text-ink">${Math.round(v / fb.total * 100)}% (${v})</span></div>
@@ -369,7 +369,7 @@
             <span class="flex items-center justify-between gap-2 text-[12px]"><b>${esc(r.name || `عضو #${r.no || ''}`)}</b><span class="text-ink" dir="ltr">${new Date(r.created_at).toLocaleDateString('ar-SA-u-nu-latn', { day: 'numeric', month: 'short' })}</span></span>
             <span class="block text-[12px] text-brick font-semibold">${RS[r.reason] || r.reason}</span>
             ${r.note ? `<span class="block text-[12px] text-ink">«${esc(r.note)}»</span>` : ''}</button>`).join('')}</div></div>` : '')
-        : `<p class="text-xs text-ink">للحين ما فيه ردود. اللي يرجع بعد غياب ${(ly.data.settings.feedback && ly.data.settings.feedback.days) || 30} يوم ويختم من شاشة الختم، ينسأل وش أخّره.</p>`;
+        : `<p class="text-xs text-ink">لا توجد ردود بعد. من يعود بعد غياب ${(ly.data.settings.feedback && ly.data.settings.feedback.days) || 30} يوم ويختم من شاشة الختم، يُسأل عن سبب غيابه.</p>`;
       const gs = ly.data.gifts || {};
       const tile = (l, v) => `<div class="rounded-xl bg-brand/[0.04] border border-brand/10 p-2.5"><p class="text-[11px] text-ink">${l}</p><p class="text-lg font-bold">${v || 0}</p></div>`;
       document.getElementById('ly-gift-stats').innerHTML = tile('هدايا انرسلت', gs.sent) + tile('انستلمت', gs.claimed) + tile('انصرفت في المحل', gs.redeemed) + tile('زبائن جدد جوا بهدية', gs.new_members);
@@ -406,7 +406,7 @@
           <button type="button" class="ly-act del" title="حذف العضو" onclick="deleteLyMember(${c.id})"><i class="ph-bold ph-trash"></i></button>
         </td>
       </tr>`; }).join('') || '<tr><td colspan="7" class="py-10 text-center text-ink">ما فيه أعضاء هنا.</td></tr>';
-    document.getElementById('ly-more').textContent = list.length > 200 ? `يطلع أول 200 من ${list.length}. نزّل CSV عشان تشوف الكل.` : '';
+    document.getElementById('ly-more').textContent = list.length > 200 ? `يظهر أول 200 من ${list.length}. نزّل ملف CSV لترى الجميع.` : '';
   }
   function exportLyCsv() {
     const M = ly.members || [], n = ly.data ? ly.data.settings.needed : 8;
@@ -434,22 +434,22 @@
   }
   async function redeemLyMember() {
     if (!ly.member) return;
-    const at = await askLyBranch({ title: 'صرف المكافأة', message: `تصرف ${ly.data.settings.reward} لـ ${memberName(ly.member)} الحين؟`, confirmText: 'اصرفها' });
+    const at = await askLyBranch({ title: 'صرف المكافأة', message: `تصرف ${ly.data.settings.reward} لـ ${memberName(ly.member)} الآن؟`, confirmText: 'اصرفها' });
     if (!at) return;
     try { const r = await api('loyalty-redeem', { card_id: ly.member.id, ...at }); showToast(`تم صرف ${r.reward}`); const id = ly.member.id; await onLoyaltyPage(); openLyMember(id); }
-    catch (e) { showToast(e.message || 'ما انصرفت المكافأة. حاول مرة ثانية', true); }
+    catch (e) { showToast(e.message || 'لم تُصرف المكافأة. حاول مرة أخرى', true); }
   }
   // ─── حذف عضو ───
   async function deleteLyMember(id) {
     const c = (ly.members || []).find(x => x.id === id) || ly.member || { id };
-    const ok = await DMDialog.confirm({ title: 'حذف العضو', message: `يتحذف ${memberName(c)} وكل أختامه وزياراته ورسائله، وتنلغي بطاقته في محفظة جواله. ما تقدر ترجعه بعدين.`, confirmText: 'احذف العضو', cancelText: 'تراجع', tone: 'danger' });
+    const ok = await DMDialog.confirm({ title: 'حذف العضو', message: `يتحذف ${memberName(c)} وكل أختامه وزياراته ورسائله، وتُلغى بطاقته في محفظة جواله. لا يمكن استرجاعه لاحقاً.`, confirmText: 'احذف العضو', cancelText: 'تراجع', tone: 'danger' });
     if (!ok) return;
     try {
       const r = await api('loyalty-member-delete', { card_id: id });
       ly.members = (ly.members || []).filter(x => x.id !== id);
       if (ly.member && ly.member.id === id) closeLyMember();
       renderLyMembers(); showToast(r.wallet === 'revoked' ? 'تم حذف العضو، وانلغت بطاقته في المحفظة' : 'تم حذف العضو');
-    } catch (e) { showToast(e.message || 'ما انحذف. حاول مرة ثانية', true); }
+    } catch (e) { showToast(e.message || 'لم يُحذف. حاول مرة أخرى', true); }
   }
 
   // ─── ملف العضو ───
@@ -475,7 +475,7 @@
     wa.classList.toggle('hidden', !m.phone); if (m.phone) wa.href = `https://wa.me/${m.phone}`;
     const rs = document.getElementById('lm-restore');
     if (rs) rs.onclick = async () => {
-      if (!(await DMDialog.confirm({ title: 'رابط بطاقة العضو', message: 'هذا الرابط يفتح بطاقته بأختامها. أرسله بس للعضو نفسه بعد ما تتأكد منه (مثلاً من رقم جواله أو قدامك في المحل).', confirmText: 'انسخ الرابط', cancelText: 'تراجع', tone: '' }))) return;
+      if (!(await DMDialog.confirm({ title: 'رابط بطاقة العضو', message: 'هذا الرابط يفتح بطاقته بأختامها. أرسله للعضو نفسه فقط بعد التأكد منه (مثلاً من رقم جواله أو أمامك في المحل).', confirmText: 'انسخ الرابط', cancelText: 'تراجع', tone: '' }))) return;
       navigator.clipboard.writeText(m.restore_url).then(() => showToast('انتسخ رابط بطاقته'));
     };
     document.getElementById('lm-stamp').disabled = m.stamps >= n;
@@ -490,8 +490,8 @@
         <span><i class="ph-bold ph-arrows-left-right text-[#c9a227]"></i> نقل ${m.transferred} ${m.transferred === 1 ? 'ختم' : 'أختام'} من بطاقته القديمة</span>
         <span class="text-xs text-ink">${new Date(m.transferred_at).toLocaleString('ar-SA-u-ca-gregory-nu-latn', { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })}</span>
       </div>`);
-    const RSN = { wait: 'الانتظار طويل', price: 'الأسعار', quality: 'الطعم أو الجودة', far: 'المكان بعيد', busy: 'ما صار عنده وقت', other: 'شي ثاني' };
-    const fbHtml = (r.feedback || []).length ? `<div class="rounded-xl border border-brick/20 bg-brick/[0.04] p-3 mb-3"><p class="text-xs font-bold text-brick mb-1"><i class="ph-bold ph-question"></i> ليش غاب؟ (جوابه)</p>${r.feedback.map(f => `<p class="text-[13px]"><b>${RSN[f.reason] || f.reason}</b>${f.note ? `: «${esc(f.note)}»` : ''} <span class="text-[11px] text-ink">${agoText(f.created_at)}</span></p>`).join('')}</div>` : '';
+    const RSN = { wait: 'الانتظار طويل', price: 'الأسعار', quality: 'الطعم أو الجودة', far: 'المكان بعيد', busy: 'ما صار عنده وقت', other: 'شيء آخر' };
+    const fbHtml = (r.feedback || []).length ? `<div class="rounded-xl border border-brick/20 bg-brick/[0.04] p-3 mb-3"><p class="text-xs font-bold text-brick mb-1"><i class="ph-bold ph-question"></i> لماذا غاب؟ (إجابته)</p>${r.feedback.map(f => `<p class="text-[13px]"><b>${RSN[f.reason] || f.reason}</b>${f.note ? `: «${esc(f.note)}»` : ''} <span class="text-[11px] text-ink">${agoText(f.created_at)}</span></p>`).join('')}</div>` : '';
     document.getElementById('lm-msgs').innerHTML = fbHtml + (r.messages.length ? `<p class="text-xs font-bold text-ink mb-1">رسائله</p><div class="text-sm divide-y divide-brand/10">${r.messages.map(x => `
       <div class="py-2"><p>${x.source === 'ai' ? '<span class="text-[11px] font-bold bg-violet-500/10 text-violet-700 rounded-full px-2 py-0.5 ml-1">المساعد</span>' : ''}${esc(x.body)}</p><p class="text-[11px] text-ink">${agoText(x.created_at)}</p></div>`).join('')}</div>` : '');
   }
@@ -538,7 +538,7 @@
       document.getElementById('li-sub').textContent = `${file.name}: ${LI.rows.length} صف`;
       renderLyImport();
       const box = document.getElementById('ly-import'); box.classList.remove('hidden'); box.classList.add('flex');
-    } catch (e) { showToast('ما قدرنا نقرأ الملف. احفظه CSV أو Excel وجرب مرة ثانية', true); }
+    } catch (e) { showToast('تعذّرت قراءة الملف. احفظه بصيغة CSV أو Excel وحاول مرة أخرى', true); }
   }
   function lyImportRows() {
     const p = +document.getElementById('li-phone').value, n = +document.getElementById('li-name').value, s = +document.getElementById('li-stamps').value;
@@ -562,7 +562,7 @@
         added += r.added; existing += r.existing; invalid += r.invalid;
       }
       closeLyImport();
-      await DMDialog.confirm({ title: 'تم الاستيراد', tone: '', icon: 'ph-check-circle', confirmText: 'تمام', cancelText: 'إغلاق', message: `انضاف ${added} عضو.${existing ? `\n${existing} مسجلين عندك من قبل وما تغيروا.` : ''}${invalid ? `\n${invalid} رقم جوال غير صحيح وما انضاف.` : ''}\n\nلما يمسح العميل كود التسجيل ويكتب نفس جواله، تطلع له بطاقته بأختامه.` });
+      await DMDialog.confirm({ title: 'تم الاستيراد', tone: '', icon: 'ph-check-circle', confirmText: 'تمام', cancelText: 'إغلاق', message: `انضاف ${added} عضو.${existing ? `\n${existing} مسجلين عندك من قبل وما تغيروا.` : ''}${invalid ? `\n${invalid} رقم جوال غير صحيح وما انضاف.` : ''}\n\nعندما يمسح العميل كود التسجيل ويكتب جواله نفسه، تظهر له بطاقته بأختامه.` });
       await onLoyaltyPage();
     } catch (e) { showToast(e.message || 'تعذر الاستيراد', true); }
     btn.disabled = false; btn.innerHTML = '<i class="ph-bold ph-file-arrow-up"></i> استورد';

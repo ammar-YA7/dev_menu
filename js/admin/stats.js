@@ -249,7 +249,7 @@
         </div>
         <div class="space-y-4">
           <div>
-            <p class="text-[11px] font-bold text-ink mb-2">من وين يجي زبائنك؟</p>
+            <p class="text-[11px] font-bold text-ink mb-2">من أين يأتي عملاؤك؟</p>
             ${known ? `
               <div class="flex h-3 rounded-full overflow-hidden bg-brand/5">
                 <div class="bg-amber-400" style="width:${qrPct}%"></div>
@@ -317,7 +317,7 @@
     if (!on) return;
     let r;
     try { r = await api('chat-top'); } catch { return card.classList.add('hidden'); }
-    document.getElementById('chat-top-count').textContent = r.month_used ? `${r.month_used} سؤال هالشهر` : '';
+    document.getElementById('chat-top-count').textContent = r.month_used ? `${r.month_used} سؤال هذا الشهر` : '';
     const list = document.getElementById('chat-top-list');
     list.innerHTML = r.questions.length ? r.questions.map(x => `
       <details class="group rounded-xl border border-brand/15 bg-white">
@@ -327,13 +327,13 @@
         </summary>
         ${x.a ? `<p class="px-3 pb-3 text-[12px] text-ink leading-relaxed whitespace-pre-line">${esc(x.a)}</p>` : ''}
       </details>`).join('')
-      : '<p class="text-[12px] text-ink py-2">لسا ما سأل أحد. أول ما يسألون المساعد تطلع أسئلتهم هنا.</p>';
+      : '<p class="text-[12px] text-ink py-2">لم يسأل أحد بعد. عندما يسأل العملاء المساعد تظهر أسئلتهم هنا.</p>';
   }
   function renderInsightChips() {
     document.getElementById('insights-card').style.display = DMPlans.isFree(client) ? 'none' : '';
     const qs = [];
-    if (!featureLocked('pager')) qs.push('كم متوسط الانتظار اليوم؟', 'وش أزحم ساعة عندي؟', 'لخص لي آراء الزبائن');
-    if (!featureLocked('menu')) qs.push('وش أكثر طبق ينشاف؟', 'وش الأطباق اللي محد يفتحها؟');
+    if (!featureLocked('pager')) qs.push('كم متوسط الانتظار اليوم؟', 'ما أكثر ساعة ازدحاماً لدي؟', 'لخص لي آراء الزبائن');
+    if (!featureLocked('menu')) qs.push('ما أكثر طبق مشاهدةً؟', 'ما الأطباق التي لا يفتحها أحد؟');
     document.getElementById('ins-chips').innerHTML = qs.slice(0, 5).map(q => `<button type="button" class="text-[11px] font-bold px-3 py-1.5 rounded-full bg-brand/10 border border-brand/45 hover:bg-brand/10 text-ink transition">${esc(q)}</button>`).join('');
     document.getElementById('ins-chips').onclick = (e) => { const b = e.target.closest('button'); if (b) { document.getElementById('ins-q').value = b.textContent; askInsights(); } };
   }
@@ -344,7 +344,7 @@
     btn.disabled = true; out.classList.remove('hidden');
     out.innerHTML = '<i class="ph-bold ph-spinner-gap ph-spin"></i> أقرأ أرقامك…';
     try { const r = await api('insights', { question: q }); out.textContent = r.reply; }
-    catch (err) { out.textContent = err.message || 'ما قدرت أجاوب الحين، جرّب مرة ثانية'; }
+    catch (err) { out.textContent = err.message || 'تعذّرت الإجابة الآن، حاول مرة أخرى'; }
     finally { btn.disabled = false; }
   }
 

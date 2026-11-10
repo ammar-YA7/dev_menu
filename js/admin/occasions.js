@@ -23,7 +23,7 @@
     if (!o.starts_on || !o.ends_on) return ['بدون تاريخ', 'bg-amber-500/15 text-amber-800'];
     if (o.ends_on < t) return ['انتهت', 'bg-ink/10 text-ink'];
     if (o.starts_on > t) { const d = Math.round((Date.parse(o.starts_on) - Date.parse(t)) / 86400000); return [`قادمة · تبدأ بعد ${d === 1 ? 'يوم' : d === 2 ? 'يومين' : `${d} يوم`}`, 'bg-blue-500/10 text-blue-700']; }
-    return ['تظهر الحين', 'bg-green-500/15 text-green-700'];
+    return ['تظهر الآن', 'bg-green-500/15 text-green-700'];
   }
   function renderOccasions() {
     document.getElementById('occ-presets').innerHTML = Object.entries(DMOccasions.PRESETS).map(([key, p]) => `

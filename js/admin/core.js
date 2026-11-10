@@ -97,7 +97,7 @@
     lockedKey = key;
     const f = DMPlans.FEATURES[key];
     document.getElementById('lock-icon').className = `ph-bold ${f.icon}`;
-    document.getElementById('lock-title').textContent = `${f.name} مو ضمن باقتك`;
+    document.getElementById('lock-title').textContent = `${f.name} ليست ضمن باقتك`;
     document.getElementById('lock-desc').textContent = f.desc;
     document.getElementById('lock-price').textContent = `تضيفها بـ ${f.month} ر.س بالشهر أو ${f.year} ر.س بالسنة`;
   }
@@ -111,7 +111,7 @@
   const deskLocked = () => featureLocked('pager') && featureLocked('loyalty') && !(client && client.menu_order_mode && !featureLocked('menu'));
   function openPagerDesk(a) {
     if (deskLocked()) { location.hash = 'pager'; showPage('pager'); return false; }
-    a.href = 'pager-desk.html' + location.search; return true;
+    a.href = 'pager-desk.html' + location.search; setupMark('pager'); return true;
   }
   // روابط الخدمات المفعّلة
   const SVC_PAGES = [['menu', 'menu', 'المنيو', 'ph-fork-knife'], ['pager', 'pager', 'البيجر', 'ph-bell'], ['waitlist', 'waitlist', 'قائمة الانتظار', 'ph-hourglass-medium'], ['loyalty', 'loyalty', 'بطاقة الولاء', 'ph-seal-check']];
@@ -140,7 +140,7 @@
       rows.push(['desk', 'شاشة الكاشير', 'ph-cash-register', key && `${location.origin}/pager-desk.html?k=${key}`, 'للموظف، بدون حسابك']);
     }
     const hint = document.getElementById('svc-links-hint');
-    if (hint) hint.textContent = free ? 'صفحة الروابط السريعة متاحة مع الاشتراك. وهذي روابط البيجر وشاشاته.' : 'الرابط الرئيسي يفتح صفحة الروابط السريعة اللي فيها كل خدماتك، حطه في بايو انستجرام وتيك توك. وتحته رابط كل خدمة لحالها.';
+    if (hint) hint.textContent = free ? 'صفحة الروابط السريعة متاحة مع الاشتراك. وهذي روابط البيجر وشاشاته.' : 'الرابط الرئيسي يفتح صفحة الروابط السريعة التي تضم كل خدماتك، ضعه في بايو انستجرام وتيك توك. وتحته رابط كل خدمة على حدة.';
     const btn = 'text-[11px] font-bold px-2.5 py-1.5 rounded-lg bg-white border border-brand/15';
     box.innerHTML = rows.map(([k, name, icon, url, sub]) => !url ? `
       <div class="flex flex-wrap items-center gap-2 bg-brand/5 border-brand/15 border rounded-xl px-3 py-2">
@@ -162,7 +162,7 @@
   async function makeScreenLinks(btn) {
     btn.disabled = true;
     try { const r = await api('desk-link'); client.desk_key = new URL(r.kiosk_url).searchParams.get('k'); renderServiceLinks(); showToast('جهز الرابط، انسخه وافتحه على الجهاز'); }
-    catch { btn.disabled = false; showToast('ما قدرنا ننشئ الرابط، جرّب مرة ثانية', true); }
+    catch { btn.disabled = false; showToast('تعذّر إنشاء الرابط، حاول مرة أخرى', true); }
   }
   // ─── ملخص الخدمات في الرئيسية ───
   const tile = (v, l) => `<div class="rounded-2xl bg-white border border-brand/[0.13] px-3 py-3"><p class="text-2xl font-bold tnum leading-none">${v}</p><p class="text-[11.5px] text-ink mt-1.5">${l}</p></div>`;
@@ -221,7 +221,7 @@
       const tk = (d && d.tickets) || [];
       return svcCard('ph-bell', 'البيجر اليوم', 'pager-desk.html' + location.search,
         tile(tk.filter(t => t.status === 'waiting').length, 'بالانتظار') + tile(tk.filter(t => t.status === 'ready').length, 'تم النداء') + tile(tk.length, 'أرقام اليوم'),
-        st && st.total ? `آخر 7 أيام: متوسط الانتظار ${mins(st.wait.avg)}${st.rating && st.rating.n ? `، والتقييم ${st.rating.avg} ★ من ${st.rating.n}` : ''}` : 'أول ما ياخذون أرقام تطلع الأرقام هنا', '',
+        st && st.total ? `آخر 7 أيام: متوسط الانتظار ${mins(st.wait.avg)}${st.rating && st.rating.n ? `، والتقييم ${st.rating.avg} ★ من ${st.rating.n}` : ''}` : 'عندما يأخذ العملاء أرقاماً تظهر هنا', '',
         miniBars(Object.fromEntries(((st && st.daily) || []).map(x => [x.d, x.n])), 'أرقام البيجر آخر 7 أيام'));
     }));
     if (!featureLocked('loyalty')) jobs.push(api('loyalty').catch(() => null).then(d => {
@@ -238,11 +238,11 @@
         tile(en.filter(e => e.status === 'waiting').length, 'ينتظرون') + tile(en.filter(e => e.status === 'notified').length, 'تم نداؤهم') + tile(en.filter(e => e.status === 'seated').length, 'حضروا'), '', '',
         // أول المنتظرين بالترتيب
         (() => { const w = en.filter(e => e.status === 'waiting' || e.status === 'notified').slice(0, 4);
-          return `<div class="rounded-2xl bg-white border border-brand/[0.13] p-3"><p class="text-[11px] font-bold text-ink mb-2">الدور الحين</p>${w.length ? w.map(e => `
+          return `<div class="rounded-2xl bg-white border border-brand/[0.13] p-3"><p class="text-[11px] font-bold text-ink mb-2">الدور الآن</p>${w.length ? w.map(e => `
             <div class="flex items-center justify-between gap-2 py-1.5 border-b border-brand/[0.07] last:border-0 text-[12.5px]">
               <span class="font-bold truncate">${esc(e.name || 'زبون')}</span>
               <span class="shrink-0 text-ink">${e.party_size ? `${e.party_size} أشخاص` : ''}${e.status === 'notified' ? ' <b class="text-[#8a6d0f]">تم النداء</b>' : ''}</span>
-            </div>`).join('') : '<p class="text-[12px] text-ink py-3 text-center">ما فيه أحد ينتظر الحين</p>'}</div>`; })());
+            </div>`).join('') : '<p class="text-[12px] text-ink py-3 text-center">لا يوجد أحد ينتظر الآن</p>'}</div>`; })());
     }));
     const cards = await Promise.all(jobs);
     box.innerHTML = cards.join('');
@@ -284,7 +284,7 @@
     if (page === 'pager' && !locked) page = 'dashboard';
     if (locked) showLocked(key);
     document.querySelectorAll('[data-page]').forEach(sec => sec.classList.toggle('hidden', locked ? sec.dataset.page !== 'locked' : sec.dataset.page !== page));
-    if (page === 'pagerset' && !locked) setTimeout(() => placePhone('pager'), 50);
+    if (page === 'pagerset' && !locked) { setTimeout(() => placePhone('pager'), 50); psStep(); }
     if (page === 'menu' && !locked && !document.getElementById('section-msettings').classList.contains('hidden')) setTimeout(() => placePhone('menu'), 50);
     if (locked) {
       document.querySelectorAll('[data-nav]').forEach(b => b.classList.toggle('nav-active', b.dataset.nav === page));
@@ -352,27 +352,94 @@
       cell('متوفر الآن', available, 'menu', 'ph-check-circle', 'gold') +
       cell('نفدت الكمية', soldOut, 'menu', 'ph-warning-circle', soldOut > 0 ? 'warn' : '') + '</div>';
 
-    const items = [
-      ['شعار المنشأة', !!client.logo_url, 'settings'],
-      ['خلفية المنيو (صورة أو فيديو)', !!(client.bg_image_url || client.bg_video_url), 'settings'],
-      ['قسم واحد على الأقل', loadedCategories.length > 0, 'menu'],
-      ['5 أطباق أو أكثر', total >= 5, 'menu'],
-      [noImg ? `صور لكل الأطباق (باقي ${noImg})` : 'صور لكل الأطباق', total > 0 && noImg === 0, 'menu'],
-      ...(showCalories() ? [[noCal ? `السعرات لكل الأطباق (باقي ${noCal})` : 'السعرات لكل الأطباق', total > 0 && noCal === 0, 'menu']] : []),
-      ['رقم واتساب المنشأة', isValidWa(client.whatsapp_number), 'settings'],
-      ['ساعات العمل', !!client.opening_hours, 'settings']
-    ];
-    const done = items.filter(i => i[1]).length;
-    const pct = Math.round((done / items.length) * 100);
-    document.getElementById('checklist-pct').textContent = pct === 100 ? 'مكتمل 🎉' : `${pct}%`;
-    document.getElementById('checklist-bar').style.width = `${pct}%`;
-    document.getElementById('checklist-body').innerHTML = items.map(([label, ok, page]) => `
-      <li class="flex items-center justify-between gap-2 text-[11px]">
-        <span class="flex items-center gap-2 ${ok ? 'text-ink line-through decoration-brand/30' : 'text-ink/90'}">
-          <i class="ph-bold ${ok ? 'ph-check-circle text-emerald-600' : 'ph-circle text-ink/15'}"></i> ${label}
-        </span>
-        ${ok ? '' : `<button onclick="location.hash='${page}'" class="text-[11px] font-bold text-amber-700 hover:text-amber-800">أكمل</button>`}
-      </li>`).join('');
+    renderSetup(total, noImg, noCal);
+  }
+
+  // ─── إعدادات البيجر: ثلاث خطوات (قبل الرقم، أثناء الانتظار، بعد الاستلام)، خطوة وحدة تطلع في كل مرة ───
+  // الخطوة الأولى (موقع المحل ورسالة شاشة القفل) تختفي لو بطاقة النداء تجي من بطاقة الولاء
+  let psCur = 1;
+  function psStep(n) {
+    const card = document.getElementById('info-pager-card'), first = card && !card.classList.contains('hidden') ? 1 : 2;
+    psCur = Math.max(first, n || psCur);
+    document.querySelectorAll('[data-ps]').forEach(b => {
+      const k = +b.dataset.ps;
+      b.classList.toggle('hidden', k < first);
+      b.setAttribute('aria-selected', String(k === psCur));
+    });
+    document.querySelectorAll('[data-ps-step]').forEach(d => d.classList.toggle('hidden', +d.dataset.psStep !== psCur));
+    if (n) document.querySelector('.ps-steps')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+  // الحفظ التلقائي: النص ينحفظ لما يخلص كتابة ويطلع من الخانة، والاختيارات أول ما تتغير
+  function psAutosave() {
+    const on = (id, fn) => { const el = document.getElementById(id); if (el && !el.dataset.auto) { el.dataset.auto = '1'; el.addEventListener('change', () => fn()); } };
+    on('info-near', () => saveNearText());
+    ['info-game-reward', 'info-game-moves', 'info-quiz-need'].forEach(id => on(id, () => saveGameReward()));
+    on('info-review', () => saveReviewLink());
+  }
+  psAutosave();
+
+  // ─── ابدأ هنا: خطوات تجهيز المحل الجديد حسب خدماته ───
+  // الخطوات اللي تنقاس من البيانات تتعلّم لحالها، والباقي (طباعة QR، تجربة البيجر، حفظ الولاء) ينحفظ في الجهاز لما يسويها
+  const setupKey = () => `dm_setup_${client && client.id}`;
+  function setupFlags() { try { return JSON.parse(localStorage.getItem(setupKey()) || '{}') || {}; } catch { return {}; } }
+  function setupMark(k) {
+    if (!client) return;
+    const f = setupFlags(); if (f[k]) return;
+    f[k] = Date.now();
+    try { localStorage.setItem(setupKey(), JSON.stringify(f)); } catch {}
+    if (typeof renderDashboardSummary === 'function') renderDashboardSummary();
+  }
+  // العدد مع المعدود بصياغة صحيحة: خطوة واحدة، خطوتان، 3 خطوات، 11 خطوة
+  const countOf = (n, one, two, few, many) => n === 1 ? one : n === 2 ? two : n <= 10 ? `${n} ${few}` : `${n} ${many}`;
+  const dishes = (n) => countOf(n, 'طبق واحد', 'طبقان', 'أطباق', 'طبقاً');
+  const stepsN = (n) => countOf(n, 'خطوة واحدة', 'خطوتان', 'خطوات', 'خطوة');
+  function renderSetup(total, noImg, noCal) {
+    const card = document.getElementById('setup-card'), dash = document.querySelector('section[data-page="dashboard"]');
+    if (!card || !dash) return;
+    const f = setupFlags(), has = (k) => DMPlans.has(client, k), steps = [];
+    if (has('menu')) {
+      const cal = showCalories();
+      steps.push({ title: 'أضف أطباقك وأسعارها', done: total >= 5,
+        hint: total >= 5 ? `في المنيو ${dishes(total)}.` : `أضف ${5 - total === 1 ? 'طبقاً واحداً' : 5 - total === 2 ? 'طبقين' : dishes(5 - total)} على الأقل ليظهر المنيو مكتملاً لزبائنك.`,
+        go: 'goAddDish()', label: 'أضف طبقاً' });
+      const miss = [noImg && `${dishes(noImg)} بدون صورة`, cal && noCal && `${dishes(noCal)} بدون سعرات`].filter(Boolean);
+      steps.push({ title: cal ? 'صور الأطباق وسعراتها' : 'صور الأطباق', done: total > 0 && !noImg && !(cal && noCal),
+        hint: total === 0 ? 'الصورة الواضحة تزيد الطلب على الطبق.' : miss.length ? `باقي ${miss.join('، و')}.` : 'كل الأطباق مكتملة.',
+        go: "location.hash='menu'", label: 'أكمل' });
+      const info = [!client.logo_url && 'الشعار', !isValidWa(client.whatsapp_number) && 'رقم الواتساب', !client.opening_hours && 'ساعات العمل'].filter(Boolean);
+      steps.push({ title: 'بيانات المنشأة', done: !info.length,
+        hint: info.length ? `ناقص: ${info.join('، ')}.` : 'الشعار ورقم الواتساب وساعات العمل مكتملة.',
+        go: "location.hash='settings'", label: 'أكمل' });
+      steps.push({ title: 'اطبع رمز QR للطاولات', done: !!f.qr,
+        hint: 'يمسحه الزبون من طاولته فيفتح له المنيو مباشرة.', go: 'downloadQrCard()', label: 'حمّل للطباعة' });
+    }
+    if (has('pager')) steps.push({ title: 'جرّب البيجر', done: !!f.pager,
+      hint: 'افتح شاشة البيجر عند الكاشير، وجرّب النداء على جوالك.', href: 'pager-desk.html', label: 'افتح الشاشة' });
+    if (has('loyalty')) steps.push({ title: 'جهّز بطاقة الولاء', done: !!f.loyalty,
+      hint: 'حدد عدد الأختام والمكافأة، ثم احفظ.', go: "location.hash='loyalty'", label: 'جهّزها' });
+
+    const left = steps.filter(s => !s.done).length;
+    const show = steps.length && left && !f.hidden;
+    card.classList.toggle('hidden', !show);
+    // المحل الجديد (أول 3 أسابيع): الإحصائيات الفاضية ما تطلع لين يكمل التجهيز
+    const age = client.created_at ? (Date.now() - new Date(client.created_at)) / 864e5 : 0;
+    dash.classList.toggle('new-store', !!show && age <= 21);
+    if (!show) return;
+    const next = steps.findIndex(s => !s.done);
+    card.innerHTML = `
+      <div class="flex items-start justify-between gap-3">
+        <div><h3>ابدأ هنا</h3>
+          <p class="su-sub">${left === steps.length ? `${stepsN(steps.length)} ويصبح محلك جاهزاً لاستقبال الزبائن.` : `باقي ${stepsN(left)} من ${steps.length} ويصبح محلك جاهزاً.`}</p></div>
+        <button type="button" class="su-hide shrink-0" onclick="setupMark('hidden')">إخفاء</button>
+      </div>
+      <div class="su-bar"><i style="width:${Math.round((steps.length - left) / steps.length * 100)}%"></i></div>
+      ${steps.map((s, i) => `
+        <div class="su-step ${s.done ? 'done' : ''} ${i === next ? 'next' : ''}">
+          <span class="su-num">${s.done ? '<i class="ph-bold ph-check"></i>' : i + 1}</span>
+          <div class="min-w-0"><div class="su-title">${s.title}</div><div class="su-hint">${s.hint}</div></div>
+          ${s.done ? '' : s.href ? `<a href="${s.href}" onclick="return openPagerDesk(this)" class="su-go">${s.label}</a>`
+            : `<button type="button" onclick="${s.go}" class="su-go">${s.label}</button>`}
+        </div>`).join('')}`;
   }
 
   // رابط المنيو مبني على مسار الصفحة الحالية (يشتغل على GitHub Pages داخل مجلد المشروع)
