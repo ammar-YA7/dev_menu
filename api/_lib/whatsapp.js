@@ -14,6 +14,9 @@ const PROVIDERS = ['meta', 'ultramsg', 'greenapi', 'wasender', 'custom'];
 const AUTH_STYLES = ['bearer', 'supabase', 'header'];
 const DEFAULT_BODY = '{"phone": "{phone}", "message": "{message}"}';
 const DEFAULT_MESSAGE = 'طلبك رقم {number} جاهز، تفضّل استلمه من {store}';
+const DEFAULT_WL_MESSAGE = 'أهلاً {name}، جاء دورك في {store}. تفضّل للاستقبال، رقمك {number}';
+const CHANNELS = ['pager', 'waitlist'];
+const on = (cfg, ch) => !!cfg && (Array.isArray(cfg.channels) ? cfg.channels : ['pager']).includes(ch);
 
 // ─── التشفير: المفتاح من INTEGRATIONS_KEY، ولو ما انضاف من مفتاح الخادم ───
 // لو تغيّر المفتاح اللي يتشفّر فيه، يدخّل المدير العام مفتاح الواتساب من جديد
@@ -64,19 +67,21 @@ async function configFor(storeId) {
 }
 const linked = async (storeId) => !!(await configFor(storeId));
 // خانة الجوال في صفحة البيجر (تختفي لو خادم المزوّد يجيب جوال العميل برقم الفاتورة)
-const askPhone = async (storeId) => { const c = await configFor(storeId); return !!c && c.ask_phone !== false; };
+const askPhone = async (storeId) => { const c = await configFor(storeId); return on(c, 'pager') && c.ask_phone !== false; };
 // الإرسال برقم الفاتورة: الخادم الخاص بس، وهو اللي يجيب بيانات العميل
 const byInvoice = (cfg) => !!cfg && cfg.provider === 'custom' && cfg.send_mode === 'invoice';
 const forget = () => cache.clear();
 
 // شكل طلب الخادم الخاص: القيم تنحط داخل JSON بشكل آمن (علامات التنصيص والأسطر)
 function fillBody(tpl, vals) {
-  const out = String(tpl || DEFAULT_BODY).replace(/\{(phone_plus|phone|message|number|store|invoice)\}/g, (_, k) => JSON.stringify(String(vals[k] ?? '')).slice(1, -1));
+  const out = String(tpl || DEFAULT_BODY).replace(/\{(phone_plus|phone|message|number|store|invoice|name|kind)\}/g, (_, k) => JSON.stringify(String(vals[k] ?? '')).slice(1, -1));
   try { const v = JSON.parse(out); return v && typeof v === 'object' ? JSON.stringify(v) : null; } catch { return null; }
 }
 const validBody = (tpl) => fillBody(tpl, { phone: '966500000000', phone_plus: '+966500000000', message: 'x', number: '1', store: 'x' }) !== null;
 
-const fill = (tpl, vars) => String(tpl || DEFAULT_MESSAGE).replace(/\{number\}/g, vars.number ?? '').replace(/\{store\}/g, vars.store ?? '').replace(/\{invoice\}/g, vars.invoice ?? '');
+const fill = (tpl, vars) => String(tpl).replace(/\{(number|store|invoice|name)\}/g, (_, k) => String(vars[k] ?? ''));
+// نص الرسالة: لكل نوع نصه (الطلبات أو قائمة الانتظار)، ولو فاضي النص الافتراضي
+const textFor = (cfg, vars) => fill(vars.kind === 'waitlist' ? (cfg.wl_message || DEFAULT_WL_MESSAGE) : (cfg.message || DEFAULT_MESSAGE), vars);
 
 // ─── الإرسال حسب المزوّد. يرجّع { ok, error } ───
 async function send(cfg, to, vars) {
@@ -84,29 +89,32 @@ async function send(cfg, to, vars) {
   if (!token) return { ok: false, error: 'المفتاح ما ينقرأ، أدخله من جديد' };
   const phone = intlPhone(to);
   // برقم الفاتورة: الجوال اختياري (خادمهم يجيبه)، لكن لازم فاتورة أو جوال
-  if (!phone && !(byInvoice(cfg) && vars.invoice)) return { ok: false, error: 'رقم الجوال غير صحيح' };
+  if (!phone && !(vars.kind !== 'waitlist' && byInvoice(cfg) && vars.invoice)) return { ok: false, error: 'رقم الجوال غير صحيح' };
+  const text = textFor(cfg, vars);
   let url, init;
   if (cfg.provider === 'meta') {
+    const template = vars.kind === 'waitlist' ? cfg.wl_template : cfg.template;
+    if (!template) return { ok: false, error: vars.kind === 'waitlist' ? 'اكتب قالب Meta لرسالة قائمة الانتظار' : 'اكتب قالب Meta لرسالة الطلبات' };
     const params = cfg.template_vars === 'none' ? [] : cfg.template_vars === 'number' ? [vars.number] : [vars.number, vars.store];
     url = `https://graph.facebook.com/v21.0/${encodeURIComponent(cfg.instance)}/messages`;
     init = { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({
       messaging_product: 'whatsapp', to: phone, type: 'template',
-      template: { name: cfg.template, language: { code: cfg.template_lang || 'ar' },
+      template: { name: template, language: { code: cfg.template_lang || 'ar' },
         ...(params.length ? { components: [{ type: 'body', parameters: params.map(p => ({ type: 'text', text: String(p ?? '') })) }] } : {}) }
     }) };
   } else if (cfg.provider === 'ultramsg') {
     url = `https://api.ultramsg.com/${encodeURIComponent(cfg.instance)}/messages/chat`;
-    init = { headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ token, to: `+${phone}`, body: fill(cfg.message, vars) }).toString() };
+    init = { headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ token, to: `+${phone}`, body: text }).toString() };
   } else if (cfg.provider === 'greenapi') {
     const base = (cfg.api_url || 'https://api.green-api.com').replace(/\/+$/, '');
     url = `${base}/waInstance${encodeURIComponent(cfg.instance)}/sendMessage/${encodeURIComponent(token)}`;
-    init = { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chatId: `${phone}@c.us`, message: fill(cfg.message, vars) }) };
+    init = { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chatId: `${phone}@c.us`, message: text }) };
   } else if (cfg.provider === 'wasender') {
     url = 'https://www.wasenderapi.com/api/send-message';
-    init = { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ to: `+${phone}`, text: fill(cfg.message, vars) }) };
+    init = { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ to: `+${phone}`, text: text }) };
   } else if (cfg.provider === 'custom') {
     if (!/^https:\/\//i.test(cfg.api_url || '')) return { ok: false, error: 'رابط الخادم غير صحيح' };
-    const body = fillBody(cfg.body_tpl, { phone: phone || '', phone_plus: phone ? `+${phone}` : '', message: fill(cfg.message, vars), number: vars.number, store: vars.store, invoice: vars.invoice || '' });
+    const body = fillBody(cfg.body_tpl, { phone: phone || '', phone_plus: phone ? `+${phone}` : '', message: text, number: vars.number, store: vars.store, invoice: vars.invoice || '', name: vars.name || '', kind: vars.kind || 'pager' });
     if (!body) return { ok: false, error: 'شكل الطلب (JSON) غير صحيح' };
     const headers = { 'Content-Type': 'application/json' };
     if (cfg.auth_style === 'header' && cfg.auth_header) headers[cfg.auth_header] = token;
@@ -140,8 +148,8 @@ async function post(url, init, canWait, tried = false) {
 async function pagerReady(store, ticket) {
   if (!ticket || !(ticket.wa_phone || ticket.invoice_no)) return 'off';
   const cfg = await configFor(store.id);
-  if (!cfg || !(ticket.wa_phone || byInvoice(cfg))) return 'off';
-  const r = await send(cfg, ticket.wa_phone, { number: ticket.number, store: store.display_name || store.name || '', invoice: ticket.invoice_no || '' });
+  if (!on(cfg, 'pager') || !(ticket.wa_phone || byInvoice(cfg))) return 'off';
+  const r = await send(cfg, ticket.wa_phone, { kind: 'pager', number: ticket.number, store: store.display_name || store.name || '', invoice: ticket.invoice_no || '' });
   const now = new Date().toISOString();
   await Promise.all([
     rest(`pager_tickets?id=eq.${ticket.id}`, { method: 'PATCH', body: { wa_status: r.ok ? `sent ${now.slice(11, 19)}` : `failed: ${r.error}`.slice(0, 200) } }).catch(() => {}),
@@ -151,4 +159,16 @@ async function pagerReady(store, ticket) {
   return r.ok ? 'sent' : 'failed';
 }
 
-module.exports = { PROVIDERS, AUTH_STYLES, DEFAULT_BODY, validBody, DEFAULT_MESSAGE, encrypt, decrypt, intlPhone, maskPhone, configFor, linked, askPhone, byInvoice, forget, send, pagerReady };
+// ─── قائمة الانتظار: «جاء دورك» لما يضغط الموظف «الطاولة جاهزة» (العميل كتب جواله وهو يسجّل) ───
+async function waitlistReady(store, entry) {
+  if (!entry || !entry.phone) return 'off';
+  const cfg = await configFor(store.id);
+  if (!on(cfg, 'waitlist')) return 'off';
+  const r = await send(cfg, entry.phone, { kind: 'waitlist', number: entry.ticket ?? '', name: entry.name || '', store: store.display_name || store.name || '' });
+  const now = new Date().toISOString();
+  await rest(`client_whatsapp?client_id=eq.${cfg.client_id}`, { method: 'PATCH', body: r.ok ? { last_sent_at: now, last_error: null } : { last_error: `${now.slice(0, 16)} ${r.error}`.slice(0, 220) } }).catch(() => {});
+  console.log('WAITLIST_WA', store.id, entry.id, r.ok ? 'sent' : r.error);
+  return r.ok ? 'sent' : 'failed';
+}
+
+module.exports = { CHANNELS, DEFAULT_WL_MESSAGE, waitlistReady, PROVIDERS, AUTH_STYLES, DEFAULT_BODY, validBody, DEFAULT_MESSAGE, encrypt, decrypt, intlPhone, maskPhone, configFor, linked, askPhone, byInvoice, forget, send, pagerReady };

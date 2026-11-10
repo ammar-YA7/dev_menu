@@ -250,8 +250,8 @@ module.exports = handler(['GET', 'POST'], async (req) => {
   if (action === 'featured') return patch({ is_featured: b.featured === true });
   // ─── ربط واتساب خارجي لهذا المحل فقط (المفتاح ما يرجع للمتصفح) ───
   if (action === 'wa-get') {
-    const row = (await rest(`client_whatsapp?client_id=eq.${id}&select=provider,instance,api_url,auth_style,auth_header,body_tpl,send_mode,ask_phone,template,template_lang,template_vars,message,enabled,last_error,last_sent_at,updated_at`))[0];
-    return { wa: row ? { ...row, has_token: true } : null, default_message: WA.DEFAULT_MESSAGE, default_body: WA.DEFAULT_BODY };
+    const row = (await rest(`client_whatsapp?client_id=eq.${id}&select=provider,instance,api_url,auth_style,auth_header,body_tpl,send_mode,ask_phone,channels,wl_message,wl_template,template,template_lang,template_vars,message,enabled,last_error,last_sent_at,updated_at`))[0];
+    return { wa: row ? { ...row, has_token: true } : null, default_message: WA.DEFAULT_MESSAGE, default_wl_message: WA.DEFAULT_WL_MESSAGE, default_body: WA.DEFAULT_BODY };
   }
   if (action === 'wa-save') {
     const provider = String(b.provider || '');
@@ -273,15 +273,20 @@ module.exports = handler(['GET', 'POST'], async (req) => {
     if (custom && authStyle === 'header' && !/^[A-Za-z0-9-]{1,60}$/.test(authHeader)) throw new ApiError(400, 'اسم الترويسة غير صحيح، مثل x-api-key');
     const bodyTpl = custom ? (String(b.body_tpl || '').trim() || null) : null;
     if (bodyTpl && (bodyTpl.length > 2000 || !WA.validBody(bodyTpl))) throw new ApiError(400, 'شكل الطلب ليس JSON صحيحاً. ضع المتغيرات داخل علامات التنصيص، مثل "{phone}"');
-    const template = provider === 'meta' ? str(b.template, 120, 'اسم القالب') : null;
-    if (provider === 'meta' && !template) throw new ApiError(400, 'اكتب اسم القالب المعتمد من Meta');
+    // وين تنرسل: الطلبات (البيجر) أو قائمة الانتظار أو الاثنين
+    const channels = [...new Set((Array.isArray(b.channels) ? b.channels : ['pager']).filter(c => WA.CHANNELS.includes(c)))];
+    if (!channels.length) throw new ApiError(400, 'اختر الطلبات أو قائمة الانتظار');
+    const template = provider === 'meta' && channels.includes('pager') ? str(b.template, 120, 'اسم القالب') : null;
+    const wlTemplate = provider === 'meta' && channels.includes('waitlist') ? str(b.wl_template, 120, 'قالب قائمة الانتظار') : null;
+    if (provider === 'meta' && channels.includes('pager') && !template) throw new ApiError(400, 'اكتب اسم قالب Meta لرسالة الطلبات');
+    if (provider === 'meta' && channels.includes('waitlist') && !wlTemplate) throw new ApiError(400, 'اكتب اسم قالب Meta لرسالة قائمة الانتظار');
     const vars = ['none', 'number', 'number_store'].includes(b.template_vars) ? b.template_vars : 'number_store';
     if (!(await rest(`clients?id=eq.${id}&select=id`))[0]) throw new ApiError(404, 'المتجر غير موجود');
     const row = {
       client_id: id, provider, instance, api_url: provider === 'greenapi' || custom ? (apiUrl || null) : null, auth_style: authStyle, auth_header: authHeader, body_tpl: bodyTpl,
       send_mode: custom && b.send_mode === 'invoice' ? 'invoice' : 'phone', ask_phone: !(custom && b.send_mode === 'invoice' && b.ask_phone === false),
       token_enc: token ? WA.encrypt(token) : old.token_enc, template, template_lang: str(b.template_lang, 12, 'لغة القالب') || 'ar', template_vars: vars,
-      message: provider === 'meta' ? null : (str(b.message, 500, 'نص الرسالة') || null), enabled: b.enabled !== false, updated_at: new Date().toISOString(),
+      message: provider === 'meta' ? null : (str(b.message, 500, 'نص رسالة الطلبات') || null), channels, wl_template: wlTemplate, wl_message: provider === 'meta' ? null : (str(b.wl_message, 500, 'نص رسالة قائمة الانتظار') || null), enabled: b.enabled !== false, updated_at: new Date().toISOString(),
       ...(token ? { last_error: null } : {})
     };
     await rest('client_whatsapp', { method: 'POST', prefer: 'resolution=merge-duplicates', body: row });
@@ -293,7 +298,8 @@ module.exports = handler(['GET', 'POST'], async (req) => {
     if (!cfg) throw new ApiError(404, 'المحل غير مربوط بواتساب');
     if (!WA.intlPhone(b.phone)) throw new ApiError(400, 'اكتب رقم جوال صحيح');
     const store = (await rest(`clients?id=eq.${id}&select=name`))[0] || {};
-    const r = await WA.send(cfg, b.phone, { number: 23, store: store.name || '', invoice: String(b.invoice || '').trim().slice(0, 20) || '1045' });
+    const kind = b.kind === 'waitlist' ? 'waitlist' : 'pager';
+    const r = await WA.send(cfg, b.phone, { kind, number: kind === 'waitlist' ? 12 : 23, name: 'محمد', store: store.name || '', invoice: kind === 'pager' ? (String(b.invoice || '').trim().slice(0, 20) || '1045') : '' });
     await rest(`client_whatsapp?client_id=eq.${id}`, { method: 'PATCH', body: r.ok ? { last_sent_at: new Date().toISOString(), last_error: null } : { last_error: `${new Date().toISOString().slice(0, 16)} ${r.error}`.slice(0, 220) } }).catch(() => {});
     if (!r.ok) throw new ApiError(502, `ما وصلت الرسالة: ${r.error}`, 'WA_FAILED');
     return { ok: true };
