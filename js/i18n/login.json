@@ -25,5 +25,7 @@
   "تم إرسال الرمز إلى بريدك: {e}": "We sent the code to: {e}",
   "تم إرسال رمز التحقق إلى بريدك": "We sent a verification code to your email",
   "يرجى إدخال رمز التحقق كاملاً (6 أرقام)": "Enter the full verification code (6 digits)",
-  "تم تسجيل الدخول بنجاح، جاري تحويلك...": "Signed in. Redirecting..."
+  "تم تسجيل الدخول بنجاح، جاري تحويلك...": "Signed in. Redirecting...",
+  "هذا البريد غير مسجل لدينا. سننقلك الآن إلى صفحة التسجيل.": "This email isn't registered. Taking you to sign up now.",
+  "اكتب بريداً إلكترونياً صحيحاً": "Enter a valid email address"
 }
