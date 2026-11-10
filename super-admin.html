@@ -1122,12 +1122,15 @@
   const WA_PROVIDERS = [
     { value: 'meta', label: 'Meta الرسمي', desc: 'WhatsApp Cloud API بقالب معتمد', icon: 'ph-seal-check' },
     { value: 'ultramsg', label: 'UltraMsg', desc: 'Instance ID و Token', icon: 'ph-plug' },
-    { value: 'greenapi', label: 'Green API', desc: 'idInstance و apiTokenInstance', icon: 'ph-plug' }];
+    { value: 'greenapi', label: 'Green API', desc: 'idInstance و apiTokenInstance', icon: 'ph-plug' },
+    { value: 'wasender', label: 'WasenderAPI', desc: 'مفتاح الجلسة (API Key) فقط', icon: 'ph-plug' },
+    { value: 'custom', label: 'خادم خاص', desc: 'خادم المزوّد نفسه، مثل Supabase Edge Function', icon: 'ph-hard-drives' }];
+  const WA_NEEDS_INSTANCE = ['meta', 'ultramsg', 'greenapi'];
   async function openWhatsapp(id) {
     openMenu = null; renderStores();
     const c = find(id); if (!c) return;
-    let cur, def;
-    try { const r = await DM.post(A('wa-get'), { id }, true); cur = r.wa; def = r.default_message; }
+    let cur, def, defBody;
+    try { const r = await DM.post(A('wa-get'), { id }, true); cur = r.wa; def = r.default_message; defBody = r.default_body; }
     catch (e) { forbidden(e); return showToast(`تعذر فتح الربط: ${e.message}`, true); }
     const w = cur || {};
     const status = !cur ? 'لا يوجد ربط حالياً.' : w.last_error ? `آخر خطأ: ${w.last_error}` : w.last_sent_at ? `آخر رسالة: ${new Date(w.last_sent_at).toLocaleString('ar-SA-u-nu-latn', { dateStyle: 'short', timeStyle: 'short' })}` : 'مربوط، ولم تُرسل رسائل بعد.';
@@ -1136,9 +1139,16 @@
       note: 'يظهر للعميل في صفحة البيجر حقل اختياري لرقم جواله، وعندما يضغط الكاشير «جاهز» تصله رسالة واتساب. لا يتأثر أي محل آخر.',
       fields: [
         { name: 'provider', label: 'المزوّد', type: 'choice', value: w.provider || 'ultramsg', options: WA_PROVIDERS },
-        { name: 'instance', label: 'المعرّف (Instance ID أو Phone number ID)', value: w.instance || '', dir: 'ltr', maxlength: 120, required: true },
-        { name: 'token', label: 'المفتاح (Token)', value: '', dir: 'ltr', maxlength: 2000, required: !cur, placeholder: cur ? 'اتركه فارغاً لإبقاء المفتاح الحالي' : '' },
-        { name: 'api_url', label: 'رابط الـ API', value: w.api_url || '', dir: 'ltr', maxlength: 200, placeholder: 'https://7103.api.greenapi.com', showIf: (x) => x.provider === 'greenapi' },
+        { name: 'instance', label: 'المعرّف (Instance ID أو Phone number ID)', value: w.instance || '', dir: 'ltr', maxlength: 120, required: true, showIf: (x) => WA_NEEDS_INSTANCE.includes(x.provider) },
+        { name: 'api_url', label: 'رابط الإرسال', value: w.api_url || '', dir: 'ltr', maxlength: 500, placeholder: 'https://xxxx.supabase.co/functions/v1/send-whatsapp', hint: 'الرابط الكامل الذي يستقبل طلب الإرسال في خادم المزوّد.', required: true, showIf: (x) => x.provider === 'custom' },
+        { name: 'gapi_url', label: 'رابط الـ API', value: w.provider === 'greenapi' ? (w.api_url || '') : '', dir: 'ltr', maxlength: 200, placeholder: 'https://7103.api.greenapi.com', showIf: (x) => x.provider === 'greenapi' },
+        { name: 'token', label: 'المفتاح (Token أو API Key)', value: '', dir: 'ltr', maxlength: 2000, required: !cur, placeholder: cur ? 'اتركه فارغاً لإبقاء المفتاح الحالي' : '' },
+        { name: 'auth_style', label: 'طريقة إرسال المفتاح', type: 'choice', value: w.auth_style || 'bearer', showIf: (x) => x.provider === 'custom', options: [
+          { value: 'bearer', label: 'Authorization: Bearer', desc: 'الطريقة الشائعة' },
+          { value: 'supabase', label: 'Supabase', desc: 'apikey و Authorization: Bearer بنفس المفتاح' },
+          { value: 'header', label: 'ترويسة خاصة', desc: 'مثل x-api-key' }] },
+        { name: 'auth_header', label: 'اسم الترويسة', value: w.auth_header || '', dir: 'ltr', maxlength: 60, placeholder: 'x-api-key', required: true, showIf: (x) => x.provider === 'custom' && x.auth_style === 'header' },
+        { name: 'body_tpl', label: 'شكل الطلب (JSON)', value: w.body_tpl || '', dir: 'ltr', multiline: true, maxlength: 2000, placeholder: defBody, hint: 'المتغيرات: {phone} الجوال بدون + مثل 9665xxxxxxxx، و {phone_plus} مع +، و {message} نص الرسالة، و {number} رقم الطلب، و {store} اسم المحل. إذا تُرك فارغاً يُستخدم الشكل الظاهر.', showIf: (x) => x.provider === 'custom' },
         { name: 'template', label: 'اسم القالب المعتمد', value: w.template || '', dir: 'ltr', maxlength: 120, showIf: (x) => x.provider === 'meta' },
         { name: 'template_lang', label: 'لغة القالب', value: w.template_lang || 'ar', dir: 'ltr', maxlength: 12, showIf: (x) => x.provider === 'meta' },
         { name: 'template_vars', label: 'متغيرات القالب', type: 'choice', value: w.template_vars || 'number_store', showIf: (x) => x.provider === 'meta', options: [
@@ -1155,7 +1165,7 @@
       return showToast(err ? `تعذر الإلغاء: ${err.message}` : 'تم إلغاء ربط الواتساب', !!err);
     }
     if (v.provider === 'meta' && !v.template) return showToast('اكتب اسم القالب المعتمد من Meta', true);
-    const err = await post('wa-save', { id, ...v, enabled: v.enabled === 'on' });
+    const err = await post('wa-save', { id, ...v, api_url: v.provider === 'greenapi' ? v.gapi_url : v.api_url, enabled: v.enabled === 'on' });
     if (err) return showToast(`تعذر الحفظ: ${err.message}`, true);
     showToast(v.enabled === 'on' ? 'تم حفظ الربط' : 'تم الحفظ، والربط متوقف');
     if (v.enabled !== 'on') return;

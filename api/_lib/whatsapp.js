@@ -3,13 +3,16 @@
 //   المدير العام يضيف مزوّد المحل ومفتاحه من لوحته (api/admin.js ← wa-*)
 //   المحل المربوط: صفحة البيجر تطلب جوال العميل (اختياري)، ولما يضغط الكاشير «جاهز» توصله رسالة واتساب
 //   المحل اللي ما عنده ربط: ما يتغير عنده شي
-//   المزوّدين: Meta الرسمي (قالب معتمد) و UltraMsg و Green API
+//   المزوّدين: Meta الرسمي (قالب معتمد) و UltraMsg و Green API و WasenderAPI
+//   أو خادم خاص بالمحل (custom): رابطهم ومفتاحهم وشكل الطلب اللي يقبله خادمهم
 //   المفتاح ينحفظ مشفّر في client_whatsapp، وما يرجع للمتصفح أبداً
 // =====================================================================
 const crypto = require('crypto');
 const { rest, ApiError } = require('./core');
 
-const PROVIDERS = ['meta', 'ultramsg', 'greenapi'];
+const PROVIDERS = ['meta', 'ultramsg', 'greenapi', 'wasender', 'custom'];
+const AUTH_STYLES = ['bearer', 'supabase', 'header'];
+const DEFAULT_BODY = '{"phone": "{phone}", "message": "{message}"}';
 const DEFAULT_MESSAGE = 'طلبك رقم {number} جاهز، تفضّل استلمه من {store}';
 
 // ─── التشفير: المفتاح من INTEGRATIONS_KEY، ولو ما انضاف من مفتاح الخادم ───
@@ -62,6 +65,13 @@ async function configFor(storeId) {
 const linked = async (storeId) => !!(await configFor(storeId));
 const forget = () => cache.clear();
 
+// شكل طلب الخادم الخاص: القيم تنحط داخل JSON بشكل آمن (علامات التنصيص والأسطر)
+function fillBody(tpl, vals) {
+  const out = String(tpl || DEFAULT_BODY).replace(/\{(phone_plus|phone|message|number|store)\}/g, (_, k) => JSON.stringify(String(vals[k] ?? '')).slice(1, -1));
+  try { const v = JSON.parse(out); return v && typeof v === 'object' ? JSON.stringify(v) : null; } catch { return null; }
+}
+const validBody = (tpl) => fillBody(tpl, { phone: '966500000000', phone_plus: '+966500000000', message: 'x', number: '1', store: 'x' }) !== null;
+
 const fill = (tpl, vars) => String(tpl || DEFAULT_MESSAGE).replace(/\{number\}/g, vars.number ?? '').replace(/\{store\}/g, vars.store ?? '');
 
 // ─── الإرسال حسب المزوّد. يرجّع { ok, error } ───
@@ -86,14 +96,34 @@ async function send(cfg, to, vars) {
     const base = (cfg.api_url || 'https://api.green-api.com').replace(/\/+$/, '');
     url = `${base}/waInstance${encodeURIComponent(cfg.instance)}/sendMessage/${encodeURIComponent(token)}`;
     init = { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chatId: `${phone}@c.us`, message: fill(cfg.message, vars) }) };
+  } else if (cfg.provider === 'wasender') {
+    url = 'https://www.wasenderapi.com/api/send-message';
+    init = { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ to: `+${phone}`, text: fill(cfg.message, vars) }) };
+  } else if (cfg.provider === 'custom') {
+    if (!/^https:\/\//i.test(cfg.api_url || '')) return { ok: false, error: 'رابط الخادم غير صحيح' };
+    const body = fillBody(cfg.body_tpl, { phone, phone_plus: `+${phone}`, message: fill(cfg.message, vars), number: vars.number, store: vars.store });
+    if (!body) return { ok: false, error: 'شكل الطلب (JSON) غير صحيح' };
+    const headers = { 'Content-Type': 'application/json' };
+    if (cfg.auth_style === 'header' && cfg.auth_header) headers[cfg.auth_header] = token;
+    else if (cfg.auth_style === 'supabase') Object.assign(headers, { apikey: token, Authorization: `Bearer ${token}` });
+    else headers.Authorization = `Bearer ${token}`;
+    url = cfg.api_url; init = { headers, body };
   } else return { ok: false, error: 'مزوّد غير معروف' };
+  return post(url, init, cfg.provider === 'wasender');
+}
+
+// الطلب نفسه. Wasender: الحد مشترك على الرقم، فلو رد «انتظر» (retry_after) ننتظر ونعيد مرة وحدة إذا الانتظار قصير
+async function post(url, init, canWait, tried = false) {
   try {
     const r = await fetch(url, { method: 'POST', ...init, signal: AbortSignal.timeout(15000) });
     const text = await r.text();
     let data = null; try { data = JSON.parse(text); } catch {}
+    const wait = Number(data && data.retry_after);
+    if (canWait && !tried && wait > 0 && wait <= 8) { await new Promise(res => setTimeout(res, wait * 1000 + 300)); return post(url, init, canWait, true); }
     // UltraMsg يرجّع 200 حتى مع الخطأ، والخطأ يكون في error
     const err = !r.ok ? ((data && (data.error && (data.error.message || data.error))) || data && data.message || `HTTP ${r.status}`)
-      : data && data.error ? (data.error.message || data.error) : null;
+      : data && data.error ? (data.error.message || data.error)
+      : data && data.success === false ? (data.message || 'المزوّد رفض الرسالة') : null;
     return err ? { ok: false, error: String(typeof err === 'string' ? err : JSON.stringify(err)).slice(0, 200) } : { ok: true };
   } catch (e) {
     return { ok: false, error: e && (e.name === 'TimeoutError' || e.name === 'AbortError') ? 'المزوّد ما رد خلال 15 ثانية' : String(e.message || e).slice(0, 200) };
@@ -115,4 +145,4 @@ async function pagerReady(store, ticket) {
   return r.ok ? 'sent' : 'failed';
 }
 
-module.exports = { PROVIDERS, DEFAULT_MESSAGE, encrypt, decrypt, intlPhone, maskPhone, configFor, linked, forget, send, pagerReady };
+module.exports = { PROVIDERS, AUTH_STYLES, DEFAULT_BODY, validBody, DEFAULT_MESSAGE, encrypt, decrypt, intlPhone, maskPhone, configFor, linked, forget, send, pagerReady };

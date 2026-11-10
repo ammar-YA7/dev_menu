@@ -88,7 +88,7 @@
         return `<div class="dmd-field" data-fi="${i}">
           <label class="dmd-label" for="dmd-f${i}">${esc(f.label)}${f.required ? '' : ' <small>(اختياري)</small>'}</label>
           ${f.multiline
-            ? `<textarea id="dmd-f${i}" class="dmd-input" rows="4" data-name="${esc(f.name)}" placeholder="${esc(f.placeholder || '')}" ${f.maxlength ? `maxlength="${Number(f.maxlength)}"` : ''} style="resize:vertical;min-height:96px;line-height:1.6">${esc(f.value ?? '')}</textarea>`
+            ? `<textarea id="dmd-f${i}" class="dmd-input" rows="4" data-name="${esc(f.name)}" ${f.dir ? `dir="${esc(f.dir)}"` : ''} placeholder="${esc(f.placeholder || '')}" ${f.maxlength ? `maxlength="${Number(f.maxlength)}"` : ''} style="resize:vertical;min-height:96px;line-height:1.6">${esc(f.value ?? '')}</textarea>`
             : `<input id="dmd-f${i}" class="dmd-input" data-name="${esc(f.name)}" value="${esc(f.value ?? '')}" placeholder="${esc(f.placeholder || '')}"
             ${f.maxlength ? `maxlength="${Number(f.maxlength)}"` : ''} ${f.dir ? `dir="${esc(f.dir)}"` : ''} autocomplete="off">`}
           ${f.suggestions && f.suggestions.length ? `<div class="dmd-sugg">${f.suggestions.map(s => `<button type="button" data-fill="${i}" data-v="${esc(s)}">${esc(s)}</button>`).join('')}</div>` : ''}
@@ -149,7 +149,7 @@
             return;
           }
           const input = back.querySelector(`#dmd-f${i}`), v = input.value.trim();
-          const err = f.required && !v ? `اكتب ${f.label}` : (f.validate ? f.validate(v) : '') || '';
+          const err = f.required && !v && (!f.showIf || f.showIf(values)) ? `اكتب ${f.label}` : (f.validate ? f.validate(v) : '') || '';
           back.querySelector(`[data-err="${i}"]`).textContent = err;
           input.classList.toggle('bad', !!err);
           if (err && ok) { ok = false; input.focus(); }
