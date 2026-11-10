@@ -5,6 +5,7 @@
 //   GET  /api/pager?action=status&slug=&t= حالة الرقم (waiting / ready / done / cancelled)
 //   POST /api/pager?action=subscribe       اشتراك إشعارات الجوال للرقم { slug, t, sub }
 //   POST /api/pager?action=ack             العميل شاف التنبيه ← يوقف تكرار الإشعار { slug, t }
+//   POST /api/pager?action=wa              جوال العميل لرسالة واتساب «طلبك جاهز» (المحل المربوط بواتساب فقط) { slug, t, phone }
 //   POST /api/pager?action=invoice         العميل يكتب رقم فاتورته، ويطلع عند الموظف { slug, t, invoice }
 //   POST /api/pager?action=rate            تقييم الزبون بعد الاستلام { slug, t, rating, note } ← رابط تقييم قوقل للراضين
 // الكاشير يغيّر الحالة من /api/owner?action=pager-update
@@ -19,6 +20,7 @@ const { pagerReadyNotice } = require('./_lib/loyalty-assistant');
 const SECTORS = require('./_lib/sectors');
 const { riyadhDayStart } = require('./_lib/waitlist');
 const wallet = require('./_lib/wallet');
+const WA = require('./_lib/whatsapp');
 // تحديث رقم المحفظة لما يجي دوره (يطلع إشعار من النظام)
 async function walletReady(store, t) {
   if (!t.wallet_serial) return;
@@ -273,7 +275,7 @@ module.exports = handler(['GET', 'POST'], async (req, res) => {
     const token = String(req.query.t || '');
     if (!TOKEN_RE.test(token)) throw new ApiError(404, 'الرقم غير موجود', 'NOT_FOUND');
     const sel = `pager_tickets?token=eq.${q(token)}&client_id=eq.${store.id}&select=id,number,status,created_at,ready_at`;
-    const t = (await rest(`${sel},invoice_no,loyalty_card_id,loyalty_stamped,wallet_url,wallet_serial,wallet_error,car,addons,game_won,eta_at`).catch(() => rest(`${sel},invoice_no,loyalty_card_id,loyalty_stamped,wallet_url,wallet_serial,wallet_error,car,addons,game_won`)).catch(() => rest(`${sel},invoice_no,loyalty_card_id,loyalty_stamped,wallet_url,wallet_serial,wallet_error,car`)).catch(() => rest(`${sel},invoice_no,loyalty_card_id,loyalty_stamped,wallet_url,wallet_serial,wallet_error`)).catch(() => rest(`${sel},invoice_no`)).catch(() => rest(sel)))[0];
+    const t = (await rest(`${sel},invoice_no,loyalty_card_id,loyalty_stamped,wallet_url,wallet_serial,wallet_error,car,addons,game_won,eta_at,wa_phone`).catch(() => rest(`${sel},invoice_no,loyalty_card_id,loyalty_stamped,wallet_url,wallet_serial,wallet_error,car,addons,game_won,eta_at`)).catch(() => rest(`${sel},invoice_no,loyalty_card_id,loyalty_stamped,wallet_url,wallet_serial,wallet_error,car,addons,game_won`)).catch(() => rest(`${sel},invoice_no,loyalty_card_id,loyalty_stamped,wallet_url,wallet_serial,wallet_error,car`)).catch(() => rest(`${sel},invoice_no,loyalty_card_id,loyalty_stamped,wallet_url,wallet_serial,wallet_error`)).catch(() => rest(`${sel},invoice_no`)).catch(() => rest(sel)))[0];
     if (!t) throw new ApiError(404, 'الرقم غير موجود', 'NOT_FOUND');
     if (DEMO.has(store.client_slug) && t.status === 'waiting' && Date.now() - Date.parse(t.created_at) > (t.wallet_url ? DEMO_AFTER_CARD : DEMO_AFTER)) {
       await demoRing(store, token);
@@ -287,6 +289,8 @@ module.exports = handler(['GET', 'POST'], async (req, res) => {
       && ((await rest(`pager_cards?wallet_serial=eq.${q(t.wallet_serial || '')}&select=platform`).catch(() => []))[0] || {}).platform !== 'google';
     // تسليم الطلب للسيارة: صاحب المحل مشغّله، فنسأل الزبون عن سيارته
     const car_ask = t.status === 'waiting' && ((await rest(`clients?id=eq.${store.id}&select=pager_car`).catch(() => []))[0] || {}).pager_car === true;
+    // المحل مربوط بواتساب: خانة اختيارية للجوال وهو ينتظر
+    const wa_ask = t.status === 'waiting' && !stale && await WA.linked(store.id);
     // إضافات صفحة الانتظار: الصفحة تسأل عنها مرة وحدة لكل رقم (c=1)، مو مع كل تحديث كل 3 ثواني
     const live = ['waiting', 'ready'].includes(t.status) && !stale;
     const extras = req.query.c === '1' ? (live ? await waitExtras(store.id, t) : { chat: false, upsell: [], game: null, game_on: true }) : {};
@@ -301,7 +305,7 @@ module.exports = handler(['GET', 'POST'], async (req, res) => {
     }
     // وقت الكاشير يوصل مع كل تحديث (يتغير فوراً عند الزبون)، والتقدير من الطابور كل 15 ثانية
     const staffEta = t.status === 'waiting' && t.eta_at ? require('./_lib/pager-wait').estimate(t, 0, null) : null;
-    return { ...extras, ...(queue ? { queue } : {}), staff_eta: staffEta, addons: publicAddons(t.addons), game_won: t.game_won === true, demo: DEMO.has(store.client_slug), wallet: wallet.configured() && !store.free && !(await wallet.cardMaintenance()), in_wallet: !!t.wallet_url && !card_gone, card_gone, car_ask, car: t.car || null, review_url: review, social, store: { name: store.display_name || store.name, logo_url: store.logo_url, business_type: store.business_type, accent_color: store.accent_color || null }, ticket: { number: t.number, status: stale ? 'expired' : t.status, ready_at: t.ready_at, invoice_no: t.invoice_no || null }, live: topic('ticket', token),
+    return { ...extras, ...(queue ? { queue } : {}), staff_eta: staffEta, addons: publicAddons(t.addons), game_won: t.game_won === true, demo: DEMO.has(store.client_slug), wallet: wallet.configured() && !store.free && !(await wallet.cardMaintenance()), in_wallet: !!t.wallet_url && !card_gone, card_gone, car_ask, car: t.car || null, wa_ask, wa: wa_ask ? WA.maskPhone(t.wa_phone) : null, review_url: review, social, store: { name: store.display_name || store.name, logo_url: store.logo_url, business_type: store.business_type, accent_color: store.accent_color || null }, ticket: { number: t.number, status: stale ? 'expired' : t.status, ready_at: t.ready_at, invoice_no: t.invoice_no || null }, live: topic('ticket', token),
       loyalty: { ...(await loyaltyOf(store.id)), linked: !!t.loyalty_card_id, stamped: !!t.loyalty_stamped,
         ...(await linkedCard(store.id, t.loyalty_card_id)) } };
   }
@@ -378,6 +382,21 @@ module.exports = handler(['GET', 'POST'], async (req, res) => {
     await rest(`pager_tickets?id=eq.${t.id}`, { method: 'PATCH', body: { car } });
     await poke([topic('pager', store.id), topic('ticket', token)]);
     return { car };
+  }
+
+  // ─── جوال العميل لرسالة واتساب «طلبك جاهز» (بس للمحل المربوط بواتساب) ───
+  if (action === 'wa' && req.method === 'POST') {
+    const store = await loadStore(b.slug);
+    const token = String(b.t || '');
+    if (!TOKEN_RE.test(token)) throw new ApiError(404, 'الرقم غير موجود', 'NOT_FOUND');
+    if (!(await WA.linked(store.id))) throw new ApiError(409, 'رسائل الواتساب غير متاحة في هذا المحل', 'WA_OFF');
+    const raw = String(b.phone || '').trim();
+    const phone = raw ? WA.intlPhone(raw) : null;
+    if (raw && !phone) throw new ApiError(400, 'اكتب رقم جوال صحيح، مثل 0512345678');
+    const rows = await rest(`pager_tickets?token=eq.${q(token)}&client_id=eq.${store.id}&status=eq.waiting`, { method: 'PATCH', body: { wa_phone: phone }, prefer: 'return=representation' });
+    if (!rows.length) throw new ApiError(404, 'الرقم غير موجود أو انتهى', 'NOT_FOUND');
+    await poke(topic('pager', store.id));
+    return { wa: WA.maskPhone(phone) };
   }
 
   if (action === 'invoice' && req.method === 'POST') {

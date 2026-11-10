@@ -543,6 +543,16 @@
       <p id="car-err" class="hidden text-[12px] font-bold text-rose-700"></p>
     </form>
     <button type="button" id="car-chip" class="hidden chip mx-auto"><span></span> <i class="ph-bold ph-pencil-simple"></i></button>
+    <!-- المحل مربوط بواتساب: العميل يكتب جواله وتوصله رسالة لما يجهز طلبه -->
+    <form id="wa-form" class="card p-4 space-y-2.5 hidden" novalidate>
+      <label for="wa-in" class="block font-black text-[14px]"><i class="ph-bold ph-whatsapp-logo"></i> اكتب جوالك وتوصلك رسالة واتساب لما يجهز طلبك <span class="font-bold opacity-55 text-[12px]">(اختياري)</span></label>
+      <div class="flex gap-2">
+        <input id="wa-in" type="tel" class="field flex-1 min-w-0 text-center !text-lg !font-black tracking-wider" inputmode="tel" autocomplete="tel" maxlength="16" dir="ltr" placeholder="05xxxxxxxx">
+        <button id="wa-save" class="btn btn-brand !w-auto !px-5 !py-3 !text-base">تم</button>
+      </div>
+      <p id="wa-err" class="hidden text-[12px] font-bold text-rose-700"></p>
+    </form>
+    <button type="button" id="wa-chip" class="hidden chip mx-auto"><i class="ph-bold ph-whatsapp-logo"></i> <span></span> <i class="ph-bold ph-pencil-simple"></i></button>
     <!-- العميل يكتب رقم فاتورته -->
     <form id="inv-form" class="card p-4 space-y-2.5 hidden" novalidate>
       <label for="inv-in" class="block font-black text-[14px]"><i class="ph-bold ph-receipt"></i> رقم فاتورتك <span class="font-bold opacity-55 text-[12px]">(اختياري)</span></label>
@@ -1095,6 +1105,25 @@
     } catch (err) { $('car-err').textContent = err.message || 'ما انحفظت. تأكد من الإنترنت وحاول مرة ثانية'; $('car-err').classList.remove('hidden'); }
     btn.disabled = false;
   };
+  // ─── رسالة واتساب لما يجهز الطلب (المحل المربوط بواتساب فقط) ───
+  let waEditing = false;
+  function renderWa(r, st) {
+    const ask = !!r.wa_ask && st === 'waiting', has = !!r.wa;
+    $('wa-form').classList.toggle('hidden', !ask || (has && !waEditing));
+    $('wa-chip').classList.toggle('hidden', !ask || !has || waEditing);
+    if (has) $('wa-chip').querySelector('span').innerHTML = `يوصلك واتساب على <bdi dir="ltr">${r.wa}</bdi> لما يجهز طلبك`;
+  }
+  $('wa-chip').onclick = () => { waEditing = true; $('wa-in').value = ''; renderWa({ wa_ask: true, wa: 'x' }, 'waiting'); $('wa-in').focus(); };
+  $('wa-form').onsubmit = async (e) => {
+    e.preventDefault();
+    const btn = $('wa-save'); btn.disabled = true; $('wa-err').classList.add('hidden');
+    try {
+      const r = await DM.post('/api/pager?action=wa', { slug, t: loadToken(), phone: $('wa-in').value.trim() });
+      waEditing = false;
+      renderWa({ wa_ask: true, wa: r.wa }, 'waiting');
+    } catch (err) { $('wa-err').textContent = err.message || 'ما انحفظ. تأكد من الإنترنت وحاول مرة ثانية'; $('wa-err').classList.remove('hidden'); }
+    btn.disabled = false;
+  };
   // ─── رقم الفاتورة من العميل ───
   let invEditing = false;
   $('w-invoice').onclick = () => { invEditing = true; $('inv-in').value = $('w-invoice').querySelector('span').textContent; $('inv-form').classList.remove('hidden'); $('inv-in').focus(); };
@@ -1528,6 +1557,7 @@
     $('w-tell').classList.toggle('hidden', !!inv);
     if (!invEditing) $('inv-form').classList.add('hidden');   // الفاتورة تنكتب قبل أخذ الرقم، وهنا تعديل بس
     renderCar(r, st);
+    renderWa(r, st);
     $('w-demo').classList.toggle('hidden', !r.demo);
     const ly = r.loyalty || {};
     // بطاقة النداء للمحل اللي ما عنده ولاء بس (المحل المشترك في الولاء: النداء يوصل من بطاقة الولاء)

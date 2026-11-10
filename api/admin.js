@@ -13,6 +13,7 @@ const { notifyOwner } = require('./_lib/owner-notify');
 const { sendMail, mailConfigured } = require('./_lib/mail');
 const { PLAN_PRICE, invoiceNumber, invoiceEmail, branchProration, branchInvoiceLines } = require('./_lib/invoice');
 const PLANS = require('./_lib/plans');
+const WA = require('./_lib/whatsapp');
 const SECTORS = require('./_lib/sectors');
 
 // يرسل الفاتورة لبريد صاحب الحساب (المتجر الرئيسي). ما يوقف العملية لو فشل
@@ -247,6 +248,51 @@ module.exports = handler(['GET', 'POST'], async (req) => {
     return { ok: true };
   }
   if (action === 'featured') return patch({ is_featured: b.featured === true });
+  // ─── ربط واتساب خارجي لهذا المحل فقط (المفتاح ما يرجع للمتصفح) ───
+  if (action === 'wa-get') {
+    const row = (await rest(`client_whatsapp?client_id=eq.${id}&select=provider,instance,api_url,template,template_lang,template_vars,message,enabled,last_error,last_sent_at,updated_at`))[0];
+    return { wa: row ? { ...row, has_token: true } : null, default_message: WA.DEFAULT_MESSAGE };
+  }
+  if (action === 'wa-save') {
+    const provider = String(b.provider || '');
+    if (!WA.PROVIDERS.includes(provider)) throw new ApiError(400, 'اختر مزوّد الواتساب');
+    const instance = str(b.instance, 120, 'المعرّف');
+    if (!instance) throw new ApiError(400, provider === 'meta' ? 'اكتب Phone number ID' : 'اكتب رقم الـ Instance');
+    const old = (await rest(`client_whatsapp?client_id=eq.${id}&select=token_enc`))[0];
+    const token = String(b.token || '').trim();
+    if (!token && !old) throw new ApiError(400, 'اكتب المفتاح (Token)');
+    if (token.length > 2000) throw new ApiError(400, 'المفتاح طويل جداً');
+    const apiUrl = String(b.api_url || '').trim();
+    if (apiUrl && !/^https:\/\/[a-z0-9.-]+(:\d+)?\/?$/i.test(apiUrl)) throw new ApiError(400, 'رابط الـ API غير صحيح');
+    const template = provider === 'meta' ? str(b.template, 120, 'اسم القالب') : null;
+    if (provider === 'meta' && !template) throw new ApiError(400, 'اكتب اسم القالب المعتمد من Meta');
+    const vars = ['none', 'number', 'number_store'].includes(b.template_vars) ? b.template_vars : 'number_store';
+    if (!(await rest(`clients?id=eq.${id}&select=id`))[0]) throw new ApiError(404, 'المتجر غير موجود');
+    const row = {
+      client_id: id, provider, instance, api_url: provider === 'greenapi' ? (apiUrl || null) : null,
+      token_enc: token ? WA.encrypt(token) : old.token_enc, template, template_lang: str(b.template_lang, 12, 'لغة القالب') || 'ar', template_vars: vars,
+      message: provider === 'meta' ? null : (str(b.message, 500, 'نص الرسالة') || null), enabled: b.enabled !== false, updated_at: new Date().toISOString(),
+      ...(token ? { last_error: null } : {})
+    };
+    await rest('client_whatsapp', { method: 'POST', prefer: 'resolution=merge-duplicates', body: row });
+    WA.forget();
+    return { ok: true };
+  }
+  if (action === 'wa-test') {
+    const cfg = (await rest(`client_whatsapp?client_id=eq.${id}&select=*`))[0];
+    if (!cfg) throw new ApiError(404, 'المحل غير مربوط بواتساب');
+    if (!WA.intlPhone(b.phone)) throw new ApiError(400, 'اكتب رقم جوال صحيح');
+    const store = (await rest(`clients?id=eq.${id}&select=name`))[0] || {};
+    const r = await WA.send(cfg, b.phone, { number: 23, store: store.name || '' });
+    await rest(`client_whatsapp?client_id=eq.${id}`, { method: 'PATCH', body: r.ok ? { last_sent_at: new Date().toISOString(), last_error: null } : { last_error: `${new Date().toISOString().slice(0, 16)} ${r.error}`.slice(0, 220) } }).catch(() => {});
+    if (!r.ok) throw new ApiError(502, `ما وصلت الرسالة: ${r.error}`, 'WA_FAILED');
+    return { ok: true };
+  }
+  if (action === 'wa-delete') {
+    await rest(`client_whatsapp?client_id=eq.${id}`, { method: 'DELETE' });
+    WA.forget();
+    return { ok: true };
+  }
   // نوع نشاط المحل (المدير العام يعدّله)
   if (action === 'business-type') {
     if (!SECTORS.KEYS.includes(b.type)) throw new ApiError(400, 'نوع نشاط غير صحيح');
