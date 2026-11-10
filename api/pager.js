@@ -290,7 +290,7 @@ module.exports = handler(['GET', 'POST'], async (req, res) => {
     // تسليم الطلب للسيارة: صاحب المحل مشغّله، فنسأل الزبون عن سيارته
     const car_ask = t.status === 'waiting' && ((await rest(`clients?id=eq.${store.id}&select=pager_car`).catch(() => []))[0] || {}).pager_car === true;
     // المحل مربوط بواتساب: خانة اختيارية للجوال وهو ينتظر
-    const wa_ask = t.status === 'waiting' && !stale && await WA.linked(store.id);
+    const wa_ask = t.status === 'waiting' && !stale && await WA.askPhone(store.id);
     // إضافات صفحة الانتظار: الصفحة تسأل عنها مرة وحدة لكل رقم (c=1)، مو مع كل تحديث كل 3 ثواني
     const live = ['waiting', 'ready'].includes(t.status) && !stale;
     const extras = req.query.c === '1' ? (live ? await waitExtras(store.id, t) : { chat: false, upsell: [], game: null, game_on: true }) : {};
@@ -404,7 +404,7 @@ module.exports = handler(['GET', 'POST'], async (req, res) => {
     const token = String(b.t || '');
     if (!TOKEN_RE.test(token)) throw new ApiError(404, 'الرقم غير موجود', 'NOT_FOUND');
     const invoice = cleanInvoice(b.invoice);
-    const t = (await rest(`pager_tickets?token=eq.${q(token)}&client_id=eq.${store.id}&status=in.(waiting,ready)&select=id,number,status,lang,wallet_serial`))[0];
+    const t = (await rest(`pager_tickets?token=eq.${q(token)}&client_id=eq.${store.id}&status=in.(waiting,ready)&select=id,number,status,lang,wallet_serial,wa_phone,wa_status`).catch(() => rest(`pager_tickets?token=eq.${q(token)}&client_id=eq.${store.id}&status=in.(waiting,ready)&select=id,number,status,lang,wallet_serial`)))[0];
     if (!t) throw new ApiError(404, 'الرقم غير موجود أو انتهى', 'NOT_FOUND');
     if (invoice) {
       const dup = await rest(`pager_tickets?client_id=eq.${store.id}&invoice_no=eq.${q(invoice)}&id=neq.${t.id}&created_at=gte.${q(riyadhDayStart())}&status=in.(waiting,ready)&select=number&limit=1`);
@@ -413,6 +413,8 @@ module.exports = handler(['GET', 'POST'], async (req, res) => {
     await rest(`pager_tickets?id=eq.${t.id}`, { method: 'PATCH', body: { invoice_no: invoice || null } });
     // رقم الفاتورة في بطاقة النداء (بصمت)
     if (t.wallet_serial) later(wallet.updatePagerPass(t.wallet_serial, { ...wallet.pagerStep({ store, number: t.number, step: t.status, lang: t.lang, invoice }), silent: true }));
+    // كتب الفاتورة بعد ما جهز طلبه والرسالة ما انرسلت: ترسل الحين (المحل اللي يرسل برقم الفاتورة)
+    if (t.status === 'ready' && invoice && !t.wa_status) later(WA.pagerReady(store, { ...t, invoice_no: invoice }).catch(e => console.error('PAGER_WA', e.message)));
     await poke([topic('pager', store.id), topic('ticket', token)]);
     return { invoice_no: invoice || null };
   }

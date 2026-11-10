@@ -1148,12 +1148,17 @@
           { value: 'supabase', label: 'Supabase', desc: 'apikey و Authorization: Bearer بنفس المفتاح' },
           { value: 'header', label: 'ترويسة خاصة', desc: 'مثل x-api-key' }] },
         { name: 'auth_header', label: 'اسم الترويسة', value: w.auth_header || '', dir: 'ltr', maxlength: 60, placeholder: 'x-api-key', required: true, showIf: (x) => x.provider === 'custom' && x.auth_style === 'header' },
-        { name: 'body_tpl', label: 'شكل الطلب (JSON)', value: w.body_tpl || '', dir: 'ltr', multiline: true, maxlength: 2000, placeholder: defBody, hint: 'المتغيرات: {phone} الجوال بدون + مثل 9665xxxxxxxx، و {phone_plus} مع +، و {message} نص الرسالة، و {number} رقم الطلب، و {store} اسم المحل. إذا تُرك فارغاً يُستخدم الشكل الظاهر.', showIf: (x) => x.provider === 'custom' },
+        { name: 'send_mode', label: 'متى تُرسل الرسالة؟', type: 'choice', value: w.send_mode || 'phone', showIf: (x) => x.provider === 'custom', options: [
+          { value: 'phone', label: 'عندما يكتب العميل جواله', desc: 'في صفحة البيجر' },
+          { value: 'invoice', label: 'لكل طلب عليه رقم فاتورة', desc: 'خادم المزوّد يجلب اسم العميل وجواله برقم الفاتورة' }] },
+        { name: 'ask_phone', label: 'خانة الجوال في صفحة البيجر', type: 'choice', value: w.ask_phone === false ? 'off' : 'on', showIf: (x) => x.provider === 'custom' && x.send_mode === 'invoice', options: [
+          { value: 'on', label: 'تظهر', desc: 'إذا لم يكن جوال العميل في قاعدة المزوّد' }, { value: 'off', label: 'مخفية', desc: 'جوال العميل موجود عند المزوّد' }] },
+        { name: 'body_tpl', label: 'شكل الطلب (JSON)', value: w.body_tpl || '', dir: 'ltr', multiline: true, maxlength: 2000, placeholder: defBody, hint: 'المتغيرات: {phone} الجوال بدون + مثل 9665xxxxxxxx، و {phone_plus} مع +، و {message} نص الرسالة، و {number} رقم الطلب، و {invoice} رقم الفاتورة، و {store} اسم المحل. إذا تُرك فارغاً يُستخدم الشكل الظاهر.', showIf: (x) => x.provider === 'custom' },
         { name: 'template', label: 'اسم القالب المعتمد', value: w.template || '', dir: 'ltr', maxlength: 120, showIf: (x) => x.provider === 'meta' },
         { name: 'template_lang', label: 'لغة القالب', value: w.template_lang || 'ar', dir: 'ltr', maxlength: 12, showIf: (x) => x.provider === 'meta' },
         { name: 'template_vars', label: 'متغيرات القالب', type: 'choice', value: w.template_vars || 'number_store', showIf: (x) => x.provider === 'meta', options: [
           { value: 'number_store', label: '{{1}} الرقم و {{2}} المحل' }, { value: 'number', label: '{{1}} الرقم فقط' }, { value: 'none', label: 'بدون متغيرات' }] },
-        { name: 'message', label: 'نص الرسالة', value: w.message || '', multiline: true, maxlength: 500, placeholder: def, hint: 'استخدم {number} لرقم الطلب و {store} لاسم المحل. إذا تُرك فارغاً يُستخدم النص الافتراضي.', showIf: (x) => x.provider !== 'meta' },
+        { name: 'message', label: 'نص الرسالة', value: w.message || '', multiline: true, maxlength: 500, placeholder: def, hint: 'استخدم {number} لرقم الطلب و {invoice} لرقم الفاتورة و {store} لاسم المحل. إذا تُرك فارغاً يُستخدم النص الافتراضي.', showIf: (x) => x.provider !== 'meta' },
         { name: 'enabled', label: 'الحالة', type: 'choice', value: cur && w.enabled === false ? 'off' : 'on', options: [
           { value: 'on', label: 'مفعّل', icon: 'ph-check-circle' }, { value: 'off', label: 'متوقف', icon: 'ph-pause' },
           ...(cur ? [{ value: 'remove', label: 'إلغاء الربط', icon: 'ph-trash' }] : [])] }]
@@ -1165,14 +1170,15 @@
       return showToast(err ? `تعذر الإلغاء: ${err.message}` : 'تم إلغاء ربط الواتساب', !!err);
     }
     if (v.provider === 'meta' && !v.template) return showToast('اكتب اسم القالب المعتمد من Meta', true);
-    const err = await post('wa-save', { id, ...v, api_url: v.provider === 'greenapi' ? v.gapi_url : v.api_url, enabled: v.enabled === 'on' });
+    const err = await post('wa-save', { id, ...v, api_url: v.provider === 'greenapi' ? v.gapi_url : v.api_url, ask_phone: v.ask_phone !== 'off', enabled: v.enabled === 'on' });
     if (err) return showToast(`تعذر الحفظ: ${err.message}`, true);
     showToast(v.enabled === 'on' ? 'تم حفظ الربط' : 'تم الحفظ، والربط متوقف');
     if (v.enabled !== 'on') return;
     const t = await DMDialog.form({ title: 'رسالة تجربة', subtitle: 'تُرسل رسالة «طلبك جاهز» برقم 23 للتأكد من الربط', icon: 'ph-paper-plane-tilt', confirmText: 'أرسل',
-      fields: [{ name: 'phone', label: 'رقم الجوال', placeholder: '05xxxxxxxx', dir: 'ltr', maxlength: 16, required: true }] });
+      fields: [{ name: 'phone', label: 'رقم الجوال', placeholder: '05xxxxxxxx', dir: 'ltr', maxlength: 16, required: true },
+        ...(v.provider === 'custom' && v.send_mode === 'invoice' ? [{ name: 'invoice', label: 'رقم فاتورة للتجربة', placeholder: '1045', dir: 'ltr', maxlength: 20, hint: 'رقم فاتورة موجود في قاعدة المزوّد حتى يجلب بيانات العميل.' }] : [])] });
     if (!t) return;
-    const te = await post('wa-test', { id, phone: t.phone });
+    const te = await post('wa-test', { id, phone: t.phone, invoice: t.invoice || '' });
     showToast(te ? te.message : 'وصلت رسالة التجربة', !!te);
   }
 

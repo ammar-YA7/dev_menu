@@ -163,7 +163,7 @@ module.exports.post = async function post(action, req, b, env) {
     const now = new Date().toISOString();
     const patch = { status };
     // "جاهز" = أول رنّة، والعدّاد يبدأ من جديد (لو رجع للتجهيز ثم جاهز مرة ثانية)
-    if (status === 'ready') Object.assign(patch, { ready_at: now, closed_at: null, ring_count: 0, last_ring_at: null, acked_at: null });
+    if (status === 'ready') Object.assign(patch, { ready_at: now, closed_at: null, ring_count: 0, last_ring_at: null, acked_at: null, wa_status: null });
     else if (status === 'waiting') { patch.ready_at = null; patch.closed_at = null; }
     else patch.closed_at = now;
     if (status === 'done' || status === 'cancelled') patch.push_sub = null;
@@ -200,8 +200,8 @@ module.exports.post = async function post(action, req, b, env) {
         await poke([topic('pager', sid), topic('ticket', t.token)]);   // صفحة الزبون تشوف الختم
       })());
     }
-    // المحل مربوط بواتساب والعميل كتب جواله: رسالة «طلبك جاهز» (بالخلفية)
-    if (status === 'ready' && t.wa_phone) later(WA.pagerReady(store, t).catch(e => console.error('PAGER_WA', e.message)));
+    // المحل مربوط بواتساب، والعميل كتب جواله أو الرقم عليه فاتورة: رسالة «طلبك جاهز» (بالخلفية)
+    if (status === 'ready' && (t.wa_phone || t.invoice_no)) later(WA.pagerReady(store, t).catch(e => console.error('PAGER_WA', e.message)));
     const push = status === 'ready' ? await ringTicket(store, t) : 'off';
     await poke([topic('pager', sid), topic('ticket', t.token)]);
     return { ticket: { id: t.id, number: t.number, status: t.status, created_at: t.created_at, ready_at: t.ready_at, closed_at: t.closed_at, has_push: !!t.push_sub, ring_count: t.ring_count || 0, acked_at: t.acked_at || null }, push };
@@ -245,6 +245,8 @@ module.exports.post = async function post(action, req, b, env) {
     const t = rows[0];
     // رقم الفاتورة في بطاقة النداء (بصمت)
     if (t.wallet_serial && ['waiting', 'ready'].includes(t.status)) later(wallet.updatePagerPass(t.wallet_serial, { ...wallet.pagerStep({ store, number: t.number, step: t.status, lang: t.lang, invoice: t.invoice_no }), silent: true }));
+    // الكاشير كتب الفاتورة بعد «جاهز» والرسالة ما انرسلت: ترسل الحين (المحل اللي يرسل برقم الفاتورة)
+    if (t.status === 'ready' && t.invoice_no && !t.wa_status) later(WA.pagerReady(store, t).catch(e => console.error('PAGER_WA', e.message)));
     await poke([topic('pager', sid), topic('ticket', t.token)]);
     return { ticket: { id: t.id, number: t.number, invoice_no: t.invoice_no } };
   }

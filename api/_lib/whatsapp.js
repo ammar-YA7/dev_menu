@@ -63,23 +63,28 @@ async function configFor(storeId) {
   return cfg;
 }
 const linked = async (storeId) => !!(await configFor(storeId));
+// خانة الجوال في صفحة البيجر (تختفي لو خادم المزوّد يجيب جوال العميل برقم الفاتورة)
+const askPhone = async (storeId) => { const c = await configFor(storeId); return !!c && c.ask_phone !== false; };
+// الإرسال برقم الفاتورة: الخادم الخاص بس، وهو اللي يجيب بيانات العميل
+const byInvoice = (cfg) => !!cfg && cfg.provider === 'custom' && cfg.send_mode === 'invoice';
 const forget = () => cache.clear();
 
 // شكل طلب الخادم الخاص: القيم تنحط داخل JSON بشكل آمن (علامات التنصيص والأسطر)
 function fillBody(tpl, vals) {
-  const out = String(tpl || DEFAULT_BODY).replace(/\{(phone_plus|phone|message|number|store)\}/g, (_, k) => JSON.stringify(String(vals[k] ?? '')).slice(1, -1));
+  const out = String(tpl || DEFAULT_BODY).replace(/\{(phone_plus|phone|message|number|store|invoice)\}/g, (_, k) => JSON.stringify(String(vals[k] ?? '')).slice(1, -1));
   try { const v = JSON.parse(out); return v && typeof v === 'object' ? JSON.stringify(v) : null; } catch { return null; }
 }
 const validBody = (tpl) => fillBody(tpl, { phone: '966500000000', phone_plus: '+966500000000', message: 'x', number: '1', store: 'x' }) !== null;
 
-const fill = (tpl, vars) => String(tpl || DEFAULT_MESSAGE).replace(/\{number\}/g, vars.number ?? '').replace(/\{store\}/g, vars.store ?? '');
+const fill = (tpl, vars) => String(tpl || DEFAULT_MESSAGE).replace(/\{number\}/g, vars.number ?? '').replace(/\{store\}/g, vars.store ?? '').replace(/\{invoice\}/g, vars.invoice ?? '');
 
 // ─── الإرسال حسب المزوّد. يرجّع { ok, error } ───
 async function send(cfg, to, vars) {
   const token = decrypt(cfg.token_enc);
   if (!token) return { ok: false, error: 'المفتاح ما ينقرأ، أدخله من جديد' };
   const phone = intlPhone(to);
-  if (!phone) return { ok: false, error: 'رقم الجوال غير صحيح' };
+  // برقم الفاتورة: الجوال اختياري (خادمهم يجيبه)، لكن لازم فاتورة أو جوال
+  if (!phone && !(byInvoice(cfg) && vars.invoice)) return { ok: false, error: 'رقم الجوال غير صحيح' };
   let url, init;
   if (cfg.provider === 'meta') {
     const params = cfg.template_vars === 'none' ? [] : cfg.template_vars === 'number' ? [vars.number] : [vars.number, vars.store];
@@ -101,7 +106,7 @@ async function send(cfg, to, vars) {
     init = { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ to: `+${phone}`, text: fill(cfg.message, vars) }) };
   } else if (cfg.provider === 'custom') {
     if (!/^https:\/\//i.test(cfg.api_url || '')) return { ok: false, error: 'رابط الخادم غير صحيح' };
-    const body = fillBody(cfg.body_tpl, { phone, phone_plus: `+${phone}`, message: fill(cfg.message, vars), number: vars.number, store: vars.store });
+    const body = fillBody(cfg.body_tpl, { phone: phone || '', phone_plus: phone ? `+${phone}` : '', message: fill(cfg.message, vars), number: vars.number, store: vars.store, invoice: vars.invoice || '' });
     if (!body) return { ok: false, error: 'شكل الطلب (JSON) غير صحيح' };
     const headers = { 'Content-Type': 'application/json' };
     if (cfg.auth_style === 'header' && cfg.auth_header) headers[cfg.auth_header] = token;
@@ -131,11 +136,12 @@ async function post(url, init, canWait, tried = false) {
 }
 
 // ─── «طلبك جاهز» لرقم بيجر عنده جوال ───
+// يرسل لو العميل كتب جواله، أو (الإرسال برقم الفاتورة) لو الرقم عليه فاتورة
 async function pagerReady(store, ticket) {
-  if (!ticket || !ticket.wa_phone) return 'off';
+  if (!ticket || !(ticket.wa_phone || ticket.invoice_no)) return 'off';
   const cfg = await configFor(store.id);
-  if (!cfg) return 'off';
-  const r = await send(cfg, ticket.wa_phone, { number: ticket.number, store: store.display_name || store.name || '' });
+  if (!cfg || !(ticket.wa_phone || byInvoice(cfg))) return 'off';
+  const r = await send(cfg, ticket.wa_phone, { number: ticket.number, store: store.display_name || store.name || '', invoice: ticket.invoice_no || '' });
   const now = new Date().toISOString();
   await Promise.all([
     rest(`pager_tickets?id=eq.${ticket.id}`, { method: 'PATCH', body: { wa_status: r.ok ? `sent ${now.slice(11, 19)}` : `failed: ${r.error}`.slice(0, 200) } }).catch(() => {}),
@@ -145,4 +151,4 @@ async function pagerReady(store, ticket) {
   return r.ok ? 'sent' : 'failed';
 }
 
-module.exports = { PROVIDERS, AUTH_STYLES, DEFAULT_BODY, validBody, DEFAULT_MESSAGE, encrypt, decrypt, intlPhone, maskPhone, configFor, linked, forget, send, pagerReady };
+module.exports = { PROVIDERS, AUTH_STYLES, DEFAULT_BODY, validBody, DEFAULT_MESSAGE, encrypt, decrypt, intlPhone, maskPhone, configFor, linked, askPhone, byInvoice, forget, send, pagerReady };
