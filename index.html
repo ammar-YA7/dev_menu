@@ -936,6 +936,12 @@
     location.replace('admin.html');
   }
 
+  // جاء من صفحة الدخول ببريد غير مسجل: نعبّي البريد في نموذج التسجيل
+  try {
+    const e = sessionStorage.getItem('dm_signup_email');
+    if (e) { sessionStorage.removeItem('dm_signup_email'); if (!$('reg-email').value) $('reg-email').value = e; }
+  } catch {}
+
   // الرجوع من Google: ننشئ الحساب ونروح للوحة على طول (شاشة الانتظار ظاهرة من أول ما فتحت الصفحة)
   async function finishGoogleSignup() {
     let session;

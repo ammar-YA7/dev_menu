@@ -17,6 +17,15 @@ module.exports.pre = async function pre(action, req, b) {
     return { email: user.email, is_admin: admin, has_store: !!store, slug: store && store.client_slug };
   }
 
+  // ─── قبل إرسال رمز الدخول: هل البريد مربوط بمنشأة (أو مدير عام)؟ ───
+  // غير المسجل يتوجّه للتسجيل مباشرة بدون ما يوصله بريد
+  if (action === 'email-check' && req.method === 'POST') {
+    const email = String(b.email || '').trim().toLowerCase();
+    if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new ApiError(400, 'اكتب بريداً إلكترونياً صحيحاً', 'INVALID_EMAIL');
+    const [store, admin] = await Promise.all([rpc('server_client_by_email', { p_email: email }), isSuperAdmin(email)]);
+    return { registered: admin || !!(store && store[0]) };
+  }
+
   // ─── إنشاء متجر جديد بعد التحقق من البريد ───
   if (action === 'register' && req.method === 'POST') {
     const user = await getUser(req);

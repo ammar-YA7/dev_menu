@@ -286,6 +286,17 @@
     if (!inputEmail) return;
 
     setBusy('send-otp-btn', 'btn-spinner', true);
+    // البريد غير المسجل: رسالة فورية وتوجيه للتسجيل، بدون إرسال رمز
+    let registered = true;
+    try { registered = (await DM.post('/api/owner?action=email-check', { email: inputEmail })).registered !== false; }
+    catch (e) { if (e.status === 400) { setBusy('send-otp-btn', 'btn-spinner', false); return showToast(e.message, 'error'); } }
+    if (!registered) {
+      setBusy('send-otp-btn', 'btn-spinner', false);
+      showToast('هذا البريد غير مسجل لدينا. سننقلك الآن إلى صفحة التسجيل.', 'error');
+      try { sessionStorage.setItem('dm_signup_email', inputEmail); } catch {}
+      setTimeout(() => { location.href = 'index.html#register'; }, 1800);
+      return;
+    }
     let error = null;
     try { await DM.sendOtp(inputEmail); } catch (e) { error = e; }
     setBusy('send-otp-btn', 'btn-spinner', false);
