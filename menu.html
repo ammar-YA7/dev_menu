@@ -184,12 +184,21 @@
   .grp-btn.grp-on { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
   .price { color: var(--price); }
   .sec-title { border-color: var(--sec-line); }
+  /* شريط الفئات (داخل القسم الحالي): دوائر بالصور، ثابت فوق مع شريط الأقسام */
+  #sub-bar { gap: 10px; padding: 8px 6px 6px; border-radius: 18px; background: var(--header); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid var(--header-line, rgba(255,255,255,.15)); }
+  #sub-bar .sb-item { display: flex; flex-direction: column; align-items: center; gap: 5px; width: 68px; flex-shrink: 0; background: transparent; border: 0; padding: 0; }
+  #sub-bar .sb-img { width: 54px; height: 54px; border-radius: 50%; background: rgba(255,255,255,.12) center / cover no-repeat; box-shadow: 0 0 0 2px var(--sec-line); display: grid; place-items: center; font-size: 19px; font-weight: 900; transition: box-shadow .2s, width .2s, height .2s; }
+  #sub-bar .sb-name { font-size: 11px; font-weight: 800; line-height: 1.3; text-align: center; max-width: 68px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; opacity: .85; }
+  #sub-bar .sb-item.active .sb-img { box-shadow: 0 0 0 3px var(--accent), 0 6px 16px var(--accent-glow); }
+  #sub-bar .sb-item.active .sb-name { opacity: 1; color: var(--accent); }
+  body.cats-stuck #sub-bar .sb-img { width: 44px; height: 44px; }
+  /* وهو لاصق فوق: خلفية وحدة تجمع الأقسام والفئات (ما تبين الأطباق من الفراغ بينهم) */
+  body.cats-stuck #menu-sticky:has(#sub-bar:not(.hidden)) { background: var(--header); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-radius: 20px; }
+  body.cats-stuck #menu-sticky:has(#sub-bar:not(.hidden)) #sub-bar { background: transparent; border-color: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; }
+  body.cats-stuck #sub-bar .sb-item { width: 60px; gap: 3px; }
   /* الفئات الفرعية داخل القسم (الشاي، الموهيتو...) */
   .sub-title { display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 900; opacity: .92; padding-top: 4px; }
   .sub-title::after { content: ''; flex: 1; height: 1px; background: var(--sec-line); opacity: .7; }
-  .sub-chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin-top: -2px; }
-  .sub-chips::-webkit-scrollbar { display: none; }
-  .sub-chip { flex-shrink: 0; font-size: 12px; font-weight: 800; padding: 5px 12px; border-radius: 99px; border: 1px solid var(--sec-line); background: rgba(255,255,255,.06); }
   .modal-panel { background-color: var(--modal); }
   /* اختيار الحجم في نافذة الطبق */
   .size-chip { background: var(--chip); border: 1px solid var(--line); color: var(--fg); }
@@ -564,9 +573,11 @@
   </div>
 
   <!-- شريط الأقسام السريع -->
-  <div class="sticky top-2 z-40">
+  <div id="menu-sticky" class="sticky top-2 z-40">
     <div id="group-bar" class="hidden gap-2 mb-2 overflow-x-auto no-scrollbar"></div>
     <div id="fast-filter-bar" class="glass-header rounded-2xl p-1.5 flex gap-2 overflow-x-auto no-scrollbar text-xs border border-white/20 shadow-xl"><span class="sk sk-pill"></span><span class="sk sk-pill"></span><span class="sk sk-pill"></span></div>
+    <!-- الفئات داخل القسم الحالي: دوائر بالصور، ثابتة وهو يتصفح -->
+    <div id="sub-bar" class="hidden mt-1.5 flex overflow-x-auto no-scrollbar text-white"></div>
   </div>
 
   <!-- الأقسام والمنتجات -->
@@ -1606,6 +1617,50 @@
     });
   }
 
+  // ─── شريط الفئات: دوائر فئات القسم اللي يتصفحه الحين (صورة أول طبق فيها صورة) ───
+  let subsByCat = {}, subBarCat = null;
+  function subImage(ps) {
+    const p = ps.find(x => safeUrl(x.image_url) || safeUrl(x.cutout_url));
+    return p ? (safeUrl(p.image_url) || safeUrl(p.cutout_url)) : '';
+  }
+  const stickyBottom = () => { const st = document.getElementById('fast-filter-bar').parentElement; return Math.max(80, st.getBoundingClientRect().bottom + 12); };
+  function renderSubBar(catId) {
+    const bar = document.getElementById('sub-bar'), subs = subsByCat[catId] || [];
+    if (subBarCat === catId) return;
+    subBarCat = catId;
+    bar.classList.toggle('hidden', subs.length < 2);
+    bar.innerHTML = subs.length < 2 ? '' : subs.map((x, i) => `
+      <button type="button" class="sb-item" data-sub="${esc(x.id)}">
+        <span class="sb-img" ${x.img ? `style="background-image:url('${esc(sized(x.img, 140)).replace(/'/g, '%27')}')"` : ''}>${x.img ? '' : esc(tr(x.name).trim().charAt(0))}</span>
+        <span class="sb-name">${esc(tr(x.name))}</span>
+      </button>`).join('');
+  }
+  // القسم والفئة الحالية حسب مكان التصفح
+  function syncSubBar() {
+    const line = stickyBottom();
+    const sections = [...document.querySelectorAll('#dynamic-menu-sections section')];
+    let current = sections[0];
+    for (const s of sections) if (s.getBoundingClientRect().top < line) current = s;
+    if (!current) { renderSubBar(null); return null; }
+    const id = current.id.replace('section-', '');
+    renderSubBar(id);
+    const subs = subsByCat[id] || [];
+    let act = null;   // الأطباق اللي قبل أول فئة: ما فيه دائرة مختارة
+    for (const x of subs) { const el = document.getElementById(x.id); if (el && el.getBoundingClientRect().top < line + 4) act = x.id; }
+    document.querySelectorAll('#sub-bar .sb-item').forEach(b => {
+      const on = b.dataset.sub === act;
+      b.classList.toggle('active', on);
+      if (on) { const bar = b.parentElement, br = bar.getBoundingClientRect(), r = b.getBoundingClientRect();
+        if (r.left < br.left + 8 || r.right > br.right - 8) bar.scrollTo({ left: bar.scrollLeft + (r.left + r.width / 2) - (br.left + br.width / 2), behavior: 'smooth' }); }
+    });
+    return id;
+  }
+  document.getElementById('sub-bar').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-sub]'); if (!b) return;
+    const t = document.getElementById(b.dataset.sub);
+    if (t) window.scrollTo({ top: t.getBoundingClientRect().top + window.scrollY - (stickyBottom() - 4), behavior: 'smooth' });
+  });
+
   function renderMenu(products, isSearch) {
     const container = document.getElementById('dynamic-menu-sections');
     container.removeAttribute('aria-busy');
@@ -1621,6 +1676,7 @@
     }
 
     const card = photoLayout() ? photoCard : productCard, gap = photoLayout() ? 'space-y-3.5' : 'space-y-2.5';
+    subsByCat = {}; subBarCat = null;
     container.innerHTML = groups.map(([cat, ps]) => {
       // الفئات الفرعية داخل القسم: الأطباق بدون فئة فرعية أول، وبعدها كل فئة تحت عنوانها (بترتيب أول طبق فيها)
       const subs = [...new Set(ps.map(p => p.subgroup).filter(Boolean))];
@@ -1628,13 +1684,14 @@
         ps.some(p => !p.subgroup) ? `<div class="${gap}">${ps.filter(p => !p.subgroup).map(card).join('')}</div>` : '',
         ...subs.map((g, i) => `<div id="sub-${esc(cat.id)}-${i}" class="${gap} scroll-mt-24"><h4 class="sub-title text-white">${esc(tr(g))}</h4>${ps.filter(p => p.subgroup === g).map(card).join('')}</div>`)
       ].join('');
-      const chips = subs.length > 1 && !isSearch ? `<div class="sub-chips text-white">${subs.map((g, i) => `<button type="button" class="sub-chip" data-sub="sub-${esc(cat.id)}-${i}">${esc(tr(g))}</button>`).join('')}</div>` : '';
+      subsByCat[cat.id] = isSearch ? [] : subs.map((g, i) => ({ id: `sub-${cat.id}-${i}`, name: g, img: subImage(ps.filter(p => p.subgroup === g)) }));
       return `
       <section id="section-${esc(cat.id)}" class="space-y-3 scroll-mt-24">
         <h3 class="sec-title font-bold text-base text-white tracking-wide border-b pb-1.5">${esc(catName(cat))}</h3>
-        ${chips}${body}
+        ${body}
       </section>`;
     }).join('');
+    syncSubBar();
     watchVideos(container);    ixSync();
   }
 
@@ -1653,7 +1710,7 @@
     const btn = e.target.closest('[data-cat]');
     if (!btn) return;
     const target = document.getElementById(`section-${btn.dataset.cat}`);
-    if (target) window.scrollTo({ top: target.getBoundingClientRect().top + window.scrollY - 80, behavior: 'smooth' });
+    if (target) window.scrollTo({ top: target.getBoundingClientRect().top + window.scrollY - (stickyBottom() - 4), behavior: 'smooth' });
   });
 
   let scrollTick = false;
@@ -1662,11 +1719,8 @@
     scrollTick = true;
     requestAnimationFrame(() => {
       scrollTick = false;
-      const sections = [...document.querySelectorAll('#dynamic-menu-sections section')];
-      let current = sections[0];
-      for (const s of sections) if (s.getBoundingClientRect().top < 120) current = s;
-      if (!current) return;
-      const id = current.id.replace('section-', '');
+      const id = syncSubBar();
+      if (!id) return;
       document.querySelectorAll('.cat-pill').forEach(b => {
         const on = b.dataset.cat === id;
         b.classList.toggle('active', on);
@@ -1680,8 +1734,6 @@
   // ─── نافذة تفاصيل الطبق ───
   const menuEl = document.getElementById('dynamic-menu-sections');
   menuEl.addEventListener('click', (e) => {
-    const sub = e.target.closest('[data-sub]');
-    if (sub) { const t = document.getElementById(sub.dataset.sub); if (t) window.scrollTo({ top: t.getBoundingClientRect().top + window.scrollY - 80, behavior: 'smooth' }); return; }
     const add = e.target.closest('[data-add]');
     if (add) {
       e.stopPropagation();
