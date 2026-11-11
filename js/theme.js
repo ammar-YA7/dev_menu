@@ -114,6 +114,16 @@
     // بدون طبقة لون: صورة أو فيديو الخلفية بألوانه الأصلية (اختيار صاحب المحل)
     if (store && store.bg_overlay === false) { el.style.setProperty('--ov-in', 'transparent'); el.style.setProperty('--ov-out', 'transparent'); el.style.setProperty('--media-filter', 'none'); }
     el.classList.toggle('no-overlay', !!(store && store.bg_overlay === false));
+    // لون خط النصوص فوق الخلفية (اسم المحل، البحث، الأقسام، الفئات)
+    const tc = store && isHex(store.text_color) ? store.text_color : null;
+    if (tc) {
+      // خلفية العناصر (البحث والأقسام والفئات) عكس لون الخط: خط فاتح ← خلفية غامقة شفافة، وخط غامق ← فاتحة شفافة
+      const light = textOn(tc) === '#000000';
+      el.style.setProperty('--hdr-fg', tc);
+      el.style.setProperty('--hdr-bg', light ? 'rgba(0, 0, 0, 0.38)' : 'rgba(255, 255, 255, 0.62)');
+      el.style.setProperty('--hdr-line', light ? 'rgba(255, 255, 255, 0.28)' : 'rgba(0, 0, 0, 0.14)');
+    } else ['--hdr-fg', '--hdr-bg', '--hdr-line'].forEach(k => el.style.removeProperty(k));
+    el.classList.toggle('has-hdr-fg', !!tc);
     const meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.setAttribute('content', r.vars.bg);
     return r;

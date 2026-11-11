@@ -449,6 +449,7 @@
       <button type="button" onclick="pickAccent('${c}')" aria-label="${c}" title="${c}"
         class="w-9 h-9 rounded-full border-2 transition ${accent === c ? 'border-ink scale-110' : 'border-white shadow'}" style="background:${c}"></button>`).join('');
     renderBgOverlay();
+    renderTextColor();
     document.getElementById('appearance-preview').href = menuUrl();
     document.getElementById('appearance-links-preview').href = linksUrl();
     // بدون باقة المنيو: المعاينة لصفحة الروابط بس
@@ -468,6 +469,23 @@
     if ((client.bg_overlay !== false) === v) return;
     if (await updateClient({ bg_overlay: v })) { renderBgOverlay(); showToast(v ? 'رجع لون الثيم فوق الخلفية' : 'الخلفية تظهر بألوانها الأصلية'); }
     else showToast('تعذر حفظ الإعداد', true);
+  }
+  // لون خط النصوص فوق الخلفية (ينحفظ على طول). فاضي = لون الثيم
+  function renderTextColor() {
+    const box = document.getElementById('text-color-pick');
+    if (!box) return;
+    const cur = DMTheme.isHex(client.text_color) ? client.text_color.toLowerCase() : null;
+    const chip = (v, label, sw) => `<button type="button" onclick="setTextColor(${v ? `'${v}'` : 'null'})" aria-pressed="${cur === v}" class="flex items-center gap-1.5 rounded-xl border px-3 py-2 text-[11px] font-bold transition ${cur === v ? 'border-brand bg-brand text-cream' : 'border-brand/20 bg-white text-ink hover:border-brand/40'}">${sw}${label}</button>`;
+    const dot = (c) => `<span class="w-4 h-4 rounded-full border border-black/20" style="background:${c}"></span>`;
+    const custom = cur && cur !== '#ffffff' && cur !== '#111111';
+    box.innerHTML = chip(null, 'لون الثيم', '<i class="ph-bold ph-palette"></i>') + chip('#ffffff', 'أبيض', dot('#ffffff')) + chip('#111111', 'أسود', dot('#111111'))
+      + `<label class="flex items-center gap-1.5 rounded-xl border px-3 py-2 text-[11px] font-bold cursor-pointer ${custom ? 'border-brand bg-brand text-cream' : 'border-brand/20 bg-white text-ink'}"><input type="color" value="${custom ? cur : '#7a4f24'}" onchange="setTextColor(this.value)" class="w-5 h-5 rounded border-0 p-0 bg-transparent cursor-pointer" aria-label="لون آخر"> لون آخر</label>`;
+  }
+  async function setTextColor(v) {
+    v = DMTheme.isHex(v) ? v.toLowerCase() : null;
+    if ((DMTheme.isHex(client.text_color) ? client.text_color.toLowerCase() : null) === v) return;
+    if (await updateClient({ text_color: v })) { renderTextColor(); showToast(v ? 'تم حفظ لون الخط' : 'رجع لون الخط للون الثيم'); }
+    else showToast('تعذر حفظ لون الخط', true);
   }
   function pickTheme(key) { themeDraft.theme = key; renderAppearance(false); }
   function pickAccent(c) { themeDraft.accent = DMTheme.isHex(c) ? c.toLowerCase() : null; renderAppearance(false); }

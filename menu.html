@@ -415,6 +415,15 @@
   /* بدون طبقة لون (اختيار صاحب المحل): صورة أو فيديو الخلفية بألوانه الأصلية */
   body.no-overlay #ix-bgm::after { display: none; }
   body.no-overlay #bg-media-container::after { display: none; }
+  /* لون خط النصوص فوق الخلفية (اختيار صاحب المحل): الاسم والوصف، والموقع والتوصيل، والبحث، والأقسام، والفئات */
+  body.has-hdr-fg #project-title, body.has-hdr-fg #project-type, body.has-hdr-fg #info-bar *, body.has-hdr-fg #delivery-title, body.has-hdr-fg #delivery-list *,
+  body.has-hdr-fg #search-input, body.has-hdr-fg .fa-magnifying-glass, body.has-hdr-fg #fast-filter-bar .cat-pill:not(.active), body.has-hdr-fg #sub-bar .sb-name, body.has-hdr-fg #dynamic-menu-sections .sec-title, body.has-hdr-fg #dynamic-menu-sections .sub-title,
+  body.has-hdr-fg #group-bar .grp-btn:not(.grp-on), body.has-hdr-fg #layout-toggle button:not(.on):not([aria-checked="true"]), body.has-hdr-fg #app-content > .flex.justify-between > *, body.has-hdr-fg #app-content > .flex.justify-between > * * { color: var(--hdr-fg) !important; }
+  body.has-hdr-fg #search-input::placeholder { color: var(--hdr-fg) !important; opacity: .7; }
+  body.has-hdr-fg #search-input, body.has-hdr-fg #layout-toggle, body.has-hdr-fg #fast-filter-bar, body.has-hdr-fg #sub-bar, body.has-hdr-fg #group-bar .grp-btn:not(.grp-on),
+  body.has-hdr-fg #info-bar > *, body.has-hdr-fg #delivery-list > *, body.has-hdr-fg #app-content > .flex.justify-between > * {
+    background: var(--hdr-bg) !important; border-color: var(--hdr-line) !important; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+  body.has-hdr-fg #fast-filter-bar .cat-pill:not(.active) { background: transparent !important; border-color: var(--hdr-line) !important; }
   #ix .ix-scr { z-index: 2; }
   #ix.ix-tex-grain::before, #ix.ix-tex-paper::before { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='900' height='900'%3E%3Cfilter id='b'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.003 .022' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .16 -.04'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23b)'/%3E%3C/svg%3E"), radial-gradient(70% 45% at 15% 8%, rgba(255, 255, 255, .07), transparent 70%), radial-gradient(60% 40% at 90% 75%, rgba(0, 0, 0, .2), transparent 70%);

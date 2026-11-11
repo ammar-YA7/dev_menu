@@ -347,6 +347,8 @@ module.exports.post = async function post(action, req, b, env) {
     if (has('menu_look')) p.menu_look = b.menu_look === 'clean' ? 'clean' : 'classic';
     // طبقة لون الثيم فوق صورة أو فيديو الخلفية
     if (has('bg_overlay')) p.bg_overlay = b.bg_overlay !== false;
+    // لون خط النصوص فوق الخلفية (فاضي = لون الثيم)
+    if (has('text_color')) p.text_color = typeof b.text_color === 'string' && /^#[0-9a-fA-F]{6}$/.test(b.text_color) ? b.text_color.toLowerCase() : null;
     if (has('menu_layout')) {
       if (b.menu_layout === 'interactive' && !PLANS.has(store, 'ixpro')) throw new ApiError(403, IX_OFF, 'ADDON_OFF');
       p.menu_layout = ['photos', 'interactive'].includes(b.menu_layout) ? b.menu_layout : 'list';

@@ -9,6 +9,10 @@ alter table public.clients drop constraint if exists clients_menu_look_check;
 alter table public.clients add constraint clients_menu_look_check check (menu_look in ('classic', 'clean'));
 -- طبقة لون الثيم فوق صورة أو فيديو الخلفية (المنيو العادي والتفاعلي وصفحة الروابط): false = الخلفية بألوانها الأصلية
 alter table public.clients add column if not exists bg_overlay boolean not null default true;
+-- لون خط النصوص فوق الخلفية (اسم المحل، البحث، الأقسام، الفئات): فاضي = لون الثيم
+alter table public.clients add column if not exists text_color text;
+alter table public.clients drop constraint if exists clients_text_color_check;
+alter table public.clients add constraint clients_text_color_check check (text_color is null or text_color ~ '^#[0-9a-fA-F]{6}$');
 notify pgrst, 'reload schema';
 
 -- إضافة العمود إلى public_clients (المنيو العام يقرأ منها)
@@ -35,7 +39,7 @@ begin
     src := 'clients';
   end if;
 
-  foreach col in array array['menu_look', 'bg_overlay'] loop
+  foreach col in array array['menu_look', 'bg_overlay', 'text_color'] loop
     if not exists (
       select 1 from information_schema.columns
       where table_schema = 'public' and table_name = 'public_clients' and column_name = col
