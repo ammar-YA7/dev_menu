@@ -450,6 +450,7 @@
       <div class="cat-row" data-id="${Number(c.id)}">
         <span class="cat-grip" aria-hidden="true" title="اسحب لتغيير الترتيب"><i class="ph-bold ph-dots-six-vertical"></i></span>
         <span class="cat-pos">${i + 1}</span>
+        <button type="button" onclick="editCategoryImage(${Number(c.id)})" class="cat-img" aria-label="صورة قسم ${esc(c.name)}" title="${c.image_url ? 'تغيير صورة القسم' : 'إضافة صورة للقسم'}">${(() => { const u = catThumb(c); return u ? `<img src="${esc(u)}" alt="" loading="lazy">` : '<i class="ph-bold ph-image"></i>'; })()}${c.image_url ? '' : '<span class="cat-img-add"><i class="ph-bold ph-plus"></i></span>'}</button>
         <div class="min-w-0 flex-1">
           <p class="text-sm font-semibold text-ink truncate">${esc(c.name)}${c.name_en ? ` <span class="text-ink font-normal text-xs" dir="ltr">${esc(c.name_en)}</span>` : ''}</p>
           <p class="text-xs text-ink mt-0.5"><span class="tnum">${productsInCategory(c).length}</span> طبق${c.group_name ? ` · <span class="text-amber-800 font-semibold">${esc(c.group_name)}</span>` : ''}</p>
@@ -462,6 +463,44 @@
       </div>`).join('');
     enableCategoryDrag(list);
   }
+
+  // ─── صورة القسم: دائرته في شريط الأقسام بالمنيو. بدون صورة = صورة أول طبق فيه ───
+  function catThumb(c) {
+    if (c.image_url) return safeUrl(c.image_url);
+    const p = productsInCategory(c).find(x => x.image_url || x.cutout_url);
+    return p ? safeUrl(p.image_url || p.cutout_url) : '';
+  }
+  let catImageId = null;
+  async function editCategoryImage(id) {
+    const c = loadedCategories.find(x => x.id === id); if (!c) return;
+    catImageId = id;
+    if (!c.image_url) return document.getElementById('cat-image-file').click();
+    const r = await DMDialog.form({ title: `صورة قسم «${c.name}»`, subtitle: 'تظهر في دائرة القسم عندما يكون شريط الأقسام «دوائر بالصور».', icon: 'ph-image', confirmText: 'متابعة',
+      fields: [{ name: 'do', label: 'الإجراء', type: 'choice', value: 'change', options: [
+        { value: 'change', label: 'تغيير الصورة', icon: 'ph-upload-simple' },
+        { value: 'remove', label: 'إزالة الصورة', desc: 'تظهر صورة أول طبق في القسم بدلاً منها', icon: 'ph-trash' }] }] });
+    if (!r) return;
+    if (r.do === 'change') return document.getElementById('cat-image-file').click();
+    await saveCategoryImage(id, '');
+  }
+  async function saveCategoryImage(id, url) {
+    try {
+      const res = await api('category-image', { id, image_url: url });
+      const c = loadedCategories.find(x => x.id === id); if (c) c.image_url = res.category.image_url;
+      renderCategories();
+      showToast(url ? 'تم حفظ صورة القسم' : 'تمت إزالة صورة القسم');
+    } catch (e) { showToast(e.message || 'تعذر حفظ صورة القسم', true); }
+  }
+  document.getElementById('cat-image-file').addEventListener('change', async (e) => {
+    const file = e.target.files[0]; e.target.value = '';
+    if (!file || catImageId == null) return;
+    const problem = validateFile(file, 'image');
+    if (problem) return showToast(problem, true);
+    showToast('جاري رفع صورة القسم...');
+    const url = await uploadFile(file, 'cat', 600);
+    if (!url) return showToast(`فشل رفع الصورة: ${lastUploadError}`, true);
+    await saveCategoryImage(catImageId, url);
+  });
 
   // سحب وإفلات: نحفظ الترتيب الجديد كامل بعد ما يفلت القسم
   let catSortable = null;

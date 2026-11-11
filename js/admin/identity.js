@@ -593,11 +593,26 @@
     try { return localStorage.getItem(prevLayoutKey()) === 'photos' ? 'photos' : 'list'; } catch { return 'list'; }
   }
   function renderNormalView() {
+    renderCatStyle();
     const box = document.getElementById('normal-view');
     if (!box) return;
     const cur = normalView();
     box.innerHTML = [['list', 'قائمة', 'ph-list'], ['photos', 'صور كبيرة', 'ph-squares-four']].map(([v, t, ic]) => `
       <button type="button" role="radio" aria-checked="${cur === v}" onclick="setNormalView('${v}')" class="rounded-lg border px-2 py-2 text-[11px] font-bold transition ${cur === v ? 'border-brand bg-brand text-cream' : 'border-brand/20 bg-white text-ink hover:border-brand/40'}"><i class="ph-bold ${ic}"></i> ${t}</button>`).join('');
+  }
+  // شريط الأقسام في المنيو: أزرار نص أو دوائر بالصور
+  function renderCatStyle() {
+    const box = document.getElementById('cat-style');
+    if (!box) return;
+    const cur = client.cat_style === 'circles' ? 'circles' : 'pills';
+    box.innerHTML = [['pills', 'أزرار', 'ph-rows'], ['circles', 'دوائر بالصور', 'ph-circles-four']].map(([v, t, ic]) => `
+      <button type="button" role="radio" aria-checked="${cur === v}" onclick="setCatStyle('${v}')" class="rounded-lg border px-2 py-2 text-[11px] font-bold transition ${cur === v ? 'border-brand bg-brand text-cream' : 'border-brand/20 bg-white text-ink hover:border-brand/40'}"><i class="ph-bold ${ic}"></i> ${t}</button>`).join('');
+  }
+  async function setCatStyle(v) {
+    v = v === 'circles' ? 'circles' : 'pills';
+    if ((client.cat_style || 'pills') === v) return;
+    if (await updateClient({ cat_style: v })) { renderCatStyle(); showToast(v === 'circles' ? 'الأقسام تظهر دوائر بالصور' : 'الأقسام تظهر أزراراً'); }
+    else showToast('تعذر حفظ الإعداد', true);
   }
   async function setNormalView(v) {
     v = v === 'photos' ? 'photos' : 'list';

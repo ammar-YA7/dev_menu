@@ -47,7 +47,7 @@ async function main(req) {
 // أي تعديل يغيّر اللي يشوفه الزبون في المنيو ← تنبيه لحظي للمنيوهات المفتوحة
 const MENU_ACTIONS = new Set([
   'update-store', 'occasions-save', 'branch-rename', 'coupon-save', 'coupon-toggle', 'coupon-delete', 'update-slug',
-  'category-add', 'category-group', 'category-rename', 'category-delete', 'reorder',
+  'category-add', 'category-group', 'category-image', 'category-rename', 'category-delete', 'reorder',
   'product-save', 'product-toggle', 'product-delete', 'products-import', 'waitlist-settings', 'extras-copy'
 ]);
 

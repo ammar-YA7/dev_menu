@@ -167,6 +167,19 @@
   body .cat-pill.active, body.tone-light .cat-pill.active:not(.keep-c) {
     background: var(--accent); color: var(--accent-fg); font-weight: 800; box-shadow: 0 4px 15px var(--accent-glow);
   }
+  /* شريط الأقسام بالدوائر والصور (cat_style = circles): لما يلصق فوق تختفي الصور ويصير أسماء بس */
+  #fast-filter-bar.circles { background: transparent; border-color: transparent; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; gap: 10px; padding: 4px 2px; }
+  #fast-filter-bar.circles .cat-circ { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 76px; padding: 0; background: transparent; border: 0; flex-shrink: 0; }
+  #fast-filter-bar.circles .cc-img { width: 64px; height: 64px; border-radius: 50%; overflow: hidden; background: rgba(255,255,255,.12) center / cover no-repeat; box-shadow: 0 0 0 2px var(--sec-line); display: grid; place-items: center; font-size: 22px; font-weight: 900; transition: box-shadow .2s, width .2s, height .2s; }
+  #fast-filter-bar.circles .cc-name { font-size: 11.5px; font-weight: 800; line-height: 1.3; text-align: center; max-width: 76px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  body #fast-filter-bar.circles .cat-pill.active { background: transparent; box-shadow: none; color: inherit; }
+  #fast-filter-bar.circles .cat-pill.active .cc-img { box-shadow: 0 0 0 3px var(--accent), 0 6px 18px var(--accent-glow); }
+  #fast-filter-bar.circles .cat-pill.active .cc-name { color: var(--accent); }
+  body.cats-stuck #fast-filter-bar.circles { background: var(--header); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-color: rgba(255,255,255,.2); padding: 6px; }
+  body.cats-stuck #fast-filter-bar.circles .cat-circ { width: auto; }
+  body.cats-stuck #fast-filter-bar.circles .cc-img { display: none; }
+  body.cats-stuck #fast-filter-bar.circles .cc-name { max-width: none; white-space: nowrap; padding: 6px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,.25); -webkit-line-clamp: 1; }
+  body.cats-stuck #fast-filter-bar.circles .cat-pill.active .cc-name { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
   /* الفئات الرئيسية (فطور، غداء...) */
   .grp-btn { background: var(--grp-bg); color: var(--grp-fg); border-color: var(--grp-line); }
   .grp-btn.grp-on { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
@@ -1438,11 +1451,35 @@
     const bar = document.getElementById('fast-filter-bar');
     const cats = visibleCats().filter(c => productsIn(c, allProducts).length > 0);
     bar.parentElement.classList.toggle('hidden', cats.length === 0);
-    bar.innerHTML = cats.map((c, i) => `
+    const circles = !!(project && project.cat_style === 'circles');
+    bar.classList.toggle('circles', circles);
+    bar.innerHTML = circles ? cats.map((c, i) => {
+      const img = catImage(c);
+      return `
+      <button type="button" data-cat="${esc(c.id)}" class="cat-pill cat-circ ${i === 0 ? 'active' : ''} text-white">
+        <span class="cc-img" ${img ? `style="background-image:url('${esc(sized(img, 160)).replace(/'/g, '%27')}')"` : ''}>${img ? '' : esc(catName(c).trim().charAt(0))}</span>
+        <span class="cc-name">${esc(catName(c))}</span>
+      </button>`;
+    }).join('') : cats.map((c, i) => `
       <button type="button" data-cat="${esc(c.id)}" class="cat-pill ${i === 0 ? 'active' : ''} px-4 py-2 rounded-xl bg-white/10 border border-white/25 shrink-0 text-xs text-white font-bold transition">
         ${esc(catName(c))}
       </button>`).join('');
   }
+  // صورة دائرة القسم: صورته، ولو ما له صورة أول طبق فيه له صورة
+  function catImage(c) {
+    const own = safeUrl(c.image_url);
+    if (own) return own;
+    const p = productsIn(c, allProducts).find(x => safeUrl(x.cutout_url) || safeUrl(x.image_url));
+    return p ? (safeUrl(p.image_url) || safeUrl(p.cutout_url)) : '';
+  }
+  // شريط الأقسام لاصق فوق: الدوائر تصغر لأسماء بس (ما ياخذ مساحة كبيرة وهو يتصفح)
+  (() => {
+    const bar = document.getElementById('fast-filter-bar');
+    const sentinel = document.createElement('div');
+    sentinel.style.cssText = 'height:1px;margin-top:-1px';
+    bar.parentElement.before(sentinel);
+    if ('IntersectionObserver' in window) new IntersectionObserver(([e]) => document.body.classList.toggle('cats-stuck', !e.isIntersecting && e.boundingClientRect.top < 0), { threshold: 0 }).observe(sentinel);
+  })();
 
   // شارات الخصم على الطبق: خصم تلقائي، أو كوبون ظاهر يشمله
   function dealBadges(p) {

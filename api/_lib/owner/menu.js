@@ -140,6 +140,16 @@ module.exports.post = async function post(action, req, b, env) {
     return { category: rows[0] };
   }
 
+  // صورة القسم (دائرة في شريط الأقسام). فاضية = صورة أول طبق فيه
+  if (action === 'category-image') {
+    const id = int(b.id);
+    const url = String(b.image_url || '').trim();
+    if (url && !ownsMediaUrl(url, sid)) throw new ApiError(400, 'الصورة غير تابعة لمتجرك');
+    const rows = await rest(`categories?id=eq.${id}&client_id=eq.${sid}`, { method: 'PATCH', body: { image_url: url || null }, prefer: 'return=representation' });
+    if (!rows.length) throw new ApiError(404, 'القسم غير موجود');
+    return { category: rows[0] };
+  }
+
   if (action === 'category-rename') {
     const id = int(b.id);
     const cat = (await rest(`categories?id=eq.${id}&client_id=eq.${sid}&select=id,name`))[0];

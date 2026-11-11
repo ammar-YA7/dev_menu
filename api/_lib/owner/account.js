@@ -341,6 +341,8 @@ module.exports.post = async function post(action, req, b, env) {
     if (has('pager_near_text')) p.pager_near_text = String(b.pager_near_text || '').replace(/\s+/g, ' ').trim().slice(0, 80) || null;
     // المنيو التفاعلي إضافة (ixpro): بدونها ما ينحفظ نوعه ولا شكله، والمحفوظ من قبل يبقى (يرجع يشتغل لو رجعت الإضافة)
     const IX_OFF = 'المنيو التفاعلي إضافة على المنيو، أضفها لباقتك من صفحة الاشتراك';
+    // شريط الأقسام في المنيو: أزرار نص أو دوائر بالصور
+    if (has('cat_style')) p.cat_style = b.cat_style === 'circles' ? 'circles' : 'pills';
     if (has('menu_layout')) {
       if (b.menu_layout === 'interactive' && !PLANS.has(store, 'ixpro')) throw new ApiError(403, IX_OFF, 'ADDON_OFF');
       p.menu_layout = ['photos', 'interactive'].includes(b.menu_layout) ? b.menu_layout : 'list';
@@ -499,7 +501,7 @@ module.exports.post = async function post(action, req, b, env) {
   // ─── رابط رفع ملف (الرفع يتم مباشرة للتخزين برابط موقّع صالح لملف واحد) ───
   if (action === 'upload-url') {
     const kind = b.kind;
-    if (!['logo', 'bg_image', 'bg_video', 'links_bg_image', 'links_bg_video', 'prod', 'prod_video', 'prod_cut', 'sticker', 'stamp', 'card_bg', 'ix_bg_image', 'ix_bg_video'].includes(kind)) throw new ApiError(400, 'نوع ملف غير صحيح');
+    if (!['logo', 'bg_image', 'bg_video', 'links_bg_image', 'links_bg_video', 'prod', 'prod_video', 'prod_cut', 'cat', 'sticker', 'stamp', 'card_bg', 'ix_bg_image', 'ix_bg_video'].includes(kind)) throw new ApiError(400, 'نوع ملف غير صحيح');
     const isVideo = kind === 'bg_video' || kind === 'links_bg_video' || kind === 'prod_video' || kind === 'ix_bg_video';
     const ext = (isVideo ? VIDEO_TYPES : IMAGE_TYPES)[b.type];
     if (!ext) throw new ApiError(400, isVideo ? 'الملف لازم يكون فيديو MP4' : 'صيغة الصورة غير مدعومة، استخدم JPG أو PNG أو WebP');
