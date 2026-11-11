@@ -1315,6 +1315,7 @@
     if (e) e.preventDefault();
     const input = document.getElementById('chatInput'), text = input.value.trim();
     if (!text || chatBusy) return;
+    if (!navigator.onLine) { chatBubble('assistant', chatT('أنت غير متصل بالإنترنت. المساعد يحتاج اتصالاً، والمنيو تقدر تتصفحه عادي.', 'You are offline. The assistant needs a connection, but you can still browse the menu.')); return; }
     input.value = ''; chatBusy = true; document.getElementById('chatSend').disabled = true;
     document.getElementById('chatChips').innerHTML = '';
     chatAsked.add(text);
@@ -2328,6 +2329,7 @@
       if (!(at > Date.now() + 10 * 60e3)) { directErr(T('اختر وقت بعد ربع ساعة على الأقل', 'Pick a time at least 15 minutes from now')); return; }
       extra.when = new Date(at).toISOString();
     }
+    if (!navigator.onLine) { directErr(T('أنت غير متصل بالإنترنت. اتصل بالشبكة ثم أرسل الطلب، أو اطلب من الكاشير.', 'You are offline. Connect to the internet and send again, or order at the counter.')); return; }
     const btn = document.getElementById('cartSend'); btn.disabled = true;
     try {
       try { if (table) sessionStorage.setItem(tableKey(), table); } catch {}
@@ -3045,6 +3047,21 @@
   ['pointerdown', 'keydown', 'touchstart', 'scroll'].forEach(ev => document.addEventListener(ev, ixIdle, { passive: true, capture: true }));
 
   initMenu();
+</script>
+<!-- بدون شبكة: المنيو المحفوظ يشتغل، وننبّه العميل إن الطلب يحتاج اتصال -->
+<div id="offline-bar" class="hidden fixed bottom-3 inset-x-3 z-[70] mx-auto max-w-sm rounded-2xl bg-black/85 text-white text-[12.5px] font-bold px-4 py-2.5 text-center backdrop-blur-md shadow-xl" role="status"></div>
+<script>
+  (function () {
+    // المنيو يتحفظ في الجهاز بعد أول فتح (sw.js)، ويفتح بعدها حتى لو الشبكة ضعيفة أو مقطوعة
+    if ('serviceWorker' in navigator && location.protocol === 'https:') window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+    const bar = document.getElementById('offline-bar');
+    const ar = () => document.documentElement.lang !== 'en';
+    const sync = () => {
+      bar.textContent = ar() ? 'أنت غير متصل بالإنترنت. هذه آخر نسخة محفوظة من المنيو.' : 'You are offline. This is the last saved menu.';
+      bar.classList.toggle('hidden', navigator.onLine);
+    };
+    window.addEventListener('online', sync); window.addEventListener('offline', sync); sync();
+  })();
 </script>
 </body>
 </html>
