@@ -528,6 +528,7 @@
         ? `<div class="dish-cat"><h4>${esc(cat.name)}</h4><span class="tnum">${productsInCategory(cat).length} طبق</span></div>` : '';
       lastCat = cat;
       const meta = [
+        p.subgroup ? `<span class="text-brand font-bold"><i class="ph-bold ph-folder-simple"></i> ${esc(p.subgroup)}</span>` : '',
         p.coffee && allowsCoffee() ? esc(coffeeSummary(p.coffee) || 'قهوة مختصة') : '',
         !showCalories() ? '' : p.calories != null ? `${Number(p.calories)} سعرة` : '<span class="text-amber-700">بدون سعرات</span>'
       ].filter(Boolean).join(' · ');
@@ -536,7 +537,7 @@
           <button type="button" class="dish-main" onclick="startEdit(${id})" aria-label="تعديل ${esc(p.name)}">
             ${img ? `<img src="${esc(img)}" alt="" loading="lazy" class="dish-thumb">` : `<span class="dish-thumb"><i class="ph-bold ph-fork-knife"></i></span>`}
             <span class="dish-text">
-              <span class="dish-name block">${esc(p.name)}${p.subgroup ? `<span class="dish-tag bg-brand/10 text-brand">${esc(p.subgroup)}</span>` : ''}${isBestseller ? '<span class="dish-tag bg-saffron/15 text-amber-800">مميز</span>' : ''}${isHidden ? '<span class="dish-tag bg-ink/10 text-ink">مخفي</span>' : ''}</span>
+              <span class="dish-name block">${esc(p.name)}${isBestseller ? '<span class="dish-tag bg-saffron/15 text-amber-800">مميز</span>' : ''}${isHidden ? '<span class="dish-tag bg-ink/10 text-ink">مخفي</span>' : ''}</span>
               ${meta ? `<span class="dish-meta block">${meta}</span>` : ''}
             </span>
             <span class="dish-leader" aria-hidden="true"></span>

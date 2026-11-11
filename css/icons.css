@@ -1,6 +1,6 @@
 /* DEV MENU — أيقونات (Phosphor, MIT). مولّد بـ tools/icons.js، لا تعدّله يدوياً */
-@font-face { font-family: "Phosphor-Bold"; src: url("/fonts/Phosphor-Bold.woff2?v=cfb3c0c2") format("woff2"); font-display: block; }
-@font-face { font-family: "Phosphor-Fill"; src: url("/fonts/Phosphor-Fill.woff2?v=522939b8") format("woff2"); font-display: block; }
+@font-face { font-family: "Phosphor-Bold"; src: url("/fonts/Phosphor-Bold.woff2?v=5b08014d") format("woff2"); font-display: block; }
+@font-face { font-family: "Phosphor-Fill"; src: url("/fonts/Phosphor-Fill.woff2?v=d4795bbf") format("woff2"); font-display: block; }
 .ph-bold { font-family: "Phosphor-Bold" !important; font-style: normal; font-weight: normal; font-variant: normal; text-transform: none; line-height: 1; display: inline-block; vertical-align: -.125em; speak: never; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
 .ph-bold.ph-star, .ph-bold.ph-star-half, .ph-bold.ph-circle { font-family: "Phosphor-Fill" !important; }
 .ph-address-book:before { content: "\e6f8"; }
@@ -85,6 +85,7 @@
 .ph-floppy-disk:before { content: "\e248"; }
 .ph-flower:before { content: "\e75e"; }
 .ph-flower-tulip:before { content: "\eacc"; }
+.ph-folder-simple:before { content: "\e25a"; }
 .ph-fork-knife:before { content: "\e262"; }
 .ph-frame-corners:before { content: "\e626"; }
 .ph-gauge:before { content: "\e628"; }
