@@ -285,6 +285,8 @@ module.exports.post = async function post(action, req, b, env) {
       description: str(b.description, 500, 'الوصف'),
       extra_info: str(b.extra_info, 200, 'معلومات إضافية') || null,
       note: str(b.note, 200, 'الملاحظة') || null,
+      // الفئة الفرعية داخل القسم (مثل الشاي، الموهيتو). فاضي = بدون فئة فرعية
+      ...(b.subgroup !== undefined ? { subgroup: str(b.subgroup, 40, 'الفئة الفرعية').replace(/\s+/g, ' ') || null } : {}),
       name_en: str(b.name_en, 100, 'الاسم الإنجليزي') || null,
       description_en: str(b.description_en, 500, 'الوصف الإنجليزي') || null,
       is_bestseller: b.is_bestseller === true,

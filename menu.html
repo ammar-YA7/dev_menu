@@ -172,6 +172,12 @@
   .grp-btn.grp-on { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
   .price { color: var(--price); }
   .sec-title { border-color: var(--sec-line); }
+  /* الفئات الفرعية داخل القسم (الشاي، الموهيتو...) */
+  .sub-title { display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 900; opacity: .92; padding-top: 4px; }
+  .sub-title::after { content: ''; flex: 1; height: 1px; background: var(--sec-line); opacity: .7; }
+  .sub-chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin-top: -2px; }
+  .sub-chips::-webkit-scrollbar { display: none; }
+  .sub-chip { flex-shrink: 0; font-size: 12px; font-weight: 800; padding: 5px 12px; border-radius: 99px; border: 1px solid var(--sec-line); background: rgba(255,255,255,.06); }
   .modal-panel { background-color: var(--modal); }
   /* اختيار الحجم في نافذة الطبق */
   .size-chip { background: var(--chip); border: 1px solid var(--line); color: var(--fg); }
@@ -848,6 +854,7 @@
       if (p.extra_info) texts.add(p.extra_info);
       allCategories.forEach(c => c.group_name && texts.add(c.group_name));
       if (p.note) texts.add(p.note);
+      if (p.subgroup) texts.add(p.subgroup);
       (Array.isArray(p.sizes) ? p.sizes : []).forEach(z => { if (z && z.name && !z.name_en) texts.add(z.name); });
       if (p.coffee) [p.coffee.origin, p.coffee.region, p.coffee.process_other, ...(p.coffee.notes || [])].forEach(t => t && texts.add(t));
     });
@@ -1575,11 +1582,21 @@
       return ixSync();
     }
 
-    container.innerHTML = groups.map(([cat, ps]) => `
+    const card = photoLayout() ? photoCard : productCard, gap = photoLayout() ? 'space-y-3.5' : 'space-y-2.5';
+    container.innerHTML = groups.map(([cat, ps]) => {
+      // الفئات الفرعية داخل القسم: الأطباق بدون فئة فرعية أول، وبعدها كل فئة تحت عنوانها (بترتيب أول طبق فيها)
+      const subs = [...new Set(ps.map(p => p.subgroup).filter(Boolean))];
+      const body = !subs.length ? `<div class="${gap}">${ps.map(card).join('')}</div>` : [
+        ps.some(p => !p.subgroup) ? `<div class="${gap}">${ps.filter(p => !p.subgroup).map(card).join('')}</div>` : '',
+        ...subs.map((g, i) => `<div id="sub-${esc(cat.id)}-${i}" class="${gap} scroll-mt-24"><h4 class="sub-title text-white">${esc(tr(g))}</h4>${ps.filter(p => p.subgroup === g).map(card).join('')}</div>`)
+      ].join('');
+      const chips = subs.length > 1 && !isSearch ? `<div class="sub-chips text-white">${subs.map((g, i) => `<button type="button" class="sub-chip" data-sub="sub-${esc(cat.id)}-${i}">${esc(tr(g))}</button>`).join('')}</div>` : '';
+      return `
       <section id="section-${esc(cat.id)}" class="space-y-3 scroll-mt-24">
         <h3 class="sec-title font-bold text-base text-white tracking-wide border-b pb-1.5">${esc(catName(cat))}</h3>
-        <div class="${photoLayout() ? 'space-y-3.5' : 'space-y-2.5'}">${ps.map(photoLayout() ? photoCard : productCard).join('')}</div>
-      </section>`).join('');
+        ${chips}${body}
+      </section>`;
+    }).join('');
     watchVideos(container);    ixSync();
   }
 
@@ -1625,6 +1642,8 @@
   // ─── نافذة تفاصيل الطبق ───
   const menuEl = document.getElementById('dynamic-menu-sections');
   menuEl.addEventListener('click', (e) => {
+    const sub = e.target.closest('[data-sub]');
+    if (sub) { const t = document.getElementById(sub.dataset.sub); if (t) window.scrollTo({ top: t.getBoundingClientRect().top + window.scrollY - 80, behavior: 'smooth' }); return; }
     const add = e.target.closest('[data-add]');
     if (add) {
       e.stopPropagation();

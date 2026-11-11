@@ -222,7 +222,7 @@ const nextOrderIn = async (clientId, category) => {
   return Math.max(0, ...same.map(x => x.sort_order || 0)) + 1;
 };
 // حقول الطبق المشتركة بين الفروع (السعر والإخفاء والتوفر والتمييز والترتيب لكل فرع لحاله)
-const SHARED_PRODUCT_FIELDS = ['name', 'name_en', 'description', 'description_en', 'extra_info', 'note', 'image_url', 'video_url', 'cutout_url', 'calories', 'allergens', 'coffee', 'extras'];
+const SHARED_PRODUCT_FIELDS = ['name', 'name_en', 'description', 'description_en', 'extra_info', 'note', 'image_url', 'video_url', 'cutout_url', 'calories', 'allergens', 'coffee', 'extras', 'subgroup'];
 
 // هوية الضيف: البريد و/أو آخر 9 أرقام من الجوال (0501234567 و +966501234567 نفس الشخص)
 const guestKeysOf = (e) => {

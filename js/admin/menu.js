@@ -317,6 +317,14 @@
   const bySort = (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0) || a.id - b.id;
   const categoryOf = (p) => loadedCategories.find(c => c.key === p.category || c.name === p.category);
   const productsInCategory = (cat) => loadedProducts.filter(p => p.category === cat.key || p.category === cat.name).sort(bySort);
+  // الفئات الفرعية المستخدمة في القسم المختار (اقتراحات خانة الفئة الفرعية)
+  function fillSubgroups() {
+    const key = document.getElementById('prod-category').value;
+    const cat = loadedCategories.find(c => c.key === key);
+    const names = cat ? [...new Set(productsInCategory(cat).map(p => p.subgroup).filter(Boolean))] : [];
+    document.getElementById('prod-subgroup-list').innerHTML = names.map(n => `<option value="${esc(n)}"></option>`).join('');
+  }
+  document.getElementById('prod-category').addEventListener('change', fillSubgroups);
 
   async function refreshAll() {
     try {
@@ -404,6 +412,7 @@
     prodSelect.innerHTML = optionsHtml;
     filterSelect.innerHTML = `<option value="all">جميع الأقسام</option>` + (loadedCategories.length ? optionsHtml : '');
     if ([...prodSelect.options].some(o => o.value === prevProd)) prodSelect.value = prevProd;
+    fillSubgroups();
     if ([...filterSelect.options].some(o => o.value === prevFilter)) filterSelect.value = prevFilter;
 
     const list = document.getElementById('categories-list');
@@ -527,7 +536,7 @@
           <button type="button" class="dish-main" onclick="startEdit(${id})" aria-label="تعديل ${esc(p.name)}">
             ${img ? `<img src="${esc(img)}" alt="" loading="lazy" class="dish-thumb">` : `<span class="dish-thumb"><i class="ph-bold ph-fork-knife"></i></span>`}
             <span class="dish-text">
-              <span class="dish-name block">${esc(p.name)}${isBestseller ? '<span class="dish-tag bg-saffron/15 text-amber-800">مميز</span>' : ''}${isHidden ? '<span class="dish-tag bg-ink/10 text-ink">مخفي</span>' : ''}</span>
+              <span class="dish-name block">${esc(p.name)}${p.subgroup ? `<span class="dish-tag bg-brand/10 text-brand">${esc(p.subgroup)}</span>` : ''}${isBestseller ? '<span class="dish-tag bg-saffron/15 text-amber-800">مميز</span>' : ''}${isHidden ? '<span class="dish-tag bg-ink/10 text-ink">مخفي</span>' : ''}</span>
               ${meta ? `<span class="dish-meta block">${meta}</span>` : ''}
             </span>
             <span class="dish-leader" aria-hidden="true"></span>
@@ -1028,6 +1037,8 @@
     document.getElementById('prod-bestseller').checked = p.is_bestseller === true;
     const cat = categoryOf(p);
     if (cat) document.getElementById('prod-category').value = cat.key;
+    document.getElementById('prod-subgroup').value = p.subgroup || '';
+    fillSubgroups();
     document.getElementById('prod-image-file').value = '';
     document.getElementById('image-hint').textContent = p.image_url ? '(اتركها فارغة للإبقاء على الصورة الحالية)' : '';
     document.getElementById('img-ratio-warn').classList.add('hidden');
@@ -1110,6 +1121,7 @@
         name, category, price: sizes.length ? Math.min(...sizes.map(z => z.price)) : price, sizes, description, is_bestseller,
         extra_info: document.getElementById('prod-extra').value.trim(),
         note: document.getElementById('prod-note').value.trim(),
+        subgroup: document.getElementById('prod-subgroup').value.trim(),
         name_en: document.getElementById('prod-name-en').value.trim() || null,
         description_en: document.getElementById('prod-desc-en').value.trim() || null,
         allergens: getAllergens() || null,
