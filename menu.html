@@ -276,6 +276,8 @@
   .ix-chip:first-child { margin-inline-start: auto; } .ix-chip:last-child { margin-inline-end: auto; }
   .ix-sec { margin: clamp(22px, 4vmin, 40px) 0 clamp(12px, 2vmin, 20px); font-size: clamp(18px, 2.7vmin, 26px); font-weight: 700; color: var(--fg2); text-align: center; }
   .ix-sec:first-of-type { margin-top: 0; }
+  /* عنوان الفئة الفرعية داخل القسم (الشاي، الموهيتو...) */
+  .ix-sub, .ix-sub:first-of-type { margin: clamp(18px, 3.4vmin, 32px) 0 clamp(10px, 1.8vmin, 16px); font-size: clamp(15px, 2.2vmin, 21px); opacity: .9; }
   .ix-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(18px, 3vmin, 34px) clamp(12px, 2.2vmin, 26px); }
   @media (orientation: landscape) and (min-width: 700px) { .ix-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
   @media (orientation: landscape) and (min-width: 1100px) { .ix-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
@@ -2529,11 +2531,18 @@
     let i = 0;
     const style = ixLook().style;
     // «متعرج»: خط بالنص والأصناف يمين ويسار بالتناوب، و«خيط»: أطباق متفرقة يربطها خيط ذهبي، وإلا الشبكة
-    const grid = (c) => style === 'zigzag'
-      ? `<div class="ix-zz">${productsIn(c, allProducts).map(p => ixZRow(p, i++)).join('')}</div>`
+    const box = (ps) => style === 'zigzag'
+      ? `<div class="ix-zz">${ps.map(p => ixZRow(p, i++)).join('')}</div>`
       : style === 'thread'
-      ? `<div class="ix-th"><svg class="ix-thread" aria-hidden="true"><path/></svg>${productsIn(c, allProducts).map(p => ixTRow(p, i++)).join('')}</div>`
-      : `<div class="ix-grid">${productsIn(c, allProducts).map(p => ixCard(p, i++)).join('')}</div>`;
+      ? `<div class="ix-th"><svg class="ix-thread" aria-hidden="true"><path/></svg>${ps.map(p => ixTRow(p, i++)).join('')}</div>`
+      : `<div class="ix-grid">${ps.map(p => ixCard(p, i++)).join('')}</div>`;
+    // الفئات الفرعية داخل القسم: الأطباق بدون فئة فرعية أول، وبعدها كل فئة تحت عنوانها
+    const grid = (c) => {
+      const ps = productsIn(c, allProducts), subs = [...new Set(ps.map(p => p.subgroup).filter(Boolean))];
+      if (!subs.length) return box(ps);
+      const plain = ps.filter(p => !p.subgroup);
+      return (plain.length ? box(plain) : '') + subs.map(g => `<h4 class="ix-sec ix-sub">${esc(tr(g))}</h4>${box(ps.filter(p => p.subgroup === g))}`).join('');
+    };
     ixEl('ixCat').innerHTML = `
       <div class="ix-list ${step ? 'ix-slide' : ''}" style="--sx:${ixSx(step)}">
         ${ixGiant(ixTitle(key, cats))}
