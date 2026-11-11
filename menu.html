@@ -2476,7 +2476,6 @@
     const items = ixHomeItems(), look = ixLook();
     ixEl('ixHome').innerHTML = `
       <div class="ix-home">
-        ${ixGiant(p.name)}
         <div class="ix-logo ix-pop" style="--i:0"><img src="${esc(logo)}" alt=""></div>
         ${p.name ? `<h1 class="ix-hi ix-pop" style="--i:1">${esc(p.name)}</h1>` : ''}
         ${look.tagline ? `<p class="ix-tag ix-pop" style="--i:2">${esc(look.tagline)}</p>` : ''}
