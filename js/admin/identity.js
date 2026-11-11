@@ -459,6 +459,8 @@
     const box = document.getElementById('bg-overlay-pick');
     if (!box) return;
     const on = client.bg_overlay !== false;
+    // الثيمات تظهر بس مع «مع لون الثيم»
+    document.getElementById('theme-picker').classList.toggle('hidden', !on);
     box.innerHTML = [[true, 'مع لون الثيم', 'ph-drop-half'], [false, 'بدون', 'ph-image']].map(([v, t, ic]) => `
       <button type="button" role="radio" aria-checked="${on === v}" onclick="setBgOverlay(${v})" class="rounded-lg border px-2 py-2 text-[11px] font-bold transition ${on === v ? 'border-brand bg-brand text-cream' : 'border-brand/20 bg-white text-ink hover:border-brand/40'}"><i class="ph-bold ${ic}"></i> ${t}</button>`).join('');
   }
