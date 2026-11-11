@@ -167,7 +167,7 @@
   body .cat-pill.active, body.tone-light .cat-pill.active:not(.keep-c) {
     background: var(--accent); color: var(--accent-fg); font-weight: 800; box-shadow: 0 4px 15px var(--accent-glow);
   }
-  /* شريط الأقسام بالدوائر والصور (cat_style = circles): لما يلصق فوق تختفي الصور ويصير أسماء بس */
+  /* شريط الأقسام بالدوائر والصور (cat_style = circles): يبقى ثابت فوق وهو يتصفح، والدوائر تصغر شوي */
   #fast-filter-bar.circles { background: transparent; border-color: transparent; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; gap: 10px; padding: 4px 2px; }
   #fast-filter-bar.circles .cat-circ { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 76px; padding: 0; background: transparent; border: 0; flex-shrink: 0; }
   #fast-filter-bar.circles .cc-img { width: 64px; height: 64px; border-radius: 50%; overflow: hidden; background: rgba(255,255,255,.12) center / cover no-repeat; box-shadow: 0 0 0 2px var(--sec-line); display: grid; place-items: center; font-size: 22px; font-weight: 900; transition: box-shadow .2s, width .2s, height .2s; }
@@ -176,10 +176,9 @@
   #fast-filter-bar.circles .cat-pill.active .cc-img { box-shadow: 0 0 0 3px var(--accent), 0 6px 18px var(--accent-glow); }
   #fast-filter-bar.circles .cat-pill.active .cc-name { color: var(--accent); }
   body.cats-stuck #fast-filter-bar.circles { background: var(--header); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-color: rgba(255,255,255,.2); padding: 6px; }
-  body.cats-stuck #fast-filter-bar.circles .cat-circ { width: auto; }
-  body.cats-stuck #fast-filter-bar.circles .cc-img { display: none; }
-  body.cats-stuck #fast-filter-bar.circles .cc-name { max-width: none; white-space: nowrap; padding: 6px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,.25); -webkit-line-clamp: 1; }
-  body.cats-stuck #fast-filter-bar.circles .cat-pill.active .cc-name { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+  body.cats-stuck #fast-filter-bar.circles .cat-circ { width: 62px; gap: 4px; }
+  body.cats-stuck #fast-filter-bar.circles .cc-img { width: 46px; height: 46px; }
+  body.cats-stuck #fast-filter-bar.circles .cc-name { font-size: 10.5px; max-width: 62px; -webkit-line-clamp: 1; }
   /* الفئات الرئيسية (فطور، غداء...) */
   .grp-btn { background: var(--grp-bg); color: var(--grp-fg); border-color: var(--grp-line); }
   .grp-btn.grp-on { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
@@ -1472,7 +1471,7 @@
     const p = productsIn(c, allProducts).find(x => safeUrl(x.cutout_url) || safeUrl(x.image_url));
     return p ? (safeUrl(p.image_url) || safeUrl(p.cutout_url)) : '';
   }
-  // شريط الأقسام لاصق فوق: الدوائر تصغر لأسماء بس (ما ياخذ مساحة كبيرة وهو يتصفح)
+  // شريط الأقسام لاصق فوق: الدوائر تبقى ظاهرة وتصغر شوي (ما ياخذ مساحة كبيرة وهو يتصفح)
   (() => {
     const bar = document.getElementById('fast-filter-bar');
     const sentinel = document.createElement('div');
@@ -2559,8 +2558,6 @@
   // المقاس يتغير (تدوير الجهاز أو تحميل الخط): نعيد حساب الخيط بدون حركة
   if ('ResizeObserver' in window) new ResizeObserver(() => { if (ixScreen === 'cat' && ixLook().style === 'thread') ixThreads(ixEl('ixCat'), false); }).observe(ixEl('ixCat'));
   window.addEventListener('resize', () => { if (document.body.classList.contains('ix-mode') && ixLook().style === 'thread') ixThreads(ixEl('ixCat'), false); });
-  // الكلمة الكبيرة الباهتة ورا العنوان (قالب «متعرج» بس)
-  const ixGiant = (t) => t ? `<span class="ix-giant" aria-hidden="true">${esc(t)}</span>` : '';
   // step = جهة الانتقال لما يبدّل القسم من الشريط أو بالسحب (0 = أول دخول)
   function ixRenderCat(key, step = 0) {
     const cats = ixCatsOf(key), items = ixHomeItems();
@@ -2581,7 +2578,6 @@
     };
     ixEl('ixCat').innerHTML = `
       <div class="ix-list ${step ? 'ix-slide' : ''}" style="--sx:${ixSx(step)}">
-        ${ixGiant(ixTitle(key, cats))}
         ${style === 'thread' && project && project.name ? `<p class="ix-tstore ix-pop" style="--i:0">${esc(project.name)}</p>` : ''}
         <h2 class="ix-title ix-pop" style="--i:0">${esc(ixTitle(key, cats))}</h2>
         ${items.length > 1 ? `<div class="ix-chips" role="tablist">${items.map(x => `<button type="button" role="tab" aria-selected="${x.key === key}" class="ix-chip ${x.key === key ? 'on' : ''}" data-ix-chip="${esc(x.key)}">${esc(x.label)}</button>`).join('')}</div>` : ''}
@@ -2618,7 +2614,6 @@
     const pair = [...others.filter(x => ixImg(x)), ...others.filter(x => !ixImg(x))].slice(0, 3);
     ixEl('ixProd').innerHTML = `
       <div class="ix-hero ${img || vid ? '' : 'nopic'}">
-        ${ixKey ? ixGiant(ixTitle(ixKey, ixCatsOf(ixKey))) : ''}
         ${img || vid ? `<div class="ix-heropic ${step ? 'ix-slide' : ''}" style="--sx:${ixSx(step)}"><div class="${fly ? '' : 'ix-pop'}" style="--i:0"><div class="ix-tilt"><div class="ix-float">${ixPic(p, true)}</div></div></div>${pager}</div>` : ''}
         <div>
           <h2 class="ix-hname ix-pop" style="--i:1">${esc(productName(p))}</h2>
