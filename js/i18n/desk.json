@@ -141,5 +141,8 @@
   "رقم العضوية أو الجوال": "Member number or mobile",
   "بحث": "Search",
   "لازم العميل يكون مسجّل في بطاقة الولاء أول. لو ما سجّل، خله يمسح «QR تسجيل الولاء».": "The customer must join the loyalty card first. If not, ask them to scan the loyalty sign-up QR.",
-  "اختر العدد": "Pick the number"
+  "اختر العدد": "Pick the number",
+  "امسح بطاقة": "Scan card",
+  "نقل رصيد": "Move balance",
+  "أدوات": "Tools"
 }

@@ -39,6 +39,14 @@
   body.embed { background: rgba(0,0,0,.35); }
   body.embed > header, body.embed > main { display: none; }
   .mini { font-size: 12px; font-weight: 800; border-radius: 12px; padding: 7px 10px; }
+  .act { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 0 14px; border-radius: 10px; font-size: 14px; font-weight: 800; }
+  .act i { font-size: 17px; }
+  .desk-actions:not(:has(> :not(.hidden))) { display: none; }
+  #tools:not(:has(.tool:not(.hidden))), body.desk #tools:not(:has(.tool:not(.hidden):not(.owner-only))) { display: none; }
+  .tool { display: flex; align-items: center; gap: 10px; width: 100%; padding: 11px 12px; border-radius: 8px; font-size: 14px; font-weight: 700; color: #303030; text-align: start; }
+  .tool:hover, .tool:focus-visible { background: rgba(56,79,61,.08); }
+  .tool i { font-size: 18px; color: #384f3d; }
+  @media (max-width: 400px) { #tools-btn span { display: none; } }
   /* ─── بطاقة الطاولة: تنطبع لحالها على ورقة A6 ─── */
   .qr-card { width: 340px; background: #fff; color: #233d2c; border-radius: 26px; overflow: hidden; box-shadow: 0 30px 70px -30px rgba(0,0,0,.55); }
   .qr-card-top { background: #233d2c; color: #fff; padding: 26px 24px 70px; text-align: center; position: relative; }
@@ -165,26 +173,34 @@
 <div id="toast" class="fixed top-4 inset-x-0 mx-auto w-fit z-50 hidden bg-[#15271b] text-[#f5f2eb] text-sm font-black px-5 py-3 rounded-2xl shadow-xl"></div>
 
 <header class="sticky top-0 z-40 bg-[#f5f2eb]/90 backdrop-blur border-b border-[#233d2c]/10">
-  <!-- الجوال: العنوان سطر، والأزرار سطر تحته يتمرر بالعرض. الشاشة العريضة: سطر واحد -->
-  <div class="max-w-6xl mx-auto px-4 py-2.5 md:py-0 md:h-16 flex flex-col md:flex-row md:items-center justify-between gap-2 md:gap-3">
-    <div class="flex items-center gap-3 min-w-0">
-      <a href="admin.html" class="owner-only w-10 h-10 rounded-xl bg-white border border-[#233d2c]/15 grid place-items-center text-[#233d2c]" title="لوحة التحكم"><i class="ph-bold ph-arrow-right"></i></a>
+  <!-- سطر واحد: العنوان، ثم أزرار الكاشير، ثم الأدوات. الجوال والآيباد بالطول: أزرار الكاشير تنزل سطر تحت بعرض الشاشة -->
+  <div class="max-w-6xl mx-auto px-4 py-2.5 flex flex-wrap items-center gap-x-3 gap-y-2.5">
+    <div class="flex items-center gap-3 min-w-0 flex-1">
+      <a href="admin.html" class="owner-only shrink-0 w-10 h-10 rounded-xl bg-white border border-[#233d2c]/15 grid place-items-center text-[#233d2c]" title="لوحة التحكم" aria-label="لوحة التحكم"><i class="ph-bold ph-arrow-right"></i></a>
       <div class="min-w-0">
-        <h1 class="text-base font-black truncate"><i class="ph-bold ph-bell text-[#c9a227]"></i> <span id="desk-title">شاشة البيجر</span> — <span id="store-name">…</span></h1>
-        <p id="desk-sub" class="hidden md:block text-[11px] font-bold opacity-85">اضغط «جاهز» تحت الرقم لما يجهز الطلب، ويرن جوال الزبون</p>
+        <h1 class="text-[15px] lg:text-base font-black leading-snug truncate"><i class="ph-bold ph-bell text-[#c9a227]"></i> <span id="desk-title">شاشة البيجر</span></h1>
+        <p class="text-[12px] font-bold opacity-75 leading-snug truncate"><span id="store-name">…</span><span class="hidden xl:inline"> · <span id="desk-sub">اضغط «جاهز» تحت الرقم لما يجهز الطلب، ويرن جوال الزبون</span></span></p>
       </div>
     </div>
-    <div class="flex gap-2 overflow-x-auto md:overflow-visible -mx-4 px-4 md:mx-0 md:px-0 pb-0.5 [&>*]:shrink-0 [&>*]:whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      <button id="scan-btn" class="mini bg-[#384f3d] text-white hidden"><i class="ph-bold ph-camera"></i> امسح بطاقة زبون</button>
-      <button id="transfer-btn" class="mini bg-[#fbf6e6] border border-[#c9a227]/60 text-[#5c470c] hidden"><i class="ph-bold ph-arrows-left-right"></i> نقل رصيد قديم</button>
-      <button id="stamp-btn" class="mini bg-[#c9a227] text-[#15271b] hidden"><i class="ph-bold ph-seal-check"></i> كود ختم</button>
-      <button id="join-btn" class="mini bg-white border border-[#233d2c]/15 hidden"><i class="ph-bold ph-user-plus"></i> QR تسجيل الولاء</button>
-      <a id="kiosk-btn" href="kiosk.html" onclick="this.href='kiosk.html'+location.search" class="mini bg-white border border-[#233d2c]/15 hidden"><i class="ph-bold ph-device-tablet"></i> شاشة الزبون</a>
-      <button id="stats-btn" class="owner-only mini bg-white border border-[#233d2c]/15 hidden"><i class="ph-bold ph-chart-bar"></i> الإحصائيات</button>
-      <button id="qr-btn" class="mini bg-white border border-[#233d2c]/15 hidden"><i class="ph-bold ph-qr-code"></i> QR البيجر</button>
-      <button id="sound-btn" type="button" class="mini bg-white border border-[#233d2c]/15 hidden" title="صوت تنبيه الأرقام الجديدة"></button>
-      <!-- اللغة داخل الأزرار (الزر العائم كان يغطي "QR البيجر") -->
-      <button type="button" data-lang-toggle class="mini bg-white border border-[#233d2c]/15"></button>
+    <!-- أزرار الكاشير اليومية (الولاء) -->
+    <div class="desk-actions order-last lg:order-none w-full lg:w-auto flex gap-2 [&>*]:flex-1 lg:[&>*]:flex-none [&>*]:whitespace-nowrap">
+      <button id="scan-btn" class="act bg-[#384f3d] text-white hidden"><i class="ph-bold ph-camera"></i> <span>امسح بطاقة</span></button>
+      <button id="stamp-btn" class="act bg-[#c9a227] text-[#15271b] hidden"><i class="ph-bold ph-seal-check"></i> <span>كود ختم</span></button>
+      <button id="transfer-btn" class="act bg-[#fbf6e6] border border-[#c9a227]/60 text-[#5c470c] hidden"><i class="ph-bold ph-arrows-left-right"></i> <span>نقل رصيد</span></button>
+    </div>
+    <!-- الأدوات: قائمة تنفتح، والصوت واللغة -->
+    <div class="flex items-center gap-2 shrink-0">
+      <div id="tools" class="relative">
+        <button id="tools-btn" type="button" class="mini bg-white border border-[#233d2c]/15 h-10 inline-flex items-center gap-1.5" aria-haspopup="true" aria-expanded="false"><i class="ph-bold ph-squares-four"></i> <span>أدوات</span></button>
+        <div id="tools-menu" class="hidden absolute end-0 top-full mt-2 w-60 bg-white rounded-xl p-1.5 z-50 shadow-[0_12px_32px_-12px_rgba(0,0,0,.35),0_0_0_1px_rgba(0,0,0,.08)]" role="menu">
+          <button id="join-btn" role="menuitem" class="tool hidden"><i class="ph-bold ph-user-plus"></i> QR تسجيل الولاء</button>
+          <button id="qr-btn" role="menuitem" class="tool hidden"><i class="ph-bold ph-qr-code"></i> QR البيجر</button>
+          <a id="kiosk-btn" role="menuitem" href="kiosk.html" onclick="this.href='kiosk.html'+location.search" class="tool hidden"><i class="ph-bold ph-device-tablet"></i> شاشة الزبون</a>
+          <button id="stats-btn" role="menuitem" class="tool owner-only hidden"><i class="ph-bold ph-chart-bar"></i> الإحصائيات</button>
+        </div>
+      </div>
+      <button id="sound-btn" type="button" class="mini bg-white border border-[#233d2c]/15 h-10 hidden" title="صوت تنبيه الأرقام الجديدة"></button>
+      <button type="button" data-lang-toggle class="mini bg-white border border-[#233d2c]/15 h-10"></button>
     </div>
   </div>
   <!-- انقطع الاتصال: الكاشير يعرف إن الأرقام ممكن ما تكون محدّثة -->
@@ -671,7 +687,7 @@
     seenOrders = new Set(orders.map(o => o.id));
   }
   let seenOrders = null;
-  function renderSound() { $('sound-btn').innerHTML = `${soundOn ? IC.on : IC.off} ${soundOn ? 'الصوت' : 'بدون صوت'}`; }
+  function renderSound() { $('sound-btn').innerHTML = `${soundOn ? IC.on : IC.off} <span class="hidden sm:inline">${soundOn ? 'الصوت' : 'بدون صوت'}</span>`; $('sound-btn').setAttribute('aria-label', soundOn ? 'الصوت' : 'بدون صوت'); }
   $('sound-btn').onclick = () => { soundOn = !soundOn; try { localStorage.setItem('dm_desk_sound', soundOn ? 'on' : 'off'); } catch {} unlockAudio(); renderSound(); if (soundOn) chime(); };
 
   // 3) انقطع الاتصال: شريط أحمر ثابت، ويرجع يتحدث لحاله
@@ -948,6 +964,13 @@
       </div>` : ''}
       <p class="text-[11px] font-bold opacity-85">متوسط الخدمة (من أخذ الرقم لين الاستلام): ${mins(r.service.avg)} · ألغيت ${r.cancelled}</p>`;
   }
+  // قائمة «أدوات»: تنفتح وتنقفل بالضغط، وتنقفل لو ضغط برا أو اختار شي منها
+  const toolsMenu = $('tools-menu'), toolsBtn = $('tools-btn');
+  const setTools = (open) => { toolsMenu.classList.toggle('hidden', !open); toolsBtn.setAttribute('aria-expanded', String(open)); };
+  toolsBtn.onclick = (e) => { e.stopPropagation(); setTools(toolsMenu.classList.contains('hidden')); };
+  toolsMenu.addEventListener('click', () => setTools(false));
+  document.addEventListener('click', (e) => { if (!e.target.closest('#tools')) setTools(false); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setTools(false); });
   $('stats-btn').onclick = () => { $('stats-modal').classList.replace('hidden', 'flex'); loadStats(); };
   $('stats-close').onclick = () => $('stats-modal').classList.replace('flex', 'hidden');
   $('st-range').onclick = (e) => { const b = e.target.closest('[data-d]'); if (b) { stDays = +b.dataset.d; loadStats(); } };
