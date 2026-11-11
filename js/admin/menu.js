@@ -317,14 +317,39 @@
   const bySort = (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0) || a.id - b.id;
   const categoryOf = (p) => loadedCategories.find(c => c.key === p.category || c.name === p.category);
   const productsInCategory = (cat) => loadedProducts.filter(p => p.category === cat.key || p.category === cat.name).sort(bySort);
-  // الفئات الفرعية المستخدمة في القسم المختار (اقتراحات خانة الفئة الفرعية)
+  // اقتراحات الفئة الفرعية حسب نوع المنشأة
+  const SUBGROUP_IDEAS = {
+    cafe: ['القهوة المختصة', 'القهوة الباردة', 'الشاي', 'الموهيتو', 'العصائر', 'الحلا', 'المعجنات'],
+    restaurant: ['المشويات', 'الأطباق الرئيسية', 'المقبلات', 'السلطات', 'الشوربات', 'الساندويتشات', 'المشروبات'],
+    mixed: ['المشويات', 'الساندويتشات', 'السلطات', 'القهوة', 'الشاي', 'الموهيتو', 'الحلا'],
+    bakery: ['الكيك', 'الكوكيز', 'المعجنات', 'الخبز', 'الحلويات الشرقية', 'التارت'],
+    pharmacy: ['الفيتامينات', 'العناية بالبشرة', 'العناية بالطفل', 'الإسعافات الأولية'],
+    retail: ['الأكثر طلباً', 'الجديد', 'العروض'],
+    salon: ['الحلاقة', 'العناية بالبشرة', 'الصبغات', 'الباقات'],
+    carwash: ['الغسيل الخارجي', 'الغسيل الداخلي', 'التلميع', 'الباقات'],
+    laundry: ['الغسيل', 'الكوي', 'التنظيف الجاف', 'المفروشات']
+  };
+  const subgroupIdeas = () => SUBGROUP_IDEAS[client && client.business_type] || SUBGROUP_IDEAS.restaurant;
+  // الفئات الفرعية: المستخدمة في القسم المختار أول، وبعدها اقتراحات نوع المنشأة
   function fillSubgroups() {
     const key = document.getElementById('prod-category').value;
     const cat = loadedCategories.find(c => c.key === key);
-    const names = cat ? [...new Set(productsInCategory(cat).map(p => p.subgroup).filter(Boolean))] : [];
+    const used = cat ? [...new Set(productsInCategory(cat).map(p => p.subgroup).filter(Boolean))] : [];
+    const names = [...new Set([...used, ...subgroupIdeas()])];
     document.getElementById('prod-subgroup-list').innerHTML = names.map(n => `<option value="${esc(n)}"></option>`).join('');
+    const input = document.getElementById('prod-subgroup');
+    input.placeholder = `مثال: ${subgroupIdeas().slice(0, 2).join('، ')}`;
+    document.getElementById('prod-subgroup-sugg').innerHTML = names.slice(0, 8).map(n =>
+      `<button type="button" data-subgroup="${esc(n)}" class="text-[11px] font-bold px-2.5 py-1 rounded-full border ${input.value.trim() === n ? 'bg-brand text-white border-brand' : 'border-ink/15 text-ink bg-white'}">${esc(n)}</button>`).join('');
   }
   document.getElementById('prod-category').addEventListener('change', fillSubgroups);
+  document.getElementById('prod-subgroup').addEventListener('input', fillSubgroups);
+  document.getElementById('prod-subgroup-sugg').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-subgroup]'); if (!b) return;
+    const input = document.getElementById('prod-subgroup');
+    input.value = input.value.trim() === b.dataset.subgroup ? '' : b.dataset.subgroup;   // الضغط مرة ثانية يشيلها
+    fillSubgroups();
+  });
 
   async function refreshAll() {
     try {
@@ -1073,6 +1098,7 @@
   function cancelEdit() {
     editingProductId = null;
     document.getElementById('add-product-form').reset();
+    fillSubgroups();
     document.getElementById('prod-more').open = false;
     setDishImagePreview(null);
     setDishVideo(null);
