@@ -250,7 +250,8 @@ module.exports = handler(['GET', 'POST'], async (req) => {
   if (action === 'featured') return patch({ is_featured: b.featured === true });
   // ─── ربط واتساب خارجي لهذا المحل فقط (المفتاح ما يرجع للمتصفح) ───
   if (action === 'wa-get') {
-    const row = (await rest(`client_whatsapp?client_id=eq.${id}&select=provider,instance,api_url,auth_style,auth_header,body_tpl,send_mode,ask_phone,channels,wl_message,wl_template,template,template_lang,template_vars,message,enabled,last_error,last_sent_at,updated_at`))[0];
+    const row = (await rest(`client_whatsapp?client_id=eq.${id}&select=provider,instance,api_url,auth_style,auth_header,body_tpl,send_mode,ask_phone,channels,wl_message,wl_template,pull_key_hash,pull_seen_at,template,template_lang,template_vars,message,enabled,last_error,last_sent_at,updated_at`))[0];
+    if (row) { row.has_pull_key = !!row.pull_key_hash; delete row.pull_key_hash; }
     return { wa: row ? { ...row, has_token: true } : null, default_message: WA.DEFAULT_MESSAGE, default_wl_message: WA.DEFAULT_WL_MESSAGE, default_body: WA.DEFAULT_BODY };
   }
   if (action === 'wa-save') {
@@ -259,9 +260,12 @@ module.exports = handler(['GET', 'POST'], async (req) => {
     const needsInstance = ['meta', 'ultramsg', 'greenapi'].includes(provider);
     const instance = needsInstance ? str(b.instance, 120, 'المعرّف') : null;
     if (needsInstance && !instance) throw new ApiError(400, provider === 'meta' ? 'اكتب Phone number ID' : 'اكتب رقم الـ Instance');
-    const old = (await rest(`client_whatsapp?client_id=eq.${id}&select=token_enc`))[0];
-    const token = String(b.token || '').trim();
-    if (!token && !old) throw new ApiError(400, 'اكتب المفتاح (Token)');
+    const old = (await rest(`client_whatsapp?client_id=eq.${id}&select=token_enc,pull_key_hash,provider`))[0];
+    const outbox = provider === 'outbox';
+    const token = outbox ? '' : String(b.token || '').trim();
+    if (!outbox && !token && !(old && old.provider !== 'outbox')) throw new ApiError(400, 'اكتب المفتاح (Token)');
+    // صندوق الرسائل: مفتاح سحب جديد أول مرة (أو لو طلب المدير العام مفتاح جديد). يطلع مرة وحدة وما ينحفظ إلا بصمته
+    const pull = outbox && (!old || !old.pull_key_hash || b.new_pull_key === true) ? WA.newPullKey() : null;
     if (token.length > 2000) throw new ApiError(400, 'المفتاح طويل جداً');
     const apiUrl = String(b.api_url || '').trim();
     if (provider === 'greenapi' && apiUrl && !/^https:\/\/[a-z0-9.-]+(:\d+)?\/?$/i.test(apiUrl)) throw new ApiError(400, 'رابط الـ API غير صحيح');
@@ -285,13 +289,14 @@ module.exports = handler(['GET', 'POST'], async (req) => {
     const row = {
       client_id: id, provider, instance, api_url: provider === 'greenapi' || custom ? (apiUrl || null) : null, auth_style: authStyle, auth_header: authHeader, body_tpl: bodyTpl,
       send_mode: custom && b.send_mode === 'invoice' ? 'invoice' : 'phone', ask_phone: !(custom && b.send_mode === 'invoice' && b.ask_phone === false),
-      token_enc: token ? WA.encrypt(token) : old.token_enc, template, template_lang: str(b.template_lang, 12, 'لغة القالب') || 'ar', template_vars: vars,
+      token_enc: token ? WA.encrypt(token) : outbox ? (old && old.token_enc) || WA.encrypt('outbox') : old.token_enc,
+      ...(pull ? { pull_key_hash: pull.hash, pull_seen_at: null } : {}), template, template_lang: str(b.template_lang, 12, 'لغة القالب') || 'ar', template_vars: vars,
       message: provider === 'meta' ? null : (str(b.message, 500, 'نص رسالة الطلبات') || null), channels, wl_template: wlTemplate, wl_message: provider === 'meta' ? null : (str(b.wl_message, 500, 'نص رسالة قائمة الانتظار') || null), enabled: b.enabled !== false, updated_at: new Date().toISOString(),
       ...(token ? { last_error: null } : {})
     };
     await rest('client_whatsapp', { method: 'POST', prefer: 'resolution=merge-duplicates', body: row });
     WA.forget();
-    return { ok: true };
+    return { ok: true, ...(pull ? { pull_key: pull.key } : {}) };
   }
   if (action === 'wa-test') {
     const cfg = (await rest(`client_whatsapp?client_id=eq.${id}&select=*`))[0];
@@ -300,9 +305,9 @@ module.exports = handler(['GET', 'POST'], async (req) => {
     const store = (await rest(`clients?id=eq.${id}&select=name`))[0] || {};
     const kind = b.kind === 'waitlist' ? 'waitlist' : 'pager';
     const r = await WA.send(cfg, b.phone, { kind, number: kind === 'waitlist' ? 12 : 23, name: 'محمد', store: store.name || '', invoice: kind === 'pager' ? (String(b.invoice || '').trim().slice(0, 20) || '1045') : '' });
-    await rest(`client_whatsapp?client_id=eq.${id}`, { method: 'PATCH', body: r.ok ? { last_sent_at: new Date().toISOString(), last_error: null } : { last_error: `${new Date().toISOString().slice(0, 16)} ${r.error}`.slice(0, 220) } }).catch(() => {});
+    if (!r.queued) await rest(`client_whatsapp?client_id=eq.${id}`, { method: 'PATCH', body: r.ok ? { last_sent_at: new Date().toISOString(), last_error: null } : { last_error: `${new Date().toISOString().slice(0, 16)} ${r.error}`.slice(0, 220) } }).catch(() => {});
     if (!r.ok) throw new ApiError(502, `ما وصلت الرسالة: ${r.error}`, 'WA_FAILED');
-    return { ok: true };
+    return { ok: true, queued: !!r.queued };
   }
   if (action === 'wa-delete') {
     await rest(`client_whatsapp?client_id=eq.${id}`, { method: 'DELETE' });

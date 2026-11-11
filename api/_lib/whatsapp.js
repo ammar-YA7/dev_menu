@@ -10,7 +10,9 @@
 const crypto = require('crypto');
 const { rest, ApiError } = require('./core');
 
-const PROVIDERS = ['meta', 'ultramsg', 'greenapi', 'wasender', 'custom'];
+const PROVIDERS = ['meta', 'ultramsg', 'greenapi', 'wasender', 'custom', 'outbox'];
+// صندوق الرسائل: الرسالة تنتظر هنا 10 دقايق، بعدها ما تنرسل (العميل استلم طلبه غالباً)
+const OUTBOX_TTL_MS = 10 * 60e3;
 const AUTH_STYLES = ['bearer', 'supabase', 'header'];
 const DEFAULT_BODY = '{"phone": "{phone}", "message": "{message}"}';
 const DEFAULT_MESSAGE = 'طلبك رقم {number} جاهز، تفضّل استلمه من {store}';
@@ -85,6 +87,13 @@ const textFor = (cfg, vars) => fill(vars.kind === 'waitlist' ? (cfg.wl_message |
 
 // ─── الإرسال حسب المزوّد. يرجّع { ok, error } ───
 async function send(cfg, to, vars) {
+  // صندوق رسائل: نحفظ الرسالة عندنا، وخادم المحل (على كمبيوتره) يسحبها من /api/wa ويرسلها
+  if (cfg.provider === 'outbox') {
+    const phone = intlPhone(to);
+    if (!phone) return { ok: false, error: 'رقم الجوال غير صحيح' };
+    await rest('whatsapp_outbox', { method: 'POST', body: { client_id: cfg.client_id, kind: vars.kind || 'pager', phone, body: textFor(cfg, vars) } });
+    return { ok: true, queued: true };
+  }
   const token = decrypt(cfg.token_enc);
   if (!token) return { ok: false, error: 'المفتاح ما ينقرأ، أدخله من جديد' };
   const phone = intlPhone(to);
@@ -152,8 +161,8 @@ async function pagerReady(store, ticket) {
   const r = await send(cfg, ticket.wa_phone, { kind: 'pager', number: ticket.number, store: store.display_name || store.name || '', invoice: ticket.invoice_no || '' });
   const now = new Date().toISOString();
   await Promise.all([
-    rest(`pager_tickets?id=eq.${ticket.id}`, { method: 'PATCH', body: { wa_status: r.ok ? `sent ${now.slice(11, 19)}` : `failed: ${r.error}`.slice(0, 200) } }).catch(() => {}),
-    rest(`client_whatsapp?client_id=eq.${cfg.client_id}`, { method: 'PATCH', body: r.ok ? { last_sent_at: now, last_error: null } : { last_error: `${now.slice(0, 16)} ${r.error}`.slice(0, 220) } }).catch(() => {})
+    rest(`pager_tickets?id=eq.${ticket.id}`, { method: 'PATCH', body: { wa_status: r.ok ? `${r.queued ? 'queued' : 'sent'} ${now.slice(11, 19)}` : `failed: ${r.error}`.slice(0, 200) } }).catch(() => {}),
+    r.queued ? null : rest(`client_whatsapp?client_id=eq.${cfg.client_id}`, { method: 'PATCH', body: r.ok ? { last_sent_at: now, last_error: null } : { last_error: `${now.slice(0, 16)} ${r.error}`.slice(0, 220) } }).catch(() => {})
   ]);
   console.log('PAGER_WA', store.id, ticket.id, r.ok ? 'sent' : r.error);
   return r.ok ? 'sent' : 'failed';
@@ -166,9 +175,13 @@ async function waitlistReady(store, entry) {
   if (!on(cfg, 'waitlist')) return 'off';
   const r = await send(cfg, entry.phone, { kind: 'waitlist', number: entry.ticket ?? '', name: entry.name || '', store: store.display_name || store.name || '' });
   const now = new Date().toISOString();
-  await rest(`client_whatsapp?client_id=eq.${cfg.client_id}`, { method: 'PATCH', body: r.ok ? { last_sent_at: now, last_error: null } : { last_error: `${now.slice(0, 16)} ${r.error}`.slice(0, 220) } }).catch(() => {});
+  if (!r.queued) await rest(`client_whatsapp?client_id=eq.${cfg.client_id}`, { method: 'PATCH', body: r.ok ? { last_sent_at: now, last_error: null } : { last_error: `${now.slice(0, 16)} ${r.error}`.slice(0, 220) } }).catch(() => {});
   console.log('WAITLIST_WA', store.id, entry.id, r.ok ? 'sent' : r.error);
   return r.ok ? 'sent' : 'failed';
 }
 
-module.exports = { CHANNELS, DEFAULT_WL_MESSAGE, waitlistReady, PROVIDERS, AUTH_STYLES, DEFAULT_BODY, validBody, DEFAULT_MESSAGE, encrypt, decrypt, intlPhone, maskPhone, configFor, linked, askPhone, byInvoice, forget, send, pagerReady };
+// ─── صندوق الرسائل: مفتاح السحب (يطلع مرة وحدة للمدير العام، وننحفظ بصمته بس) ───
+const pullHash = (key) => crypto.createHash('sha256').update(`dm-wa-pull:${String(key || '')}`).digest('hex');
+const newPullKey = () => { const key = 'dmwa_' + crypto.randomBytes(24).toString('base64url'); return { key, hash: pullHash(key) }; };
+
+module.exports = { OUTBOX_TTL_MS, pullHash, newPullKey, CHANNELS, DEFAULT_WL_MESSAGE, waitlistReady, PROVIDERS, AUTH_STYLES, DEFAULT_BODY, validBody, DEFAULT_MESSAGE, encrypt, decrypt, intlPhone, maskPhone, configFor, linked, askPhone, byInvoice, forget, send, pagerReady };

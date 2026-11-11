@@ -1124,7 +1124,8 @@
     { value: 'ultramsg', label: 'UltraMsg', desc: 'Instance ID و Token', icon: 'ph-plug' },
     { value: 'greenapi', label: 'Green API', desc: 'idInstance و apiTokenInstance', icon: 'ph-plug' },
     { value: 'wasender', label: 'WasenderAPI', desc: 'مفتاح الجلسة (API Key) فقط', icon: 'ph-plug' },
-    { value: 'custom', label: 'خادم خاص', desc: 'خادم المزوّد نفسه، مثل Supabase Edge Function', icon: 'ph-hard-drives' }];
+    { value: 'custom', label: 'خادم خاص', desc: 'خادم المزوّد نفسه، مثل Supabase Edge Function', icon: 'ph-hard-drives' },
+    { value: 'outbox', label: 'صندوق رسائل', desc: 'خادم واتساب على كمبيوتر المحل (بدون رابط عام): يسحب الرسائل من عندنا', icon: 'ph-tray-arrow-down' }];
   const WA_NEEDS_INSTANCE = ['meta', 'ultramsg', 'greenapi'];
   async function openWhatsapp(id) {
     openMenu = null; renderStores();
@@ -1133,7 +1134,8 @@
     try { const r = await DM.post(A('wa-get'), { id }, true); cur = r.wa; def = r.default_message; defWl = r.default_wl_message; defBody = r.default_body; }
     catch (e) { forbidden(e); return showToast(`تعذر فتح الربط: ${e.message}`, true); }
     const w = cur || {};
-    const status = !cur ? 'لا يوجد ربط حالياً.' : w.last_error ? `آخر خطأ: ${w.last_error}` : w.last_sent_at ? `آخر رسالة: ${new Date(w.last_sent_at).toLocaleString('ar-SA-u-nu-latn', { dateStyle: 'short', timeStyle: 'short' })}` : 'مربوط، ولم تُرسل رسائل بعد.';
+    const fmt = (d) => new Date(d).toLocaleString('ar-SA-u-nu-latn', { dateStyle: 'short', timeStyle: 'short' });
+    const status = !cur ? 'لا يوجد ربط حالياً.' : w.provider === 'outbox' ? (w.pull_seen_at ? `آخر اتصال من خادمهم: ${fmt(w.pull_seen_at)}` : 'خادمهم لم يتصل بعد.') + (w.last_error ? ` · آخر خطأ: ${w.last_error}` : '') : w.last_error ? `آخر خطأ: ${w.last_error}` : w.last_sent_at ? `آخر رسالة: ${new Date(w.last_sent_at).toLocaleString('ar-SA-u-nu-latn', { dateStyle: 'short', timeStyle: 'short' })}` : 'مربوط، ولم تُرسل رسائل بعد.';
     const v = await DMDialog.form({
       title: 'ربط واتساب', subtitle: `${c.name || c.client_slug} · ${status}`, icon: 'ph-whatsapp-logo', confirmText: 'حفظ',
       note: 'الطلبات: يظهر للعميل في صفحة البيجر حقل اختياري لرقم جواله، وعندما يضغط الكاشير «جاهز» تصله رسالة. قائمة الانتظار: تصله رسالة عندما يضغط الموظف «الطاولة جاهزة». لا يتأثر أي محل آخر.',
@@ -1145,7 +1147,9 @@
         { name: 'instance', label: 'المعرّف (Instance ID أو Phone number ID)', value: w.instance || '', dir: 'ltr', maxlength: 120, required: true, showIf: (x) => WA_NEEDS_INSTANCE.includes(x.provider) },
         { name: 'api_url', label: 'رابط الإرسال', value: w.api_url || '', dir: 'ltr', maxlength: 500, placeholder: 'https://xxxx.supabase.co/functions/v1/send-whatsapp', hint: 'الرابط الكامل الذي يستقبل طلب الإرسال في خادم المزوّد.', required: true, showIf: (x) => x.provider === 'custom' },
         { name: 'gapi_url', label: 'رابط الـ API', value: w.provider === 'greenapi' ? (w.api_url || '') : '', dir: 'ltr', maxlength: 200, placeholder: 'https://7103.api.greenapi.com', showIf: (x) => x.provider === 'greenapi' },
-        { name: 'token', label: 'المفتاح (Token أو API Key)', value: '', dir: 'ltr', maxlength: 2000, required: !cur, placeholder: cur ? 'اتركه فارغاً لإبقاء المفتاح الحالي' : '' },
+        { name: 'token', label: 'المفتاح (Token أو API Key)', value: '', dir: 'ltr', maxlength: 2000, required: !cur || w.provider === 'outbox', placeholder: cur && w.provider !== 'outbox' ? 'اتركه فارغاً لإبقاء المفتاح الحالي' : '', showIf: (x) => x.provider !== 'outbox' },
+        ...(cur && w.has_pull_key ? [{ name: 'pull_key', label: 'مفتاح السحب', type: 'choice', value: 'keep', showIf: (x) => x.provider === 'outbox', options: [
+          { value: 'keep', label: 'إبقاء المفتاح الحالي' }, { value: 'new', label: 'مفتاح جديد', desc: 'يتوقف المفتاح القديم، وتحتاج تحطه في خادمهم من جديد' }] }] : []),
         { name: 'auth_style', label: 'طريقة إرسال المفتاح', type: 'choice', value: w.auth_style || 'bearer', showIf: (x) => x.provider === 'custom', options: [
           { value: 'bearer', label: 'Authorization: Bearer', desc: 'الطريقة الشائعة' },
           { value: 'supabase', label: 'Supabase', desc: 'apikey و Authorization: Bearer بنفس المفتاح' },
@@ -1174,9 +1178,16 @@
       const err = await post('wa-delete', { id });
       return showToast(err ? `تعذر الإلغاء: ${err.message}` : 'تم إلغاء ربط الواتساب', !!err);
     }
-    const err = await post('wa-save', { id, ...v, api_url: v.provider === 'greenapi' ? v.gapi_url : v.api_url, ask_phone: v.ask_phone !== 'off', enabled: v.enabled === 'on' });
-    if (err) return showToast(`تعذر الحفظ: ${err.message}`, true);
+    let saved;
+    try { saved = await DM.post(A('wa-save'), { id, ...v, api_url: v.provider === 'greenapi' ? v.gapi_url : v.api_url, ask_phone: v.ask_phone !== 'off', enabled: v.enabled === 'on', new_pull_key: v.pull_key === 'new' }, true); }
+    catch (e) { forbidden(e); return showToast(`تعذر الحفظ: ${e.message}`, true); }
     showToast(v.enabled === 'on' ? 'تم حفظ الربط' : 'تم الحفظ، والربط متوقف');
+    // صندوق الرسائل: مفتاح السحب يطلع مرة وحدة بس
+    if (saved && saved.pull_key) {
+      const copy = await DMDialog.confirm({ title: 'مفتاح السحب لخادمهم', tone: '', confirmText: 'انسخ المفتاح والطريقة', cancelText: 'إغلاق',
+        message: `انسخه الحين وأرسله لمبرمج خادم الواتساب، لأنه ما يطلع مرة ثانية.\n\n${saved.pull_key}\n\nكل 3 ثواني يسحب الرسائل:\nGET ${location.origin}/api/wa?action=pull\nوبعد الإرسال يبلغنا:\nPOST ${location.origin}/api/wa?action=ack\nوالمفتاح في الترويسة apikey.` });
+      if (copy) navigator.clipboard.writeText(`مفتاح السحب (ترويسة apikey): ${saved.pull_key}\n\n1) كل 3 ثواني:\nGET ${location.origin}/api/wa?action=pull\nالرد: { "messages": [{ "id": 1, "number": "9665xxxxxxxx", "text": "...", "kind": "pager" }] }\n\n2) بعد إرسال كل رسالة:\nPOST ${location.origin}/api/wa?action=ack\n{ "id": 1, "ok": true }   أو   { "id": 1, "ok": false, "error": "السبب" }\n\nالرسالة اللي عدّى عليها 10 دقايق ما تطلع في السحب. والرجاء ما تنحفظ أرقام العملاء عندكم.`).then(() => showToast('انتسخ المفتاح والطريقة'));
+    }
     if (v.enabled !== 'on') return;
     const t = await DMDialog.form({ title: 'رسالة تجربة', subtitle: 'تُرسل رسالة تجربة للتأكد من الربط', icon: 'ph-paper-plane-tilt', confirmText: 'أرسل',
       fields: [
@@ -1185,7 +1196,7 @@
         ...(v.provider === 'custom' && v.send_mode === 'invoice' && v.channels.includes('pager') ? [{ name: 'invoice', label: 'رقم فاتورة للتجربة', placeholder: '1045', dir: 'ltr', maxlength: 20, hint: 'رقم فاتورة موجود في قاعدة المزوّد حتى يجلب بيانات العميل.', showIf: (x) => (x.kind || 'pager') === 'pager' }] : [])] });
     if (!t) return;
     const te = await post('wa-test', { id, phone: t.phone, invoice: t.invoice || '', kind: t.kind || (v.channels.includes('pager') ? 'pager' : 'waitlist') });
-    showToast(te ? te.message : 'وصلت رسالة التجربة', !!te);
+    showToast(te ? te.message : v.provider === 'outbox' ? 'انحفظت رسالة التجربة، وتوصل أول ما يسحبها خادمهم' : 'وصلت رسالة التجربة', !!te);
   }
 
   function openNotify(id) {
