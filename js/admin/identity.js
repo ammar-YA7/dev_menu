@@ -601,7 +601,22 @@
       <button type="button" role="radio" aria-checked="${cur === v}" onclick="setNormalView('${v}')" class="rounded-lg border px-2 py-2 text-[11px] font-bold transition ${cur === v ? 'border-brand bg-brand text-cream' : 'border-brand/20 bg-white text-ink hover:border-brand/40'}"><i class="ph-bold ${ic}"></i> ${t}</button>`).join('');
   }
   // شريط الأقسام في المنيو: أزرار نص أو دوائر بالصور
+  // شكل المنيو العادي: الحالي أو المرتب
+  function renderMenuLook() {
+    const box = document.getElementById('menu-look');
+    if (!box) return;
+    const cur = client.menu_look === 'clean' ? 'clean' : 'classic';
+    box.innerHTML = [['classic', 'الحالي', 'ph-cards'], ['clean', 'المرتب', 'ph-list-dashes']].map(([v, t, ic]) => `
+      <button type="button" role="radio" aria-checked="${cur === v}" onclick="setMenuLook('${v}')" class="rounded-lg border px-2 py-2 text-[11px] font-bold transition ${cur === v ? 'border-brand bg-brand text-cream' : 'border-brand/20 bg-white text-ink hover:border-brand/40'}"><i class="ph-bold ${ic}"></i> ${t}</button>`).join('');
+  }
+  async function setMenuLook(v) {
+    v = v === 'clean' ? 'clean' : 'classic';
+    if ((client.menu_look || 'classic') === v) return;
+    if (await updateClient({ menu_look: v })) { renderMenuLook(); showToast(v === 'clean' ? 'المنيو يظهر بالشكل المرتب' : 'رجع المنيو للشكل الحالي'); }
+    else showToast('تعذر حفظ الإعداد', true);
+  }
   function renderCatStyle() {
+    renderMenuLook();
     const box = document.getElementById('cat-style');
     if (!box) return;
     const cur = client.cat_style === 'circles' ? 'circles' : 'pills';

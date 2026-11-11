@@ -343,6 +343,8 @@ module.exports.post = async function post(action, req, b, env) {
     const IX_OFF = 'المنيو التفاعلي إضافة على المنيو، أضفها لباقتك من صفحة الاشتراك';
     // شريط الأقسام في المنيو: أزرار نص أو دوائر بالصور
     if (has('cat_style')) p.cat_style = b.cat_style === 'circles' ? 'circles' : 'pills';
+    // شكل المنيو العادي: الحالي أو المرتب
+    if (has('menu_look')) p.menu_look = b.menu_look === 'clean' ? 'clean' : 'classic';
     if (has('menu_layout')) {
       if (b.menu_layout === 'interactive' && !PLANS.has(store, 'ixpro')) throw new ApiError(403, IX_OFF, 'ADDON_OFF');
       p.menu_layout = ['photos', 'interactive'].includes(b.menu_layout) ? b.menu_layout : 'list';

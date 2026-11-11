@@ -179,6 +179,40 @@
   body.cats-stuck #fast-filter-bar.circles .cat-circ { width: 62px; gap: 4px; }
   body.cats-stuck #fast-filter-bar.circles .cc-img { width: 46px; height: 46px; }
   body.cats-stuck #fast-filter-bar.circles .cc-name { font-size: 10.5px; max-width: 62px; -webkit-line-clamp: 1; }
+
+  /* ═══ الشكل المرتب (look-clean): غلاف فوق بدل خلفية كاملة، وشريط ثابت واحد خفيف، وبطاقات بدون إطارات ═══ */
+  body.look-clean { background: var(--bg); }
+  body.look-clean #bg-media-container { position: absolute; inset: 0 0 auto 0; height: 260px; z-index: 0; }
+  body.look-clean #bg-media-container::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,.15) 0%, transparent 35%, var(--bg) 100%); }
+  body.look-clean .bg-overlay { display: none; }
+  body.look-clean #app-content { padding-top: 14px; }
+  body.look-clean #menu-header { padding-top: 70px; }
+  body.look-clean #menu-header .w-32 { width: 92px; height: 92px; }
+  body.look-clean #menu-header .blur-xl { display: none; }
+  body.look-clean #menu-header .border-2 { border-width: 3px; border-color: var(--bg); box-shadow: 0 8px 24px rgba(0,0,0,.25); padding: 0; background: #fff; }
+  body.look-clean #project-title { font-size: 22px; letter-spacing: 0; text-transform: none; }
+  body.look-clean #search-input, body.look-clean #layout-toggle { background: var(--chip, rgba(255,255,255,.07)); border-color: transparent; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
+  /* الشريط الثابت: لون الصفحة نفسه، يمتد لحواف الشاشة، وخط رفيع تحته */
+  body.look-clean #menu-sticky { top: 0; margin: 0 -16px; padding: 0 16px; background: var(--bg); }
+  body.look-clean.cats-stuck #menu-sticky { box-shadow: 0 1px 0 var(--sec-line), 0 10px 20px -18px rgba(0,0,0,.6); }
+  body.look-clean #fast-filter-bar { background: transparent; border: 0; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; border-radius: 0; padding: 0; gap: 22px; box-shadow: inset 0 -1px 0 var(--sec-line); }
+  body.look-clean #fast-filter-bar .cat-pill { background: transparent !important; border: 0; border-radius: 0; padding: 14px 0 12px; font-size: 14px; font-weight: 700; opacity: .6; box-shadow: none !important; color: var(--fg) !important; position: relative; }
+  body.look-clean #fast-filter-bar .cat-pill.active { opacity: 1; font-weight: 900; }
+  body.look-clean #fast-filter-bar .cat-pill.active::after { content: ''; position: absolute; inset: auto 0 0 0; height: 3px; border-radius: 3px 3px 0 0; background: var(--accent); }
+  body.look-clean #sub-bar { background: transparent; border: 0; backdrop-filter: none; -webkit-backdrop-filter: none; padding: 12px 0 10px; margin: 0; gap: 14px; }
+  body.look-clean #menu-sticky, body.look-clean.cats-stuck #menu-sticky:has(#sub-bar:not(.hidden)) { background: var(--bg) !important; border-radius: 0 !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+  body.look-clean #sub-bar .sb-img { box-shadow: none; background-color: var(--chip, rgba(255,255,255,.08)); }
+  body.look-clean #sub-bar .sb-item.active .sb-img { box-shadow: 0 0 0 2.5px var(--bg), 0 0 0 4.5px var(--accent); }
+  body.look-clean #sub-bar .sb-name { opacity: .7; font-weight: 700; }
+  body.look-clean #sub-bar .sb-item.active .sb-name { opacity: 1; font-weight: 900; color: var(--fg); }
+  /* الأقسام والأطباق */
+  body.look-clean .sec-title { font-size: 20px; font-weight: 900; border: 0; padding: 0; letter-spacing: 0; }
+  body.look-clean .sub-title { font-size: 14px; opacity: .65; font-weight: 800; }
+  body.look-clean .sub-title::after { display: none; }
+  body.look-clean #dynamic-menu-sections .glass-card { background: transparent !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; padding: 14px 0; border-bottom: 1px solid var(--sec-line) !important; }
+  body.look-clean #dynamic-menu-sections .glass-card:active { transform: none; opacity: .7; }
+  body.look-clean #dynamic-menu-sections .space-y-2\.5 > :not([hidden]) ~ :not([hidden]) { margin-top: 0; }
+  body.look-clean #dynamic-menu-sections .product-img { border-radius: 14px; }
   /* الفئات الرئيسية (فطور، غداء...) */
   .grp-btn { background: var(--grp-bg); color: var(--grp-fg); border-color: var(--grp-line); }
   .grp-btn.grp-on { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
@@ -813,6 +847,8 @@
     if (im && im.tagName === 'IMG' && im.dataset.orig) { const o = im.dataset.orig; delete im.dataset.orig; im.src = o; }
   }, true);
   const urlParams = new URLSearchParams(window.location.search);
+  // معاينة الشكل المرتب (look=clean / look=classic) قبل ما يختاره صاحب المحل
+  const lookParam = urlParams.get('look');
   const clientSlug = (urlParams.get('client') || DM.hostSlug()).trim().toLowerCase();
   // ما نسمح بحفظ صور المنيو: قائمة الزر اليمين والسحب على أي صورة
   document.addEventListener('contextmenu', (e) => { if (e.target.closest('img, .img-full, #imgViewer')) e.preventDefault(); });
@@ -1300,6 +1336,8 @@
     menuVersion = menuData.version || null;
 
     if (window.DMTheme) DMTheme.apply(p);
+    // شكل المنيو العادي: المرتب أو الحالي (رابط المعاينة look= يغلب اختيار المحل)
+    document.body.classList.toggle('look-clean', lookParam ? lookParam === 'clean' : p.menu_look === 'clean');
     document.title = `${p.name || 'Dev Menu'} | المنيو الرقمي`;
     document.getElementById('project-title').textContent = p.name || 'Dev Menu';
     const TYPE_LABELS = { restaurant: 'RESTAURANT', cafe: 'SPECIALTY COFFEE', mixed: 'RESTAURANT &amp; CAFE', bakery: 'BAKERY &amp; SWEETS', clinic: 'CLINIC', salon: 'SALON', carwash: 'CAR WASH', laundry: 'LAUNDRY', retail: 'STORE', pharmacy: 'PHARMACY', services: 'SERVICES' };
