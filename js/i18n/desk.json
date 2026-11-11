@@ -136,5 +136,10 @@
   "حذف": "Delete",
   "تراجع": "Cancel",
   "استخدمه لو الزبون مو موجود أو ما طلب شي. الرقم ينشال من القائمة وما ينضاف له ختم.": "Use this if the customer isn't here or didn't order. The number is removed and gets no stamp.",
-  "انحذف رقم {n}": "Number {n} deleted"
+  "انحذف رقم {n}": "Number {n} deleted",
+  "للعميل اللي عنده أختام في بطاقة ورق أو تطبيق ثاني. ما ينضاف له ختم زيارة.": "For a customer with stamps on a paper card or another app. No visit stamp is added.",
+  "رقم العضوية أو الجوال": "Member number or mobile",
+  "بحث": "Search",
+  "لازم العميل يكون مسجّل في بطاقة الولاء أول. لو ما سجّل، خله يمسح «QR تسجيل الولاء».": "The customer must join the loyalty card first. If not, ask them to scan the loyalty sign-up QR.",
+  "اختر العدد": "Pick the number"
 }

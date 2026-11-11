@@ -1690,5 +1690,9 @@
   "بعد الاستلام": "After pickup",
   "التالي: أثناء الانتظار": "Next: While waiting",
   "التالي: بعد الاستلام": "Next: After pickup",
-  "إعدادات البيجر في ثلاث خطوات حسب رحلة العميل، وكل تعديل يُحفظ تلقائياً.": "Pager settings in three steps along the guest's journey. Every change saves automatically."
+  "إعدادات البيجر في ثلاث خطوات حسب رحلة العميل، وكل تعديل يُحفظ تلقائياً.": "Pager settings in three steps along the guest's journey. Every change saves automatically.",
+  "رصيد من نظام سابق": "Balance from a previous system",
+  "عدد الأختام في بطاقته القديمة": "Stamps on the old card",
+  "أضف الرصيد": "Add balance",
+  "انظر إلى بطاقته القديمة (ورقة أو تطبيق آخر) واكتب عدد أختامها. يُضاف الرصيد مرة واحدة فقط لكل عضو.": "Check the old card (paper or another app) and pick its stamp count. The balance can be added once per member."
 }

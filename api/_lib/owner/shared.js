@@ -150,7 +150,7 @@ function phoneNumber(v) {
 }
 
 // رابط الكاشير: مفتاح الفرع يفتح شاشة البيجر وشاشة الختم بس (بدون حساب المالك)
-const DESK_ACTIONS = ['pager', 'order-update', 'pager-update', 'pager-invoice', 'pager-ring', 'pager-eta', 'pager-addons-seen', 'loyalty-stamp-code', 'loyalty-scan', 'loyalty-redeem', 'loyalty-transfer', 'kiosk'];
+const DESK_ACTIONS = ['pager', 'order-update', 'pager-update', 'pager-invoice', 'pager-ring', 'pager-eta', 'pager-addons-seen', 'loyalty-stamp-code', 'loyalty-scan', 'loyalty-redeem', 'loyalty-find', 'loyalty-transfer', 'kiosk'];
 const DESK_KEY_RE = /^[A-Za-z0-9_-]{24,64}$/;
 // الولاء وحدة للمحل بكل فروعه: أي طلب ولاء من فرع يشتغل على بيانات المحل الرئيسي وإعداداته
 // (ما عدا موقع الختم: لكل فرع موقعه). here = الفرع اللي جاي منه الطلب

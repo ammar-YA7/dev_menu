@@ -176,6 +176,7 @@
     </div>
     <div class="flex gap-2 overflow-x-auto md:overflow-visible -mx-4 px-4 md:mx-0 md:px-0 pb-0.5 [&>*]:shrink-0 [&>*]:whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       <button id="scan-btn" class="mini bg-[#384f3d] text-white hidden"><i class="ph-bold ph-camera"></i> امسح بطاقة زبون</button>
+      <button id="transfer-btn" class="mini bg-[#fbf6e6] border border-[#c9a227]/60 text-[#5c470c] hidden"><i class="ph-bold ph-arrows-left-right"></i> نقل رصيد قديم</button>
       <button id="stamp-btn" class="mini bg-[#c9a227] text-[#15271b] hidden"><i class="ph-bold ph-seal-check"></i> كود ختم</button>
       <button id="join-btn" class="mini bg-white border border-[#233d2c]/15 hidden"><i class="ph-bold ph-user-plus"></i> QR تسجيل الولاء</button>
       <a id="kiosk-btn" href="kiosk.html" onclick="this.href='kiosk.html'+location.search" class="mini bg-white border border-[#233d2c]/15 hidden"><i class="ph-bold ph-device-tablet"></i> شاشة الزبون</a>
@@ -277,6 +278,29 @@
 </div>
 
 <!-- مسح بطاقة الزبون بالكاميرا: الزبون يعرض كود عضويته، والكاشير يختمه -->
+<!-- نقل رصيد بطاقة قديمة (ورق أو تطبيق ثاني): بدون ختم، مرة وحدة لكل عضو -->
+<div id="tr-modal" class="fixed inset-0 z-50 bg-black/70 hidden items-center justify-center p-5">
+  <div class="bg-white rounded-[28px] w-full max-w-sm p-5 space-y-3 text-right" dir="rtl">
+    <div class="flex items-start justify-between gap-2">
+      <div><p class="text-lg font-black"><i class="ph-bold ph-arrows-left-right text-[#c9a227]"></i> نقل رصيد قديم</p>
+      <p class="text-[12px] font-bold opacity-80">للعميل اللي عنده أختام في بطاقة ورق أو تطبيق ثاني. ما ينضاف له ختم زيارة.</p></div>
+      <button id="tr-close" class="w-9 h-9 rounded-xl bg-[#f5f2eb] shrink-0" aria-label="إغلاق"><i class="ph-bold ph-x"></i></button>
+    </div>
+    <form id="tr-find" class="flex gap-2">
+      <input id="tr-q" inputmode="tel" autocomplete="off" placeholder="رقم العضوية أو الجوال" class="flex-1 min-w-0 rounded-2xl border border-[#233d2c]/20 px-4 py-3 font-bold text-center" dir="ltr">
+      <button class="bg-[#384f3d] text-white font-black rounded-2xl px-5">بحث</button>
+    </form>
+    <p class="text-[11px] font-bold opacity-70 -mt-1">لازم العميل يكون مسجّل في بطاقة الولاء أول. لو ما سجّل، خله يمسح «QR تسجيل الولاء».</p>
+    <p id="tr-err" class="hidden text-[13px] font-bold text-rose-700"></p>
+    <div id="tr-step" class="hidden space-y-3 rounded-2xl bg-[#fbf6e6] border border-[#c9a227]/40 p-3">
+      <div><p id="tr-name" class="font-black text-base"></p><p id="tr-now" class="text-[12px] font-bold opacity-80"></p></div>
+      <div id="tr-pickbox"><p class="text-sm font-bold mb-2">كم ختم في بطاقته القديمة؟</p>
+        <div id="tr-nums" class="grid grid-cols-5 gap-1.5"></div>
+        <button id="tr-go" disabled class="mt-3 w-full bg-[#384f3d] disabled:opacity-40 text-white font-black rounded-2xl py-3">اختر العدد</button></div>
+      <p id="tr-done" class="hidden text-[13px] font-bold"></p>
+    </div>
+  </div>
+</div>
 <div id="scan-modal" class="fixed inset-0 z-50 bg-black/80 hidden items-center justify-center p-5">
   <div class="bg-white rounded-[28px] w-full max-w-sm p-5 text-center space-y-3">
     <p class="text-lg font-black"><i class="ph-bold ph-camera text-[#c9a227]"></i> وجّه الكاميرا على كود الزبون</p>
@@ -289,19 +313,6 @@
       <input id="scan-id" inputmode="numeric" placeholder="أو اكتب رقم العضوية" class="flex-1 min-w-0 rounded-2xl border border-[#233d2c]/20 px-4 py-3 font-bold text-center" dir="ltr">
       <button class="bg-[#384f3d] text-white font-black rounded-2xl px-5">ختم</button>
     </form>
-    <p id="tr-hint" class="rounded-2xl bg-[#fbf6e6] border border-[#c9a227]/40 px-3 py-2.5 text-[12px] font-bold text-right"><i class="ph-bold ph-arrows-left-right text-[#8a6d0f]"></i> عنده أختام من نظام قديم؟ امسح كوده أو اكتب رقم عضويته، ويطلع لك زر <b>نقل رصيد قديم</b></p>
-    <!-- آخر عضو انمسح: نقل رصيد بطاقته القديمة -->
-    <div id="tr-box" class="hidden rounded-2xl border-2 border-[#c9a227] bg-[#fbf6e6] p-3 text-right">
-      <div class="flex items-center gap-2">
-        <div class="flex-1 min-w-0"><p class="text-[11px] font-bold opacity-85">آخر عضو</p><p id="tr-who" class="font-black truncate"></p></div>
-        <button id="tr-open" class="shrink-0 bg-[#384f3d] text-white font-black rounded-xl px-3 py-2.5 text-sm"><i class="ph-bold ph-arrows-left-right"></i> نقل رصيد قديم</button>
-      </div>
-      <div id="tr-pick" class="hidden mt-3">
-        <p class="text-sm font-bold mb-2">كم ختم في بطاقته القديمة؟</p>
-        <div id="tr-nums" class="grid grid-cols-6 gap-1.5"></div>
-        <p class="text-[11px] opacity-85 mt-2">شوف البطاقة القديمة في جواله أو الورقة. النقل مرة وحدة بس لكل عضو.</p>
-      </div>
-    </div>
     <button id="scan-close" class="w-full bg-[#f5f2eb] font-black rounded-2xl py-3">إغلاق</button>
   </div>
 </div>
@@ -690,6 +701,7 @@
         if (!deskLocalized && !DMSectors.isFood(r)) { deskLocalized = true; DMSectors.localizeDom(document.body, r, true); } } maxRings = r.max_rings || 5;
       $('stamp-btn').classList.toggle('hidden', !r.loyalty);
       $('scan-btn').classList.toggle('hidden', !r.loyalty);
+      $('transfer-btn').classList.toggle('hidden', !r.loyalty);
       $('join-btn').classList.toggle('hidden', !r.loyalty);
       // شاشة الزبون: أكواد الخدمات (ومعها الختم للي عنده الولاء)
       $('kiosk-btn').classList.toggle('hidden', !r.loyalty && r.pager === false);
@@ -745,7 +757,6 @@
     try {
       const r = await call('loyalty-scan', payload);
       lastScan = r;
-      setTransfer(r);
       const who = esc(r.who.name), n = Math.min(r.stamps, r.needed);
       const dots = `<span class="flex flex-wrap justify-center gap-1.5 mt-1">${Array.from({ length: r.needed }, (_, i) => `<span class="w-4 h-4 rounded-full ${i < n ? 'bg-[#c9a227]' : 'bg-white/25'}"></span>`).join('')}</span>`;
       const no = `<span class="text-xs font-bold opacity-85" dir="ltr">#${esc(r.who.no)}</span>`;
@@ -782,7 +793,6 @@
     } catch { scanShow(false, '<i class="ph-bold ph-camera-slash text-5xl"></i><b>ما قدرنا نفتح الكاميرا</b><span class="text-sm">اكتب رقم العضوية تحت</span>'); }
   }
   function closeScanner() {
-    setTransfer(null);
     cancelAnimationFrame(scanLoop);
     if (scanStream) scanStream.getTracks().forEach(t => t.stop());
     scanStream = null;
@@ -811,33 +821,50 @@
     } catch (err) { toast(err.message || 'ما انصرفت المكافأة. حاول مرة ثانية'); b.disabled = false; b.textContent = 'اصرف الحين'; }
   };
 
-  // ─── نقل رصيد بطاقة قديمة (منصة ثانية أو ورق) ───
-  let trMember = null;
-  function setTransfer(r) {
-    trMember = r && r.who ? { no: r.who.no, name: r.who.name, needed: r.needed, done: r.who.transferred != null } : null;
-    $('tr-box').classList.toggle('hidden', !trMember);
-    $('tr-hint').classList.toggle('hidden', !!trMember);
-    $('tr-pick').classList.add('hidden');
-    if (!trMember) return;
-    $('tr-who').textContent = `${trMember.name} #${trMember.no}`;
-    $('tr-open').disabled = trMember.done;
-    $('tr-open').innerHTML = trMember.done ? `<i class="ph-bold ph-check"></i> نقل ${r.who.transferred} من قبل` : '<i class="ph-bold ph-arrows-left-right"></i> نقل رصيد قديم';
-    $('tr-open').classList.toggle('opacity-50', trMember.done);
-  }
-  $('tr-open').onclick = () => {
-    if (!trMember || trMember.done) return;
-    $('tr-nums').innerHTML = Array.from({ length: trMember.needed }, (_, i) => `<button data-tr="${i + 1}" class="bg-white border border-[#233d2c]/20 rounded-xl py-2.5 font-black text-lg">${i + 1}</button>`).join('');
-    $('tr-pick').classList.toggle('hidden');
-  };
-  $('tr-nums').onclick = async (e) => {
-    const b = e.target.closest('[data-tr]'); if (!b || !trMember) return;
-    const count = +b.dataset.tr;
-    if (!confirm(`تنقل ${count} ${count === 1 ? 'ختم' : 'أختام'} لـ ${trMember.name}؟`)) return;
+  // ─── نقل رصيد بطاقة قديمة (منصة ثانية أو ورق): يبحث عن العضو برقمه أو جواله، ويختار العدد، بدون ختم زيارة ───
+  let trMember = null, trCount = 0;
+  const trReset = () => { trMember = null; trCount = 0; $('tr-step').classList.add('hidden'); $('tr-err').classList.add('hidden'); };
+  function openTransfer() { trReset(); $('tr-q').value = ''; $('tr-modal').classList.replace('hidden', 'flex'); setTimeout(() => $('tr-q').focus(), 50); }
+  $('transfer-btn').onclick = openTransfer;
+  $('tr-close').onclick = () => $('tr-modal').classList.replace('flex', 'hidden');
+  $('tr-modal').onclick = (e) => { if (e.target.id === 'tr-modal') $('tr-modal').classList.replace('flex', 'hidden'); };
+  $('tr-find').onsubmit = async (e) => {
+    e.preventDefault(); trReset();
+    const query = normDigits($('tr-q').value.trim()); if (!query) return;
     try {
-      const r = await call('loyalty-transfer', { member_no: trMember.no, count });
-      scanShow(true, `<i class="ph-bold ph-arrows-left-right text-7xl"></i><b class="text-2xl">انتقل الرصيد</b><b class="text-lg">${esc(r.who.name)}</b><span class="font-bold">صار عنده ${Math.min(r.stamps, r.needed)} من ${r.needed}${r.stamps >= r.needed ? ' · المكافأة جاهزة' : ''}</span>`);
-      trMember.done = true; setTransfer({ who: { ...r.who, transferred: count }, needed: r.needed });
-    } catch (err) { scanShow(false, `<i class="ph-bold ph-warning-circle text-6xl"></i><b>${esc(err.message || 'ما انتقل الرصيد. حاول مرة ثانية')}</b>`); }
+      const r = await call('loyalty-find', { query });
+      trMember = r.who; trMember.needed = r.needed;
+      const room = Math.max(0, r.needed - r.who.stamps);
+      $('tr-name').textContent = `${r.who.name} #${r.who.no}`;
+      $('tr-now').textContent = `عنده الحين ${Math.min(r.who.stamps, r.needed)} من ${r.needed}`;
+      $('tr-done').classList.add('hidden'); $('tr-pickbox').classList.remove('hidden');
+      if (r.who.transferred != null || !room) {
+        $('tr-pickbox').classList.add('hidden'); $('tr-done').classList.remove('hidden');
+        $('tr-done').textContent = r.who.transferred != null ? `نقل رصيده القديم من قبل (${r.who.transferred}). النقل مرة وحدة لكل عضو.` : 'بطاقته مكتملة. يصرف مكافأته أول، وبعدها تقدر تنقل رصيده.';
+      } else {
+        $('tr-nums').innerHTML = Array.from({ length: room }, (_, i) => `<button type="button" data-tr="${i + 1}" class="bg-white border border-[#233d2c]/20 rounded-xl py-2.5 font-black text-lg">${i + 1}</button>`).join('');
+        $('tr-go').disabled = true; $('tr-go').textContent = 'اختر العدد';
+      }
+      $('tr-step').classList.remove('hidden');
+    } catch (err) { $('tr-err').textContent = err.message || 'ما لقينا العضو'; $('tr-err').classList.remove('hidden'); }
+  };
+  $('tr-nums').onclick = (e) => {
+    const b = e.target.closest('[data-tr]'); if (!b) return;
+    trCount = +b.dataset.tr;
+    $('tr-nums').querySelectorAll('[data-tr]').forEach(x => { const on = x === b; x.classList.toggle('bg-[#384f3d]', on); x.classList.toggle('text-white', on); x.classList.toggle('bg-white', !on); });
+    $('tr-go').disabled = false; $('tr-go').textContent = `أضف ${trCount} ${trCount === 1 ? 'ختم' : trCount <= 10 ? 'أختام' : 'ختم'} لـ ${trMember.name}`;
+  };
+  $('tr-go').onclick = async () => {
+    if (!trMember || !trCount) return;
+    $('tr-go').disabled = true;
+    try {
+      const r = await call('loyalty-transfer', { card_id: trMember.id, count: trCount });
+      $('tr-pickbox').classList.add('hidden'); $('tr-done').classList.remove('hidden');
+      $('tr-done').innerHTML = `<i class="ph-bold ph-check-circle text-emerald-700"></i> انتقل الرصيد. صار عنده ${Math.min(r.stamps, r.needed)} من ${r.needed}${r.stamps >= r.needed ? '، والمكافأة جاهزة' : ''}`;
+      $('tr-now').textContent = '';
+      if (navigator.vibrate) navigator.vibrate(80);
+      load();
+    } catch (err) { $('tr-err').textContent = err.message || 'ما انتقل الرصيد. حاول مرة ثانية'; $('tr-err').classList.remove('hidden'); $('tr-go').disabled = false; }
   };
   $('scan-btn').onclick = openScanner;
   $('scan-close').onclick = closeScanner;

@@ -265,20 +265,44 @@ module.exports.post = async function post(action, req, b, env) {
   }
 
   // ─── نقل رصيد من بطاقة قديمة: الكاشير يشوف البطاقة القديمة ويضيف أختامها (مرة وحدة لكل عضو) ───
+  // ─── عضو بدون ختم: بالكود أو رقم العضوية أو الجوال (لنقل رصيد قديم) ───
+  async function findMember(sel = 'id,name,member_no,stamps,transferred,transferred_at') {
+    if (b.card_id) return (await rest(`loyalty_cards?id=eq.${int(b.card_id)}&client_id=eq.${sid}&select=${sel}`))[0] || null;
+    if (b.qr) { const id = parseMemberQr(await familyIds(store), b.qr); if (!id) throw new ApiError(400, 'هذا مو كود عضوية من بطاقتنا', 'BAD_QR'); return (await rest(`loyalty_cards?id=eq.${id}&client_id=eq.${sid}&select=${sel}`))[0] || null; }
+    const raw = String(b.member_no || b.query || '').replace(/[\u0660-\u0669\u06F0-\u06F9]/g, d => String(d.charCodeAt(0) & 15)).replace(/[^\d+]/g, '');
+    if (!raw) return null;
+    // 9 أرقام وأكثر = جوال، وأقل = رقم عضوية
+    if (raw.replace(/\D/g, '').length >= 9) {
+      let phone = ''; try { phone = waNumber(raw); } catch {}
+      if (!phone) return null;
+      return (await rest(`loyalty_cards?phone=eq.${q(phone)}&client_id=eq.${sid}&select=${sel}`))[0] || null;
+    }
+    const no = parseInt(raw.replace(/\D/g, ''), 10);
+    return Number.isInteger(no) ? (await rest(`loyalty_cards?member_no=eq.${no}&client_id=eq.${sid}&select=${sel}`))[0] || null : null;
+  }
+  if (action === 'loyalty-find') {
+    const x = (await rest(`clients?id=eq.${sid}&select=loyalty_settings`))[0] || {};
+    const settings = normalizeLoyalty(x.loyalty_settings);
+    const card = await findMember();
+    if (!card) throw new ApiError(404, 'ما لقينا عضو بهذا الرقم. تأكد أنه سجّل في بطاقة الولاء', 'NO_MEMBER');
+    return { who: { id: card.id, no: card.member_no, name: card.name || `عضو #${card.member_no}`, stamps: card.stamps, transferred: card.transferred_at ? card.transferred : null }, needed: settings.needed };
+  }
+
   if (action === 'loyalty-transfer') {
     const x = (await rest(`clients?id=eq.${sid}&select=loyalty_settings`))[0] || {};
     const settings = normalizeLoyalty(x.loyalty_settings);
-    const no = parseInt(String(b.member_no || '').replace(/[^\d]/g, ''), 10);
-    const card = Number.isInteger(no) ? (await rest(`loyalty_cards?member_no=eq.${no}&client_id=eq.${sid}&select=id,name,member_no,stamps,transferred_at`))[0] : null;
+    const card = await findMember('id,name,member_no,stamps,transferred_at');
     if (!card) throw new ApiError(404, 'ما لقينا العضو', 'NO_MEMBER');
     if (card.transferred_at) throw new ApiError(409, 'هذا العضو نقل رصيده القديم من قبل', 'ALREADY');
     const count = int(b.count);
-    if (!Number.isInteger(count) || count < 1 || count > settings.needed) throw new ApiError(400, `عدد الأختام من 1 إلى ${settings.needed}`);
+    const room = Math.max(0, settings.needed - card.stamps);
+    if (!room) throw new ApiError(409, 'بطاقته مكتملة، يصرف مكافأته أول وبعدها انقل رصيده', 'FULL');
+    if (!Number.isInteger(count) || count < 1 || count > room) throw new ApiError(400, `عدد الأختام من 1 إلى ${room}`);
     const stamps = Math.min(settings.needed, card.stamps + count);
     const row = (await rest(`loyalty_cards?id=eq.${card.id}&transferred_at=is.null`, { method: 'PATCH', prefer: 'return=representation', body: { stamps, transferred: count, transferred_at: new Date().toISOString() } }))[0];
     if (!row) throw new ApiError(409, 'هذا العضو نقل رصيده القديم من قبل', 'ALREADY');
     await pushWalletCards(sid, { cardIds: [card.id] }).catch(() => 0);
-    return { ok: true, who: { no: card.member_no, name: card.name || `عضو #${card.member_no}` }, stamps: row.stamps, needed: settings.needed, count };
+    return { ok: true, who: { id: card.id, no: card.member_no, name: card.name || `عضو #${card.member_no}` }, stamps: row.stamps, needed: settings.needed, count };
   }
 
   // ─── حذف عضو من بطاقة الولاء (وأختامه ورسائله تنحذف معه) ───

@@ -463,6 +463,25 @@
       ly.member = r.member; renderLyMember(r);
     } catch (e) { closeLyMember(); showToast(e.message || 'تعذر فتح ملف العضو', true); }
   }
+  // ─── رصيد من نظام سابق: كم ختم كان عنده في بطاقته القديمة (مرة وحدة لكل عضو) ───
+  async function transferLyMember() {
+    const m = ly.member; if (!m) return;
+    const n = ly.data.settings.needed, room = Math.max(0, n - m.stamps);
+    if (!room) return showToast('بطاقته مكتملة، يصرف مكافأته أولاً', true);
+    const v = await DMDialog.form({
+      title: 'رصيد من نظام سابق', subtitle: `${memberName(m)} · عنده الآن ${m.stamps} من ${n}`, icon: 'ph-arrows-left-right', confirmText: 'أضف الرصيد',
+      note: 'انظر إلى بطاقته القديمة (ورقة أو تطبيق آخر) واكتب عدد أختامها. يُضاف الرصيد مرة واحدة فقط لكل عضو.',
+      fields: [{ name: 'count', label: 'عدد الأختام في بطاقته القديمة', type: 'choice', value: '1', cols: 5,
+        options: Array.from({ length: room }, (_, i) => ({ value: String(i + 1), label: String(i + 1) })) }]
+    });
+    if (!v) return;
+    try {
+      const r = await api('loyalty-transfer', { card_id: m.id, count: +v.count });
+      showToast(`أُضيف ${r.count} ${r.count === 1 ? 'ختم' : 'أختام'} لـ ${r.who.name}، وصار عنده ${Math.min(r.stamps, r.needed)} من ${r.needed}${r.stamps >= r.needed ? '، والمكافأة جاهزة' : ''}`);
+      await openLyMember(m.id);
+      onLoyaltyPage && onLoyaltyPage();
+    } catch (e) { showToast(e.message || 'تعذر إضافة الرصيد', true); }
+  }
   function renderLyMember(r) {
     const m = r.member, n = ly.data.settings.needed;
     document.getElementById('lm-title').textContent = memberName(m);
@@ -479,6 +498,8 @@
       navigator.clipboard.writeText(m.restore_url).then(() => showToast('انتسخ رابط بطاقته'));
     };
     document.getElementById('lm-stamp').disabled = m.stamps >= n;
+    // نقل رصيده من بطاقة قديمة (ورق أو تطبيق ثاني): مرة وحدة لكل عضو
+    document.getElementById('lm-transfer').classList.toggle('hidden', !!m.transferred_at || m.stamps >= n);
     document.getElementById('lm-redeem').classList.toggle('hidden', m.stamps < n);
     document.getElementById('lm-events').innerHTML = r.events.length ? r.events.map(e => `
       <div class="flex items-center justify-between gap-2 py-2">

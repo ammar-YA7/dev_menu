@@ -4,7 +4,7 @@
 //   DMDialog.confirm({ title, message, confirmText, tone })              → true / false
 //   حقل نص طويل: { name, label, multiline: true }
 // الحقول: { name, label, value, placeholder, hint, dir, maxlength, required }
-//         أو { name, label, type: 'choice', value, options: [{ value, label, desc, icon }] }
+//         أو { name, label, type: 'choice', value, options: [{ value, label, desc, icon }], cols } (cols = شبكة أرقام)
 //         ولحقل نصي: suggestions: ['...'] تظهر كأزرار سريعة
 // =====================================================================
 (function () {
@@ -29,6 +29,7 @@
     .dmd-sugg{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
     .dmd-sugg button{font-size:11px;font-weight:800;padding:5px 10px;border-radius:999px;background:rgba(56,79,61,.07);border:1px solid rgba(56,79,61,.15);color:#22362a;font-family:inherit;cursor:pointer}
     .dmd-choices{display:grid;gap:8px}
+    .dmd-choices.nums .dmd-choice{justify-content:center;padding:12px 0;font-size:17px}.dmd-choices.nums .dmd-dot{display:none}
     .dmd-choice{display:flex;gap:10px;align-items:flex-start;text-align:right;padding:11px 12px;border-radius:14px;border:1.5px solid rgba(56,79,61,.15);background:#fff;cursor:pointer;font-family:inherit;color:#22362a;transition:all .15s}
     .dmd-choice.on{border-color:#384f3d;background:rgba(56,79,61,.06);box-shadow:0 0 0 3px rgba(56,79,61,.08)}
     .dmd-choice b{display:block;font-size:13px}
@@ -80,7 +81,7 @@
         if (f.type === 'choice') {
           values[f.name] = f.value ?? (f.options[0] && f.options[0].value);
           return `<div class="dmd-field" data-fi="${i}">${f.label ? `<span class="dmd-label">${esc(f.label)}</span>` : ''}
-            <div class="dmd-choices" data-choice="${esc(f.name)}">${f.options.map(o => `
+            <div class="dmd-choices ${f.cols ? 'nums' : ''}" data-choice="${esc(f.name)}" ${f.cols ? `style="grid-template-columns:repeat(${Number(f.cols)},minmax(0,1fr))"` : ''}>${f.options.map(o => `
               <button type="button" class="dmd-choice ${o.value === values[f.name] ? 'on' : ''}" data-value="${esc(o.value)}">
                 <i class="dmd-dot"></i><div>${o.icon ? `<i class="ph-bold ${esc(o.icon)}"></i> ` : ''}<b style="display:inline">${esc(o.label)}</b>${o.desc ? `<span>${esc(o.desc)}</span>` : ''}</div>
               </button>`).join('')}</div></div>`;
