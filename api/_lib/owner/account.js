@@ -345,6 +345,8 @@ module.exports.post = async function post(action, req, b, env) {
     if (has('cat_style')) p.cat_style = b.cat_style === 'circles' ? 'circles' : 'pills';
     // شكل المنيو العادي: الحالي أو المرتب
     if (has('menu_look')) p.menu_look = b.menu_look === 'clean' ? 'clean' : 'classic';
+    // طبقة لون الثيم فوق صورة أو فيديو الخلفية
+    if (has('bg_overlay')) p.bg_overlay = b.bg_overlay !== false;
     if (has('menu_layout')) {
       if (b.menu_layout === 'interactive' && !PLANS.has(store, 'ixpro')) throw new ApiError(403, IX_OFF, 'ADDON_OFF');
       p.menu_layout = ['photos', 'interactive'].includes(b.menu_layout) ? b.menu_layout : 'list';

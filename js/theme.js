@@ -111,6 +111,9 @@
     el.classList.remove('tone-light', 'tone-dark');
     el.classList.add(`theme-${r.key}`, `tone-${r.tone}`);
     Object.entries(r.vars).forEach(([k, val]) => el.style.setProperty(`--${k}`, val));
+    // بدون طبقة لون: صورة أو فيديو الخلفية بألوانه الأصلية (اختيار صاحب المحل)
+    if (store && store.bg_overlay === false) { el.style.setProperty('--ov-in', 'transparent'); el.style.setProperty('--ov-out', 'transparent'); el.style.setProperty('--media-filter', 'none'); }
+    el.classList.toggle('no-overlay', !!(store && store.bg_overlay === false));
     const meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.setAttribute('content', r.vars.bg);
     return r;

@@ -1,11 +1,14 @@
 -- =====================================================================
 -- DEV MENU — شكل المنيو العادي: الحالي أو المرتب
+--   clients.bg_overlay: طبقة لون الثيم فوق صورة أو فيديو الخلفية (false = بدون)
 --   clients.menu_look: classic = الشكل الحالي (خلفية كاملة وبطاقات) · clean = غلاف فوق ولون ثابت وأطباق بخطوط
 --   المنيو العام يقرأ من public_clients، فالعمود ينضاف للـ view بنفس طريقة 97-category-circles.sql
 -- =====================================================================
 alter table public.clients add column if not exists menu_look text not null default 'classic';
 alter table public.clients drop constraint if exists clients_menu_look_check;
 alter table public.clients add constraint clients_menu_look_check check (menu_look in ('classic', 'clean'));
+-- طبقة لون الثيم فوق صورة أو فيديو الخلفية (المنيو العادي والتفاعلي وصفحة الروابط): false = الخلفية بألوانها الأصلية
+alter table public.clients add column if not exists bg_overlay boolean not null default true;
 notify pgrst, 'reload schema';
 
 -- إضافة العمود إلى public_clients (المنيو العام يقرأ منها)
@@ -32,7 +35,7 @@ begin
     src := 'clients';
   end if;
 
-  foreach col in array array['menu_look'] loop
+  foreach col in array array['menu_look', 'bg_overlay'] loop
     if not exists (
       select 1 from information_schema.columns
       where table_schema = 'public' and table_name = 'public_clients' and column_name = col
@@ -42,7 +45,7 @@ begin
   end loop;
 
   if extra = '' then
-    raise notice 'public_clients فيه عمود menu_look مسبقاً، ما تغيّر شي';
+    raise notice 'public_clients فيه الأعمدة مسبقاً، ما تغيّر شي';
     return;
   end if;
 

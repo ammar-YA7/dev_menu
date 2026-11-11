@@ -448,10 +448,24 @@
     document.getElementById('accent-presets').innerHTML = DMTheme.PRESETS.map(c => `
       <button type="button" onclick="pickAccent('${c}')" aria-label="${c}" title="${c}"
         class="w-9 h-9 rounded-full border-2 transition ${accent === c ? 'border-ink scale-110' : 'border-white shadow'}" style="background:${c}"></button>`).join('');
+    renderBgOverlay();
     document.getElementById('appearance-preview').href = menuUrl();
     document.getElementById('appearance-links-preview').href = linksUrl();
     // بدون باقة المنيو: المعاينة لصفحة الروابط بس
     document.getElementById('appearance-preview').classList.toggle('hidden', featureLocked('menu'));
+  }
+  // طبقة لون الثيم فوق صورة أو فيديو الخلفية (تنحفظ على طول)
+  function renderBgOverlay() {
+    const box = document.getElementById('bg-overlay-pick');
+    if (!box) return;
+    const on = client.bg_overlay !== false;
+    box.innerHTML = [[true, 'مع لون الثيم', 'ph-drop-half'], [false, 'بدون', 'ph-image']].map(([v, t, ic]) => `
+      <button type="button" role="radio" aria-checked="${on === v}" onclick="setBgOverlay(${v})" class="rounded-lg border px-2 py-2 text-[11px] font-bold transition ${on === v ? 'border-brand bg-brand text-cream' : 'border-brand/20 bg-white text-ink hover:border-brand/40'}"><i class="ph-bold ${ic}"></i> ${t}</button>`).join('');
+  }
+  async function setBgOverlay(v) {
+    if ((client.bg_overlay !== false) === v) return;
+    if (await updateClient({ bg_overlay: v })) { renderBgOverlay(); showToast(v ? 'رجع لون الثيم فوق الخلفية' : 'الخلفية تظهر بألوانها الأصلية'); }
+    else showToast('تعذر حفظ الإعداد', true);
   }
   function pickTheme(key) { themeDraft.theme = key; renderAppearance(false); }
   function pickAccent(c) { themeDraft.accent = DMTheme.isHex(c) ? c.toLowerCase() : null; renderAppearance(false); }
