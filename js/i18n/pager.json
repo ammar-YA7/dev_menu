@@ -163,5 +163,7 @@
   "لما يجهز طلبك": "when your order is ready",
   "ما انحفظ. تأكد من الإنترنت وحاول مرة ثانية": "Not saved. Check your connection and try again",
   "اكتب رقم جوال صحيح، مثل 0512345678": "Enter a valid mobile number, e.g. 0512345678",
-  "رسائل الواتساب غير متاحة في هذا المحل": "WhatsApp messages aren't available at this store"
+  "رسائل الواتساب غير متاحة في هذا المحل": "WhatsApp messages aren't available at this store",
+  "🧾 عندك رقم فاتورة؟ اكتبه (اختياري)": "🧾 Have an invoice number? Add it (optional)",
+  "أضف رقم فاتورتك (اختياري)": "Add your invoice number (optional)"
 }

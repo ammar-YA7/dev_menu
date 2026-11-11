@@ -263,6 +263,38 @@
   .cat-row:last-child { border-bottom: 0; }
   .cat-grip { width: 36px; height: 44px; display: grid; place-items: center; color: var(--ink-3); cursor: grab; touch-action: none; border-radius: 8px; flex-shrink: 0; }
   .cat-grip:hover { background: rgba(56, 79, 61, .07); color: var(--ink); }
+  /* مفتاح تشغيل/إيقاف موحّد لخيارات المنيو */
+  .dm-switch { appearance: none; -webkit-appearance: none; width: 44px; height: 26px; border-radius: 99px; background: #cfd6d0; position: relative; flex-shrink: 0; cursor: pointer; transition: background .2s; margin: 0; }
+  .dm-switch::after { content: ''; position: absolute; top: 3px; inset-inline-start: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .25); transition: transform .2s; }
+  .dm-switch:checked { background: #233d2c; }
+  [dir="rtl"] .dm-switch:checked::after { transform: translateX(-18px); }
+  [dir="ltr"] .dm-switch:checked::after { transform: translateX(18px); }
+  .dm-switch:disabled { opacity: .4; cursor: not-allowed; }
+  .dm-switch:focus-visible { outline: 2px solid #233d2c; outline-offset: 2px; }
+  /* شريط الحفظ ظاهر: مسافة تحت الإعدادات عشان ما يغطي آخر خيار */
+  body.has-savebar #section-msettings { padding-bottom: 96px; }
+  /* مربعات رفع الخلفية (صورة / فيديو) */
+  .bg-tile { display: flex; flex-direction: column; gap: 8px; cursor: pointer; border-radius: 16px; padding: 6px; border: 1.5px solid rgba(56, 79, 61, .12); background: #fff; transition: border-color .15s; }
+  .bg-tile:hover { border-color: rgba(56, 79, 61, .35); }
+  .bg-tile.on { border-color: #233d2c; }
+  .bg-tile-media { position: relative; display: block; aspect-ratio: 16 / 10; border-radius: 11px; overflow: hidden; background: #f1efe8; }
+  .bg-tile-media img, .bg-tile-media video { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .bg-tile-empty { position: absolute; inset: 0; display: grid; place-items: center; font-size: 11px; font-weight: 700; color: rgba(34, 54, 42, .5); }
+  .bg-tile-on { position: absolute; top: 6px; right: 6px; background: #233d2c; color: #fff; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 99px; }
+  .bg-tile-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 0 4px 2px; }
+  .bg-tile-name { font-size: 12px; font-weight: 800; color: #22362a; }
+  .bg-tile-btn { font-size: 13px; font-weight: 800; min-height: 40px; display: inline-flex; align-items: center; padding: 0 14px; border-radius: 11px; background: #233d2c; color: #fff; white-space: nowrap; }
+  .bg-tile-name { font-size: 13px !important; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+  .bg-tile-btn { padding: 0 12px; }
+  /* معاينة حية للمنيو داخل إطار جوال */
+  .live-phone { width: 100%; max-width: 300px; margin: 0 auto; border-radius: 34px; border: 8px solid #1d1d1f; background: #1d1d1f; overflow: hidden; box-shadow: 0 18px 40px -18px rgba(0, 0, 0, .45); }
+  .live-phone iframe { display: block; width: 100%; height: 560px; border: 0; background: #fff; border-radius: 26px; transition: height .25s; }
+  @media (max-width: 640px) { .live-phone iframe { height: 420px; } .live-phone.tall iframe { height: 640px; } }
+  /* إعدادات المنيو على الجوال: النصوص التوضيحية ما تصغر عن 12 */
+  #section-msettings .text-\[11px\], #section-msettings .text-\[10px\] { font-size: 12px; }
+  /* شريط الحفظ الثابت: يطلع لما فيه تغييرات ما انحفظت */
+  #ap-savebar { position: fixed; inset-inline: 12px; bottom: calc(76px + env(safe-area-inset-bottom)); z-index: 45; max-width: 560px; margin: 0 auto; }
+  @media (min-width: 1024px) { #ap-savebar { bottom: 20px; } }
   /* صورة القسم (دائرته في شريط الأقسام بالمنيو) */
   .cat-img { position: relative; width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0; background: rgba(56, 79, 61, .07); border: 1.5px dashed rgba(56, 79, 61, .3); display: grid; place-items: center; color: var(--ink-2); overflow: visible; }
   .cat-img img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
@@ -424,6 +456,12 @@
   </div>
 </div>
 
+<!-- شريط حفظ المظهر: ثابت تحت الشاشة لما يغيّر الشكل أو اللون وما حفظ -->
+<div id="ap-savebar" class="hidden items-center gap-3 bg-brand text-cream rounded-2xl px-4 py-3 shadow-2xl">
+  <span class="flex-1 text-[13px] font-bold"><i class="ph-bold ph-pencil-simple"></i> عندك تغييرات في المظهر لم تُحفظ</span>
+  <button type="button" onclick="pickReset()" class="text-[13px] font-bold text-cream/80 px-2 min-h-[40px]">تراجع</button>
+  <button type="button" onclick="saveAppearance()" class="bg-cream text-brand text-[13px] font-black rounded-xl px-4 min-h-[40px]">حفظ</button>
+</div>
 <div id="toast" class="fixed bottom-20 lg:bottom-5 left-5 z-[70] transform translate-y-10 opacity-0 pointer-events-none bg-brand text-cream px-5 py-3 rounded-2xl shadow-2xl border border-brand/30 text-xs font-bold flex items-center gap-2">
   <i id="toast-icon" class="ph-bold ph-check-circle text-green-600"></i>
   <span id="toast-msg">تمت العملية بنجاح</span>
@@ -698,7 +736,7 @@
           <h4 class="text-sm font-bold text-ink flex items-center gap-1.5"><i class="ph-bold ph-receipt text-emerald-600"></i> طرق الطلب</h4>
         <div data-needs="menu" id="wa-orders-box" class="bg-brand/5 p-3 rounded-xl border border-brand/15 space-y-2.5">
           <label id="wa-orders-label" class="flex items-start gap-2.5 cursor-pointer">
-            <input type="checkbox" id="info-wa-orders" onchange="saveWaOrders(this)" class="w-4 h-4 mt-0.5 accent-green-500 cursor-pointer disabled:cursor-not-allowed">
+            <input type="checkbox" id="info-wa-orders" onchange="saveWaOrders(this)" class="dm-switch order-last ms-auto">
             <span class="text-xs">
               <b class="text-ink"><i class="ph-bold ph-whatsapp-logo text-green-600"></i> استقبال الطلبات عبر واتساب</b>
               <span class="block text-[11px] text-ink mt-0.5 leading-relaxed">يظهر زر "اطلب عبر واتساب" في تفاصيل كل طبق، ويصل الطلب مباشرة إلى واتساب المنشأة.</span>
@@ -713,7 +751,7 @@
             <span class="block text-[11px] text-ink mt-0.5 leading-relaxed">يختار العميل الأصناف وكمياتها وملاحظاته من جواله، ويصل الطلب مباشرة إلى شاشة الكاشير دون الحاجة إلى واتساب. لا يُطلب من العميل اسمه ولا رقم جواله.</span>
           </div>
           <label class="flex items-start gap-2.5 cursor-pointer bg-white rounded-lg border border-brand/15 p-2.5">
-            <input type="checkbox" id="mo-on" class="w-4 h-4 mt-0.5 accent-green-600 cursor-pointer" onchange="saveOrderMode(this)">
+            <input type="checkbox" id="mo-on" class="dm-switch order-last ms-auto" onchange="saveOrderMode(this)">
             <span class="text-xs"><b class="text-ink">تفعيل الطلب من المنيو</b><span class="block text-[11px] text-ink mt-0.5 leading-relaxed">يُرسل العميل طلبه فيظهر عند الكاشير برمز الطلب (مثل A12)، وبرقم الطاولة إذا مسح رمز طاولته. يضغط الكاشير «استلمته» ثم «سلّمته»، ويرى العميل حالة طلبه في المنيو.</span></span>
           </label>
           <!-- طرق الاستلام والتوصيل والطلب المسبق -->
@@ -749,7 +787,7 @@
         <div class="pro-card p-5 space-y-3">
       <!-- إعدادات المنيو: تنحفظ مباشرة -->
       <section data-needs="menu" class="space-y-3">
-        <h5 class="text-xs font-bold text-ink border-b border-ink/10 pb-1.5">إعدادات المنيو <span class="font-normal text-ink">(تنحفظ تلقائياً)</span></h5>
+        <h4 class="text-sm font-bold text-ink flex items-center gap-1.5"><i class="ph-bold ph-paint-brush text-emerald-600"></i> شكل المنيو</h4>
         <!-- ═══ المنيو العادي ═══ -->
         <div id="normal-card" class="bg-white p-3.5 rounded-xl border border-brand/15 space-y-3 scroll-mt-24">
           <div class="flex items-center gap-2">
@@ -759,68 +797,68 @@
           <p class="text-[11px] text-ink leading-relaxed">قائمة بالأقسام والأصناف مع البحث، ويختار العميل بين عرض القائمة والصور الكبيرة.</p>
           <div id="normal-status"></div>
           <!-- شكل المنيو العادي: مجموعات مرقّمة مثل المنيو التفاعلي -->
+          
+          <input type="file" id="cat-image-file" accept="image/*" class="hidden">
           <div class="space-y-2 pt-3 border-t border-brand/10">
-            <div><b class="flex items-center gap-1.5 text-[12px] text-ink"><span class="inline-grid place-items-center w-5 h-5 rounded-full bg-brand text-cream text-[10px] font-bold shrink-0">1</span>طريقة العرض الافتراضية</b><span class="block text-[11px] text-ink/70 leading-relaxed">يمكن للعميل التبديل بين العرضين من المنيو.</span></div>
+            <div><b class="flex items-center gap-1.5 text-[12px] text-ink"><span class="inline-grid place-items-center w-5 h-5 rounded-full bg-brand text-cream text-[10px] font-bold shrink-0">1</span>الخلفية</b><span class="block text-[11px] text-ink/70 leading-relaxed">صورة أو فيديو أعلى المنيو. الفيديو يظهر بدلاً من الصورة إذا رُفع.</span></div>
+            <div class="grid grid-cols-2 gap-2">
+      <!-- رفع الخلفية: مربع بالعربي فيه المعاينة الحالية، تضغطه وتختار الملف ويرتفع على طول -->
+      <label for="bg-img-file" data-free-hide data-needs="menu" class="bg-tile">
+        <span id="bg-img-prev" class="bg-tile-media"></span>
+        <span class="bg-tile-row"><span class="bg-tile-name"><i class="ph-bold ph-image"></i> صورة</span><span id="upl-bg_image" class="bg-tile-btn">اختر صورة</span></span>
+      </label>
+      <input type="file" id="bg-img-file" accept="image/*" class="hidden" onchange="uploadMedia('bg_image')">
+      <label for="bg-video-file" data-free-hide data-needs="menu" class="bg-tile">
+        <span id="bg-video-prev" class="bg-tile-media"></span>
+        <span class="bg-tile-row"><span class="bg-tile-name"><i class="ph-bold ph-video-camera"></i> فيديو</span><span id="upl-bg_video" class="bg-tile-btn">اختر فيديو</span></span>
+      </label>
+      <input type="file" id="bg-video-file" accept="video/*" class="hidden" onchange="uploadMedia('bg_video')">
+            </div>
+          </div>
+          <div class="space-y-2 pt-3 border-t border-brand/10">
+            <div><b class="flex items-center gap-1.5 text-[12px] text-ink"><span class="inline-grid place-items-center w-5 h-5 rounded-full bg-brand text-cream text-[10px] font-bold shrink-0">2</span>الألوان</b><span class="block text-[11px] text-ink/70 leading-relaxed">تُطبَّق على المنيو العادي وصفحة الروابط.</span></div>
+            <div id="appearance-menu-slot">
+          <div id="appearance-card" class="space-y-3">
+                              <div id="theme-picker" class="grid grid-cols-3 md:grid-cols-5 gap-2"></div>
+          <!-- معاينة حية: المنيو نفسه يتغير مع كل اختيار قبل الحفظ -->
+          <div id="live-preview-box" class="space-y-1.5">
+            <p class="text-[11px] font-bold text-ink/70 text-center">معاينة حية، تتغير مع اختيارك قبل الحفظ</p>
+            <div class="live-phone" id="live-phone"><iframe id="live-preview" title="معاينة المنيو" loading="lazy"></iframe></div>
+            <button type="button" onclick="const ph = document.getElementById('live-phone'); ph.classList.toggle('tall'); this.textContent = ph.classList.contains('tall') ? 'تصغير المعاينة' : 'تكبير المعاينة'" class="sm:hidden mx-auto block text-[13px] font-bold text-ink border border-brand/20 rounded-xl px-4 min-h-[40px]">تكبير المعاينة</button>
+          </div>
+          <div class="space-y-2.5 pt-1">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <label for="accent-input" class="text-[12px] font-bold text-ink">لون الهوية <span class="text-ink/60 font-normal">(الزر النشط والأسعار)</span></label>
+              <span id="accent-label" class="text-[11px] text-ink" dir="ltr"></span>
+            </div>
+            <!-- الدوائر: تلقائي (لون الثيم)، ولون الشعار، والألوان الهادئة، وآخرها «+» لأي لون -->
+            <div id="accent-presets" class="flex flex-wrap gap-x-3 gap-y-5 pb-4"></div>
+            <input type="color" id="accent-input" oninput="pickAccent(this.value)" class="sr-only" aria-label="اختر لوناً آخر">
+            <p id="accent-warn" class="hidden text-[11px] font-bold text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2"></p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <a id="appearance-links-preview" href="#" target="_blank" rel="noopener" class="flex-1 text-center bg-brand/10 hover:bg-brand/15 text-ink font-bold py-2.5 rounded-xl text-xs border border-brand/25 transition"><i class="ph-bold ph-link-simple text-[11px]"></i> معاينة صفحة الروابط</a>
+          </div>
+          </div>
+            </div>
+          </div>
+          <details class="pt-3 border-t border-brand/10 group">
+            <summary class="cursor-pointer list-none flex items-center justify-between text-[12px] font-bold text-ink"><span><i class="ph-bold ph-sliders-horizontal"></i> خيارات إضافية <span class="font-normal text-ink/60">(طريقة العرض، الشكل، شريط الأقسام، لون الخط)</span></span><i class="ph-bold ph-caret-down transition group-open:rotate-180"></i></summary>
+            <div class="space-y-2 pt-3">
+            <div><b class="flex items-center gap-1.5 text-[12px] text-ink">طريقة العرض الافتراضية</b><span class="block text-[11px] text-ink/70 leading-relaxed">يمكن للعميل التبديل بين العرضين من المنيو.</span></div>
             <div id="normal-view" role="radiogroup" class="grid grid-cols-2 gap-1.5"></div>
             <div class="pt-1.5"><b class="block text-[12px] text-ink">الشكل</b><span class="block text-[11px] text-ink/70 leading-relaxed">المرتب: الخلفية غلاف أعلى المنيو فقط، والأقسام كتابة بخط تحتها، والأطباق تفصلها خطوط بدون بطاقات.</span></div>
             <div id="menu-look" role="radiogroup" class="grid grid-cols-2 gap-1.5"></div>
             <div class="pt-1.5"><b class="block text-[12px] text-ink">شريط الأقسام</b><span class="block text-[11px] text-ink/70 leading-relaxed">الدوائر تعرض صورة كل قسم، وتُضاف الصورة من تبويب «الأقسام». القسم الذي لا صورة له تظهر فيه صورة أول طبق.</span></div>
             <div id="cat-style" role="radiogroup" class="grid grid-cols-2 gap-1.5"></div>
-          </div>
-          <input type="file" id="cat-image-file" accept="image/*" class="hidden">
-          <div class="space-y-2 pt-3 border-t border-brand/10">
-            <div><b class="flex items-center gap-1.5 text-[12px] text-ink"><span class="inline-grid place-items-center w-5 h-5 rounded-full bg-brand text-cream text-[10px] font-bold shrink-0">2</span>الخلفية</b><span class="block text-[11px] text-ink/70 leading-relaxed">صورة أو فيديو أعلى المنيو، وتُستخدم في صفحة الروابط ما لم تُحدَّد لها خلفية خاصة من «هوية المنشأة».</span></div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-      <div data-free-hide data-needs="menu" class="bg-brand/5 p-3 rounded-xl border border-brand/15 space-y-2">
-        <label class="text-[11px] font-bold text-ink">صورة</label>
-        <input type="file" id="bg-img-file" accept="image/*" class="input-pro text-[11px]">
-        <button id="upl-bg_image" onclick="uploadMedia('bg_image')" class="w-full bg-brand text-cream hover:bg-brand-dark text-xs font-bold py-2 rounded-xl transition">تحديث الخلفية</button>
-        <div id="bg-img-prev" class="hidden"></div>
-      </div>
-
-      <div data-free-hide data-needs="menu" class="bg-brand/5 p-3 rounded-xl border border-brand/15 space-y-2">
-        <label class="text-[11px] font-bold text-ink">فيديو (MP4)</label>
-        <p class="text-[11px] text-ink leading-relaxed">يتحرك مكان الصورة، وإذا رُفع يظهر بدلاً منها.</p>
-        <input type="file" id="bg-video-file" accept="video/*" class="input-pro text-[11px]">
-        <button id="upl-bg_video" onclick="uploadMedia('bg_video')" class="w-full bg-brand text-cream hover:bg-brand-dark text-xs font-bold py-2 rounded-xl transition">تحديث الفيديو</button>
-        <div id="bg-video-prev" class="hidden"></div>
-      </div>
-            </div>
-          </div>
-          <div class="space-y-2 pt-3 border-t border-brand/10">
-            <div><b class="flex items-center gap-1.5 text-[12px] text-ink"><span class="inline-grid place-items-center w-5 h-5 rounded-full bg-brand text-cream text-[10px] font-bold shrink-0">3</span>الألوان</b><span class="block text-[11px] text-ink/70 leading-relaxed">تُطبَّق على المنيو العادي وصفحة الروابط.</span></div>
-            <div id="appearance-menu-slot">
-          <div id="appearance-card" class="space-y-3">
-          <!-- طبقة لون الثيم فوق صورة أو فيديو الخلفية: اختيارية -->
-          <div class="bg-brand/5 p-3.5 rounded-2xl border border-brand/15 space-y-2">
-            <div><b class="block text-[12px] text-ink">لون الثيم فوق صورة الخلفية</b><span class="block text-[11px] text-ink/70 leading-relaxed">«بدون» يُظهر صورة أو فيديو الخلفية بألوانه الأصلية في المنيو العادي والتفاعلي وصفحة الروابط. اختر صورة هادئة حتى تبقى الكتابة واضحة.</span></div>
-            <div id="bg-overlay-pick" role="radiogroup" class="grid grid-cols-2 gap-1.5"></div>
-          </div>
-          <!-- لون خط النصوص فوق الخلفية -->
-          <div class="bg-brand/5 p-3.5 rounded-2xl border border-brand/15 space-y-2">
+          
+            <div class="bg-brand/5 p-3.5 rounded-2xl border border-brand/15 space-y-2">
             <div><b class="block text-[12px] text-ink">لون الخط فوق الخلفية</b><span class="block text-[11px] text-ink/70 leading-relaxed">اسم المحل والوصف، و«موقعنا» والتوصيل، والبحث، وأزرار الأقسام، وأسماء الفئات.</span></div>
             <div id="text-color-pick" class="flex flex-wrap items-center gap-2"></div>
-          </div>
-          <div id="theme-picker" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>
-          <div class="bg-brand/5 p-3.5 rounded-2xl border border-brand/15 space-y-2.5">
-            <div class="flex flex-wrap items-center justify-between gap-2">
-              <label for="accent-input" class="text-[11px] font-bold text-ink">لون الهوية <span class="text-ink font-semibold">(الزر النشط، الأسعار، خط عناوين الأقسام)</span></label>
-              <span id="accent-label" class="text-[11px] font-mono text-ink" dir="ltr"></span>
-            </div>
-            <div class="flex flex-wrap items-center gap-2">
-              <input type="color" id="accent-input" oninput="pickAccent(this.value)" class="w-11 h-11 rounded-xl border border-brand/20 bg-white p-1 cursor-pointer" aria-label="اختر لون">
-              <div id="accent-presets" class="flex flex-wrap gap-2"></div>
-              <button type="button" onclick="pickAccent(null)" class="text-[11px] font-bold text-ink bg-brand/10 border border-brand/45 hover:bg-brand/10 px-3 py-2 rounded-xl transition">لون الثيم الافتراضي</button>
-            </div>
-          </div>
-          <div class="flex flex-col sm:flex-row gap-2">
-            <button onclick="saveAppearance()" class="flex-1 bg-brand text-cream hover:bg-brand-dark font-bold py-2.5 rounded-xl text-xs transition">حفظ المظهر</button>
-            <a id="appearance-preview" href="#" target="_blank" rel="noopener" class="sm:w-40 text-center bg-brand/10 hover:bg-brand/15 text-ink font-bold py-2.5 rounded-xl text-xs border border-brand/25 transition"><i class="ph-bold ph-eye text-[11px]"></i> معاينة المنيو</a>
-            <a id="appearance-links-preview" href="#" target="_blank" rel="noopener" class="sm:w-44 text-center bg-brand/10 hover:bg-brand/15 text-ink font-bold py-2.5 rounded-xl text-xs border border-brand/25 transition"><i class="ph-bold ph-link-simple text-[11px]"></i> معاينة صفحة الروابط</a>
-          </div>
+            <p id="text-color-warn" class="hidden text-[11px] font-bold text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2"></p>
           </div>
             </div>
-          </div>
+          </details>
         </div>
         <!-- ═══ المنيو التفاعلي (إضافة): أين يظهر، ورابط التابلت، وشكله ═══ -->
         <div id="ix-card" class="bg-white p-3.5 rounded-xl border border-brand/15 space-y-3">
@@ -830,6 +868,14 @@
             <span id="ix-badge"></span>
           </div>
           <p id="ix-gift-note" class="hidden text-[11px] text-ink leading-relaxed"></p>
+          <!-- بدون الإضافة: بطاقة تعريف واحدة بدل خيارات باهتة ما تنضغط -->
+          <div id="ix-upsell" class="hidden space-y-3">
+            <p class="text-[13px] text-ink leading-relaxed">منيو بصور كبيرة يتصفحه العميل بلمسة على جهاز لوحي في المحل، أو من رمز QR. مناسب للمحلات التي تريد عرض أطباقها بشكل لافت.</p>
+            <div class="flex flex-wrap gap-2">
+              <button type="button" onclick="addIxpro()" class="bg-brand text-cream font-bold rounded-xl px-4 min-h-[44px] text-[13px]"><i class="ph-bold ph-plus"></i> أضفه لباقتك</button>
+              <a id="ix-upsell-demo" href="#" target="_blank" rel="noopener" class="border border-brand/25 text-ink font-bold rounded-xl px-4 min-h-[44px] text-[13px] inline-flex items-center gap-1.5"><i class="ph-bold ph-eye"></i> شاهد مثالاً</a>
+            </div>
+          </div>
           <div class="space-y-1.5">
             <span class="block text-[11px] font-bold text-ink">أين يظهر؟</span>
             <div id="menu-layout" role="radiogroup" class="space-y-1.5"></div>
@@ -849,8 +895,9 @@
           <!-- شكل المنيو التفاعلي: القوالب والخلفية والألوان والشكل والملمس والجملة -->
           <div id="menu-ix-look" class="border-t border-brand/10 pt-3 space-y-2.5"></div>
         </div>
+        <h4 class="text-sm font-bold text-ink flex items-center gap-1.5 pt-3"><i class="ph-bold ph-sliders-horizontal text-emerald-600"></i> خيارات المنيو</h4>
         <label class="flex items-start gap-2.5 bg-brand/5 p-3 rounded-xl border border-brand/15 cursor-pointer">
-          <input type="checkbox" id="info-menu-chat" onchange="toggleMenuChat(this.checked)" class="w-4 h-4 mt-0.5 accent-[#384f3d] cursor-pointer">
+          <input type="checkbox" id="info-menu-chat" onchange="toggleMenuChat(this.checked)" class="dm-switch order-last ms-auto">
           <span class="text-xs">
             <b class="text-ink"><i class="ph-bold ph-sparkle text-amber-600"></i> المساعد الذكي في المنيو <span class="text-[11px] font-bold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded">تجريبي</span></b>
             <span class="block text-[11px] text-ink mt-0.5 leading-relaxed">زر "اسأل المساعد" في المنيو: يجيب عميلك عن الأسعار والسعرات والمكونات، ويقترح عليه حسب ذوقه وميزانيته، ويعرف أوقات عملك. يجيب من منيو محلك فقط، ويعتذر عن أي سؤال آخر.</span>
@@ -858,7 +905,7 @@
           </span>
         </label>
         <label class="flex items-start gap-2.5 bg-brand/5 p-3 rounded-xl border border-brand/15 cursor-pointer">
-          <input type="checkbox" id="info-show-calories" onchange="toggleCalories(this.checked)" class="w-4 h-4 mt-0.5 accent-[#384f3d] cursor-pointer">
+          <input type="checkbox" id="info-show-calories" onchange="toggleCalories(this.checked)" class="dm-switch order-last ms-auto">
           <span class="text-xs">
             <b class="text-ink"><i class="ph-bold ph-flame text-amber-600"></i> عرض السعرات الحرارية في المنيو</b>
             <span class="block text-[11px] text-ink mt-0.5 leading-relaxed">عند الإيقاف: يختفي حقل السعرات من نموذج الأطباق، ولا تظهر السعرات للزبائن. السعرات المحفوظة تبقى ولا تنحذف.</span>
@@ -867,7 +914,7 @@
         <div class="bg-brand/5 p-3 rounded-xl border border-brand/15">
           <label for="info-currency" class="text-xs font-bold text-ink block mb-1.5"><i class="ph-bold ph-coins text-amber-600"></i> عملة المنيو</label>
           <select id="info-currency" onchange="changeCurrency(this.value)" class="input-pro text-xs cursor-pointer"></select>
-          <span class="block text-[11px] text-ink mt-1 leading-relaxed">تظهر بجانب كل الأسعار في المنيو وفي رسائل طلبات واتساب. تغيير العملة ما يغيّر أرقام الأسعار نفسها.</span>
+          <span class="block text-[11px] text-ink mt-1 leading-relaxed">تظهر بجانب كل الأسعار في المنيو وفي رسائل طلبات واتساب. تغيير العملة لا يغيّر أرقام الأسعار نفسها.</span>
         </div>
       </section>
         </div>
@@ -1007,11 +1054,11 @@
             </div>
           </div>
           <div>
-            <label for="prod-subgroup" class="text-xs font-semibold text-ink block mb-1">الفئة الفرعية داخل القسم <span class="text-ink/60">(اختياري)</span></label>
+            <label for="prod-subgroup" class="text-xs font-semibold text-ink block mb-1">الفئة داخل القسم <span class="text-ink/60">(اختياري)</span></label>
             <input type="text" id="prod-subgroup" list="prod-subgroup-list" maxlength="40" autocomplete="off" placeholder="مثال: الشاي، الموهيتو" class="input-pro">
             <datalist id="prod-subgroup-list"></datalist>
             <div id="prod-subgroup-sugg" class="flex flex-wrap gap-1.5 mt-1.5"></div>
-            <p class="text-[11px] text-ink/60 mt-1">الأطباق التي لها الفئة الفرعية نفسها تظهر معاً تحت عنوانها داخل القسم.</p>
+            <p class="text-[11px] text-ink/60 mt-1">الأطباق التي لها الفئة نفسها تظهر معاً داخل القسم، مثل «الشاي» و«الموهيتو» داخل المشروبات.</p>
           </div>
           <div id="calories-field">
             <label class="text-xs font-semibold text-ink block mb-1">السعرات الحرارية <span class="text-ink">(مطلوبة من هيئة الغذاء والدواء)</span></label>
@@ -1352,10 +1399,10 @@
             <input type="text" id="cat-name-en" placeholder="Hot Appetizers" class="input-pro" dir="ltr">
           </div>
           <div>
-            <label class="text-xs font-semibold text-ink block mb-1">الفئة الرئيسية <span class="text-ink">(اختياري)</span></label>
-            <input type="text" id="cat-group" list="cat-groups" maxlength="40" placeholder="مثال: فطور، غداء، عشاء" class="input-pro">
+            <label class="text-xs font-semibold text-ink block mb-1">القائمة <span class="text-ink">(اختياري)</span></label>
+            <input type="text" id="cat-group" list="cat-groups" maxlength="40" placeholder="مثال: قائمة الفطور، قائمة الكوفي" class="input-pro">
             <datalist id="cat-groups"></datalist>
-            <p class="text-[11px] text-ink mt-1">الأقسام التي لها الفئة نفسها تظهر تحت تبويب واحد أعلى المنيو.</p>
+            <p class="text-[11px] text-ink mt-1">الأقسام التي لها القائمة نفسها تظهر تحت تبويب واحد أعلى المنيو.</p>
           </div>
           <button type="submit" class="w-full bg-brand text-cream hover:bg-brand-dark font-bold py-2.5 rounded-xl text-xs transition shadow-lg">حفظ القسم</button>
         </form>
@@ -1409,8 +1456,8 @@
                 <p class="text-xs font-black">استقبال التسجيلات</p>
                 <p id="wl-open-text" class="text-[11px] text-ink mt-0.5"></p>
               </div>
-              <button id="wl-open-toggle" onclick="toggleWaitlistOpen()" role="switch" class="relative w-14 h-8 rounded-full transition shrink-0">
-                <span class="absolute top-1 w-6 h-6 rounded-full bg-white shadow transition-all"></span>
+              <button id="wl-open-toggle" onclick="toggleWaitlistOpen()" role="switch" class="relative w-14 h-8 rounded-full transition shrink-0" style="background:#cfd6d0">
+                <span class="absolute top-1 w-6 h-6 rounded-full bg-white shadow transition-all" style="right:4px"></span>
               </button>
             </div>
             <!-- إظهار الزر في المنيو -->
@@ -1419,8 +1466,8 @@
                 <p class="text-xs font-black">زر الانتظار في المنيو</p>
                 <p id="wl-menu-text" class="text-[11px] text-ink mt-0.5"></p>
               </div>
-              <button id="wl-menu-toggle" onclick="toggleWaitlistInMenu()" role="switch" class="relative w-14 h-8 rounded-full transition shrink-0">
-                <span class="absolute top-1 w-6 h-6 rounded-full bg-white shadow transition-all"></span>
+              <button id="wl-menu-toggle" onclick="toggleWaitlistInMenu()" role="switch" class="relative w-14 h-8 rounded-full transition shrink-0" style="background:#cfd6d0">
+                <span class="absolute top-1 w-6 h-6 rounded-full bg-white shadow transition-all" style="right:4px"></span>
               </button>
             </div>
             <!-- الرابط -->
@@ -2107,7 +2154,7 @@
         <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_auto] gap-6 items-start">
           <div class="pro-card p-5 space-y-3 min-w-0">
             <div class="flex flex-wrap items-center justify-between gap-2">
-              <p class="text-[11px] text-ink leading-relaxed flex-1 min-w-[200px]">إعدادات البيجر في ثلاث خطوات حسب رحلة العميل، وكل تعديل يُحفظ تلقائياً.</p>
+              <p class="text-[11px] text-ink leading-relaxed flex-1 min-w-[200px]">إعدادات البيجر مرتبة حسب رحلة العميل، وكل تعديل يُحفظ تلقائياً.</p>
               <a href="pager-desk.html" onclick="this.href='pager-desk.html'+location.search" target="_blank" rel="noopener" class="bg-brand text-cream font-bold px-3 py-2 rounded-lg text-[12px]"><i class="ph-bold ph-cash-register"></i> افتح شاشة الكاشير</a>
             </div>
       <!-- البيجر: مرتبة حسب رحلة الزبون، وكل إعداد عليه حالته ووين يطلع للزبون -->
@@ -2147,51 +2194,51 @@
         </div>
         <div data-ps-step="2" class="hidden space-y-3">
         <label class="flex items-start gap-2.5 bg-brand/5 p-3 rounded-xl border border-brand/15 cursor-pointer">
-          <input type="checkbox" id="info-pager-car" onchange="togglePagerCar(this.checked)" class="w-4 h-4 mt-0.5 accent-[#384f3d] cursor-pointer">
+          <input type="checkbox" id="info-pager-car" onchange="togglePagerCar(this.checked)" class="dm-switch order-last ms-auto">
           <span class="text-xs flex-1">
             <b class="text-ink"><i class="ph-bold ph-car text-amber-600"></i> تسليم الطلب للسيارة</b>
             <span class="block text-[11px] text-ink mt-0.5 leading-relaxed">يظهر للعميل في: صفحة رقمه، فيختار لون سيارته ونوعها. وتظهر للموظف تحت الرقم في شاشة الكاشير.</span>
           </span>
-          <span id="pg-st-car"></span>
+          
         </label>
         <label class="flex items-start gap-2.5 bg-brand/5 p-3 rounded-xl border border-brand/15 cursor-pointer">
-          <input type="checkbox" id="info-kiosk-call" onchange="toggleKioskCall(this.checked)" class="w-4 h-4 mt-0.5 accent-[#384f3d] cursor-pointer">
+          <input type="checkbox" id="info-kiosk-call" onchange="toggleKioskCall(this.checked)" class="dm-switch order-last ms-auto">
           <span class="text-xs flex-1">
             <b class="text-ink"><i class="ph-bold ph-device-tablet text-amber-600"></i> الأرقام الجاهزة على شاشة الزبون</b>
             <span class="block text-[11px] text-ink mt-0.5 leading-relaxed">يظهر للعميل في: شاشة التابلت لديك، برقمه كبيراً عندما يجهز طلبه.</span>
           </span>
-          <span id="pg-st-kiosk"></span>
+          
         </label>
 
         <label data-needs="menu" class="flex items-start gap-2.5 bg-brand/5 p-3 rounded-xl border border-brand/15 cursor-pointer">
-          <input type="checkbox" id="info-pager-upsell" onchange="togglePagerUpsell(this.checked)" class="w-4 h-4 mt-0.5 accent-[#384f3d] cursor-pointer">
+          <input type="checkbox" id="info-pager-upsell" onchange="togglePagerUpsell(this.checked)" class="dm-switch order-last ms-auto">
           <span class="text-xs flex-1">
             <b class="text-ink"><i class="ph-bold ph-plus-circle text-amber-600"></i> أضف لطلبك</b>
-            <span class="block text-[11px] text-ink mt-0.5 leading-relaxed">يظهر للعميل في صفحة رقمه أثناء الانتظار زر «تريد أن تضيف إلى طلبك؟» يفتح المنيو، فيختار الحجم والعدد ويكتب ملاحظة، ثم يعرض على الكاشير شاشة واضحة بالأصناف والمجموع ليضيفها في نظام المبيعات. ولا يحتاج ذلك جهازاً إضافياً، وإن كانت شاشة الكاشير مفتوحة تظهر الإضافة تحت الرقم أيضاً.</span>
+            <span class="block text-[11px] text-ink mt-0.5 leading-relaxed">زر «أضف لطلبك» في صفحة الانتظار: يختار العميل من المنيو، ويظهر طلبه الإضافي للكاشير ليضيفه في نظام المبيعات.</span>
           </span>
-          <span id="pg-st-upsell"></span>
+          
         </label>
         <label data-needs="chat" class="flex items-start gap-2.5 bg-brand/5 p-3 rounded-xl border border-brand/15 cursor-pointer">
-          <input type="checkbox" id="info-pager-chat" onchange="togglePagerFlag('pager_chat', this)" class="w-4 h-4 mt-0.5 accent-[#384f3d] cursor-pointer">
+          <input type="checkbox" id="info-pager-chat" onchange="togglePagerFlag('pager_chat', this)" class="dm-switch order-last ms-auto">
           <span class="text-xs flex-1">
             <b class="text-ink"><i class="ph-bold ph-chat-circle-dots text-amber-600"></i> المساعد الذكي في صفحة الانتظار</b>
             <span class="block text-[11px] text-ink mt-0.5 leading-relaxed">يظهر للزبون في صفحة رقمه زر «اسأل عن طلبك»: يجيبه عن موعد جاهزية طلبه وعدد الطلبات قبله وعن أصناف المنيو، ويعتمد الوقت الذي يحدده الكاشير. يُحتسب من رصيد المساعد الذكي.</span>
           </span>
-          <span id="pg-st-chat"></span>
+          
         </label>
         <label class="flex items-start gap-2.5 bg-brand/5 p-3 rounded-xl border border-brand/15 cursor-pointer">
-          <input type="checkbox" id="info-pager-game" onchange="togglePagerFlag('pager_game', this)" class="w-4 h-4 mt-0.5 accent-[#384f3d] cursor-pointer">
+          <input type="checkbox" id="info-pager-game" onchange="togglePagerFlag('pager_game', this)" class="dm-switch order-last ms-auto">
           <span class="text-xs flex-1">
             <b class="text-ink"><i class="ph-bold ph-squares-four text-amber-600"></i> لعبة الانتظار</b>
-            <span class="block text-[11px] text-ink mt-0.5 leading-relaxed">يظهر للزبون في صفحة رقمه: لعبة «خمّن الطبق» من صور أطباقك (خمس صور مقرّبة يختار اسمها، ويستطيع إضافة الطبق لطلبه)، وإن كانت الأطباق ذات الصور أقل من ستة تظهر لعبة مطابقة البطاقات.</span>
+            <span class="block text-[11px] text-ink mt-0.5 leading-relaxed">لعبة «خمّن الطبق» من صور أطباقك يلعبها العميل وهو ينتظر، أو لعبة مطابقة البطاقات إذا كانت الأطباق المصوّرة أقل من ستة.</span>
           </span>
-          <span id="pg-st-gameon"></span>
+          
         </label>
         <div id="info-game-box" class="bg-brand/5 p-3 rounded-xl border border-brand/15 space-y-2.5">
           <div class="flex flex-wrap items-start justify-between gap-2">
             <span class="text-xs">
               <b class="text-ink"><i class="ph-bold ph-trophy text-amber-600"></i> جائزة لعبة الانتظار</b>
-              <span class="block text-[11px] text-ink mt-0.5 leading-relaxed">يظهر للزبون في صفحة رقمه: من يحقق شرط اللعبة (عدد الإجابات الصحيحة في «خمّن الطبق»، أو عدد الحركات في المطابقة) يحصل على الجائزة بعد إدخال رقم فاتورته، ويظهر بجانب رقمه في شاشة الكاشير «فاز باللعبة» مع رقم الفاتورة. ولا تُمنح الجائزة لنفس الفاتورة مرتين، ولا لنفس الجوال أكثر من مرة في اليوم. اترك الخانة فارغة لإيقاف الجائزة.</span>
+              <span class="block text-[11px] text-ink mt-0.5 leading-relaxed">من يفوز في اللعبة يحصل على الجائزة بعد إدخال رقم فاتورته، ويظهر للكاشير «فاز باللعبة». مرة واحدة لكل فاتورة ولكل جوال في اليوم. اترك الخانة فارغة لإيقاف الجائزة.</span>
             </span>
             <span id="pg-st-game"></span>
           </div>

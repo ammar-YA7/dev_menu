@@ -105,6 +105,53 @@
   }
 
   // يطبّق الثيم على عنصر (عادة body): متغيرات + class مثل theme-light و tone-light
+  // لون خط النصوص فوق الخلفية، وخلفية العناصر (البحث والأقسام والفئات) عكسه: خط فاتح ← خلفية غامقة شفافة، وغامق ← فاتحة
+  function headerColor(el, tc) {
+    if (tc) {
+      const light = textOn(tc) === '#000000';
+      el.style.setProperty('--hdr-fg', tc);
+      el.style.setProperty('--hdr-bg', light ? 'rgba(0, 0, 0, 0.38)' : 'rgba(255, 255, 255, 0.62)');
+      el.style.setProperty('--hdr-line', light ? 'rgba(255, 255, 255, 0.28)' : 'rgba(0, 0, 0, 0.14)');
+    } else ['--hdr-fg', '--hdr-bg', '--hdr-line'].forEach(k => el.style.removeProperty(k));
+    el.classList.toggle('has-hdr-fg', !!tc);
+  }
+
+  // درجة صورة أو فيديو الخلفية (الجزء العلوي اللي فوقه الاسم): 'dark' أو 'light'، أو null لو ما قدرنا نقرأها
+  // تنحفظ في الجهاز لكل رابط، عشان ما نعيد الحساب كل زيارة
+  function mediaTone(url, kind) {
+    if (!url) return Promise.resolve(null);
+    const key = `dm_tone_${url}`;
+    try { const c = localStorage.getItem(key); if (c === 'dark' || c === 'light') return Promise.resolve(c); } catch {}
+    return new Promise((done) => {
+      const finish = (v) => { try { if (v) localStorage.setItem(key, v); } catch {} done(v); };
+      const read = (src, w, h) => {
+        try {
+          const cv = document.createElement('canvas'); cv.width = 48; cv.height = 32;
+          const cx = cv.getContext('2d', { willReadFrequently: true });
+          cx.drawImage(src, 0, 0, w, h * 0.55, 0, 0, 48, 32);
+          const d = cx.getImageData(0, 0, 48, 32).data;
+          let sum = 0; for (let i = 0; i < d.length; i += 4) sum += 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2];
+          finish(sum / (d.length / 4) < 140 ? 'dark' : 'light');
+        } catch { done(null); }
+      };
+      const timer = setTimeout(() => done(null), 8000);
+      if (kind === 'video') {
+        const v = document.createElement('video');
+        v.crossOrigin = 'anonymous'; v.muted = true; v.playsInline = true; v.preload = 'auto'; v.src = url;
+        v.addEventListener('loadeddata', () => { v.currentTime = Math.min(1, (v.duration || 2) / 2); }, { once: true });
+        v.addEventListener('seeked', () => { clearTimeout(timer); read(v, v.videoWidth, v.videoHeight); v.removeAttribute('src'); v.load(); }, { once: true });
+        v.addEventListener('error', () => { clearTimeout(timer); done(null); }, { once: true });
+      } else {
+        const im = new Image(); im.crossOrigin = 'anonymous';
+        im.onload = () => { clearTimeout(timer); read(im, im.naturalWidth, im.naturalHeight); };
+        im.onerror = () => { clearTimeout(timer); done(null); };
+        im.src = url;
+      }
+    });
+  }
+  // اللون التلقائي المقترح للخط فوق الخلفية
+  const autoText = (tone) => tone === 'light' ? '#111111' : tone === 'dark' ? '#ffffff' : null;
+
   function apply(store, el = document.body) {
     const r = resolve(store && store.theme, store && store.accent_color);
     Object.keys(THEMES).forEach(k => el.classList.remove(`theme-${k}`));
@@ -115,19 +162,11 @@
     if (store && store.bg_overlay === false) { el.style.setProperty('--ov-in', 'transparent'); el.style.setProperty('--ov-out', 'transparent'); el.style.setProperty('--media-filter', 'none'); }
     el.classList.toggle('no-overlay', !!(store && store.bg_overlay === false));
     // لون خط النصوص فوق الخلفية (اسم المحل، البحث، الأقسام، الفئات)
-    const tc = store && isHex(store.text_color) ? store.text_color : null;
-    if (tc) {
-      // خلفية العناصر (البحث والأقسام والفئات) عكس لون الخط: خط فاتح ← خلفية غامقة شفافة، وخط غامق ← فاتحة شفافة
-      const light = textOn(tc) === '#000000';
-      el.style.setProperty('--hdr-fg', tc);
-      el.style.setProperty('--hdr-bg', light ? 'rgba(0, 0, 0, 0.38)' : 'rgba(255, 255, 255, 0.62)');
-      el.style.setProperty('--hdr-line', light ? 'rgba(255, 255, 255, 0.28)' : 'rgba(0, 0, 0, 0.14)');
-    } else ['--hdr-fg', '--hdr-bg', '--hdr-line'].forEach(k => el.style.removeProperty(k));
-    el.classList.toggle('has-hdr-fg', !!tc);
+    headerColor(el, store && isHex(store.text_color) ? store.text_color : null);
     const meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.setAttribute('content', r.vars.bg);
     return r;
   }
 
-  window.DMTheme = { THEMES, PRESETS, resolve, apply, isHex, textOn };
+  window.DMTheme = { THEMES, PRESETS, resolve, apply, isHex, textOn, contrast, headerColor, mediaTone, autoText };
 })();

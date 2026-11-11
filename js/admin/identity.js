@@ -414,46 +414,98 @@
   }
 
   // ─── مظهر المنيو: الثيم ولون الهوية ───
-  let themeDraft = { theme: 'dark', accent: null };
+  let themeDraft = { theme: 'dark', accent: null, overlay: true };
+  const ACCENTS = ['#7a4f24', '#a07a3c', '#556b45', '#2f4858', '#8c3b32', '#2b2b2b'];
+  // لون الشعار: أكثر لون واضح فيه (مو أبيض ولا أسود ولا رمادي)
+  let logoAccent = null;
+  function readLogoAccent() {
+    logoAccent = '';
+    const im = new Image(); im.crossOrigin = 'anonymous';
+    im.onload = () => {
+      try {
+        const cv = document.createElement('canvas'); cv.width = cv.height = 40;
+        const cx = cv.getContext('2d', { willReadFrequently: true }); cx.drawImage(im, 0, 0, 40, 40);
+        const d = cx.getImageData(0, 0, 40, 40).data, bins = {};
+        for (let i = 0; i < d.length; i += 4) {
+          const [r, g, b, a] = [d[i], d[i + 1], d[i + 2], d[i + 3]];
+          const max = Math.max(r, g, b), min = Math.min(r, g, b);
+          if (a < 200 || max < 40 || min > 215 || max - min < 40) continue;   // شفاف أو أسود أو أبيض أو رمادي
+          const k = `${r >> 5},${g >> 5},${b >> 5}`; (bins[k] = bins[k] || { n: 0, r: 0, g: 0, b: 0 }); bins[k].n++; bins[k].r += r; bins[k].g += g; bins[k].b += b;
+        }
+        const top = Object.values(bins).sort((x, y) => y.n - x.n)[0];
+        if (top && top.n > 20) { const h = (v) => Math.round(v / top.n).toString(16).padStart(2, '0'); logoAccent = `#${h(top.r)}${h(top.g)}${h(top.b)}`; renderAppearance(false); }
+      } catch {}
+    };
+    im.src = client.logo_url;
+  }
+  // ─── معاينة حية: المنيو نفسه داخل إطار جوال، ويتغير مع كل اختيار قبل الحفظ ───
+  function sendPreview() {
+    const f = document.getElementById('live-preview');
+    if (!f || !client || !client.client_slug) return;
+    const src = `/menu.html?client=${encodeURIComponent(client.client_slug)}&preview=1&ix=0`;
+    if (!f.dataset.src) { f.dataset.src = src; f.src = src; f.onload = () => setTimeout(sendPreview, 400); return; }
+    const patch = { theme: themeDraft.theme, accent_color: themeDraft.accent, bg_overlay: themeDraft.overlay, text_color: client.text_color || null, menu_look: client.menu_look || 'classic', cat_style: client.cat_style || 'pills' };
+    try { f.contentWindow.postMessage({ type: 'dm-preview', patch }, location.origin); } catch {}
+  }
 
   function renderAppearance(reset = true) {
-    if (reset) themeDraft = { theme: DMTheme.THEMES[client.theme] ? client.theme : 'dark', accent: DMTheme.isHex(client.accent_color) ? client.accent_color : null };
+    if (reset) themeDraft = { theme: DMTheme.THEMES[client.theme] ? client.theme : 'dark', accent: DMTheme.isHex(client.accent_color) ? client.accent_color : null, overlay: client.bg_overlay !== false };
     document.getElementById('theme-picker').innerHTML = Object.entries(DMTheme.THEMES).map(([key, t]) => {
       const v = DMTheme.resolve(key, themeDraft.accent).vars;
-      const on = key === themeDraft.theme;
+      const on = themeDraft.overlay && key === themeDraft.theme;
       const dish = (name, price) => `
         <div class="rounded-lg px-2 py-1.5 flex items-center justify-between" style="background:${esc(v.surface)};border:1px solid ${esc(v['surface-line'])}">
           <span class="text-[11px] font-bold" style="color:${esc(v.fg)}">${name}</span>
           <span class="text-[11px] font-black" style="color:${esc(v.price)}">${price}</span>
         </div>`;
       return `
-        <button type="button" onclick="pickTheme('${key}')" aria-pressed="${on}"
-          class="text-right rounded-2xl p-1.5 border-2 transition ${on ? 'border-brand bg-brand/5' : 'border-transparent hover:border-brand/20'}">
-          <div class="rounded-xl p-2.5 space-y-1.5 shadow-inner" style="background:${esc(v.bg)}">
-            <div class="flex gap-1">
-              <span class="text-[10px] font-black rounded-md px-2 py-0.5" style="background:${esc(v.accent)};color:${esc(v['accent-fg'])}">مشروبات</span>
-              <span class="text-[10px] font-bold rounded-md px-2 py-0.5" style="background:${esc(v.chip)};color:${esc(v.fg)}">حلى</span>
-            </div>
-            <p class="text-[11px] font-bold pb-0.5" style="color:${esc(v.fg)};border-bottom:1px solid ${esc(v['sec-line'])}">القهوة</p>
+        <button type="button" onclick="pickTheme('${key}')" aria-pressed="${on}" class="text-right p-1 rounded-2xl">
+          <div class="rounded-xl p-2 h-[92px] flex flex-col justify-between overflow-hidden transition ${on ? 'ring-[2.5px] ring-[#233d2c] ring-offset-2' : 'ring-1 ring-black/10'}" style="background:${esc(v.bg)}">
+            <span class="self-start text-[10px] font-black rounded-md px-2 py-0.5" style="background:${esc(v.accent)};color:${esc(v['accent-fg'])}">القهوة</span>
             ${dish('لاتيه', '18')}
-            ${dish('كابتشينو', '16')}
           </div>
           <p class="text-[11px] font-bold text-ink mt-1.5 px-1 flex items-center gap-1.5">${on ? '<i class="ph-bold ph-check-circle text-brand"></i>' : ''} ${esc(t.name)}</p>
         </button>`;
-    }).join('');
+    }).join('') + (() => {
+      // صورة المحل كما هي: بدون لون الثيم فوقها، والخط يختار نفسه حسب الصورة
+      const on = !themeDraft.overlay, img = client.bg_image_url || '';
+      return `
+        <button type="button" onclick="pickPhotoLook()" aria-pressed="${on}" class="text-right p-1 rounded-2xl">
+          <div class="rounded-xl p-2 h-[92px] flex flex-col items-center justify-center gap-1 text-white text-center transition ${on ? 'ring-[2.5px] ring-[#233d2c] ring-offset-2' : 'ring-1 ring-black/10'}" style="background:${img ? `#333 url('${esc(img).replace(/'/g, '%27')}') center/cover` : 'linear-gradient(135deg,#5b4633,#1f2a24)'}">
+            <i class="ph-bold ph-image text-lg"></i><span class="text-[10px] font-bold leading-tight" style="text-shadow:0 1px 4px rgba(0,0,0,.6)">بألوانها</span>
+          </div>
+          <p class="text-[11px] font-bold text-ink mt-1.5 px-1 flex items-center gap-1.5">${on ? '<i class="ph-bold ph-check-circle text-brand"></i>' : ''} صورة المحل</p>
+        </button>`;
+    })();
 
     const accent = themeDraft.accent;
+    // تنبيه: لون الهوية قريب من خلفية الثيم (مثل أبيض على بيج)، فالزر النشط والأسعار ما تبان
+    const aw = document.getElementById('accent-warn'), tbg = DMTheme.resolve(themeDraft.theme).vars.bg;
+    const weak = accent && DMTheme.contrast(accent, tbg) < 1.6;
+    if (aw) { aw.classList.toggle('hidden', !weak); aw.textContent = weak ? 'هذا اللون قريب من لون خلفية الثيم، فلن يظهر الزر النشط والأسعار بوضوح. اختر لوناً أغمق أو أفتح.' : ''; }
     document.getElementById('accent-input').value = accent || DMTheme.resolve(themeDraft.theme).vars.accent;
-    document.getElementById('accent-label').textContent = accent ? accent.toUpperCase() : 'لون الثيم';
-    document.getElementById('accent-presets').innerHTML = DMTheme.PRESETS.map(c => `
-      <button type="button" onclick="pickAccent('${c}')" aria-label="${c}" title="${c}"
-        class="w-9 h-9 rounded-full border-2 transition ${accent === c ? 'border-ink scale-110' : 'border-white shadow'}" style="background:${c}"></button>`).join('');
+    document.getElementById('accent-label').textContent = accent ? accent.toUpperCase() : '';
+    // ألوان هادئة تناسب المطاعم والمقاهي، وأولها لون مأخوذ من شعار المحل (لو قدرنا نقراه)
+    const themeAccent = DMTheme.resolve(themeDraft.theme).vars.accent;
+    // نشيل من الجاهزة أي لون قريب من لون الثيم (يطلع مكرر جنب «تلقائي»)
+    const near = (a, b) => { const p = (h) => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)); const [x, y] = [p(a), p(b)]; return Math.hypot(x[0] - y[0], x[1] - y[1], x[2] - y[2]) < 25; };
+    const swatches = [...(logoAccent ? [logoAccent] : []), ...ACCENTS.filter(c => c !== logoAccent && !near(c, themeAccent))];
+    const custom = accent && !swatches.includes(accent);
+    const ring = (on) => on ? 'ring-[2.5px] ring-[#233d2c] ring-offset-2' : 'ring-1 ring-black/10';
+    const sub = (t) => `<span class="absolute -bottom-[18px] left-1/2 -translate-x-1/2 text-[10px] font-bold text-ink/70 whitespace-nowrap">${t}</span>`;
+    document.getElementById('accent-presets').innerHTML =
+      `<button type="button" onclick="pickAccent(null)" aria-label="تلقائي: لون الثيم" class="relative w-11 h-11 rounded-full grid place-items-center transition ${ring(!accent)}" style="background:${themeAccent};color:${DMTheme.textOn(themeAccent)}"><i class="ph-bold ${!accent ? 'ph-check' : 'ph-magic-wand'} text-sm"></i>${sub('تلقائي')}</button>`
+      + swatches.map(c => `<button type="button" onclick="pickAccent('${c}')" aria-label="${c === logoAccent ? 'لون شعارك' : c}" class="relative w-11 h-11 rounded-full transition ${ring(accent === c)}" style="background:${c}">${accent === c ? '<i class="ph-bold ph-check text-white text-sm"></i>' : ''}${c === logoAccent ? sub('شعارك') : ''}</button>`).join('')
+      + `<label for="accent-input" aria-label="لون آخر" class="relative w-11 h-11 rounded-full cursor-pointer grid place-items-center transition ${custom ? ring(true) : 'ring-1 ring-black/15 bg-white'}" style="${custom ? `background:${accent}` : ''}"><i class="ph-bold ${custom ? 'ph-check text-white' : 'ph-plus text-ink'} text-sm"></i>${sub('لون آخر')}</label>`;
+    if (logoAccent === null && client.logo_url) readLogoAccent();
+    // تغييرات ما انحفظت: شريط الحفظ الثابت
+    const dirty = themeDraft.theme !== (DMTheme.THEMES[client.theme] ? client.theme : 'dark') || (themeDraft.accent || null) !== (DMTheme.isHex(client.accent_color) ? client.accent_color : null) || themeDraft.overlay !== (client.bg_overlay !== false);
+    const bar = document.getElementById('ap-savebar'); if (bar) { bar.classList.toggle('hidden', !dirty); bar.classList.toggle('flex', dirty); } document.body.classList.toggle('has-savebar', dirty);
+    sendPreview();
     renderBgOverlay();
     renderTextColor();
-    document.getElementById('appearance-preview').href = menuUrl();
     document.getElementById('appearance-links-preview').href = linksUrl();
     // بدون باقة المنيو: المعاينة لصفحة الروابط بس
-    document.getElementById('appearance-preview').classList.toggle('hidden', featureLocked('menu'));
   }
   // طبقة لون الثيم فوق صورة أو فيديو الخلفية (تنحفظ على طول)
   function renderBgOverlay() {
@@ -471,27 +523,43 @@
     else showToast('تعذر حفظ الإعداد', true);
   }
   // لون خط النصوص فوق الخلفية (ينحفظ على طول). فاضي = لون الثيم
+  // درجة خلفية المحل (صورة أو فيديو): تنحسب مرة وحدة، ومنها نقترح لون الخط وننبه لو اختار لون ما ينقرأ
+  let bgTone = { url: null, tone: null };
   function renderTextColor() {
     const box = document.getElementById('text-color-pick');
     if (!box) return;
     const cur = DMTheme.isHex(client.text_color) ? client.text_color.toLowerCase() : null;
-    const chip = (v, label, sw) => `<button type="button" onclick="setTextColor(${v ? `'${v}'` : 'null'})" aria-pressed="${cur === v}" class="flex items-center gap-1.5 rounded-xl border px-3 py-2 text-[11px] font-bold transition ${cur === v ? 'border-brand bg-brand text-cream' : 'border-brand/20 bg-white text-ink hover:border-brand/40'}">${sw}${label}</button>`;
+    const noOv = client.bg_overlay === false;
+    const media = client.bg_video_url || client.bg_image_url || null;
+    if (noOv && media && bgTone.url !== media) {
+      bgTone = { url: media, tone: null };
+      DMTheme.mediaTone(media, client.bg_video_url ? 'video' : 'image').then(t => { if (bgTone.url === media) { bgTone.tone = t; renderTextColor(); } });
+    }
+    const tone = noOv ? bgTone.tone : null, best = DMTheme.autoText(tone);
+    const chip = (v, label, sw) => `<button type="button" onclick="setTextColor(${v ? `'${v}'` : 'null'})" aria-pressed="${cur === v}" class="flex items-center gap-1.5 rounded-xl border px-3 py-2 text-[11px] font-bold transition ${cur === v ? 'border-brand bg-brand text-cream' : 'border-brand/20 bg-white text-ink hover:border-brand/40'}">${sw}${label}${v && v === best ? ' <span class="text-[10px] opacity-80">(مقترح)</span>' : ''}</button>`;
     const dot = (c) => `<span class="w-4 h-4 rounded-full border border-black/20" style="background:${c}"></span>`;
     const custom = cur && cur !== '#ffffff' && cur !== '#111111';
-    box.innerHTML = chip(null, 'لون الثيم', '<i class="ph-bold ph-palette"></i>') + chip('#ffffff', 'أبيض', dot('#ffffff')) + chip('#111111', 'أسود', dot('#111111'))
+    // تنبيه: الخط المختار قريب من درجة الخلفية فما ينقرأ
+    const warn = document.getElementById('text-color-warn');
+    const sample = tone === 'light' ? '#e8e4dc' : tone === 'dark' ? '#2a2a2a' : null;
+    const bad = cur && sample && DMTheme.contrast(cur, sample) < 3;
+    if (warn) { warn.classList.toggle('hidden', !bad); warn.textContent = bad ? `الخط ${tone === 'light' ? 'فاتح' : 'غامق'} على خلفية ${tone === 'light' ? 'فاتحة' : 'غامقة'}، فلن يكون واضحاً. جرّب «${best === '#ffffff' ? 'أبيض' : 'أسود'}».` : ''; }
+    box.innerHTML = chip(null, noOv ? 'تلقائي' : 'لون الثيم', noOv ? '<i class="ph-bold ph-magic-wand"></i>' : '<i class="ph-bold ph-palette"></i>') + chip('#ffffff', 'أبيض', dot('#ffffff')) + chip('#111111', 'أسود', dot('#111111'))
       + `<label class="flex items-center gap-1.5 rounded-xl border px-3 py-2 text-[11px] font-bold cursor-pointer ${custom ? 'border-brand bg-brand text-cream' : 'border-brand/20 bg-white text-ink'}"><input type="color" value="${custom ? cur : '#7a4f24'}" onchange="setTextColor(this.value)" class="w-5 h-5 rounded border-0 p-0 bg-transparent cursor-pointer" aria-label="لون آخر"> لون آخر</label>`;
   }
   async function setTextColor(v) {
     v = DMTheme.isHex(v) ? v.toLowerCase() : null;
     if ((DMTheme.isHex(client.text_color) ? client.text_color.toLowerCase() : null) === v) return;
-    if (await updateClient({ text_color: v })) { renderTextColor(); showToast(v ? 'تم حفظ لون الخط' : 'رجع لون الخط للون الثيم'); }
+    if (await updateClient({ text_color: v })) { sendPreview(); renderTextColor(); showToast(v ? 'تم حفظ لون الخط' : 'رجع لون الخط للون الثيم'); }
     else showToast('تعذر حفظ لون الخط', true);
   }
-  function pickTheme(key) { themeDraft.theme = key; renderAppearance(false); }
+  function pickTheme(key) { themeDraft.theme = key; themeDraft.overlay = true; renderAppearance(false); }
+  function pickPhotoLook() { themeDraft.overlay = false; renderAppearance(false); }
+  function pickReset() { renderAppearance(true); }
   function pickAccent(c) { themeDraft.accent = DMTheme.isHex(c) ? c.toLowerCase() : null; renderAppearance(false); }
 
   async function saveAppearance() {
-    if (await updateClient({ theme: themeDraft.theme, accent_color: themeDraft.accent })) {
+    if (await updateClient({ theme: themeDraft.theme, accent_color: themeDraft.accent, bg_overlay: themeDraft.overlay })) {
       renderAppearance();
       showToast('تم حفظ المظهر، ويظهر في المنيو وصفحة الروابط');
     } else showToast('تعذر حفظ المظهر', true);
@@ -646,7 +714,7 @@
   async function setMenuLook(v) {
     v = v === 'clean' ? 'clean' : 'classic';
     if ((client.menu_look || 'classic') === v) return;
-    if (await updateClient({ menu_look: v })) { renderMenuLook(); showToast(v === 'clean' ? 'المنيو يظهر بالشكل المرتب' : 'رجع المنيو للشكل الحالي'); }
+    if (await updateClient({ menu_look: v })) { sendPreview(); renderMenuLook(); showToast(v === 'clean' ? 'المنيو يظهر بالشكل المرتب' : 'رجع المنيو للشكل الحالي'); }
     else showToast('تعذر حفظ الإعداد', true);
   }
   function renderCatStyle() {
@@ -660,7 +728,7 @@
   async function setCatStyle(v) {
     v = v === 'circles' ? 'circles' : 'pills';
     if ((client.cat_style || 'pills') === v) return;
-    if (await updateClient({ cat_style: v })) { renderCatStyle(); showToast(v === 'circles' ? 'الأقسام تظهر دوائر بالصور' : 'الأقسام تظهر أزراراً'); }
+    if (await updateClient({ cat_style: v })) { sendPreview(); renderCatStyle(); showToast(v === 'circles' ? 'الأقسام تظهر دوائر بالصور' : 'الأقسام تظهر أزراراً'); }
     else showToast('تعذر حفظ الإعداد', true);
   }
   async function setNormalView(v) {
@@ -699,6 +767,13 @@
       ? '<span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full"><i class="ph-bold ph-check-circle"></i> مفعّل</span>'
       : '<span class="inline-flex items-center gap-1 text-[11px] font-bold text-ink bg-brand/5 border border-brand/20 px-2.5 py-1 rounded-full"><i class="ph-bold ph-lock-simple"></i> إضافة</span>';
     if (note) { note.classList.toggle('hidden', state !== 'gift'); note.textContent = 'المنيو التفاعلي هدية لاشتراكك الحالي، وبعد التجديد يمكنك إضافته إلى باقتك.'; }
+    // بدون الإضافة: نخفي خيارات المنيو التفاعلي كلها ونعرض بطاقة تعريف واحدة
+    const ixCard = document.getElementById('ix-card'), up = document.getElementById('ix-upsell');
+    if (ixCard && up) {
+      [...ixCard.children].forEach((el, i) => { if (i > 0 && el.id !== 'ix-upsell' && el.id !== 'ix-gift-note') el.classList.toggle('hidden', state === 'off'); });
+      up.classList.toggle('hidden', state !== 'off');
+      const demo = document.getElementById('ix-upsell-demo'); if (demo) demo.href = `/menu.html?client=${encodeURIComponent(client.client_slug)}&ix=1&preview=1`;
+    }
     // أين يظهر؟
     const off = state === 'off';
     const opt = (k, label) => `

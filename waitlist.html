@@ -37,7 +37,7 @@
 
   <!-- المتجر -->
   <header class="text-center space-y-2 pt-2">
-    <div class="w-20 h-20 mx-auto rounded-3xl bg-cream border border-brand/15 overflow-hidden flex items-center justify-center shadow-md">
+    <div id="store-logo-box" class="w-20 h-20 mx-auto rounded-3xl bg-cream border border-brand/15 overflow-hidden flex items-center justify-center shadow-md">
       <img id="store-logo" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='images/logo.jpeg?v=2'">
     </div>
     <h1 id="store-name" class="text-xl font-black">...</h1>
@@ -157,6 +157,8 @@
   const views = ['loading', 'unavailable', 'form', 'closed', 'status'];
   function show(name) { views.forEach(v => document.getElementById(`view-${v}`).classList.toggle('hidden', v !== name)); }
   function unavailable(title, sub) {
+    // ما وصلتنا بيانات المحل: نخفي مكان الشعار والاسم بدل مربع فاضي و«...»
+    if (document.getElementById('store-name').textContent === '...') { document.getElementById('store-logo-box').classList.add('hidden'); document.getElementById('store-name').classList.add('hidden'); }
     document.getElementById('unavailable-title').textContent = title;
     document.getElementById('unavailable-sub').textContent = sub;
     show('unavailable');

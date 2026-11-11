@@ -9,7 +9,9 @@
     // المساعد إضافة مدفوعة على المنيو: لو مو في الباقة، الخيار مقفول ونوضح كيف يضيفه
     const locked = featureLocked('chat');
     box.disabled = locked;
-    if (locked) { info.innerHTML = '<i class="ph-bold ph-lock-simple"></i> أضف "المساعد الذكي" لباقتك من صفحة الاشتراك (19 ر.س بالشهر)'; return; }
+    // مقفول: بدل مفتاح ما يشتغل، زر واحد يضيفه للباقة (نفس بطاقة المنيو التفاعلي)
+    box.classList.toggle('hidden', locked);
+    if (locked) { info.innerHTML = `<button type="button" onclick="event.preventDefault(); lockedKey = 'chat'; addFeature()" class="mt-1 inline-flex items-center gap-1.5 bg-brand text-cream font-bold rounded-xl px-4 min-h-[40px] text-[13px]"><i class="ph-bold ph-plus"></i> أضفه لباقتك (19 ر.س بالشهر)</button>`; return; }
     try {
       const r = await api('chat-usage');
       info.innerHTML = `<i class="ph-bold ph-chat-circle-dots"></i> أسئلة عملائك للمساعد هذا الشهر: ${r.used.toLocaleString('en')}`;
@@ -390,7 +392,7 @@
     catch (e) { console.error(e); showToast('تعذر تغيير الترتيب', true); }
   }
 
-  // الفئة الرئيسية لقسم موجود
+  // القائمة اللي يظهر تحتها القسم
   const categoryGroups = () => [...new Set(loadedCategories.map(c => c.group_name).filter(Boolean))];
   async function renameCategory(id) {
     const c = loadedCategories.find(x => x.id === id); if (!c) return;
@@ -413,15 +415,15 @@
     const c = loadedCategories.find(x => x.id === id); if (!c) return;
     const groups = categoryGroups();
     const r = await DMDialog.form({
-      title: 'الفئة الرئيسية', subtitle: `لقسم "${c.name}". الأقسام التي لها الفئة نفسها تظهر تحت تبويب واحد أعلى المنيو.`, icon: 'ph-stack',
-      fields: [{ name: 'group', label: 'الفئة', value: c.group_name || '', maxlength: 40, placeholder: 'مثال: فطور، غداء، عشاء', suggestions: groups, hint: 'اتركها فاضية لإزالة الفئة.' }]
+      title: 'القائمة', subtitle: `لقسم "${c.name}". الأقسام التي لها القائمة نفسها تظهر تحت تبويب واحد أعلى المنيو، مثل «قائمة الفطور».`, icon: 'ph-stack',
+      fields: [{ name: 'group', label: 'القائمة', value: c.group_name || '', maxlength: 40, placeholder: 'مثال: قائمة الفطور، قائمة الكوفي', suggestions: groups, hint: 'اتركها فارغة لإزالة القسم من القائمة.' }]
     });
     if (!r) return;
     try {
       const res = await api('category-group', { id, group_name: r.group });
       c.group_name = res.category.group_name;
       renderCategories();
-      showToast(c.group_name ? `صار القسم تحت "${c.group_name}"` : 'تمت إزالة الفئة الرئيسية');
+      showToast(c.group_name ? `صار القسم تحت "${c.group_name}"` : 'أُزيل القسم من القائمة');
     } catch { showToast('لم يُحفظ التعديل. تأكد من الاتصال بالإنترنت وحاول مرة أخرى', true); }
   }
 
@@ -458,7 +460,7 @@
         <button onclick="moveCategory(${Number(c.id)}, -1)" ${i === 0 ? 'disabled' : ''} aria-label="تحريك ${esc(c.name)} لأعلى" class="cat-arrow"><i class="ph-bold ph-arrow-up text-xs"></i></button>
         <button onclick="moveCategory(${Number(c.id)}, 1)" ${i === last ? 'disabled' : ''} aria-label="تحريك ${esc(c.name)} لأسفل" class="cat-arrow"><i class="ph-bold ph-arrow-down text-xs"></i></button>
         <button onclick="renameCategory(${Number(c.id)})" aria-label="تعديل اسم ${esc(c.name)}" class="cat-act"><i class="ph-bold ph-pencil-simple text-[11px]"></i> <span>الاسم</span></button>
-        <button onclick="editCategoryGroup(${Number(c.id)})" aria-label="فئة ${esc(c.name)}" class="cat-act"><i class="ph-bold ph-stack text-[11px]"></i> <span>الفئة</span></button>
+        <button onclick="editCategoryGroup(${Number(c.id)})" aria-label="قائمة ${esc(c.name)}" class="cat-act"><i class="ph-bold ph-stack text-[11px]"></i> <span>القائمة</span></button>
         <button onclick="deleteCategory(${Number(c.id)})" aria-label="حذف ${esc(c.name)}" class="cat-act danger"><i class="ph-bold ph-trash text-[11px]"></i> <span>حذف</span></button>
       </div>`).join('');
     enableCategoryDrag(list);

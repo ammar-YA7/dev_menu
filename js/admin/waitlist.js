@@ -83,19 +83,19 @@
     const open = wl.settings && wl.settings.open;
     const t = document.getElementById('wl-open-toggle');
     t.setAttribute('aria-checked', open ? 'true' : 'false');
-    t.className = `relative w-14 h-8 rounded-full transition shrink-0 ${open ? 'bg-green-600' : 'bg-brand/25'}`;
-    t.firstElementChild.style.right = open ? '4px' : '28px';
-    document.getElementById('wl-open-text').textContent = open ? 'مفتوحة: يستطيع الضيوف التسجيل' : 'مغلقة — ما يقبل تسجيلات جديدة';
+    t.className = 'relative w-14 h-8 rounded-full transition shrink-0'; t.style.background = open ? '#233d2c' : '#cfd6d0';   // نفس لون مفاتيح المنيو، والمتوقف رمادي واضح
+    t.firstElementChild.style.right = open ? '28px' : '4px';   // مثل باقي المفاتيح: المشغّل الدائرة يسار
+    document.getElementById('wl-open-text').textContent = open ? 'مفتوحة: يستطيع الضيوف التسجيل' : 'مغلقة: لا تُقبل تسجيلات جديدة';
 
     // زر المنيو
     const inMenu = wl.settings && wl.settings.show_in_menu !== false;
     const m = document.getElementById('wl-menu-toggle');
     m.setAttribute('aria-checked', inMenu ? 'true' : 'false');
-    m.className = `relative w-14 h-8 rounded-full transition shrink-0 ${inMenu ? 'bg-green-600' : 'bg-brand/25'}`;
-    m.firstElementChild.style.right = inMenu ? '4px' : '28px';
+    m.className = 'relative w-14 h-8 rounded-full transition shrink-0'; m.style.background = inMenu ? '#233d2c' : '#cfd6d0';
+    m.firstElementChild.style.right = inMenu ? '28px' : '4px';
     document.getElementById('wl-menu-text').textContent = !inMenu
-      ? 'مخفي — الضيوف يسجلون من الرابط أو QR فقط'
-      : open ? 'ظاهر: يراه العميل أعلى المنيو' : 'ظاهر لما تفتح القائمة';
+      ? 'مخفي: يسجّل الضيوف من الرابط أو رمز QR فقط'
+      : open ? 'ظاهر: يراه العميل أعلى المنيو' : 'يظهر عند فتح القائمة';
   }
 
   async function toggleWaitlistInMenu() {

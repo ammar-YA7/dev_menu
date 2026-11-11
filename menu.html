@@ -1344,15 +1344,32 @@
     } finally { chatBusy = false; document.getElementById('chatSend').disabled = false; showChatChips(); if (document.activeElement === input || window.matchMedia('(pointer: fine)').matches) input.focus(); }
   }
 
+  // الثيم والألوان والشكل (تنعاد من المعاينة الحية في لوحة التحكم بدون تحميل)
+  function applyLook(p) {
+    if (window.DMTheme) DMTheme.apply(p);
+    // بدون طبقة لون وما اختار لون خط: نختار أبيض أو أسود حسب درجة صورة أو فيديو الخلفية (عشان الاسم والأقسام تنقرأ)
+    if (window.DMTheme && p.bg_overlay === false && !DMTheme.isHex(p.text_color)) {
+      const vid = safeUrl(p.bg_video_url), img = safeUrl(p.bg_image_url);
+      DMTheme.mediaTone(vid || img, vid ? 'video' : 'image').then(t => { if (project === p && p.bg_overlay === false && !DMTheme.isHex(p.text_color) && DMTheme.autoText(t)) DMTheme.headerColor(document.body, DMTheme.autoText(t)); });
+    }
+    // شكل المنيو العادي: المرتب أو الحالي (رابط المعاينة look= يغلب اختيار المحل)
+    document.body.classList.toggle('look-clean', lookParam ? lookParam === 'clean' : p.menu_look === 'clean');
+  }
+  // معاينة حية من لوحة التحكم (نفس الموقع بس): الاختيارات قبل الحفظ
+  if (urlParams.get('preview') === '1') window.addEventListener('message', (e) => {
+    if (e.origin !== location.origin || !e.data || e.data.type !== 'dm-preview' || !project) return;
+    Object.assign(project, e.data.patch || {});
+    applyLook(project);
+    if (typeof renderFilterBar === 'function') { renderFilterBar(); renderMenu(allProducts, false); }
+  });
+
   function applyMenu(menuData, first) {
     const p = menuData.store;
     const prevOccasion = project ? JSON.stringify(project.occasion || null) : null;
     project = p;
     menuVersion = menuData.version || null;
 
-    if (window.DMTheme) DMTheme.apply(p);
-    // شكل المنيو العادي: المرتب أو الحالي (رابط المعاينة look= يغلب اختيار المحل)
-    document.body.classList.toggle('look-clean', lookParam ? lookParam === 'clean' : p.menu_look === 'clean');
+    applyLook(p);
     document.title = `${p.name || 'Dev Menu'} | المنيو الرقمي`;
     document.getElementById('project-title').textContent = p.name || 'Dev Menu';
     const TYPE_LABELS = { restaurant: 'RESTAURANT', cafe: 'SPECIALTY COFFEE', mixed: 'RESTAURANT &amp; CAFE', bakery: 'BAKERY &amp; SWEETS', clinic: 'CLINIC', salon: 'SALON', carwash: 'CAR WASH', laundry: 'LAUNDRY', retail: 'STORE', pharmacy: 'PHARMACY', services: 'SERVICES' };

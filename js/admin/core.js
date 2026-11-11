@@ -58,6 +58,8 @@
     // صف التبويبات يتمرر بالجوال: التبويب المفتوح يبان
     document.getElementById(`tab-${tab}`).scrollIntoView({ block: 'nearest', inline: 'nearest' });
     if (tab === 'coupons') openCouponsTab();
+    // زر «أضف طبق» العائم: في تبويب الأطباق بس (في الإعدادات يغطي على المحتوى)
+    const fab = document.querySelector('[onclick="goAddDish()"][aria-label]'); if (fab) fab.classList.toggle('!hidden', tab !== 'products');
     if (tab === 'sales') loadSales(salesRange);
     if (tab === 'msettings') placePhone('menu');
   }
@@ -361,10 +363,12 @@
   function psStep(n) {
     const card = document.getElementById('info-pager-card'), first = card && !card.classList.contains('hidden') ? 1 : 2;
     psCur = Math.max(first, n || psCur);
+    let shown = 0;   // ترقيم الخطوات الظاهرة بس (لو الخطوة الأولى مخفية تبدأ من 1 مو 2)
     document.querySelectorAll('[data-ps]').forEach(b => {
       const k = +b.dataset.ps;
       b.classList.toggle('hidden', k < first);
       b.setAttribute('aria-selected', String(k === psCur));
+      if (k >= first) { const n = b.querySelector('b'); if (n) n.textContent = ++shown; }
     });
     document.querySelectorAll('[data-ps-step]').forEach(d => d.classList.toggle('hidden', +d.dataset.psStep !== psCur));
     if (n) document.querySelector('.ps-steps')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });

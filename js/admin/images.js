@@ -179,8 +179,11 @@
   function renderBgPreview() {
     const img = safeUrl(client.bg_image_url), vid = safeUrl(client.bg_video_url);
     const box = (id, html) => { const el = document.getElementById(id); el.classList.toggle('hidden', !html); el.innerHTML = html || ''; };
-    box('bg-img-prev', img && !vid ? `<p class="text-[11px] font-bold text-emerald-700 mb-1"><i class="ph-bold ph-check-circle"></i> الخلفية الحالية</p><img src="${esc(img)}" alt="" class="w-full h-20 object-cover rounded-xl border border-brand/15">` : '');
-    box('bg-video-prev', vid ? `<p class="text-[11px] font-bold text-emerald-700 mb-1"><i class="ph-bold ph-check-circle"></i> الفيديو الحالي</p><video src="${esc(vid)}" muted loop autoplay playsinline class="w-full h-20 object-cover rounded-xl border border-brand/15"></video>` : '');
+    // مربعات الرفع: المعاينة الحالية (أو مكان فاضي)، وعلامة على المستخدم الحين
+    const tile = (id, media, inUse, empty) => { const el = document.getElementById(id); if (!el) return; el.innerHTML = media ? media + (inUse ? '<span class="bg-tile-on"><i class="ph-bold ph-check"></i> المستخدمة</span>' : '') : `<span class="bg-tile-empty">${empty}</span>`; el.closest('.bg-tile').classList.toggle('on', !!inUse); };
+    tile('bg-img-prev', img ? `<img src="${esc(img)}" alt="">` : '', img && !vid, 'لا توجد صورة');
+    tile('bg-video-prev', vid ? `<video src="${esc(vid)}" muted loop autoplay playsinline></video>` : '', !!vid, 'لا يوجد فيديو');
+    ['upl-bg_image', 'upl-bg_video'].forEach((k, i) => { const b = document.getElementById(k); if (b && !b.querySelector('.ph-spinner-gap')) { b.textContent = (i ? vid : img) ? 'تغيير' : (i ? 'اختر فيديو' : 'اختر صورة'); b.dataset.label = b.textContent; } });
     const limg = safeUrl(client.links_bg_image_url), lvid = safeUrl(client.links_bg_video_url);
     box('links-bg-prev', lvid ? `<p class="text-[11px] font-bold text-emerald-700 mb-1"><i class="ph-bold ph-check-circle"></i> فيديو صفحة الروابط الحالي</p><video src="${esc(lvid)}" muted loop autoplay playsinline class="w-full max-w-xs h-24 object-cover rounded-xl border border-brand/15"></video>`
       : limg ? `<p class="text-[11px] font-bold text-emerald-700 mb-1"><i class="ph-bold ph-check-circle"></i> صورة صفحة الروابط الحالية</p><img src="${esc(limg)}" alt="" class="w-full max-w-xs h-24 object-cover rounded-xl border border-brand/15">` : '');

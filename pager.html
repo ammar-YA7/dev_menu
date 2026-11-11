@@ -435,7 +435,7 @@
         <p id="t-start" class="stp-sub"></p>
         <button id="take-btn" class="btn btn-wallet"><i class="ph-bold ph-ticket"></i> خذ رقمي وفعّل التنبيه</button>
         <div class="flex flex-wrap justify-center gap-x-4">
-          <button type="button" id="s-take-inv" class="stp-skip !no-underline hidden">🧾 فاتورة <span dir="ltr"></span> <i class="ph-bold ph-pencil-simple text-xs"></i></button>
+          <button type="button" id="s-take-inv" class="stp-skip !no-underline">🧾 عندك رقم فاتورة؟ اكتبه (اختياري)</button>
           <button type="button" id="s-take-car" class="stp-skip !no-underline hidden">🚗 <span></span> <i class="ph-bold ph-pencil-simple text-xs"></i></button>
         </div>
       </div>
@@ -492,6 +492,7 @@
     </div>
     <div id="ups-added" class="ups-added hidden"></div>
     <p id="w-tell" class="note"></p>
+    <button type="button" id="w-add-inv" class="hidden chip mx-auto"><i class="ph-bold ph-receipt"></i> أضف رقم فاتورتك (اختياري)</button>
     <p class="note hidden"><span id="t-waiting"></span></p>
     <!-- تسجيل في الولاء من نفس الصفحة -->
     <section id="v-join" class="card p-5 space-y-3.5 hidden">
@@ -502,7 +503,8 @@
           <p id="jn-sub" class="text-[12.5px] font-bold opacity-65 leading-relaxed"></p>
         </div>
       </div>
-      <form id="jn-form" class="space-y-2.5" novalidate>
+      <button type="button" id="jn-open" class="btn btn-brand !py-3.5 !text-base"><i class="ph-bold ph-user-plus"></i> سجّلني وخذ ختم</button>
+      <form id="jn-form" class="space-y-2.5 hidden" novalidate>
         <input id="jn-name" class="field" autocomplete="given-name" maxlength="40" placeholder="اسمك">
         <span class="flex gap-2" dir="ltr">
           <select id="jn-cc" class="field !w-auto !px-2.5" aria-label="رمز الدولة"></select>
@@ -1126,6 +1128,7 @@
   };
   // ─── رقم الفاتورة من العميل ───
   let invEditing = false;
+  $('w-add-inv').onclick = () => { invEditing = true; $('w-add-inv').classList.add('hidden'); $('inv-in').value = ''; $('inv-form').classList.remove('hidden'); $('inv-in').focus(); };
   $('w-invoice').onclick = () => { invEditing = true; $('inv-in').value = $('w-invoice').querySelector('span').textContent; $('inv-form').classList.remove('hidden'); $('inv-in').focus(); };
   $('inv-form').onsubmit = async (e) => {
     e.preventDefault();
@@ -1136,6 +1139,7 @@
       invEditing = false; $('inv-in').value = '';
       ['w-invoice', 'r-invoice'].forEach(id => { $(id).classList.toggle('hidden', !r.invoice_no); $(id).querySelector('span').textContent = r.invoice_no || ''; });
       $('w-tell').classList.toggle('hidden', !!r.invoice_no);
+      $('w-add-inv').classList.toggle('hidden', !!r.invoice_no);
       $('inv-form').classList.toggle('hidden', !!r.invoice_no);
     } catch (err) { $('inv-err').textContent = err.message || 'ما انحفظ التعديل. تأكد من الإنترنت وحاول مرة ثانية'; $('inv-err').classList.remove('hidden'); }
     btn.disabled = false;
@@ -1146,6 +1150,7 @@
   $('jn-cc').innerHTML = DM.countryOptions();
   if (DM.fillMe) DM.fillMe($('jn-name'), $('jn-phone'), $('jn-cc'));
   document.querySelectorAll('.jn-g').forEach(b => b.onclick = () => { jnGender = b.dataset.g; document.querySelectorAll('.jn-g').forEach(x => x.setAttribute('aria-checked', String(x === b))); });
+  $('jn-open').onclick = () => { $('jn-open').classList.add('hidden'); $('jn-form').classList.remove('hidden'); setTimeout(() => $('jn-name').focus(), 50); };
   $('jn-form').onsubmit = async (e) => {
     e.preventDefault();
     const name = $('jn-name').value.trim(), phone = DM.intlPhone($('jn-phone').value, $('jn-cc').value);
@@ -1158,7 +1163,7 @@
       if (DM.rememberMe) DM.rememberMe({ name, phone });
       lyToken = r.token; joined = true;
       DM.rememberLoyalty(slug, r.token);
-      $('jn-form').classList.add('hidden'); $('jn-done').classList.remove('hidden');
+      $('jn-form').classList.add('hidden'); $('jn-open').classList.add('hidden'); $('jn-done').classList.remove('hidden');
       document.querySelectorAll('.t-when').forEach(el => { el.textContent = T.ringWhen; });
       if (!r.wallet) $('jn-wallet').classList.add('hidden');
       poll();
@@ -1555,6 +1560,7 @@
     $('w-number').textContent = r.ticket.number; $('r-number').textContent = r.ticket.number;
     ['w-invoice', 'r-invoice'].forEach(id => { $(id).classList.toggle('hidden', !inv); $(id).querySelector('span').textContent = inv; });
     $('w-tell').classList.toggle('hidden', !!inv);
+    $('w-add-inv').classList.toggle('hidden', !!inv || invEditing || r.ticket.status !== 'waiting');
     if (!invEditing) $('inv-form').classList.add('hidden');   // الفاتورة تنكتب قبل أخذ الرقم، وهنا تعديل بس
     renderCar(r, st);
     renderWa(r, st);
@@ -1616,7 +1622,8 @@
     return url;
   }
   // ─── خطوات أخذ الرقم: بطاقة النداء ← رقم الفاتورة ← خذ رقمك ───
-  let cardOffer = false, stepInv = '', stepAt = '', invSkipped = false;
+  // رقم الفاتورة اختياري: العميل ياخذ رقمه على طول، ويقدر يضيف الفاتورة من رابط تحت الزر أو بعدين من صفحة الانتظار
+  let cardOffer = false, stepInv = '', stepAt = '', invSkipped = true;
   const SKIP_KEY = `${KEY}_pcskip`;
   const cardSkipped = () => { try { return sessionStorage.getItem(SKIP_KEY) === '1'; } catch { return false; } };
   // خطوة وحدة بس قدّامه: البطاقة (لو ما عنده) ← رقم الفاتورة ← السيارة (لو المحل يوصّل للسيارة) ← خذ رقمك
@@ -1627,12 +1634,12 @@
     const cur = stepAt || (!cardDone ? 'card' : !invDone ? 'inv' : !carDone ? 'car' : 'take');
     ['card', 'inv', 'car', 'take'].forEach(k => { const el = $(`s-${k}`); el.classList.toggle('hidden', k !== cur); el.classList.toggle('on', k === cur); });
     // نقاط التقدم (بدون أرقام): الخطوات اللي بيمر عليها في هالزيارة
-    const steps = [...(cardOffer && !hadCard ? ['card'] : []), 'inv', ...(carOffer ? ['car'] : []), 'take'], at = steps.indexOf(cur);
+    const steps = [...(cardOffer && !hadCard ? ['card'] : []), ...(cur === 'inv' ? ['inv'] : []), ...(carOffer ? ['car'] : []), 'take'], at = steps.indexOf(cur);
     $('s-dots').innerHTML = steps.length > 1 ? steps.map((k, i) => `<span class="${i === at ? 'on' : i < at ? 'done' : ''}"></span>`).join('') : '';
     let just = false; try { just = sessionStorage.getItem(JUST_KEY) === '1'; } catch {}
     $('s-note').classList.toggle('hidden', !(just && pagerCard() && cur !== 'card'));
-    $('s-take-inv').classList.toggle('hidden', !stepInv);
-    $('s-take-inv').querySelector('span').textContent = stepInv;
+    $('s-take-inv').classList.remove('hidden');
+    $('s-take-inv').innerHTML = stepInv ? `🧾 فاتورة <span dir="ltr">${stepInv.replace(/[<>&"]/g, '')}</span> <i class="ph-bold ph-pencil-simple text-xs"></i>` : '🧾 عندك رقم فاتورة؟ اكتبه (اختياري)';
     $('s-take-car').classList.toggle('hidden', !stepCar);
     if (stepCar) $('s-take-car').querySelector('span').textContent = carText(stepCar);
     if (cur === 'car' && !$('s-car-colors').children.length) paintStepColors();
@@ -1807,9 +1814,7 @@
     const t = loadToken(), l = lastLoyalty;
     if (t && lastPass && !$('v-waiting').classList.contains('hidden')) return offerPagerCard(t);   // محل بدون ولاء
     if (!t || joined || !l || !l.enabled || l.linked || $('v-waiting').classList.contains('hidden')) return;
-    try { if (localStorage.getItem(ASK_KEY) === t) return; localStorage.setItem(ASK_KEY, t); } catch {}
-    $('ly-ask-sub').textContent = `سجّل في بطاقة الولاء، وبعد ${l.needed} أختام تاخذ ${l.reward}.`;
-    $('ly-ask').classList.replace('hidden', 'flex');
+    // بدون نافذة فوق الرقم: الدعوة بطاقة صغيرة تحت الرقم، والنموذج ما ينفتح إلا لو ضغط «سجّلني»
   }
   $('ly-ask-no').onclick = () => $('ly-ask').classList.replace('flex', 'hidden');
   // دعوة بطاقة النداء: مرة لكل رقم، وما تطلع لو البطاقة محفوظة في الجوال
