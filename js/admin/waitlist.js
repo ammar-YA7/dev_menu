@@ -22,6 +22,16 @@
     document.getElementById('wl-open-link').href = wlUrl();
   }
 
+  // ─── تبويبات صفحة الانتظار: الضيوف الآن / السجل / الإعدادات ───
+  function setWlPage(tab) {
+    if (!['now', 'history', 'settings'].includes(tab)) tab = 'now';
+    document.querySelectorAll('[data-wlp]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.wlp === tab)));
+    document.querySelectorAll('[data-wlptab]').forEach(el => el.classList.toggle('st-off', el.dataset.wlptab !== tab));
+    try { localStorage.setItem('dm_wl_tab', tab); } catch {}
+  }
+  document.querySelectorAll('[data-wlp]').forEach(b => b.addEventListener('click', () => setWlPage(b.dataset.wlp)));
+  (() => { let t = ''; try { t = localStorage.getItem('dm_wl_tab') || ''; } catch {} setWlPage(t); })();
+
   // التحديث التلقائي: كل 15 ثانية داخل الصفحة، وكل 45 ثانية بالخلفية (عشان عدّاد القائمة الجانبية)
   function onWaitlistPage(active) {
     clearInterval(wl.timer); clearInterval(wl.tick);

@@ -70,10 +70,24 @@
     if (wrap.parentElement !== slot) slot.appendChild(wrap);
     phoneView = view; reloadPagerPhone();
   }
-  // يفتح تبويب إعدادات المنيو (من أزرار في أماكن ثانية)
-  function openMenuSettings(scrollTo) {
+  // تبويبات إعدادات المنيو: الشكل، الطلبات، الخيارات
+  function setMsTab(tab) {
+    if (!['look', 'orders', 'options'].includes(tab)) tab = 'look';
+    document.querySelectorAll('[data-mst]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.mst === tab)));
+    document.querySelectorAll('[data-msttab]').forEach(el => el.classList.toggle('st-off', el.dataset.msttab !== tab));
+    try { localStorage.setItem('dm_ms_tab', tab); } catch {}
+  }
+  document.querySelectorAll('[data-mst]').forEach(b => b.addEventListener('click', () => setMsTab(b.dataset.mst)));
+  (() => { let t = ''; try { t = localStorage.getItem('dm_ms_tab') || ''; } catch {} setMsTab(t); })();
+  // يفتح تبويب إعدادات المنيو (من أزرار في أماكن ثانية)، وعلى التبويب اللي فيه العنصر
+  function openMenuSettings(scrollTo, block = 'center') {
     if (location.hash !== '#menu') location.hash = 'menu'; else showPage('menu');
-    setTimeout(() => { switchTab('msettings'); if (scrollTo) { const el = document.getElementById(scrollTo); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } }, 80);
+    setTimeout(() => {
+      switchTab('msettings');
+      const el = scrollTo && document.getElementById(scrollTo), t = el && el.closest('[data-msttab]');
+      if (t) setMsTab(t.dataset.msttab);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block });
+    }, 80);
   }
 
   // ─── التنقل بين الصفحات ───
@@ -84,7 +98,8 @@
     loyalty:   ['بطاقة الولاء', 'تصميم البطاقة وإعداداتها وأرقامها'],
     customers: ['العملاء', 'أعضاء بطاقة الولاء في كل فروعك'],
     messages:  ['الرسائل', 'أرسل عروضك وأخبارك لجوالات عملائك'],
-    branches:  ['الفروع', 'فروعك ومميزات كل فرع وروابط الكاشير'],
+    branches:  ['الفروع', 'فروعك ومميزات كل فرع'],
+    devices:   ['الأجهزة', 'روابط شاشات المحل: الكاشير وشاشة الزبون والجهاز اللوحي'],
     account:   ['الاشتراك', 'باقتك وتجديدها وطلباتك للإدارة'],
     pagerset:  ['البيجر', 'إعدادات البيجر وصفحة الانتظار عند العميل'],
     settings:  ['هوية المنشأة', 'الرابط والاسم والشعار والمظهر ومعلومات التواصل']
@@ -287,6 +302,7 @@
     if (locked) showLocked(key);
     document.querySelectorAll('[data-page]').forEach(sec => sec.classList.toggle('hidden', locked ? sec.dataset.page !== 'locked' : sec.dataset.page !== page));
     if (page === 'pagerset' && !locked) { setTimeout(() => placePhone('pager'), 50); psStep(); }
+    if (page === 'settings' && !locked && typeof setStTab === 'function') setStTab((document.querySelector('[data-stt][aria-selected="true"]') || {}).dataset?.stt);
     if (page === 'menu' && !locked && !document.getElementById('section-msettings').classList.contains('hidden')) setTimeout(() => placePhone('menu'), 50);
     if (locked) {
       document.querySelectorAll('[data-nav]').forEach(b => b.classList.toggle('nav-active', b.dataset.nav === page));
@@ -413,7 +429,7 @@
       const info = [!client.logo_url && 'الشعار', !isValidWa(client.whatsapp_number) && 'رقم الواتساب', !client.opening_hours && 'ساعات العمل'].filter(Boolean);
       steps.push({ title: 'بيانات المنشأة', done: !info.length,
         hint: info.length ? `ناقص: ${info.join('، ')}.` : 'الشعار ورقم الواتساب وساعات العمل مكتملة.',
-        go: "location.hash='settings'", label: 'أكمل' });
+        go: info.length === 1 && info[0] === 'رقم الواتساب' ? "goStoreCard('social-card', 'center')" : "goStoreCard('setting-name')", label: 'أكمل' });
       steps.push({ title: 'اطبع رمز QR للطاولات', done: !!f.qr,
         hint: 'يمسحه الزبون من طاولته فيفتح له المنيو مباشرة.', go: 'downloadQrCard()', label: 'حمّل للطباعة' });
     }

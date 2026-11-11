@@ -9,6 +9,15 @@
     if (branches.length < 2) return;
     sel.innerHTML = branches.map(b => `<option value="${Number(b.id)}" ${b.id === client.id ? 'selected' : ''}>${b.parent_id ? '' : '★ '}${esc(b.name || b.client_slug)}</option>`).join('');
   }
+  // ─── تبويبات صفحة الرسائل: أرسل الآن / التلقائية ───
+  function setMgTab(tab) {
+    if (!['send', 'auto'].includes(tab)) tab = 'send';
+    document.querySelectorAll('[data-mgt]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.mgt === tab)));
+    document.querySelectorAll('[data-mgtab]').forEach(el => el.classList.toggle('st-off', el.dataset.mgtab !== tab));
+    try { localStorage.setItem('dm_mg_tab', tab); } catch {}
+  }
+  document.querySelectorAll('[data-mgt]').forEach(b => b.addEventListener('click', () => setMgTab(b.dataset.mgt)));
+  (() => { let t = ''; try { t = localStorage.getItem('dm_mg_tab') || ''; } catch {} setMgTab(t); })();
   // ─── رابط الكاشير (لكل فرع رابطه) ───
   function renderDeskCard() {
     const on = !!client && (DMPlans.has(client, 'pager') || DMPlans.has(client, 'loyalty'));

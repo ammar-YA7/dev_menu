@@ -9,15 +9,15 @@
   function setLyTab(tab) {
     ly.tab = tab;
     document.querySelectorAll('[data-lyt]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.lyt === tab)));
-    document.querySelectorAll('[data-lytab]').forEach(el => el.classList.toggle('hidden', el.dataset.lytab !== tab));
-    const grid = document.getElementById('ly-grid');
-    grid.classList.toggle('hidden', tab !== 'settings');
+    // العنصر ممكن يطلع في أكثر من تبويب: data-lytab="settings messages"
+    document.querySelectorAll('[data-lytab]').forEach(el => el.classList.toggle('hidden', !el.dataset.lytab.split(' ').includes(tab)));
+    document.getElementById('ly-grid').classList.toggle('hidden', !['settings', 'messages', 'register'].includes(tab));
     try { localStorage.setItem('dm_ly_tab', tab); } catch {}
   }
   document.querySelectorAll('[data-lyt]').forEach(b => b.addEventListener('click', () => setLyTab(b.dataset.lyt)));
   async function onLoyaltyPage() {
     let saved = ''; try { saved = localStorage.getItem('dm_ly_tab') || ''; } catch {}
-    setLyTab(['overview', 'design', 'settings'].includes(ly.tab || saved) ? (ly.tab || saved) : 'overview');
+    setLyTab(['overview', 'design', 'settings', 'messages', 'register'].includes(ly.tab || saved) ? (ly.tab || saved) : 'overview');
     try { [ly.data, ly.members] = await Promise.all([api('loyalty'), api('loyalty-members').then(r => r.members)]); }
     catch (e) { showToast(e.message || 'تعذر تحميل بطاقة الولاء', true); return; }
     renderLoyalty();

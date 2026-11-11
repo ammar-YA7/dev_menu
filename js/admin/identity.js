@@ -87,11 +87,26 @@
     card.classList.add('ring-2', 'ring-brand');
     setTimeout(() => card.classList.remove('ring-2', 'ring-brand'), 1800);
   }
-  // من بطاقة صفحة الروابط في الرئيسية: يفتح الخلفية والترتيب على طول
-  function openLinksSettings() {
-    if (location.hash === '#settings') showPage('settings'); else location.hash = 'settings';
-    setTimeout(() => document.getElementById('links-bg-card').scrollIntoView({ behavior: 'smooth', block: 'start' }), 120);
+  // ─── تبويبات صفحة المنشأة ───
+  function setStTab(tab) {
+    if (!['info', 'contact', 'links'].includes(tab)) tab = 'info';
+    const btn = document.querySelector(`[data-stt="${tab}"]`);
+    if (btn && btn.style.display === 'none') tab = 'info';   // تبويب مخفي حسب الباقة
+    document.querySelectorAll('[data-stt]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.stt === tab)));
+    document.querySelectorAll('[data-sttab]').forEach(el => el.classList.toggle('st-off', el.dataset.sttab !== tab));
+    try { localStorage.setItem('dm_st_tab', tab); } catch {}
   }
+  document.querySelectorAll('[data-stt]').forEach(b => b.addEventListener('click', () => setStTab(b.dataset.stt)));
+  (() => { let t = ''; try { t = localStorage.getItem('dm_st_tab') || ''; } catch {} setStTab(t); })();
+  // يفتح صفحة المنشأة على التبويب اللي فيه العنصر، وينزل له
+  function goStoreCard(id, block = 'start') {
+    if (location.hash === '#settings') showPage('settings'); else location.hash = 'settings';
+    const el = document.getElementById(id), t = el && el.closest('[data-sttab]');
+    if (t) setStTab(t.dataset.sttab);
+    setTimeout(() => el && el.scrollIntoView({ behavior: 'smooth', block }), 120);
+  }
+  // من بطاقة صفحة الروابط في الرئيسية: يفتح الخلفية والترتيب على طول
+  function openLinksSettings() { goStoreCard('links-bg-card'); }
   (() => {
     const list = document.getElementById('links-order');
     const rowOf = e => e.target.closest && e.target.closest('.links-row');
@@ -278,7 +293,7 @@
          <p class="text-[11px] text-ink mt-1.5">اضغط "اختبر الرقم": إذا فتحت محادثة في واتساب فالرقم شغال. وإذا ظهرت رسالة إن الرقم غير صالح، صحّحه في روابط التواصل.</p>`
       : `<div class="flex flex-wrap items-center justify-between gap-2 bg-amber-500/10 border border-amber-500/30 rounded-lg px-3 py-2">
            <span class="text-amber-800"><i class="ph-bold ph-info"></i> لتفعيل الطلبات، أضف رقم واتساب المنشأة واحفظه أولاً.</span>
-           <button type="button" onclick="location.hash='settings'; setTimeout(() => { const w = document.getElementById('social-whatsapp'); w.scrollIntoView({behavior:'smooth', block:'center'}); w.focus({ preventScroll: true }); }, 150)"
+           <button type="button" onclick="goStoreCard('social-whatsapp', 'center'); setTimeout(() => document.getElementById('social-whatsapp').focus({ preventScroll: true }), 200)"
                    class="bg-brand/10 hover:bg-brand/15 text-ink font-bold px-2.5 py-1 rounded-md text-[11px] border border-brand/25 transition">إضافة الرقم</button>
          </div>`;
   }
@@ -743,11 +758,7 @@
     else showToast('تعذر حفظ الإعداد', true);
   }
   // زر «إعدادات شكل المنيو» في هوية المنشأة: يفتح إعدادات المنيو على بطاقة المنيو العادي
-  function goMenuLook() {
-    showPage('menu');
-    switchTab('msettings');
-    setTimeout(() => { const el = document.getElementById('normal-card'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 80);
-  }
+  function goMenuLook() { openMenuSettings('normal-card', 'start'); }
 
   function renderMenuLayout() {
     placeAppearance();
