@@ -1751,5 +1751,10 @@
   "تصل للعميل على بطاقته عند تسجيله، وعند صرف مكافأته.": "Sent to the customer's card when they sign up and when they redeem a reward.",
   "عدّل الرسالتين": "Edit both messages",
   "الضيوف الآن": "Guests now",
-  "السجل": "History"
+  "السجل": "History",
+  "@اسم الحساب أو الرابط": "@username or link",
+  "رابط تيك توك غير صحيح": "Invalid TikTok link",
+  "رابط انستجرام غير صحيح": "Invalid Instagram link",
+  "رابط سناب شات غير صحيح": "Invalid Snapchat link",
+  "رابط الموقع غير صحيح": "Invalid website link"
 }
