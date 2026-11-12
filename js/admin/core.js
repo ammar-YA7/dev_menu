@@ -599,9 +599,18 @@
   async function updateSocialLinks() {
     const fields = { website_url: 'social-web', tiktok_url: 'social-tiktok', instagram_url: 'social-insta', snapchat_url: 'social-snap' };
     const payload = {};
+    // يقبل اسم المستخدم (@name) أو رابط بدون https، ونكمّله للرابط الكامل
+    const base = { tiktok_url: 'https://www.tiktok.com/@', instagram_url: 'https://www.instagram.com/', snapchat_url: 'https://www.snapchat.com/add/' };
+    const label = { website_url: 'الموقع', tiktok_url: 'تيك توك', instagram_url: 'انستجرام', snapchat_url: 'سناب شات' };
     for (const [col, id] of Object.entries(fields)) {
-      const v = document.getElementById(id).value.trim();
-      if (v && !safeUrl(v)) return showToast('رابط غير صحيح: يجب أن يبدأ بـ https://', true);
+      const inp = document.getElementById(id);
+      let v = inp.value.trim();
+      if (v && !/^https?:\/\//i.test(v)) {
+        const user = v.replace(/^@/, '');
+        v = base[col] && /^[\w.\-]+$/.test(user) ? base[col] + user : 'https://' + v.replace(/^\/+/, '');
+      }
+      if (v && !safeUrl(v)) { inp.focus(); return showToast(`رابط ${label[col]} غير صحيح`, true); }
+      inp.value = v;
       payload[col] = v;
     }
     const waRaw = document.getElementById('social-whatsapp').value;
