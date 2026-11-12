@@ -83,6 +83,8 @@
   function editLinksSection(k) {
     const card = linksEditorCard(k);
     if (!card) return;
+    const t = card.closest('[data-sttab]');   // البطاقة في تبويب ثاني (التواصل أو البيانات): نفتحه أول
+    if (t && t.classList.contains('st-off')) setStTab(t.dataset.sttab.split(' ')[0]);
     card.scrollIntoView({ behavior: 'smooth', block: 'center' });
     card.classList.add('ring-2', 'ring-brand');
     setTimeout(() => card.classList.remove('ring-2', 'ring-brand'), 1800);

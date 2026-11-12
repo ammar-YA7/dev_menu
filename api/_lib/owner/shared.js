@@ -25,7 +25,7 @@ const bySort = (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0) || a.id - b.i
 const COFFEE_TYPES = ['cafe', 'mixed'];
 const SECTORS = require('../sectors');
 // أقسام صفحة الروابط السريعة (للترتيب والإخفاء)
-const LINKS_SECTIONS = ['services', 'contact', 'delivery', 'social', 'custom', 'location'];
+const LINKS_SECTIONS = ['services', 'branches', 'contact', 'delivery', 'social', 'custom', 'location'];
 const BUSINESS_TYPES = SECTORS.KEYS;
 const ALLERGENS = ['gluten', 'milk', 'egg', 'nuts', 'peanut', 'sesame', 'fish', 'shellfish', 'soy'];
 const PROCESS = ['washed', 'natural', 'honey', 'anaerobic', 'carbonic', 'other'];
