@@ -471,7 +471,6 @@
   const linksUrl = () => DM.storeUrl(client.client_slug, 'links');
 
   async function logout() {
-    if (window.DMAnalytics) DMAnalytics.reset();
     await DM.logout();
     window.location.replace('login.html');
   }
@@ -504,7 +503,6 @@
 
     client = data.store;
     currentClientId = client.id;
-    if (!isSuperAdmin && window.DMAnalytics) DMAnalytics.identify(client);   // تحليلات المنتج: المحل برقمه بس
     // مصطلحات النشاط: غير المطاعم والمقاهي «منتج» بدل «طبق» في كل اللوحة (ومع أي شي ينضاف بعدين)
     if (!localizeDash.on && !DMSectors.isFood(client)) { localizeDash.on = true; DMSectors.localizeDom(document.body, client, true); }
     loadedCategories = (data.categories || []).sort(bySort);
