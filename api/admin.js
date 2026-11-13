@@ -9,6 +9,7 @@ const {
 } = require('./_lib/core');
 const { followParentFeatures } = require('./_lib/branch-features');
 const { notifyOwner } = require('./_lib/owner-notify');
+const { purgeStore, ARCHIVE_DAYS } = require('./_lib/store-delete');
 
 const { sendMail, mailConfigured } = require('./_lib/mail');
 const { PLAN_PRICE, invoiceNumber, invoiceEmail, branchProration, branchInvoiceLines } = require('./_lib/invoice');
@@ -45,11 +46,38 @@ async function syncBranchSubscriptions(parentId) {
 
 // الفروع القديمة (بدون مميزات خاصة) تاخذ مميزات الحساب، والفرع اللي له مميزاته يبقى عليها
 // والفرع اللي له مميزاته ياخذ معها مميزات الحساب كله (الولاء والرسائل)
+// ─── سجل العمليات: كل عملية تعدّل شي تنحفظ (مين، متى، على أي محل، ووش أرسل) ───
+// العمليات اللي تقرا بس ما تنسجل، والأسرار (توكن الواتساب وغيره) تنشال قبل الحفظ
+const NO_AUDIT = new Set(['summary', 'wa-get']);
+const SECRET_KEY = /token|secret|password|api_?key|pin/i;
+function auditDetails(b) {
+  const out = {};
+  for (const [k, v] of Object.entries(b || {})) {
+    if (k === 'id') continue;
+    out[k] = SECRET_KEY.test(k) ? '•••' : typeof v === 'string' ? v.slice(0, 300) : v;
+  }
+  return out;
+}
+async function audit(email, action, body, result) {
+  try {
+    const client = result && result.client;
+    const id = int(body && body.id) || (client && client.id) || null;
+    let name = client && client.name;
+    if (id && !name) name = ((await rest(`clients?id=eq.${id}&select=name`).catch(() => []))[0] || {}).name;
+    await rest('admin_audit', { method: 'POST', body: { admin_email: email, action, client_id: Number.isInteger(id) ? id : null, client_name: name || null, details: auditDetails(body) } });
+  } catch (e) { console.error('AUDIT', action, e.message); }   // السجل ما يوقف العملية لو فشل
+}
+
 module.exports = handler(['GET', 'POST'], async (req) => {
   const user = await getUser(req);
   if (!(await isSuperAdmin(user.email))) throw new ApiError(403, 'هذه الصفحة للمدير العام فقط', 'FORBIDDEN');
-
   const action = req.query.action;
+  const result = await run(req, user, action);
+  if (req.method === 'POST' && !NO_AUDIT.has(action)) await audit(user.email, action, readBody(req), result);
+  return result;
+});
+
+async function run(req, user, action) {
 
   if (action === 'check') return { ok: true, email: user.email };
 
@@ -114,6 +142,13 @@ module.exports = handler(['GET', 'POST'], async (req) => {
     }));
     Object.values(stores).forEach(s => { s.last = s.last ? new Date(s.last).toISOString() : null; });
     return { stores, missing, at: new Date(now).toISOString() };
+  }
+
+  // سجل العمليات (آخر 300، أو لمحل واحد)
+  if (action === 'audit' && req.method === 'GET') {
+    const cid = int(req.query.client_id);
+    const rows = await rest(`admin_audit?select=id,at,admin_email,action,client_id,client_name,details${Number.isInteger(cid) ? `&client_id=eq.${cid}` : ''}&order=id.desc&limit=300`).catch(() => null);
+    return { rows: rows || [], ready: !!rows };
   }
 
   // طلبات المشتركين (تجديد، باقة، تفعيل، تواصل)
@@ -475,33 +510,36 @@ module.exports = handler(['GET', 'POST'], async (req) => {
     return { products: products.length, categories: categories.length };
   }
 
+  // «حذف» = أرشفة: المحل يتوقف ويختفي من اللوحة، ويتمسح نهائياً بعد 30 يوم (subscriptions-cron)
+  // الفرع ينفصل عن حسابه وقت الأرشفة (ما ينحسب في السعر ولا يتشغّل مع الحساب)، والاسترجاع يرجعه
   if (action === 'delete') {
-    const client = (await rest(`clients?id=eq.${id}&select=logo_url,bg_image_url,bg_video_url,links_bg_image_url,links_bg_video_url`))[0];
-    if (!client) throw new ApiError(404, 'المتجر غير موجود');
-    let branches = [];
-    try { branches = await rest(`clients?parent_id=eq.${id}&select=id&limit=1`); } catch {}
+    const c = (await rest(`clients?id=eq.${id}&select=id,name,parent_id,is_active,deleted_at`))[0];
+    if (!c) throw new ApiError(404, 'المتجر غير موجود');
+    if (c.deleted_at) return { client: c };
+    const branches = await rest(`clients?parent_id=eq.${id}&select=id&limit=1`).catch(() => []);
     if (branches.length) throw new ApiError(400, 'المتجر له فروع، احذف الفروع أولاً', 'HAS_BRANCHES');
-    // 1) نجمع مسارات الملفات قبل حذف البيانات
-    const products = await rest(`products?client_id=eq.${id}&select=image_url`);
-    const paths = new Set();
-    // ملفات هذا المتجر فقط: الفرع يستخدم صور المتجر الرئيسي، فما نحذفها معه
-    [client.logo_url, client.bg_image_url, client.bg_video_url, client.links_bg_image_url, client.links_bg_video_url, ...products.map(p => p.image_url)]
-      .forEach(u => { const p = storagePathFromUrl(u); if (p && p.startsWith(`${id}/`)) paths.add(p); });
-    try {
-      const listed = await storage(`object/list/${BUCKET}`, { body: { prefix: `${id}/`, limit: 1000 } });
-      (listed || []).forEach(f => { if (f && f.id && f.name) paths.add(`${id}/${f.name}`); });
-    } catch (e) { console.warn('storage list failed', e.message); }
-
-    // 2) حذف البيانات وحساب الدخول
-    await rpc('server_delete_client', { p_client_id: id });
-
-    // 3) حذف الملفات
-    if (paths.size) {
-      try { await storage(`object/${BUCKET}`, { method: 'DELETE', body: { prefixes: [...paths] } }); }
-      catch (e) { console.warn('storage delete failed', e.message); }
-    }
-    return { ok: true, files: paths.size };
+    return patch({ deleted_at: new Date().toISOString(), deleted_info: { was_active: c.is_active !== false, parent_id: c.parent_id || null }, is_active: false, parent_id: null });
   }
 
+  if (action === 'restore') {
+    const c = (await rest(`clients?id=eq.${id}&select=id,deleted_at,deleted_info`))[0];
+    if (!c) throw new ApiError(404, 'المتجر غير موجود');
+    if (!c.deleted_at) return { client: c };
+    const info = c.deleted_info || {};
+    let parent = null;
+    if (info.parent_id) {
+      const p = (await rest(`clients?id=eq.${int(info.parent_id)}&select=id,deleted_at`).catch(() => []))[0];
+      if (!p) throw new ApiError(400, 'المتجر الرئيسي لهذا الفرع انحذف نهائياً، ما نقدر نرجّع الفرع', 'PARENT_GONE');
+      if (p.deleted_at) throw new ApiError(400, 'استرجع المتجر الرئيسي أول، وبعدها الفرع', 'PARENT_ARCHIVED');
+      parent = p.id;
+    }
+    const out = await patch({ deleted_at: null, deleted_info: null, is_active: info.was_active !== false, parent_id: parent });
+    if (parent) await syncBranchSubscriptions(parent);   // الفرع ياخذ اشتراك حسابه الحالي
+    return out;
+  }
+
+  // مسح نهائي الحين لمحل مؤرشف (بدل انتظار الـ 30 يوم)
+  if (action === 'purge') return purgeStore(id);
+
   throw new ApiError(404, 'هذا الطلب غير معروف، حدّث الصفحة وحاول مرة ثانية', 'UNKNOWN');
-});
+}

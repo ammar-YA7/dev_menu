@@ -174,6 +174,7 @@
       <button type="button" data-satab-btn="stores" class="sa-tab"><i class="ph-bold ph-storefront"></i> المشتركين <span id="stores-count" class="text-[10px] font-black bg-ink/10 rounded-full px-2 py-0.5"></span></button>
       <button type="button" data-satab-btn="usage" class="sa-tab"><i class="ph-bold ph-pulse"></i> الاستخدام <span id="usage-idle" class="text-[10px] font-black bg-amber-500 text-white rounded-full px-2 py-0.5 hidden"></span></button>
       <button type="button" data-satab-btn="overview" class="sa-tab"><i class="ph-bold ph-chart-line-up"></i> الأرقام والدخل</button>
+      <button type="button" data-satab-btn="log" class="sa-tab"><i class="ph-bold ph-clock-counter-clockwise"></i> السجل</button>
       <button type="button" data-satab-btn="notify" class="sa-tab"><i class="ph-bold ph-megaphone"></i> الإشعارات</button>
     </div>
   </nav>
@@ -250,6 +251,22 @@
         <button type="button" onclick="loadSupport()" class="text-[11px] font-bold text-ink/60"><i class="ph-bold ph-arrow-clockwise"></i> تحديث</button>
       </div>
       <div id="sup-list" class="space-y-2"></div>
+    </section>
+
+    <!-- ═══ سجل العمليات: مين سوّى إيش ومتى ═══ -->
+    <section data-satab="log" class="card p-5 space-y-3">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <p class="text-sm font-black"><i class="ph-bold ph-clock-counter-clockwise text-brand"></i> سجل العمليات</p>
+          <p class="text-[12px] text-ink/60 mt-0.5">كل تفعيل وتجديد وتعديل وحذف واسترجاع: مين سوّاه ومتى وعلى أي محل.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <input id="log-search" type="search" placeholder="ابحث بالمحل أو العملية أو المدير..." class="field md:w-72 text-[12px]">
+          <button type="button" onclick="loadAudit()" class="text-[11px] font-bold text-ink/60 whitespace-nowrap"><i class="ph-bold ph-arrow-clockwise"></i> تحديث</button>
+        </div>
+      </div>
+      <div id="log-store"></div>
+      <div id="log-list" class="divide-y divide-ink/[0.07]"></div>
     </section>
 
     <!-- ═══ الإشعارات ═══ -->
@@ -336,7 +353,7 @@
   const TYPES = Object.fromEntries(Object.entries(DMSectors.SECTORS).map(([k, v]) => [k, [v.name, v.icon]]));
   const typeOf = (c) => [DMSectors.label(c), (TYPES[c.business_type] || TYPES.restaurant)[1]];
 
-  let clients = [], filter = 'all', openMenu = null, notifyId = null;
+  let clients = [], archived = [], filter = 'all', openMenu = null, notifyId = null;
 
   // ─── أدوات عامة ───
   function showToast(msg, isError = false) {
@@ -427,7 +444,11 @@
   }
 
   async function loadClients(manual = false) {
-    try { clients = (await DM.get(A('list'), true)).clients || []; }
+    try {
+      const all = (await DM.get(A('list'), true)).clients || [];
+      // المحذوفة (مؤرشفة 30 يوم) تطلع بس تحت فلتر «المحذوفة»، وما تدخل في الأرقام
+      clients = all.filter(c => !c.deleted_at); archived = all.filter(c => c.deleted_at);
+    }
     catch (e) { console.error(e); return showToast(`تعذر تحميل العملاء: ${e.message}`, true); }
     renderAll();
     loadUsage();
@@ -480,11 +501,12 @@
   // ─── التبويبات ───
   let saTab = '', saAuto = !location.hash;
   function showTab(t) {
-    if (!['requests', 'stores', 'usage', 'overview', 'notify'].includes(t)) t = 'stores';
+    if (!['requests', 'stores', 'usage', 'overview', 'log', 'notify'].includes(t)) t = 'stores';
     saTab = t;
     document.querySelectorAll('[data-satab]').forEach(el => el.classList.toggle('hidden', el.dataset.satab !== t));
     document.querySelectorAll('[data-satab-btn]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.satabBtn === t)));
     if (location.hash !== '#' + t) history.replaceState(null, '', location.pathname + location.search + '#' + t);
+    if (t === 'log') setTimeout(() => { if (!auditRows) loadAudit(); });   // بعد ما يكمل تحميل السكربت
   }
   document.querySelectorAll('[data-satab-btn]').forEach(b => b.addEventListener('click', () => { saAuto = false; showTab(b.dataset.satabBtn); window.scrollTo({ top: 0 }); }));
   showTab(location.hash ? location.hash.slice(1) : 'stores');
@@ -556,6 +578,7 @@
       featured: accounts.filter(c => c.is_featured).length,
       noEmail: accounts.filter(c => !c.email).length,
       requests: accounts.filter(c => c.requested_plan).length,
+      archived: archived.length,
       ...Object.fromEntries(DMPlans.ORDER.map(k => ['f_' + k, accounts.filter(c => statusOf(c).key === 'paid' && planFeats(c).includes(k)).length]))
     };
   }
@@ -751,7 +774,7 @@
   // ─── الفلاتر والبحث ───
   const FILTERS = [
     ['all', 'الكل'], ['requests', 'طلبات اشتراك'], ['paid', 'مشتركون'], ['trial', 'تجريبي'], ['free', 'البيجر المجاني'], ['soon', 'ينتهي قريباً'], ['expired', 'منتهي'],
-    ['suspended', 'موقوف'], ...DMPlans.ORDER.map(k => ['f_' + k, DMPlans.FEATURES[k].name]), ['featured', 'أمثلة الرئيسية'], ['noEmail', 'بدون بريد']
+    ['suspended', 'موقوف'], ...DMPlans.ORDER.map(k => ['f_' + k, DMPlans.FEATURES[k].name]), ['featured', 'أمثلة الرئيسية'], ['noEmail', 'بدون بريد'], ['archived', 'المحذوفة']
   ];
   // أرقام "الأرقام والدخل" تفتح المشتركين بنفس الفلتر
   function setFilter(f) { filter = f; renderKpis(); renderFilters(); renderStores(); if (saTab && saTab !== 'stores') showTab('stores'); }
@@ -794,6 +817,11 @@
 
   // ─── بطاقات المتاجر ───
   function renderStores() {
+    if (filter === 'archived') {
+      document.getElementById('empty').classList.toggle('hidden', archived.length > 0);
+      document.getElementById('stores').innerHTML = archived.slice().sort((a, b) => Date.parse(b.deleted_at) - Date.parse(a.deleted_at)).map(archivedCard).join('');
+      return;
+    }
     const list = visibleClients();
     document.getElementById('empty').classList.toggle('hidden', list.length > 0);
     document.getElementById('stores').innerHTML = list.map(storeCard).join('');
@@ -904,7 +932,8 @@
         ${c.parent_id ? '' : `<button onclick="setFeatured(${id}, ${!c.is_featured})"><i class="ph-bold ph-star" ${c.is_featured ? 'style="color:#d97706"' : ''}></i> ${c.is_featured ? 'إزالة من أمثلة الرئيسية' : 'عرضه في أمثلة الرئيسية'}</button>`}
         <button onclick="setActive(${id}, ${c.is_active === false})"><i class="ph-bold ${c.is_active === false ? 'ph-play' : 'ph-pause'}"></i> ${c.is_active === false ? (c.parent_id ? 'إعادة تشغيل الفرع' : 'إعادة تشغيل المتجر') : (c.parent_id ? 'إيقاف الفرع' : 'إيقاف المتجر')}</button>
         <div class="h-px bg-brand/10 my-1"></div>
-        <button onclick="deleteClient(${id})" style="color:#b91c1c"><i class="ph-bold ph-trash" style="color:#b91c1c"></i> ${c.parent_id ? 'حذف الفرع نهائياً' : 'حذف المتجر نهائياً'}</button>
+        <button onclick="openAudit(${id})"><i class="ph-bold ph-clock-counter-clockwise"></i> سجل العمليات</button>
+        <button onclick="deleteClient(${id})" style="color:#b91c1c"><i class="ph-bold ph-trash" style="color:#b91c1c"></i> ${c.parent_id ? 'حذف الفرع' : 'حذف المتجر'}</button>
       </div>`;
   }
 
@@ -1394,20 +1423,109 @@
   }
   document.getElementById('notify-dlg').addEventListener('click', (e) => { if (e.target.id === 'notify-dlg') closeNotify(); });
 
+  // الحذف = أرشفة: يتوقف ويختفي، ويرجع خلال 30 يوم، وبعدها ينمسح نهائياً لحاله
   async function deleteClient(id) {
     openMenu = null; renderStores();
     const c = find(id); if (!c) return;
+    const ok = await confirmDialog({ title: `حذف "${c.name || c.client_slug}"`, message: `${c.parent_id ? 'الفرع' : 'المتجر'} يتوقف للزبائن ويختفي من القائمة. تقدر ترجعه من فلتر «المحذوفة» خلال 30 يوم، وبعدها ينمسح نهائياً هو وكل بياناته.`, confirmText: 'احذف', tone: 'danger' });
+    if (!ok) return;
+    const error = await post('delete', { id });
+    if (error) return showToast(`تعذر الحذف: ${error.message}`, true);
+    showToast('انحذف. تقدر ترجعه من «المحذوفة» خلال 30 يوم'); loadClients();
+  }
+  const findArchived = (id) => archived.find(x => x.id === id);
+  const purgeDay = (c) => new Date(Date.parse(c.deleted_at) + 30 * 864e5);
+  function archivedCard(c) {
+    const id = Number(c.id), info = c.deleted_info || {};
+    const left = Math.max(0, Math.ceil((purgeDay(c) - Date.now()) / 864e5));
+    const parent = info.parent_id ? clients.find(x => x.id === info.parent_id) || findArchived(info.parent_id) : null;
+    const day = (d) => new Date(d).toLocaleDateString('ar-SA-u-ca-gregory-nu-latn', { day: 'numeric', month: 'long' });
+    return `
+      <article class="card p-4 flex flex-col gap-3 border-dashed opacity-90">
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0">
+            <p class="font-black text-sm truncate">${esc(c.name || 'بدون اسم')}</p>
+            <p class="text-[11px] text-ink/55 font-mono" dir="ltr">${esc(c.client_slug)}</p>
+            ${info.parent_id ? `<p class="text-[10.5px] text-emerald-800 font-bold mt-0.5"><i class="ph-bold ph-git-branch"></i> فرع من ${esc(parent ? parent.name : `#${info.parent_id}`)}</p>` : ''}
+          </div>
+          <span class="shrink-0 text-[10px] font-black px-2 py-0.5 rounded-full border bg-red-500/10 text-red-700 border-red-500/20">محذوف</span>
+        </div>
+        <div class="text-[11px] space-y-1 bg-red-500/[0.04] border border-red-500/15 rounded-xl p-3">
+          <p class="flex justify-between gap-2"><span class="text-ink/55">انحذف</span><span>${day(c.deleted_at)}</span></p>
+          <p class="flex justify-between gap-2"><span class="text-ink/55">ينمسح نهائياً</span><b class="${left <= 3 ? 'text-red-700' : ''}">${day(purgeDay(c))} · ${left === 0 ? 'اليوم' : `بعد ${left} ${left <= 10 ? 'أيام' : 'يوم'}`}</b></p>
+          <p class="flex justify-between gap-2"><span class="text-ink/55">البريد</span><span class="truncate" dir="ltr">${esc(c.email || '—')}</span></p>
+        </div>
+        <div class="grid grid-cols-[1fr_auto_auto] gap-1.5 mt-auto">
+          <button onclick="restoreClient(${id})" class="bg-brand hover:bg-brand-dark text-cream rounded-xl py-2.5 text-[12px] font-black"><i class="ph-bold ph-arrow-counter-clockwise"></i> استرجاع</button>
+          <button onclick="openAudit(${id})" aria-label="سجل العمليات" class="bg-brand/10 hover:bg-brand/15 border border-brand/15 rounded-xl px-3 text-[12px] font-black"><i class="ph-bold ph-clock-counter-clockwise"></i></button>
+          <button onclick="purgeClient(${id})" class="rounded-xl px-3 text-[11px] font-black text-red-700 border border-red-500/30 hover:bg-red-500/10">امسح الحين</button>
+        </div>
+      </article>`;
+  }
+  async function restoreClient(id) {
+    const c = findArchived(id); if (!c) return;
+    const error = await post('restore', { id });
+    if (error) return showToast(`تعذر الاسترجاع: ${error.message}`, true);
+    showToast(`رجع "${c.name || c.client_slug}" مثل ما كان`); loadClients();
+  }
+  async function purgeClient(id) {
+    const c = findArchived(id); if (!c) return;
     let n = { products: 0, categories: 0 };
     try { n = await DM.post(A('summary'), { id }, true); } catch {}
     const items = [`${n.products} طبق و ${n.categories} قسم`, 'الشعار والخلفيات وصور الأطباق', 'الاشتراك والإحصائيات وتسجيلات الانتظار'];
     if (c.email) items.push(`حساب الدخول: ${c.email}`);
-    const ok = await confirmDialog({ title: `حذف "${c.name || c.client_slug}" نهائياً`, message: 'لا يمكن التراجع. سيتم حذف:', items, confirmText: 'حذف نهائي', tone: 'danger', expected: c.client_slug });
+    const ok = await confirmDialog({ title: `مسح "${c.name || c.client_slug}" نهائياً الحين`, message: 'لا يمكن التراجع. سيتم حذف:', items, confirmText: 'مسح نهائي', tone: 'danger', expected: c.client_slug });
     if (!ok) return;
-    showToast('جاري الحذف...');
-    const error = await post('delete', { id });
-    if (error) return showToast(`تعذر الحذف: ${error.message}`, true);
-    showToast('تم حذف المتجر وكل بياناته'); loadClients();
+    showToast('جاري المسح...');
+    const error = await post('purge', { id });
+    if (error) return showToast(`تعذر المسح: ${error.message}`, true);
+    showToast('انمسح المتجر وكل بياناته نهائياً'); loadClients();
   }
+
+  // ─── سجل العمليات ───
+  const AUDIT_LABEL = {
+    activate: 'تفعيل / تجديد', 'set-free': 'تحويل للبيجر المجاني', 'send-invoice': 'إرسال فاتورة', 'set-active': 'تشغيل / إيقاف',
+    rename: 'تغيير الاسم', transfer: 'تسليم المتجر لصاحبه', notify: 'إشعار لمحل', 'notify-all': 'إشعار للمشتركين', featured: 'أمثلة الرئيسية',
+    'wa-save': 'ربط واتساب', 'wa-test': 'تجربة واتساب', 'wa-delete': 'فصل واتساب', 'business-type': 'نوع النشاط', 'waitlist-addon': 'قائمة الانتظار',
+    features: 'تعديل المميزات', 'branch-create': 'إضافة فرع', delete: 'حذف (أرشفة)', restore: 'استرجاع', purge: 'مسح نهائي',
+    'support-update': 'تحديث طلب', 'prospect-create': 'منيو لعميل محتمل', 'card-maintenance': 'صيانة بطاقة النداء'
+  };
+  const AUDIT_TONE = { delete: 'text-red-700', purge: 'text-red-700', restore: 'text-emerald-700', activate: 'text-emerald-700' };
+  let auditRows = null, auditStore = null;
+  async function loadAudit() {
+    try { const r = await DM.get(A('audit') + (auditStore ? `&client_id=${auditStore}` : ''), true); auditRows = r.rows || []; if (!r.ready) auditRows.notReady = true; }
+    catch (e) { return showToast(`تعذر تحميل السجل: ${e.message}`, true); }
+    renderAudit();
+  }
+  function openAudit(id) { openMenu = null; auditStore = id; auditRows = null; showTab('log'); window.scrollTo({ top: 0 }); }
+  function auditValue(k, v) {
+    if (Array.isArray(v)) return v.map(x => (DMPlans.FEATURES[x] && DMPlans.FEATURES[x].name) || x).join('، ');
+    if (v === true) return 'نعم'; if (v === false) return 'لا';
+    if (v && typeof v === 'object') return JSON.stringify(v);
+    return String(v ?? '');
+  }
+  function renderAudit() {
+    const box = document.getElementById('log-list');
+    const c = auditStore ? find(auditStore) || findArchived(auditStore) : null;
+    document.getElementById('log-store').innerHTML = auditStore ? `<button type="button" onclick="auditStore=null; loadAudit()" class="chip on"><i class="ph-bold ph-x"></i> ${esc(c ? c.name : `متجر #${auditStore}`)} بس</button>` : '';
+    if (auditRows && auditRows.notReady) { box.innerHTML = '<p class="text-[12px] text-red-700 py-4">جدول السجل ما انشأ للحين: شغّل supabase/100-admin-audit-archive.sql</p>'; return; }
+    const q = document.getElementById('log-search').value.trim().toLowerCase();
+    const rows = (auditRows || []).filter(r => !q || [r.client_name, r.admin_email, AUDIT_LABEL[r.action], r.action].some(v => v && String(v).toLowerCase().includes(q)));
+    const when = (iso) => new Date(iso).toLocaleString('ar-SA-u-ca-gregory-nu-latn', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+    box.innerHTML = rows.map(r => {
+      const d = Object.entries(r.details || {}).filter(([, v]) => v !== '' && v !== null && v !== undefined).map(([k, v]) => `<span class="text-ink/45">${esc(k)}:</span> ${esc(auditValue(k, v).slice(0, 160))}`).join(' · ');
+      return `
+        <div class="py-2.5 grid gap-1 md:grid-cols-[150px_1fr_auto] md:gap-4 items-start">
+          <p class="text-[11px] text-ink/55">${when(r.at)}</p>
+          <div class="min-w-0">
+            <p class="text-[12.5px]"><b class="${AUDIT_TONE[r.action] || ''}">${esc(AUDIT_LABEL[r.action] || r.action)}</b>${r.client_name || r.client_id ? ` · <button type="button" onclick="openAudit(${Number(r.client_id)})" class="font-bold underline underline-offset-4 decoration-dotted">${esc(r.client_name || `#${r.client_id}`)}</button>` : ''}</p>
+            ${d ? `<p class="text-[11px] text-ink/70 break-words mt-0.5">${d}</p>` : ''}
+          </div>
+          <p class="text-[11px] text-ink/50 truncate" dir="ltr">${esc(r.admin_email === 'system' ? 'تلقائي' : r.admin_email)}</p>
+        </div>`;
+    }).join('') || `<p class="text-[12px] text-ink/50 py-8 text-center">${auditRows ? 'ما فيه عمليات مسجّلة.' : 'جاري التحميل...'}</p>`;
+  }
+  document.getElementById('log-search').addEventListener('input', () => renderAudit());
 
   // ─── تصدير ───
   function exportCsv() {

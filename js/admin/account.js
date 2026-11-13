@@ -307,7 +307,8 @@
     const graceText = graceEnd ? new Date(graceEnd).toLocaleDateString('ar-SA-u-ca-gregory-nu-latn', { day: 'numeric', month: 'long' }) : '';
 
     let pill, pillCls, note = '';
-    if (suspended)               { pill = 'موقوف'; pillCls = 'bg-brick/10 text-brick'; note = 'المتجر موقوف من الإدارة، والمنيو ما يظهر للزبائن.'; }
+    if (client.deleted_at)       { pill = 'محذوف'; pillCls = 'bg-brick/10 text-brick'; note = `انحذف متجرك وتوقف عن الزبائن، وينمسح نهائياً يوم ${new Date(Date.parse(client.deleted_at) + 30 * 864e5).toLocaleDateString('ar-SA-u-ca-gregory-nu-latn', { day: 'numeric', month: 'long' })}. إذا تبي ترجعه تواصل مع الإدارة قبلها.`; }
+    else if (suspended)          { pill = 'موقوف'; pillCls = 'bg-brick/10 text-brick'; note = 'المتجر موقوف من الإدارة، والمنيو ما يظهر للزبائن.'; }
     else if (expired)            { pill = 'منتهي'; pillCls = 'bg-brick/10 text-brick'; note = 'انتهى اشتراكك، والمنيو ما يظهر للزبائن. اختر باقتك ويرجع على طول.'; }
     else if (free)               { pill = 'الباقة المجانية'; pillCls = 'bg-emerald-600/10 text-emerald-800'; note = `البيجر شغال لك مجاناً (${DMPlans.FREE.pager} رقم بالشهر لفرع واحد). اشترك لتضيف بطاقة النداء والرسائل وبقية الخدمات.`; }
     else if (inGrace)            { pill = 'مهلة'; pillCls = 'bg-amber-400/20 text-amber-900'; note = `انتهى اشتراكك، ومنحناك مهلة: المنيو يعمل لعملائك حتى ${graceText}. جدّد قبلها حتى لا يتوقف.`; }
@@ -348,7 +349,8 @@
     const banner = document.getElementById('renew-banner');
     if (!free && (!live || (left !== null && left <= 7))) {   // يظهر قبل الانتهاء بأسبوع، ويحمرّ في آخر 3 أيام
       const danger = !live || inGrace || left <= 3;
-      const text = suspended ? 'متجرك موقوف من الإدارة، والمنيو لا يظهر للزبائن حالياً.'
+      const text = client.deleted_at ? 'انحذف متجرك والمنيو لا يظهر للزبائن. تواصل مع الإدارة خلال 30 يوم من الحذف إذا تبي ترجعه.'
+        : suspended ? 'متجرك موقوف من الإدارة، والمنيو لا يظهر للزبائن حالياً.'
         : !live ? 'انتهى اشتراكك، والمنيو لا يظهر للزبائن حالياً. جدّد الآن ليعود فوراً.'
         : inGrace ? `انتهى اشتراكك. المنيو يعمل لعملائك حتى ${graceText} فقط، جدّد الآن حتى لا يتوقف.`
         : staysFree ? `تنتهي تجربتك المجانية خلال ${daysText(left)}. بعدها يستمر البيجر مجاناً، واشترك حتى لا تتوقف ${onlyPager ? 'بطاقة النداء والرسائل' : 'باقي خدماتك'}.`

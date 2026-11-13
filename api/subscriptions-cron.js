@@ -5,12 +5,14 @@
 //   • قبل الانتهاء بـ 3 أيام أو أقل: "اشتراكك ينتهي قريب"
 //   • بعد الانتهاء (خلال مهلة الـ 3 أيام للمشتركين، أو انتهاء التجربة): "انتهى اشتراكك"
 // كل تذكير ينرسل مرة وحدة لكل تاريخ انتهاء (reminder_key)، بالبريد وإشعار على أجهزة صاحب المتجر.
+// وبعدها: المحلات المحذوفة من 30 يوم تنمسح نهائياً (_lib/store-delete.js).
 // =====================================================================
 const { rest, handler } = require('./_lib/core');
 const { assertCronKey } = require('./_lib/cron');
 const { sendMail, mailConfigured } = require('./_lib/mail');
 const { sendPush } = require('./_lib/push');
 const PLANS = require('./_lib/plans');
+const { purgeExpired } = require('./_lib/store-delete');
 
 const DAY = 864e5;
 const GRACE_DAYS = 3;
@@ -94,7 +96,11 @@ module.exports = handler(['GET', 'POST'], async (req) => {
     results.push({ store: s.id, stage, mailed, pushed });
   }
   console.log('RENEW_REMINDERS', JSON.stringify(results));
-  return { checked: stores.length, reminded: results.length, results };
+  // المحلات المحذوفة (المؤرشفة) من 30 يوم: تنمسح نهائياً
+  let purged = [];
+  try { purged = await purgeExpired(); } catch (e) { console.error('PURGE_EXPIRED', e.message); }
+  if (purged.length) console.log('PURGED', JSON.stringify(purged));
+  return { checked: stores.length, reminded: results.length, results, purged };
 });
 
 module.exports.config = { maxDuration: 60 };
