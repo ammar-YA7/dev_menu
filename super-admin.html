@@ -54,6 +54,18 @@
   .sa-tab { color: #616161; font-weight: 700; border-radius: 8px 8px 0 0; }
   .sa-tab:hover { color: var(--brand); background: rgba(56,79,61,.08); }
   .sa-tab[aria-selected="true"] { color: var(--brand); border-bottom-color: var(--brand); }
+  /* منيو جانبي من 1024px وفوق */
+  @media (min-width: 1024px) {
+    .sa-shell { display: flex; align-items: flex-start; }
+    .sa-shell > nav { position: sticky; top: 0; align-self: flex-start; height: 100vh; width: 232px; flex-shrink: 0; background: #fff; border-bottom: 0; border-inline-end: 1px solid #e3e3e3; backdrop-filter: none; }
+    .sa-shell > nav > div { flex-direction: column; gap: 2px; padding: 16px 10px; margin: 0; max-width: none; overflow: visible; }
+    .sa-shell > nav .sa-tab { width: 100%; padding: 10px 12px; border-bottom: 0; border-radius: 8px; font-size: 13.5px; }
+    .sa-shell > nav .sa-tab > i { font-size: 17px; width: 20px; }
+    .sa-shell > nav .sa-tab > span { margin-inline-start: auto; }
+    .sa-shell > nav .sa-tab[aria-selected="true"] { background: rgba(56,79,61,.1); color: var(--brand); }
+    .sa-shell > main { flex: 1; min-width: 0; margin: 0; }
+    .sa-shell .sa-tools { top: 12px; }
+  }
   main button.bg-brand, main a.bg-brand, .dmd-box button.bg-brand { border-radius: 8px !important; box-shadow: var(--shadow-primary); font-weight: 600; }
   main button.bg-brand:hover, main a.bg-brand:hover { background-color: var(--brand-dark); }
   .menu-pop { border: 0; border-radius: 12px; box-shadow: 0 8px 16px -4px rgba(26,26,26,.22), var(--shadow-card); }
@@ -168,6 +180,8 @@
   </header>
 
   <!-- التبويبات: كل شغلة في مكانها -->
+  <!-- الشاشات الكبيرة: القوائم منيو جانبي ثابت، والجوال: تبويبات فوق تنسحب -->
+  <div class="sa-shell">
   <nav class="sticky top-0 z-30 bg-[#f1f1f1]/95 backdrop-blur border-b border-[#e3e3e3]">
     <div class="max-w-[1500px] mx-auto px-3 md:px-8 flex gap-1 overflow-x-auto no-scrollbar" role="tablist">
       <button type="button" data-satab-btn="requests" class="sa-tab"><i class="ph-bold ph-chat-circle-text"></i> الطلبات <span id="sup-open" class="text-[10px] font-black bg-red-500 text-white rounded-full px-2 py-0.5 hidden"></span></button>
@@ -286,7 +300,7 @@
     <!-- ═══ المشتركين ═══ -->
     <div data-satab="stores" class="space-y-6">
     <!-- الأدوات -->
-    <section class="card p-3 md:p-4 space-y-3 sticky top-14 z-20">
+    <section class="sa-tools card p-3 md:p-4 space-y-3 sticky top-14 z-20">
       <div class="flex flex-col md:flex-row gap-2">
         <div class="relative flex-1">
           <i class="ph-bold ph-magnifying-glass absolute right-3.5 top-1/2 -translate-y-1/2 text-ink/40 text-xs"></i>
@@ -312,6 +326,7 @@
     <p id="empty" class="hidden text-center text-sm text-ink/50 py-16"><i class="ph-bold ph-prohibit text-2xl block mb-2"></i> لا توجد نتائج</p>
     </div>
   </main>
+  </div>
 </div>
 
 <script>
