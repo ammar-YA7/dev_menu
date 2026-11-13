@@ -156,7 +156,9 @@
     let c = hexRgb(color);
     if (!c || lum(c) > .8 || lum(c) < .015) c = [198, 42, 31];   // أبيض/أسود ما يصلح لون أساسي: أحمر البرقر
     const W = [255, 255, 255], K = [20, 16, 14], G = [238, 239, 241];
-    const brand = lum(c) > .45 ? mix(c, K, .35) : rgbHex(...c);
+    // لون رمادي/باهت (تشبّع قليل): نغمّقه عشان الأزرار تنقرا. ولون فاتح: نغمّقه شوي
+    const mx = Math.max(...c), mn = Math.min(...c), sat = mx === mn ? 0 : (mx - mn) / (255 - Math.abs(mx + mn - 255));
+    const brand = sat < .18 ? mix(c, K, .6) : lum(c) > .45 ? mix(c, K, .35) : rgbHex(...c);
     return { brand, deep: mix(c, K, .45), soft: mix(c, W, .9), bg: mix(G, c, .06), paper: mix(W, c, .05), on: lum(hexRgb(brand)) > .5 ? '#1d1a17' : '#ffffff', raw: rgbHex(...c) };
   }
 

@@ -1827,7 +1827,7 @@
   function loadBuilder() {
     if (window.DMBuilder) return Promise.resolve();
     return builderLoading || (builderLoading = new Promise((res, rej) => {
-      const sc = document.createElement('script'); sc.src = '/js/builder.js?v=1';
+      const sc = document.createElement('script'); sc.src = '/js/builder.js?v=2';
       sc.onload = res; sc.onerror = () => { builderLoading = null; rej(new Error('builder')); };
       document.head.appendChild(sc);
     }));
