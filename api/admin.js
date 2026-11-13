@@ -67,6 +67,55 @@ module.exports = handler(['GET', 'POST'], async (req) => {
     return { clients: await rest('clients?select=*&order=id.desc') };
   }
 
+  // ─── الاستخدام: كل محل وش استخدم من مميزاته (آخر 30 يوم) ───
+  // لكل مقياس: [هالأسبوع، الأسبوع اللي قبله، آخر 30 يوم]، والفروع تنحسب على المتجر الرئيسي
+  if (action === 'usage' && req.method === 'GET') {
+    const DAY = 864e5, now = Date.now();
+    const since = new Date(now - 30 * DAY).toISOString();
+    const sinceDay = since.slice(0, 10);
+    // نجيب الصفوف صفحات (قاعدة البيانات ترجع 1000 بالمرة)، وحد أعلى عشان ما يطول الطلب
+    const pull = async (path) => {
+      const out = [];
+      for (let off = 0; off < 40000; off += 1000) {
+        const r = await rest(`${path}&limit=1000&offset=${off}`);
+        out.push(...r);
+        if (r.length < 1000) return out;
+      }
+      return out;
+    };
+    const SOURCES = {
+      views:    `menu_events?kind=eq.view&created_at=gte.${q(since)}&select=client_id,created_at&order=created_at`,
+      orders:   `menu_orders?created_at=gte.${q(since)}&select=client_id,created_at&order=created_at`,
+      chat:     `menu_chat_devices?day=gte.${sinceDay}&select=client_id,day,used&order=day`,
+      pager:    `pager_tickets?created_at=gte.${q(since)}&select=client_id,created_at&order=created_at`,
+      cards:    `pager_cards?created_at=gte.${q(since)}&select=client_id,created_at&order=created_at`,
+      notify:   `pager_messages?created_at=gte.${q(since)}&select=client_id,created_at&order=created_at`,
+      waitlist: `waitlist_entries?created_at=gte.${q(since)}&select=client_id,created_at&order=created_at`,
+      stamps:   `loyalty_events?created_at=gte.${q(since)}&select=client_id,created_at&order=created_at`,
+      lmsg:     `loyalty_messages?created_at=gte.${q(since)}&select=client_id,created_at&order=created_at`
+    };
+    const all = await rest('clients?select=id,parent_id');
+    const mainOf = new Map(all.map(c => [c.id, c.parent_id || c.id]));
+    const stores = {}, missing = [];
+    await Promise.all(Object.entries(SOURCES).map(async ([key, path]) => {
+      let rows;
+      try { rows = await pull(path); } catch (e) { console.error('USAGE', key, e.message); missing.push(key); return; }
+      for (const r of rows) {
+        const id = mainOf.get(r.client_id); if (!id) continue;
+        const t = Date.parse(r.created_at || `${r.day}T12:00:00+03:00`);
+        const n = key === 'chat' ? Number(r.used) || 0 : 1;
+        const s = stores[id] || (stores[id] = { last: 0, m: {} });
+        const m = s.m[key] || (s.m[key] = [0, 0, 0]);
+        const age = now - t;
+        if (age < 7 * DAY) m[0] += n; else if (age < 14 * DAY) m[1] += n;
+        m[2] += n;
+        if (t > s.last) s.last = t;
+      }
+    }));
+    Object.values(stores).forEach(s => { s.last = s.last ? new Date(s.last).toISOString() : null; });
+    return { stores, missing, at: new Date(now).toISOString() };
+  }
+
   // طلبات المشتركين (تجديد، باقة، تفعيل، تواصل)
   if (action === 'support' && req.method === 'GET') {
     const rows = await rest('support_requests?select=id,client_id,kind,body,meta,status,reply,created_at,handled_at&order=status.desc,id.desc&limit=200').catch(() => null);

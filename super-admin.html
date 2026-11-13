@@ -172,12 +172,36 @@
     <div class="max-w-[1500px] mx-auto px-3 md:px-8 flex gap-1 overflow-x-auto no-scrollbar" role="tablist">
       <button type="button" data-satab-btn="requests" class="sa-tab"><i class="ph-bold ph-chat-circle-text"></i> الطلبات <span id="sup-open" class="text-[10px] font-black bg-red-500 text-white rounded-full px-2 py-0.5 hidden"></span></button>
       <button type="button" data-satab-btn="stores" class="sa-tab"><i class="ph-bold ph-storefront"></i> المشتركين <span id="stores-count" class="text-[10px] font-black bg-ink/10 rounded-full px-2 py-0.5"></span></button>
+      <button type="button" data-satab-btn="usage" class="sa-tab"><i class="ph-bold ph-pulse"></i> الاستخدام <span id="usage-idle" class="text-[10px] font-black bg-amber-500 text-white rounded-full px-2 py-0.5 hidden"></span></button>
       <button type="button" data-satab-btn="overview" class="sa-tab"><i class="ph-bold ph-chart-line-up"></i> الأرقام والدخل</button>
       <button type="button" data-satab-btn="notify" class="sa-tab"><i class="ph-bold ph-megaphone"></i> الإشعارات</button>
     </div>
   </nav>
 
   <main class="max-w-[1500px] mx-auto px-3 md:px-8 py-6 space-y-6">
+    <!-- ═══ الاستخدام: مين يستخدم إيش، وصحة كل محل ═══ -->
+    <div data-satab="usage" class="space-y-6">
+      <section class="card p-5 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <p class="text-sm font-black"><i class="ph-bold ph-squares-four text-brand"></i> الميزات: مين يستخدم إيش</p>
+            <p class="text-[12px] text-ink/60 mt-0.5">المحلات الشغالة (مشترك، تجربة، مجاني) بدون العملاء المحتملين. «استخدموها» = آخر 7 أيام.</p>
+          </div>
+          <button type="button" onclick="loadUsage(true)" class="text-[11px] font-bold text-ink/60"><i class="ph-bold ph-arrow-clockwise"></i> تحديث</button>
+        </div>
+        <div id="feat-usage" class="overflow-x-auto"></div>
+        <p id="usage-missing" class="hidden text-[11px] text-amber-800"></p>
+      </section>
+      <section id="health-box" class="card p-5 space-y-4">
+        <div>
+          <p class="text-sm font-black"><i class="ph-bold ph-heartbeat text-red-600"></i> صحة المحلات</p>
+          <p class="text-[12px] text-ink/60 mt-0.5">الخامل وقليل الاستخدام فوق: هذولي اللي يحتاجون اتصال قبل لا يلغون.</p>
+        </div>
+        <div id="health-filters" class="flex flex-wrap gap-1.5"></div>
+        <div id="health-list" class="grid gap-2.5 md:grid-cols-2 xl:grid-cols-3"></div>
+      </section>
+    </div>
+
     <!-- ═══ الأرقام والدخل ═══ -->
     <div data-satab="overview" class="space-y-6">
     <!-- صيانة بطاقة النداء -->
@@ -256,6 +280,7 @@
           <select id="sort" class="field md:w-52">
             <option value="new">الأحدث تسجيلاً</option>
             <option value="expiry">الأقرب انتهاءً</option>
+            <option value="usage">الأقل استخداماً</option>
             <option value="name">الاسم</option>
           </select>
           <button onclick="createProspect()" class="shrink-0 px-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold whitespace-nowrap"><i class="ph-bold ph-magic-wand"></i> منيو لعميل محتمل</button>
@@ -405,6 +430,7 @@
     try { clients = (await DM.get(A('list'), true)).clients || []; }
     catch (e) { console.error(e); return showToast(`تعذر تحميل العملاء: ${e.message}`, true); }
     renderAll();
+    loadUsage();
     if (manual) showToast('تم التحديث');
   }
 
@@ -454,7 +480,7 @@
   // ─── التبويبات ───
   let saTab = '', saAuto = !location.hash;
   function showTab(t) {
-    if (!['requests', 'stores', 'overview', 'notify'].includes(t)) t = 'stores';
+    if (!['requests', 'stores', 'usage', 'overview', 'notify'].includes(t)) t = 'stores';
     saTab = t;
     document.querySelectorAll('[data-satab]').forEach(el => el.classList.toggle('hidden', el.dataset.satab !== t));
     document.querySelectorAll('[data-satab-btn]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.satabBtn === t)));
@@ -606,6 +632,122 @@
     chart.innerHTML = days.map(d => `<div class="flex-1 rounded-t ${d.v ? 'bg-brand/70 hover:bg-brand' : 'bg-brand/10'}" style="height:${d.v ? Math.max(8, d.v / max * 100) : 4}%" title="${esc(d.label)}: ${d.v}"></div>`).join('');
   }
 
+
+  // ─── الاستخدام ───
+  // المقاييس (من الخادم): لكل محل [هالأسبوع، الأسبوع اللي قبله، آخر 30 يوم]
+  const METRICS = {
+    views: 'زيارة للمنيو', orders: 'طلب من المنيو', chat: 'سؤال للمساعد', pager: 'رقم بيجر', cards: 'بطاقة نداء جديدة',
+    notify: 'رسالة لزبائن البيجر', waitlist: 'تسجيل في الانتظار', stamps: 'ختم وهدية', lmsg: 'رسالة ولاء'
+  };
+  // كل ميزة وش يدل إنها مستخدمة (المنيو التفاعلي ما ينقاس لحاله: زياراته ضمن زيارات المنيو)
+  const FEAT_METRICS = { menu: ['views', 'orders'], chat: ['chat'], ixpro: [], pager: ['pager', 'cards'], notify: ['notify'], waitlist: ['waitlist'], loyalty: ['stamps', 'lmsg'] };
+  const HEALTH = {
+    idle:   { label: 'خامل', cls: 'bg-red-500/10 text-red-700 border-red-500/25', rank: 0 },
+    down:   { label: 'قلّ استخدامه', cls: 'bg-amber-400/20 text-amber-900 border-amber-500/40', rank: 1 },
+    fresh:  { label: 'جديد، ما بدأ', cls: 'bg-sky-500/10 text-sky-800 border-sky-500/25', rank: 2 },
+    active: { label: 'نشط', cls: 'bg-emerald-500/10 text-emerald-800 border-emerald-500/25', rank: 3 }
+  };
+  let usage = null, usageMissing = [], healthFilter = 'all', featPick = null;
+  const num = (n) => Number(n || 0).toLocaleString('en-US');
+  async function loadUsage(manual = false) {
+    try { const r = await DM.get(A('usage'), true); usage = r.stores || {}; usageMissing = r.missing || []; }
+    catch (e) { console.error(e); if (manual) showToast(`تعذر تحميل الاستخدام: ${e.message}`, true); return; }
+    renderUsage(); renderStores();
+    if (manual) showToast('تم التحديث');
+  }
+  const usageOf = (c) => (usage && usage[c.id]) || { last: null, m: {} };
+  const metricOf = (c, k) => usageOf(c).m[k] || [0, 0, 0];
+  const featUsed = (c, f) => FEAT_METRICS[f].some(k => metricOf(c, k)[0] > 0);
+  const ago = (iso) => {
+    if (!iso) return 'ما استخدم شي من 30 يوم أو أكثر';
+    const d = Math.floor((Date.now() - Date.parse(iso)) / 864e5);
+    return d <= 0 ? 'آخر استخدام اليوم' : d === 1 ? 'آخر استخدام أمس' : d === 2 ? 'آخر استخدام قبل يومين' : `آخر استخدام قبل ${d} ${d <= 10 ? 'أيام' : 'يوم'}`;
+  };
+  // محل سجّل خلال الـ 30 يوم وما استخدم شي: نقول «من سجّل» بدل «من 30 يوم»
+  const agoOf = (c) => !usageOf(c).last && c.created_at && Date.now() - Date.parse(c.created_at) < 30 * 864e5 ? 'ما استخدم شي من سجّل' : ago(usageOf(c).last);
+  // صحة المحل: خامل (ولا شي هالأسبوع)، قلّ استخدامه (نص الأسبوع اللي قبله أو أقل)، جديد ما بدأ، نشط
+  function healthOf(c) {
+    const m = usageOf(c).m;
+    const t7 = Object.values(m).reduce((a, x) => a + x[0], 0), p7 = Object.values(m).reduce((a, x) => a + x[1], 0);
+    const young = c.created_at && Date.now() - Date.parse(c.created_at) < 7 * 864e5;
+    const key = t7 === 0 ? (young ? 'fresh' : 'idle') : p7 >= 10 && t7 < p7 * 0.5 ? 'down' : 'active';
+    return { key, t7, p7, ...HEALTH[key] };
+  }
+  // المحلات اللي نتابعها: الرئيسية الشغالة، بدون العملاء المحتملين
+  const tracked = () => clients.filter(c => !c.parent_id && !isProspect(c) && statusOf(c).live);
+  function usageLine(c) {
+    const h = healthOf(c);
+    return `<p class="flex justify-between gap-2"><span class="text-ink/55">الاستخدام</span><span><b class="text-[10px] font-black px-2 py-0.5 rounded-full border ${h.cls}">${h.label}</b> <span class="text-ink/60">${esc(agoOf(c))}</span></span></p>`;
+  }
+  function renderUsage() {
+    if (!usage) return;
+    const list = tracked();
+    const rows = DMPlans.ORDER.map(f => {
+      const on = list.filter(c => DMPlans.has(c, f));
+      const measurable = FEAT_METRICS[f].length > 0;
+      const used = measurable ? on.filter(c => featUsed(c, f)) : [];
+      const totals = FEAT_METRICS[f].map(k => [k, on.reduce((a, c) => a + metricOf(c, k)[0], 0)]);
+      return { f, on: on.length, used: used.length, unused: measurable ? on.length - used.length : null, totals, measurable };
+    });
+    const cell = (f, mode, n, cls) => n ? `<button type="button" onclick="pickFeat('${f}', '${mode}')" class="font-black underline underline-offset-4 decoration-dotted ${cls} ${featPick && featPick.f === f && featPick.mode === mode ? 'bg-brand/10 rounded px-1' : ''}">${n}</button>` : `<span class="text-ink/35">0</span>`;
+    document.getElementById('feat-usage').innerHTML = `
+      <table class="w-full text-[12.5px] min-w-[640px]">
+        <thead><tr class="text-[11px] text-ink/55 text-right">
+          <th class="font-bold py-2">الميزة</th><th class="font-bold">مفعّلة عند</th><th class="font-bold">استخدموها</th><th class="font-bold">مفعّلة وما استخدموها</th><th class="font-bold">الحجم هالأسبوع</th>
+        </tr></thead>
+        <tbody>${rows.map(r => `
+          <tr class="border-t border-ink/[0.07]">
+            <td class="py-2.5 font-bold whitespace-nowrap"><i class="ph-bold ${DMPlans.FEATURES[r.f].icon} ${FEAT_COLOR[r.f]}"></i> ${DMPlans.FEATURES[r.f].name}</td>
+            <td>${cell(r.f, 'on', r.on, '')}</td>
+            <td>${r.measurable ? cell(r.f, 'used', r.used, 'text-emerald-700') : '<span class="text-[11px] text-ink/45">ضمن زيارات المنيو</span>'}</td>
+            <td>${r.measurable ? cell(r.f, 'unused', r.unused, 'text-red-700') : '<span class="text-ink/35">—</span>'}</td>
+            <td class="text-[11.5px] text-ink/70">${r.totals.map(([k, n]) => `${num(n)} ${METRICS[k]}`).join(' · ') || '—'}</td>
+          </tr>`).join('')}</tbody>
+      </table>`;
+    const miss = document.getElementById('usage-missing');
+    miss.classList.toggle('hidden', !usageMissing.length);
+    miss.textContent = usageMissing.length ? `ما قدرنا نقرا: ${usageMissing.map(k => METRICS[k] || k).join('، ')}. أرقامها تطلع صفر.` : '';
+    renderHealth();
+  }
+  function pickFeat(f, mode) {
+    featPick = featPick && featPick.f === f && featPick.mode === mode ? null : { f, mode };
+    healthFilter = 'all';
+    renderUsage();
+    if (featPick) document.getElementById('health-box').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  function renderHealth() {
+    let list = tracked();
+    if (featPick) list = list.filter(c => DMPlans.has(c, featPick.f) && (featPick.mode === 'on' || (featPick.mode === 'used') === featUsed(c, featPick.f)));
+    const n = { all: list.length }; Object.keys(HEALTH).forEach(k => { n[k] = list.filter(c => healthOf(c).key === k).length; });
+    const idleAll = tracked().filter(c => healthOf(c).key === 'idle').length;
+    const badge = document.getElementById('usage-idle'); badge.textContent = idleAll; badge.classList.toggle('hidden', !idleAll);
+    const pickText = featPick ? `${DMPlans.FEATURES[featPick.f].name}: ${featPick.mode === 'on' ? 'مفعّلة عندهم' : featPick.mode === 'used' ? 'استخدموها' : 'مفعّلة وما استخدموها'}` : '';
+    document.getElementById('health-filters').innerHTML =
+      (featPick ? `<button type="button" onclick="featPick=null; renderUsage()" class="chip on"><i class="ph-bold ph-x"></i> ${esc(pickText)}</button>` : '') +
+      [['all', 'الكل'], ...Object.entries(HEALTH).map(([k, h]) => [k, h.label])].map(([k, l]) =>
+        `<button type="button" onclick="healthFilter='${k}'; renderHealth()" class="chip ${healthFilter === k ? 'on' : ''}">${l} <span class="opacity-60">${n[k]}</span></button>`).join('');
+    if (healthFilter !== 'all') list = list.filter(c => healthOf(c).key === healthFilter);
+    list.sort((a, b) => healthOf(a).rank - healthOf(b).rank || (Date.parse(usageOf(a).last || 0) - Date.parse(usageOf(b).last || 0)));
+    document.getElementById('health-list').innerHTML = list.map(c => {
+      const h = healthOf(c), s = statusOf(c), phone = waPhone(c.phone);
+      const feats = DMPlans.ORDER.filter(f => DMPlans.has(c, f) && FEAT_METRICS[f].length);
+      const metrics = feats.flatMap(f => FEAT_METRICS[f]).filter((k, i, a) => a.indexOf(k) === i);
+      return `
+        <div class="rounded-xl border border-ink/10 bg-white/70 p-3 space-y-2">
+          <div class="flex items-start justify-between gap-2">
+            <div class="min-w-0">
+              <p class="text-[13px] font-black truncate">${esc(c.name || 'بدون اسم')}</p>
+              <p class="text-[10.5px] text-ink/50"><span class="font-mono" dir="ltr">${esc(c.client_slug)}</span> · ${s.label}</p>
+            </div>
+            <span class="shrink-0 text-[10px] font-black px-2 py-0.5 rounded-full border ${h.cls}">${h.label}</span>
+          </div>
+          <p class="text-[11px] text-ink/60"><i class="ph-bold ph-clock"></i> ${esc(agoOf(c))}</p>
+          <div class="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px]">${metrics.map(k => { const [w, p] = metricOf(c, k); const arrow = w > p ? '<i class="ph-bold ph-arrow-up text-emerald-700"></i>' : w < p ? '<i class="ph-bold ph-arrow-down text-red-600"></i>' : ''; return `<p class="flex justify-between gap-1"><span class="text-ink/55 truncate">${METRICS[k]}</span><span class="whitespace-nowrap"><b>${num(w)}</b> ${arrow}<span class="text-ink/40 text-[10px]"> قبله ${num(p)}</span></span></p>`; }).join('') || '<p class="text-ink/45 col-span-2">ما عنده ميزة تنقاس</p>'}</div>
+          ${phone ? `<a href="https://wa.me/${phone}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-[11px] font-bold text-green-700"><i class="ph-bold ph-whatsapp-logo"></i> كلّمه واتساب</a>` : ''}
+        </div>`;
+    }).join('') || '<p class="text-[12px] text-ink/50 py-6 text-center md:col-span-2 xl:col-span-3">ما فيه محلات بهالفلتر.</p>';
+  }
+
   // ─── الفلاتر والبحث ───
   const FILTERS = [
     ['all', 'الكل'], ['requests', 'طلبات اشتراك'], ['paid', 'مشتركون'], ['trial', 'تجريبي'], ['free', 'البيجر المجاني'], ['soon', 'ينتهي قريباً'], ['expired', 'منتهي'],
@@ -643,6 +785,7 @@
     const sort = document.getElementById('sort').value;
     if (sort === 'name') list.sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'ar'));
     else if (sort === 'expiry') list.sort((a, b) => (statusOf(a).left ?? 1e9) - (statusOf(b).left ?? 1e9));
+    else if (sort === 'usage') list.sort((a, b) => healthOf(a).rank - healthOf(b).rank || healthOf(a).t7 - healthOf(b).t7);
     else list.sort((a, b) => b.id - a.id);
     // طلبات الاشتراك المعلّقة دايماً فوق
     list.sort((a, b) => (b.requested_plan ? 1 : 0) - (a.requested_plan ? 1 : 0));
@@ -695,6 +838,7 @@
           ${s.key === 'free' ? `<p class="flex justify-between gap-2"><span class="text-ink/55">الاشتراك</span><b class="text-emerald-700">البيجر المجاني · ${DMPlans.FREE.pager} رقم بالشهر</b></p>
           <p class="flex justify-between gap-2"><span class="text-ink/55">سجّل</span><span>${c.created_at ? new Date(c.created_at).toLocaleDateString('ar-SA-u-ca-gregory-nu-latn') : '—'}</span></p>`
           : `<p class="flex justify-between gap-2"><span class="text-ink/55">الاشتراك</span><b class="${isSoon(c) ? 'text-amber-700' : ''}">${esc(s.endText)}${days}</b></p>`}
+          ${usage && !isProspect(c) && !c.parent_id ? usageLine(c) : ''}
           ${c.heard_from ? `<p class="flex justify-between gap-2"><span class="text-ink/55">سمع عنا من</span><span>${esc(HEARD_FROM[c.heard_from] || c.heard_from)}${c.heard_from_note ? ` · ${esc(c.heard_from_note)}` : ''}</span></p>` : ''}
           <p class="flex justify-between gap-2"><span class="text-ink/55">البريد</span><span class="truncate" dir="ltr">${isProspect(c) ? '<span class="text-purple-700 font-bold">ما تسلّمه صاحبه بعد</span>' : c.email ? esc(c.email) : c.parent_id ? '<span class="text-ink/50">يديره صاحب المتجر الرئيسي</span>' : '<span class="text-red-600 font-bold">— بدون بريد —</span>'}</span></p>
           <p class="flex justify-between gap-2"><span class="text-ink/55">الجوال</span>${c.phone ? (phone ? `<a href="https://wa.me/${phone}" target="_blank" rel="noopener" class="text-green-700 font-bold" dir="ltr"><i class="ph-bold ph-whatsapp-logo"></i> ${esc(c.phone)}</a>` : `<span dir="ltr">${esc(c.phone)}</span>`) : '<span class="text-ink/40">—</span>'}</p>
