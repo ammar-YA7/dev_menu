@@ -209,6 +209,7 @@ page('privacy', ('سياسة الخصوصية', 'Privacy policy'),
         ('Supabase لقاعدة البيانات وتسجيل الدخول وتخزين الصور، وVercel لاستضافة المنصة.', 'Supabase for the database, sign-in and image storage, and Vercel for hosting.'),
         ('Apple Wallet وGoogle Wallet ومزود إصدار بطاقات المحفظة، لبطاقات الولاء والنداء.', 'Apple Wallet, Google Wallet and our wallet pass provider, for loyalty and pager cards.'),
         ('خدمة البريد الإلكتروني لإرسال الرموز والفواتير.', 'An email service to send codes and invoices.'),
+        ('PostHog (خوادم في أوروبا) لفهم طريقة استخدام أصحاب المنشآت للوحة التحكم وتحسينها: الصفحات التي يفتحونها، والأزرار التي يضغطونها، والأخطاء التي تظهر لهم، وتسجيل مبسّط للجلسة. تُخفى الحقول وأي بيانات لعملاء المنشأة وأرقام الجوال والبريد قبل الإرسال، ولا يُستخدم ذلك في صفحات العملاء كالمنيو والبيجر وبطاقة الولاء.', 'PostHog (servers in Europe) to understand how business owners use the dashboard and improve it: the pages they open, the buttons they press, the errors they see, and a simplified session recording. Form fields, any data about the business customers, mobile numbers and emails are hidden before sending, and this is not used on customer pages such as the menu, pager and loyalty card.'),
         ('Anthropic لتشغيل المساعد الذكي عند تفعيله، ويُرسل إليه ما يلزم لكتابة الرسالة فقط، مثل الاسم الأول وعدد الزيارات، دون رقم الجوال.', "Anthropic to run the AI assistant when it is turned on. It receives only what is needed to write the message, such as the first name and number of visits, never the mobile number."),
       ]),
     ]),
@@ -280,7 +281,7 @@ def build(slug):
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<script src="/js/i18n.js?v=7" data-dict="{slug}"></script>
+<script src="/js/i18n.js?v=8" data-dict="{slug}"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="icon" type="image/png" sizes="192x192" href="/images/icon-192.png">
