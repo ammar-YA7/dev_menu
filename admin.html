@@ -1117,6 +1117,18 @@
             <div id="extras-list" class="space-y-2"></div>
             <button type="button" id="extras-copy-btn" onclick="openExtrasCopy()" class="hidden text-[11px] font-bold text-ink underline"><i class="ph-bold ph-copy"></i> انسخ هذه الإضافات لأطباق أخرى</button>
           </div>
+          <!-- «ركّب برقرك» (إضافة مدفوعة): العميل يركّب الطبق بنفسه من إضافاته -->
+          <div id="prod-builder" data-needs="builder" class="bg-brand/5 rounded-xl border border-brand/15 p-2.5 space-y-2">
+            <label class="flex items-center justify-between gap-2 cursor-pointer">
+              <span class="text-[11px] font-bold text-ink"><i class="ph-bold ph-hamburger text-emerald-600"></i> «ركّب برقرك»: يركّبه العميل بنفسه</span>
+              <input type="checkbox" id="prod-builder-on" onchange="toggleBuilderForm(this.checked)" class="accent-[#384f3d] w-4 h-4 shrink-0">
+            </label>
+            <p class="text-[11px] text-ink leading-relaxed">يفتح للعميل شاشة يركّب فيها الطبق طبقةً طبقة من الإضافات أعلاه، بالأسماء والأسعار نفسها، وبألوان هويتك. مناسب للبرقر والساندويتشات.</p>
+            <div id="prod-builder-base" class="hidden space-y-1.5">
+              <span class="block text-[11px] font-bold text-ink">مكونات الطبق الأساسية قبل الإضافات</span>
+              <div id="prod-builder-chips" class="flex flex-wrap gap-1.5"></div>
+            </div>
+          </div>
           <!-- فيديو الطبق (اختياري): يتحرك في المنيو مكان الصورة، والصورة تبقى غلافه -->
           <div>
             <label for="prod-video-file" class="img-drop">

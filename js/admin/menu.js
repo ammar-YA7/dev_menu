@@ -1093,6 +1093,7 @@
     renderSizes();
     formExtras = (Array.isArray(p.extras) ? p.extras : []).map(g => ({ ...g, options: (g.options || []).map(o => ({ ...o })) }));
     renderExtras();
+    formBuilder = p.builder && Array.isArray(p.builder.base) ? { base: p.builder.base.slice() } : null; renderBuilderForm();
     document.getElementById('prod-desc').value = p.description || '';
     document.getElementById('prod-extra').value = p.extra_info || '';
     document.getElementById('prod-note').value = p.note || '';
@@ -1114,7 +1115,7 @@
     renderCutout();
     // «تفاصيل أكثر» تنفتح لو الطبق فيه شي منها، عشان يشوفه وهو يعدّل
     document.getElementById('prod-more').open = !!(p.description || p.extra_info || p.note || p.name_en || p.description_en || p.video_url || p.is_bestseller
-      || (Array.isArray(p.sizes) && p.sizes.length) || (Array.isArray(p.extras) && p.extras.length) || (Array.isArray(p.allergens) && p.allergens.length) || p.coffee);
+      || (Array.isArray(p.sizes) && p.sizes.length) || (Array.isArray(p.extras) && p.extras.length) || p.builder || (Array.isArray(p.allergens) && p.allergens.length) || p.coffee);
     document.getElementById('form-title').textContent = `تعديل: ${p.name}`;
     document.getElementById('form-icon').className = 'ph-bold ph-pencil-simple text-amber-600';
     document.getElementById('submit-btn').textContent = 'حفظ التعديلات';
@@ -1136,6 +1137,27 @@
     document.getElementById('linked-note').classList.toggle('hidden', others.length === 0);
   }
 
+  // ─── «ركّب برقرك» في نموذج الطبق: تشغيل + الطبقات الأساسية (قبل الإضافات) ───
+  const BUILDER_BASE = [['patty', 'لحم'], ['chicken', 'دجاج'], ['cheese', 'جبن'], ['lettuce', 'خس'], ['tomato', 'طماطم'], ['pickles', 'مخلل'], ['jalapeno', 'هالبينو'], ['onion', 'بصل']];
+  let formBuilder = null;   // { base: [...] } أو null = ما يتركّب
+  function renderBuilderForm() {
+    const on = !!formBuilder;
+    document.getElementById('prod-builder-on').checked = on;
+    document.getElementById('prod-builder-base').classList.toggle('hidden', !on);
+    document.getElementById('prod-builder-chips').innerHTML = on ? BUILDER_BASE.map(([k, label]) => {
+      const sel = formBuilder.base.includes(k);
+      return `<button type="button" onclick="toggleBuilderBase('${k}')" class="text-[11px] font-bold px-2.5 py-1 rounded-full border ${sel ? 'bg-brand text-cream border-brand' : 'bg-white border-brand/25 text-ink'}">${sel ? '<i class="ph-bold ph-check text-[10px]"></i> ' : ''}${label}</button>`;
+    }).join('') : '';
+  }
+  function toggleBuilderForm(on) { formBuilder = on ? { base: ['patty', 'cheese'] } : null; renderBuilderForm(); }
+  function toggleBuilderBase(k) {
+    if (!formBuilder) return;
+    const b = formBuilder.base;
+    if (b.includes(k)) { if (b.length > 1) formBuilder.base = b.filter(x => x !== k); else showToast('اختر مكوّناً أساسياً واحداً على الأقل', true); }
+    else if (b.length < 6) b.push(k); else showToast('المكونات الأساسية حدها 6', true);
+    renderBuilderForm();
+  }
+
   function cancelEdit() {
     editingProductId = null;
     document.getElementById('add-product-form').reset();
@@ -1147,6 +1169,7 @@
     setCoffee(null);
     formSizes = [];
     renderSizes();
+    formBuilder = null; renderBuilderForm();
     formExtras = [];
     renderExtras();
     document.getElementById('image-hint').textContent = '';
@@ -1197,6 +1220,7 @@
       };
       if (allowsCoffee()) payload.coffee = getCoffee();
       if (showCalories()) payload.calories = calories;
+      if (window.DMPlans && DMPlans.has(client, 'builder')) payload.builder = formBuilder ? { base: formBuilder.base } : null;
       if (imageFile) {
         const problem = validateFile(imageFile, 'image');
         if (problem) return showToast(problem, true);

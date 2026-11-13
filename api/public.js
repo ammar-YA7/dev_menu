@@ -14,7 +14,7 @@ const { handler, rest, rpc, q, ApiError, readBody, int, findPublicStore, CURRENC
 const { topic } = require('./_lib/live');
 
 const STORE_FIELDS = 'id,name,client_slug,logo_url,bg_image_url,bg_video_url,promo_message,website_url,tiktok_url,instagram_url,whatsapp_number,snapchat_url,opening_hours,location_url,whatsapp_orders,business_type,show_calories,menu_layout,delivery_apps,theme,accent_color,order_numbers,custom_links,cat_style,menu_look,bg_overlay,text_color';
-const PRODUCT_FIELDS = 'id,name,name_en,description,description_en,extra_info,note,price,category,image_url,video_url,cutout_url,is_available,is_bestseller,calories,allergens,coffee,sort_order,sizes,extras,subgroup';
+const PRODUCT_FIELDS = 'id,name,name_en,description,description_en,extra_info,note,price,category,image_url,video_url,cutout_url,is_available,is_bestseller,calories,allergens,coffee,sort_order,sizes,extras,subgroup,builder';
 const bySort = (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0) || a.id - b.id;
 
 async function findStore(rawSlug) {
@@ -109,7 +109,9 @@ async function menuPayload(slug) {
   const [categories, products, waitlist_open, has_coupons, occasion, promos, name, order_mode] = await Promise.all([
     rest(`categories?client_id=eq.${store.id}&select=id,key,name,name_en,sort_order,group_name,image_url`),
     // المنتجات المخفية ما توصل للزبون أصلاً
-    rest(`products?client_id=eq.${store.id}&is_hidden=is.false&select=${PRODUCT_FIELDS}`),
+    // لو عمود builder ما انضاف للحين (101-product-builder.sql) المنيو يشتغل بدونه
+    rest(`products?client_id=eq.${store.id}&is_hidden=is.false&select=${PRODUCT_FIELDS}`)
+      .catch(e => { if (!/builder/.test(e.dbMessage || e.message || '')) throw e; return rest(`products?client_id=eq.${store.id}&is_hidden=is.false&select=${PRODUCT_FIELDS.replace(',builder', '')}`); }),
     waitlistOpen(store.id),
     hasCoupons(store.id),
     activeOccasion(store.id),
@@ -122,10 +124,13 @@ async function menuPayload(slug) {
   const menu_chat = store.menu_chat === true && feats.chat;
   // المنيو التفاعلي إضافة: بدونها (أو لو انتهت) يطلع المنيو العادي حتى في رابط التابلت. نرسل نعم/لا بس، مو مميزات الباقة
   const ix_on = !!feats.ixpro;
+  // «ركّب برقرك»: الإضافة ضمن باقة المحل. بدونها ما يطلع زر التركيب حتى لو الطبق مفعّل عليه
+  const builder_on = !!feats.builder;
+  if (!builder_on) products.forEach(p => { p.builder = null; });
   // الإضافات المربوطة بأصناف المنيو تاخذ اسمها وسعرها الحالي منها
   await require('./_lib/order').resolveExtraLinks(store.id, products);
   const order_opts = order_mode ? await require('./_lib/order').orderSettings(store.id) : null;
-  return { store: { ...store, name, menu_chat, ix_on, waitlist_open, has_coupons, occasion, promos, order_mode, order_opts }, categories: categories.sort(bySort), products: products.sort(bySort), feats };
+  return { store: { ...store, name, menu_chat, ix_on, builder_on, waitlist_open, has_coupons, occasion, promos, order_mode, order_opts }, categories: categories.sort(bySort), products: products.sort(bySort), feats };
 }
 // ردود جاهزة للأسئلة البسيطة. أي شي غيرها يروح للمساعد
 const AR = (t) => /[؀-ۿ]/.test(t);

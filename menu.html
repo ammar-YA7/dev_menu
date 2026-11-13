@@ -1821,9 +1821,32 @@
     if (card && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openModal(card.dataset.product); }
   });
 
-  function openModal(id) {
+  // ─── «ركّب برقرك» (إضافة مدفوعة): الطبق المفعّل عليه يفتح شاشة التركيب بدل نافذة الطبق ───
+  const builderOn = (p) => !!(project && project.builder_on && p && p.builder && (extrasOf(p).length || sizesOf(p).length));
+  let builderLoading = null;
+  function loadBuilder() {
+    if (window.DMBuilder) return Promise.resolve();
+    return builderLoading || (builderLoading = new Promise((res, rej) => {
+      const sc = document.createElement('script'); sc.src = '/js/builder.js?v=1';
+      sc.onload = res; sc.onerror = () => { builderLoading = null; rej(new Error('builder')); };
+      document.head.appendChild(sc);
+    }));
+  }
+  function openBuilder(p) {
+    loadBuilder().then(() => DMBuilder.open({
+      product: p, lang: currentLang,
+      store: { name: project.name, color: project.accent_color, logo: safeUrl(project.logo_url) },
+      money, sizes: sizesOf(p), sizeLabel: sizeName, unitPrice: (sz) => unitPrice(p, sz),
+      price: (sz, extras) => linePrice(p, { size: sz, extras }),
+      canOrder: orderingOn() && p.is_available !== false,
+      onAdd: ({ size, extras, qty }) => addToCart(p.id, qty, size, null, extras)
+    })).catch(() => openModal(p.id, true));   // لو ما تحمّل الملف: نافذة الطبق العادية
+  }
+
+  function openModal(id, plain) {
     const p = allProducts.find(x => String(x.id) === String(id));
     if (!p) return;
+    if (!plain && builderOn(p)) return openBuilder(p);
     const img = safeUrl(p.image_url), vid = safeUrl(p.video_url);
     const modalImg = document.getElementById('modalImg'), modalVid = document.getElementById('modalVid');
     modalImg.parentElement.classList.toggle('hidden', !img && !vid);
