@@ -1827,7 +1827,7 @@
   function loadBuilder() {
     if (window.DMBuilder) return Promise.resolve();
     return builderLoading || (builderLoading = new Promise((res, rej) => {
-      const sc = document.createElement('script'); sc.src = '/js/builder.js?v=3';
+      const sc = document.createElement('script'); sc.src = '/js/builder.js?v=4';
       sc.onload = res; sc.onerror = () => { builderLoading = null; rej(new Error('builder')); };
       document.head.appendChild(sc);
     }));
@@ -1837,6 +1837,9 @@
       product: p, lang: currentLang,
       store: { name: project.name, color: project.accent_color, logo: safeUrl(project.logo_url) },
       money, sizes: sizesOf(p), sizeLabel: sizeName, unitPrice: (sz) => unitPrice(p, sz),
+      // صور المحل نفسه: صورة الطبق فوق، وصورة كل إضافة مربوطة بطبقها في المنيو
+      photo: safeUrl(p.image_url) ? sized(safeUrl(p.image_url), 900) : '',
+      imageOf: (pid) => { const x = productById(pid); const u = x && safeUrl(x.image_url); return u ? sized(u, 300) : ''; },
       price: (sz, extras) => linePrice(p, { size: sz, extras }),
       canOrder: orderingOn() && p.is_available !== false,
       onAdd: ({ size, extras, qty, note }) => addToCart(p.id, qty, size, note || null, extras)

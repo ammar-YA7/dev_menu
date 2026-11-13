@@ -186,6 +186,7 @@
 .bb-grid { display: grid; grid-template-columns: minmax(0, 420px) minmax(0, 1fr); gap: 18px; max-width: 1180px; margin: 0 auto; padding: 16px max(16px, env(safe-area-inset-right, 0px)) 24px max(16px, env(safe-area-inset-left, 0px)); align-items: start; }
 .bb-plate { position: sticky; top: 0; background: #fff; border: 1px solid #e4e6e9; border-radius: 20px; padding: 14px; display: grid; gap: 10px; }
 .bb-status { margin: 0; font-size: 14px; color: #6b655f; min-height: 1.5em; font-weight: 500; }
+.bb-photo .bb-stagebox { height: 400px; }
 .bb-stagebox { position: relative; height: 380px; border-radius: 14px; overflow: hidden; background: var(--bb-paper); }
 .bb-stage { position: absolute; inset: 0; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 36px; }
 .bb-shadow { position: absolute; bottom: 24px; left: 50%; width: 240px; height: 22px; transform: translateX(-50%); border-radius: 50%; background: radial-gradient(closest-side, rgba(60,30,10,.28), transparent); }
@@ -231,6 +232,19 @@
 .bb-card:disabled { opacity: .45; cursor: not-allowed; }
 .bb-art { display: grid; place-items: center; overflow: hidden; }
 .bb-art svg { width: 100%; height: 70px; display: block; }
+.bb-art img { width: 100%; height: 70px; object-fit: cover; border-radius: 10px; display: block; background: #f3f4f5; }
+.bb-hero { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .25s ease; }
+.bb-hero.pulse { animation: bbPulse .45s ease; }
+@keyframes bbPulse { 40% { transform: scale(1.04); } }
+.bb-hero.nudge { animation: bbNudge .4s ease; }
+@keyframes bbNudge { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+.bb-photo .bb-stage { display: none; }
+.bb-photo .bb-chips { display: none; }
+.bb-ov { position: absolute; inset-inline: 8px; bottom: 8px; display: flex; flex-wrap: wrap; gap: 6px; pointer-events: none; }
+.bb-ov span { background: rgba(255,255,255,.94); color: #1d1a17; font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 999px; box-shadow: 0 2px 8px rgba(0,0,0,.15); animation: bbChip .3s ease; }
+.bb-ov span.no { color: #b3261e; }
+@keyframes bbChip { from { transform: scale(.7); opacity: 0; } }
+.bb-fly { position: fixed; z-index: 9100; border-radius: 12px; object-fit: cover; pointer-events: none; box-shadow: 0 10px 24px rgba(0,0,0,.25); }
 .bb-name { display: block; font-size: 15px; font-weight: 700; line-height: 1.3; }
 .bb-price { display: block; font-size: 14px; font-weight: 700; color: var(--bb-brand); }
 .bb-price.free { color: #2e7d32; }
@@ -253,6 +267,7 @@
   .bb-grid { grid-template-columns: minmax(0, 1fr); padding-top: 10px; }
   .bb-plate { position: sticky; top: 0; z-index: 2; padding: 10px; border-radius: 0 0 18px 18px; margin: -10px calc(-1 * max(16px, env(safe-area-inset-left, 0px))) 0; border-top: 0; box-shadow: 0 8px 18px rgba(0,0,0,.06); }
   .bb-stagebox { height: 250px; }
+  .bb-photo .bb-stagebox { height: 240px; }
   .bb-chips { display: none; }
 }
 @media (max-width: 440px) { .bb-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } .bb-go { font-size: 15px; } }
@@ -278,6 +293,11 @@
     const base = (P.builder && Array.isArray(P.builder.base) && P.builder.base.length ? P.builder.base : ['patty']).filter(k => ART[k]);
     let size = sizes.length ? sizes[0].name : null, picked = [], removed = new Set(), qty = 1, seedN = 21;
     const layerOf = new Map();   // "g::o" -> عنصر الطبقة
+    // صورة حقيقية من منيو المحل: للإضافة من طبقها المربوط، وللمكوّن الأساسي من إضافة بنفس المكوّن
+    const photoOf = (o) => (o && o.pid && opts.imageOf && opts.imageOf(o.pid)) || '';
+    const basePhoto = (k) => { for (const g of groups) for (const o of g.options) { const a = artFor(g.name, o.name); if (a && a.layer === k && photoOf(o)) return photoOf(o); } return ''; };
+    const pic = (url, alt) => `<img src="${esc(url)}" alt="${esc(alt || '')}" loading="lazy">`;
+    const hero = opts.photo || '';
 
     const root = document.createElement('div');
     root.className = 'bb'; root.setAttribute('role', 'dialog'); root.setAttribute('aria-modal', 'true'); root.dir = ar ? 'rtl' : 'ltr';
@@ -295,17 +315,17 @@
       <div class="bb-body"><div class="bb-grid">
         <div class="bb-plate">
           <p class="bb-status" aria-live="polite"></p>
-          <div class="bb-stagebox"><div class="bb-stage"><div class="bb-shadow"></div><div class="bb-wrap"><div class="bb-stack"></div></div></div></div>
+          <div class="bb-stagebox">${hero ? `<img class="bb-hero" src="${esc(hero)}" alt="${esc(nm(P))}"><div class="bb-ov"></div>` : ''}<div class="bb-stage"><div class="bb-shadow"></div><div class="bb-wrap"><div class="bb-stack"></div></div></div></div>
           <div class="bb-chips"></div>
         </div>
         <div class="bb-steps">${steps.map((s, i) => s.kind === 'base' ? `
           <section class="bb-step ok" data-step="base"><div class="bb-head"><span class="bb-num">${i + 1}</span><h3>${T('مكونات البرقر', 'What is inside')}</h3><span class="bb-rule">${T('اضغط على اللي ما تبيه', 'Tap to remove')}</span></div>
-            <div class="bb-cards">${base.map(k => `<button type="button" class="bb-card on" data-base="${k}"><span class="bb-art">${thumb(k)}</span><span><span class="bb-name">${esc(T(BASE_NAMES[k][0], BASE_NAMES[k][1]))}</span><span class="bb-state">${T('موجود', 'Included')}</span></span><span class="bb-tick">✓</span></button>`).join('')}</div></section>` : s.kind === 'size' ? `
+            <div class="bb-cards">${base.map(k => `<button type="button" class="bb-card on" data-base="${k}"><span class="bb-art">${basePhoto(k) ? pic(basePhoto(k)) : thumb(k)}</span><span><span class="bb-name">${esc(T(BASE_NAMES[k][0], BASE_NAMES[k][1]))}</span><span class="bb-state">${T('موجود', 'Included')}</span></span><span class="bb-tick">✓</span></button>`).join('')}</div></section>` : s.kind === 'size' ? `
           <section class="bb-step" data-step="size"><div class="bb-head"><span class="bb-num">${i + 1}</span><h3>${T('الحجم', 'Size')}</h3><span class="bb-rule">${T('اختر واحد', 'Pick one')}</span></div>
             <div class="bb-cards">${sizes.map((z, zi) => `<button type="button" class="bb-card noart" data-size="${zi}"><span><span class="bb-name">${esc(opts.sizeLabel ? opts.sizeLabel(z) : z.name)}</span><span class="bb-price">${esc(money(opts.unitPrice ? opts.unitPrice(z.name) : z.price))}</span></span><span class="bb-tick">✓</span></button>`).join('')}</div></section>` : `
           <section class="bb-step" data-step="g${s.gi}"><div class="bb-head"><span class="bb-num">${i + 1}</span><h3>${esc(nm(s.g))}</h3><span class="bb-rule ${s.g.required ? 'need' : ''}">${s.g.required ? T('إجباري · اختر واحد', 'Required · pick one') : T('اختياري', 'Optional')}</span></div>
-            <div class="bb-cards">${s.g.options.map((o, oi) => { const a = artFor(s.g.name, o.name); const pr = Number(o.price) || 0; return `<button type="button" class="bb-card ${a ? '' : 'noart'}" data-g="${s.gi}" data-o="${oi}" ${o.available === false ? 'disabled' : ''}>
-              <span class="bb-art">${a ? (a.sauce ? sauceThumb(a.sauce) : thumb(a.layer)) : ''}</span>
+            <div class="bb-cards">${s.g.options.map((o, oi) => { const a = artFor(s.g.name, o.name); const ph = photoOf(o); const pr = Number(o.price) || 0; return `<button type="button" class="bb-card ${a || ph ? '' : 'noart'}" data-g="${s.gi}" data-o="${oi}" ${o.available === false ? 'disabled' : ''}>
+              <span class="bb-art">${ph ? pic(ph, nm(o)) : a ? (a.sauce ? sauceThumb(a.sauce) : thumb(a.layer)) : ''}</span>
               <span><span class="bb-name">${esc(nm(o))}</span><span class="bb-price ${pr ? '' : 'free'}">${pr ? '+' + esc(money(pr)) : T('مجاناً', 'Free')}</span></span><span class="bb-tick">✓</span></button>`; }).join('')}</div></section>`).join('')}
         </div>
       </div></div>
@@ -314,6 +334,7 @@
         ${opts.canOrder ? `<div class="bb-qty"><button type="button" data-q="-1" aria-label="${T('أقل', 'Less')}">−</button><span class="bb-qn">1</span><button type="button" data-q="1" aria-label="${T('أكثر', 'More')}">+</button></div>` : ''}
         <button class="bb-go" type="button">${opts.canOrder ? T('أضف للطلب', 'Add to order') : T('خلّصت', 'Done')}</button>
       </div>`;
+    if (hero) root.classList.add('bb-photo');
     document.body.appendChild(root);
     const $ = (sel) => root.querySelector(sel);
     const prevOverflow = document.body.style.overflow; document.body.style.overflow = 'hidden';
@@ -367,6 +388,20 @@
       layerOf.delete(key(g.name, o.name)); drop(L);
     }
     function say(t) { $('.bb-status').textContent = t; }
+    // صورة البطاقة تطير وتنزل على صورة البرقر (إضافة)، أو الصورة تهتز (شيل)
+    function fly(card, adding) {
+      const h = $('.bb-hero'); if (!h) return;
+      if (!adding) { h.classList.remove('nudge', 'pulse'); void h.offsetWidth; h.classList.add('nudge'); return; }
+      const src = card && card.querySelector('.bb-art img, .bb-art svg');
+      const box = $('.bb-stagebox').getBoundingClientRect();
+      if (src && src.tagName === 'IMG' && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        const r = src.getBoundingClientRect(), f = document.createElement('img');
+        f.className = 'bb-fly'; f.src = src.src; Object.assign(f.style, { left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px' });
+        root.appendChild(f);
+        const dx = box.left + box.width / 2 - (r.left + r.width / 2), dy = box.top + box.height * .55 - (r.top + r.height / 2);
+        f.animate([{ transform: 'translate(0,0) scale(1)', opacity: 1 }, { transform: `translate(${dx}px,${dy}px) scale(.35)`, opacity: .2 }], { duration: 520, easing: 'cubic-bezier(.3,.7,.3,1)' }).onfinish = () => { f.remove(); h.classList.remove('nudge', 'pulse'); void h.offsetWidth; h.classList.add('pulse'); };
+      } else { h.classList.remove('nudge', 'pulse'); void h.offsetWidth; h.classList.add('pulse'); }
+    }
 
     // ─── الاختيارات ───
     root.addEventListener('click', (e) => {
@@ -375,6 +410,7 @@
       const bs = e.target.closest('[data-base]');
       if (bs) {
         const k = bs.dataset.base, label = T(BASE_NAMES[k][0], BASE_NAMES[k][1]);
+        fly(bs, removed.has(k));
         if (removed.has(k)) {
           removed.delete(k);
           // يرجع مكانه تقريباً: فوق الخبز السفلي وتحت الإضافات
@@ -393,6 +429,7 @@
       const c = e.target.closest('[data-g]'); if (!c || c.disabled) return;
       const g = groups[Number(c.dataset.g)], o = g.options[Number(c.dataset.o)];
       const on = picked.some(x => x.g === g.name && x.o === o.name);
+      fly(c, !on);
       if (on) { picked = picked.filter(x => !(x.g === g.name && x.o === o.name)); removeLayer(g, o); say(T(`شلنا ${nm(o)}.`, `Removed ${nm(o)}.`)); }
       else {
         if (g.required) picked.filter(x => x.g === g.name).forEach(x => { removeLayer(g, g.options.find(oo => oo.name === x.o) || { name: x.o }); });
@@ -410,6 +447,9 @@
       root.querySelectorAll('[data-step]').forEach(s => { const k = s.dataset.step; if (k === 'base') return; s.classList.toggle('ok', k === 'size' ? !!size : picked.some(x => x.g === groups[Number(k.slice(1))].name)); });
       const unit = opts.price ? opts.price(size, picked) : null;
       $('.bb-total').textContent = unit == null ? '—' : money(Math.round(unit * qty * 100) / 100);
+      const ov = $('.bb-ov');
+      if (ov) ov.innerHTML = [...removed].map(k => `<span class="no">${esc(T('بدون ', 'No ') + T(BASE_NAMES[k][0], BASE_NAMES[k][1]))}</span>`).join('')
+        + picked.map(x => { const g = groups.find(gg => gg.name === x.g); const o = g && g.options.find(oo => oo.name === x.o); return `<span>+ ${esc(nm(o) || x.o)}</span>`; }).join('');
       $('.bb-chips').innerHTML = [...removed].map(k => `<span class="bb-chip">${esc(T('بدون ', 'No ') + T(BASE_NAMES[k][0], BASE_NAMES[k][1]))}</span>`).join('')
         + picked.map(x => { const g = groups.find(gg => gg.name === x.g); const o = g && g.options.find(oo => oo.name === x.o); return `<span class="bb-chip">+ ${esc(nm(o) || x.o)}</span>`; }).join('');
       const m = missing();
