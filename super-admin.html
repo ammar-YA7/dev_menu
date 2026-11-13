@@ -598,8 +598,8 @@
     };
   }
 
-  const FEAT_COLOR = { builder: 'text-red-700', freepager: 'text-emerald-700', menu: 'text-emerald-700', chat: 'text-fuchsia-700', ixpro: 'text-teal-700', pager: 'text-amber-600', notify: 'text-orange-600', waitlist: 'text-sky-700', loyalty: 'text-violet-700' };
-  const FEAT_BADGE = { builder: 'bg-red-500/10 text-red-800 border-red-500/20', freepager: 'bg-emerald-500/10 text-emerald-800 border-emerald-500/20', menu: 'bg-emerald-500/10 text-emerald-800 border-emerald-500/20', chat: 'bg-fuchsia-500/10 text-fuchsia-800 border-fuchsia-500/20', notify: 'bg-orange-500/10 text-orange-800 border-orange-500/20', ixpro: 'bg-teal-500/10 text-teal-800 border-teal-500/20', pager: 'bg-amber-400/15 text-amber-900 border-amber-500/25', waitlist: 'bg-sky-500/10 text-sky-700 border-sky-500/20', loyalty: 'bg-violet-500/10 text-violet-700 border-violet-500/20' };
+  const FEAT_COLOR = { freepager: 'text-emerald-700', menu: 'text-emerald-700', chat: 'text-fuchsia-700', ixpro: 'text-teal-700', pager: 'text-amber-600', notify: 'text-orange-600', waitlist: 'text-sky-700', loyalty: 'text-violet-700' };
+  const FEAT_BADGE = { freepager: 'bg-emerald-500/10 text-emerald-800 border-emerald-500/20', menu: 'bg-emerald-500/10 text-emerald-800 border-emerald-500/20', chat: 'bg-fuchsia-500/10 text-fuchsia-800 border-fuchsia-500/20', notify: 'bg-orange-500/10 text-orange-800 border-orange-500/20', ixpro: 'bg-teal-500/10 text-teal-800 border-teal-500/20', pager: 'bg-amber-400/15 text-amber-900 border-amber-500/25', waitlist: 'bg-sky-500/10 text-sky-700 border-sky-500/20', loyalty: 'bg-violet-500/10 text-violet-700 border-violet-500/20' };
   function renderKpis() {
     const n = counts();
     document.getElementById('stores-count').textContent = n.all;
@@ -678,7 +678,7 @@
     notify: 'رسالة لزبائن البيجر', waitlist: 'تسجيل في الانتظار', stamps: 'ختم وهدية', lmsg: 'رسالة ولاء'
   };
   // كل ميزة وش يدل إنها مستخدمة (المنيو التفاعلي ما ينقاس لحاله: زياراته ضمن زيارات المنيو)
-  const FEAT_METRICS = { menu: ['views', 'orders'], chat: ['chat'], ixpro: [], builder: [], pager: ['pager', 'cards'], notify: ['notify'], waitlist: ['waitlist'], loyalty: ['stamps', 'lmsg'] };
+  const FEAT_METRICS = { menu: ['views', 'orders'], chat: ['chat'], ixpro: [], pager: ['pager', 'cards'], notify: ['notify'], waitlist: ['waitlist'], loyalty: ['stamps', 'lmsg'] };
   const HEALTH = {
     idle:   { label: 'خامل', cls: 'bg-red-500/10 text-red-700 border-red-500/25', rank: 0 },
     down:   { label: 'قلّ استخدامه', cls: 'bg-amber-400/20 text-amber-900 border-amber-500/40', rank: 1 },
@@ -737,7 +737,7 @@
           <tr class="border-t border-ink/[0.07]">
             <td class="py-2.5 font-bold whitespace-nowrap"><i class="ph-bold ${DMPlans.FEATURES[r.f].icon} ${FEAT_COLOR[r.f]}"></i> ${DMPlans.FEATURES[r.f].name}</td>
             <td>${cell(r.f, 'on', r.on, '')}</td>
-            <td>${r.measurable ? cell(r.f, 'used', r.used, 'text-emerald-700') : `<span class="text-[11px] text-ink/45">${r.f === 'builder' ? 'ضمن طلبات المنيو' : 'ضمن زيارات المنيو'}</span>`}</td>
+            <td>${r.measurable ? cell(r.f, 'used', r.used, 'text-emerald-700') : '<span class="text-[11px] text-ink/45">ضمن زيارات المنيو</span>'}</td>
             <td>${r.measurable ? cell(r.f, 'unused', r.unused, 'text-red-700') : '<span class="text-ink/35">—</span>'}</td>
             <td class="text-[11.5px] text-ink/70">${r.totals.map(([k, n]) => `${num(n)} ${METRICS[k]}`).join(' · ') || '—'}</td>
           </tr>`).join('')}</tbody>

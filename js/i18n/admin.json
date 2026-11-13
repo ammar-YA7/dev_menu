@@ -1771,20 +1771,5 @@
   "تمت استعادة الحساب، وعاد متجرك كما كان": "Your account has been restored, and your store is back as it was",
   "لم يتم الحذف: اكتب كلمة «حذف» للتأكيد": "Not deleted: type «حذف» to confirm",
   "تعذر حذف الحساب": "Could not delete the account",
-  "تعذرت استعادة الحساب": "Could not restore the account",
-  "ركّب برقرك": "Build your burger",
-  "إضافة للمنيو: تتيح للعميل تركيب البرقر أو الساندويتش بنفسه طبقةً طبقة من إضافات الطبق في المنيو، بألوان هوية المنشأة، ويصل طلبه مباشرة إلى الكاشير": "Menu add-on: lets customers build their burger or sandwich layer by layer from the dish extras on your menu, in your brand colors, and sends the order straight to the cashier",
-  "«ركّب برقرك»: يركّبه العميل بنفسه": "\"Build your burger\": customers build it themselves",
-  "يفتح للعميل شاشة يركّب فيها الطبق طبقةً طبقة من الإضافات أعلاه، بالأسماء والأسعار نفسها، وبألوان هويتك. مناسب للبرقر والساندويتشات.": "Opens a screen where customers build the dish layer by layer from the extras above, with the same names and prices, in your brand colors. Best for burgers and sandwiches.",
-  "مكونات الطبق الأساسية قبل الإضافات": "Base ingredients before extras",
-  "لحم": "Beef",
-  "دجاج": "Chicken",
-  "جبن": "Cheese",
-  "خس": "Lettuce",
-  "طماطم": "Tomato",
-  "مخلل": "Pickles",
-  "هالبينو": "Jalapeño",
-  "بصل": "Onion",
-  "اختر مكوّناً أساسياً واحداً على الأقل": "Pick at least one base ingredient",
-  "المكونات الأساسية حدها 6": "Up to 6 base ingredients"
+  "تعذرت استعادة الحساب": "Could not restore the account"
 }

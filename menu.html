@@ -1821,35 +1821,9 @@
     if (card && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openModal(card.dataset.product); }
   });
 
-  // ─── «ركّب برقرك» (إضافة مدفوعة): الطبق المفعّل عليه يفتح شاشة التركيب بدل نافذة الطبق ───
-  const builderOn = (p) => !!(project && project.builder_on && p && p.builder && (extrasOf(p).length || sizesOf(p).length));
-  let builderLoading = null;
-  function loadBuilder() {
-    if (window.DMBuilder) return Promise.resolve();
-    return builderLoading || (builderLoading = new Promise((res, rej) => {
-      const sc = document.createElement('script'); sc.src = '/js/builder.js?v=4';
-      sc.onload = res; sc.onerror = () => { builderLoading = null; rej(new Error('builder')); };
-      document.head.appendChild(sc);
-    }));
-  }
-  function openBuilder(p) {
-    loadBuilder().then(() => DMBuilder.open({
-      product: p, lang: currentLang,
-      store: { name: project.name, color: project.accent_color, logo: safeUrl(project.logo_url) },
-      money, sizes: sizesOf(p), sizeLabel: sizeName, unitPrice: (sz) => unitPrice(p, sz),
-      // صور المحل نفسه: صورة الطبق فوق، وصورة كل إضافة مربوطة بطبقها في المنيو
-      photo: safeUrl(p.image_url) ? sized(safeUrl(p.image_url), 900) : '',
-      imageOf: (pid) => { const x = productById(pid); const u = x && safeUrl(x.image_url); return u ? sized(u, 300) : ''; },
-      price: (sz, extras) => linePrice(p, { size: sz, extras }),
-      canOrder: orderingOn() && p.is_available !== false,
-      onAdd: ({ size, extras, qty, note }) => addToCart(p.id, qty, size, note || null, extras)
-    })).catch(() => openModal(p.id, true));   // لو ما تحمّل الملف: نافذة الطبق العادية
-  }
-
-  function openModal(id, plain) {
+  function openModal(id) {
     const p = allProducts.find(x => String(x.id) === String(id));
     if (!p) return;
-    if (!plain && builderOn(p)) return openBuilder(p);
     const img = safeUrl(p.image_url), vid = safeUrl(p.video_url);
     const modalImg = document.getElementById('modalImg'), modalVid = document.getElementById('modalVid');
     modalImg.parentElement.classList.toggle('hidden', !img && !vid);
@@ -2014,8 +1988,7 @@
   }
 
   function addToCart(id, qty, size = null, note = null, extras = []) {
-    // الملاحظة: من خانة الكاشير (طلب مباشر)، أو من «ركّب برقرك» (مثل: بدون مخلل) في أي وضع
-    note = String(note || '').trim().slice(0, 100) || null;
+    note = directMode() ? (String(note || '').trim().slice(0, 100) || null) : null;
     const p = productById(id);
     if (!p || p.is_available === false || !orderingOn()) return;
     if (sizesOf(p).length && unitPrice(p, size) === null) return openModal(id);
@@ -2097,7 +2070,6 @@
             <div class="flex-1 min-w-0">
               <p class="text-sm font-bold text-white leading-snug line-clamp-2">${esc(lineName(p, c))}</p>
               ${c.extras && c.extras.length ? `<p class="text-[11.5px] font-bold text-gray-300 mt-0.5">+ ${esc(exText(p, c.extras))}</p>` : ''}
-              ${c.note && !directMode() ? `<p class="text-[11.5px] font-bold text-amber-200 mt-0.5">${esc(c.note)}</p>` : ''}
               <p class="text-[11px] text-gray-400 mt-0.5">${esc(money(round2(u * c.qty)))}</p>
             </div>
             <div class="flex items-center bg-white/10 border border-white/15 rounded-xl shrink-0" dir="ltr">
@@ -2254,8 +2226,7 @@
       const u = linePrice(p, c); if (u == null) return '';
       const sub = round2(u * c.qty);
       const ex = c.extras && c.extras.length ? (ar ? ` + ${c.extras.map(x => x.o).join('، ')}` : ` + ${exText(p, c.extras)}`) : '';
-      const nt = c.note ? ` (${c.note})` : '';
-      return ar ? `• ${c.qty} × ${p.name}${c.size ? ` (${c.size})` : ''}${ex}${nt} — ${sub} ${cur}` : `• ${c.qty} × ${lineName(p, c)}${ex}${nt} — ${sub} ${cur}`;
+      return ar ? `• ${c.qty} × ${p.name}${c.size ? ` (${c.size})` : ''}${ex} — ${sub} ${cur}` : `• ${c.qty} × ${lineName(p, c)}${ex} — ${sub} ${cur}`;
     }).filter(Boolean);
     const { total } = cartTotals();
     const baseTotal = round2(cart.reduce((n, c) => { const p = productById(c.id); const b = p && basePrice(p, c.size); return b == null ? n : n + (b + exSum(p, c.extras)) * c.qty; }, 0));

@@ -7,14 +7,6 @@
 const { crypto, handler, rest, rpc, q, storage, publicUrl, ownsMediaUrl, SUPABASE_URL, BUCKET, ApiError, getUser, isSuperAdmin, str, httpUrl, waNumber, int, readBody, SLUG_RE, RESERVED_SLUGS, CURRENCIES, SITE, storeLink, loyaltyHome, later, followParentFeatures, FIELDS, normalizeSettings, riyadhDayStart, positionOf, emailTemplate, statusUrlFor, sendMail, mailConfigured, sendPush, pushPublicKey, cleanSubscription, topic, storeTopics, poke, normalizeLoyalty, validPoint, PLANS, tr, wallet, queue, pushWalletCards, runAssistant, pagerReadyNotice, walletNotice, loyaltyMessages, loyaltyNearLines, stampPagerTicket, purchaseStamp, tagBranch, newStampCode, parseMemberQr, cooldownLeft, leftText, bySort, COFFEE_TYPES, SECTORS, LINKS_SECTIONS, BUSINESS_TYPES, ALLERGENS, PROCESS, ROAST, METHODS, DELIVERY, THEMES, MAX_SIZES, MAX_COUPONS, OCCASION_PRESETS, STICKER_POSITIONS, STICKER_LIB, STICKER_SIZES, STICKER_ANIMS, MAX_OCCASIONS, MAX_STICKERS, isDay, cleanOccasions, validPrice, round2, cleanSizes, cleanExtras, riyadhDate, MAX_ORDER_NUMBERS, MAX_CUSTOM_LINKS, phoneNumber, DESK_ACTIONS, DESK_KEY_RE, MENU_ONLY, context, familyIds, storeContext, familyOf, categoryIn, nextOrderIn, SHARED_PRODUCT_FIELDS, guestKeysOf, guestHistory, patchStore, cleanCoffee, IMAGE_TYPES, VIDEO_TYPES, PAGER_MAX_RINGS, ringTicket, refreshWalletCards, PAGER_MSG_GAP, winbackSettings, redeemMessage, FEEDBACK_REASONS, absenceDue, readyRewards } = require('./shared');
 const NEXT = require('./next');
 
-// إعداد «ركّب برقرك» للطبق: فاضي = ما يتركّب، وإلا الطبقات الأساسية من مكتبة الرسومات
-const BUILDER_BASE = ['patty', 'chicken', 'cheese', 'lettuce', 'tomato', 'pickles', 'jalapeno', 'onion'];
-function cleanBuilder(v) {
-  if (!v || typeof v !== 'object' || v.on === false) return null;
-  const base = (Array.isArray(v.base) ? v.base : []).filter((k, i, a) => BUILDER_BASE.includes(k) && a.indexOf(k) === i).slice(0, 6);
-  return { base: base.length ? base : ['patty'] };
-}
-
 module.exports.pre = async function pre(action, req, b) {
 
   if (action === 'coupons' && req.method === 'GET') {
@@ -314,8 +306,6 @@ module.exports.post = async function post(action, req, b, env) {
     if (sendCalories) payload.calories = calories;
     if (b.extras !== undefined) { const ex = cleanExtras(b.extras); payload.extras = ex.length ? ex : null; }
     if (COFFEE_TYPES.includes(store.business_type)) payload.coffee = cleanCoffee(b.coffee);
-    // «ركّب برقرك»: يتحفظ بس إذا الإضافة ضمن باقة المحل (بدونها يبقى المحفوظ مثل ما هو)
-    if (b.builder !== undefined && PLANS.has(store, 'builder')) payload.builder = cleanBuilder(b.builder);
     if (b.image_url !== undefined) {
       if (b.image_url && !ownsMediaUrl(b.image_url, sid)) throw new ApiError(400, 'الصورة غير تابعة لمتجرك');
       payload.image_url = b.image_url || '';
