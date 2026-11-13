@@ -1756,5 +1756,20 @@
   "رابط تيك توك غير صحيح": "Invalid TikTok link",
   "رابط انستجرام غير صحيح": "Invalid Instagram link",
   "رابط سناب شات غير صحيح": "Invalid Snapchat link",
-  "رابط الموقع غير صحيح": "Invalid website link"
+  "رابط الموقع غير صحيح": "Invalid website link",
+  "حذف الحساب": "Delete account",
+  "استعادة الحساب": "Restore account",
+  "الحساب مجدول للحذف": "Account scheduled for deletion",
+  "الحساب متوقف": "Account stopped",
+  "مجدول للحذف": "Scheduled for deletion",
+  "لاحقاً": "Later",
+  "تواصل مع الإدارة": "Contact support",
+  "حسابك مجدول للحذف": "Your account is scheduled for deletion",
+  "للتأكيد، اكتب كلمة «حذف»": "To confirm, type the Arabic word «حذف»",
+  "عند حذف الحساب يتوقف متجرك وجميع فروعه فوراً، ولا تظهر المنيو والخدمات لعملائك. وتبقى بياناتك محفوظة لمدة 30 يوماً، يمكنك خلالها استعادة الحساب بتسجيل الدخول. وإذا لم تسجّل الدخول وتستعد الحساب خلال هذه المدة، تُحذف جميع بياناته نهائياً ولا يمكن استرجاعها.": "Deleting your account stops your store and all its branches right away, and your menu and services no longer appear to your customers. Your data is kept for 30 days, during which you can sign in and restore the account. If you do not sign in and restore it within that time, all of its data is permanently deleted and cannot be recovered.",
+  "تم إيقاف الحساب، وأرسلنا تأكيداً إلى بريدك": "Your account has been stopped, and we sent a confirmation to your email",
+  "تمت استعادة الحساب، وعاد متجرك كما كان": "Your account has been restored, and your store is back as it was",
+  "لم يتم الحذف: اكتب كلمة «حذف» للتأكيد": "Not deleted: type «حذف» to confirm",
+  "تعذر حذف الحساب": "Could not delete the account",
+  "تعذرت استعادة الحساب": "Could not restore the account"
 }

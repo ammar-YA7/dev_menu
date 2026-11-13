@@ -3,7 +3,7 @@
 //   ما يُستدعى مباشرة من زر «حذف»: الحذف صار أرشفة (deleted_at)، وهذا يشتغل بعد 30 يوم
 //   من المهمة اليومية، أو لما المدير يضغط «احذف نهائياً الحين» على محل مؤرشف
 // =====================================================================
-const { rest, rpc, storage, storagePathFromUrl, BUCKET, ApiError } = require('./core');
+const { rest, rpc, storage, storagePathFromUrl, BUCKET, ApiError, int } = require('./core');
 
 const ARCHIVE_DAYS = 30;
 
@@ -51,4 +51,47 @@ async function purgeExpired() {
   return done;
 }
 
-module.exports = { purgeStore, purgeExpired, ARCHIVE_DAYS };
+// ─── الأرشفة (الحذف المؤجل) والاسترجاع ───
+// المحل يتوقف ويختفي، ويتمسح نهائياً بعد 30 يوم. الفرع ينفصل عن حسابه وقت الأرشفة
+// (ما ينحسب في السعر ولا يتشغّل مع الحساب)، و deleted_info يحفظ وش كان عليه عشان الاسترجاع
+// by: 'owner' (صاحب المحل حذف حسابه) أو 'admin'
+async function archiveOne(c, by, extra = {}) {
+  const now = new Date().toISOString();
+  const info = { was_active: c.is_active !== false, parent_id: c.parent_id || null, by, ...extra };
+  await rest(`clients?id=eq.${c.id}`, { method: 'PATCH', body: { deleted_at: now, deleted_info: info, is_active: false, parent_id: null } });
+}
+// الحساب كله: المتجر الرئيسي وفروعه
+async function archiveAccount(id, by) {
+  const main = (await rest(`clients?id=eq.${id}&select=id,parent_id,is_active,deleted_at`))[0];
+  if (!main) throw new ApiError(404, 'المتجر غير موجود');
+  if (main.deleted_at) return main;
+  const kids = await rest(`clients?parent_id=eq.${id}&deleted_at=is.null&select=id,parent_id,is_active`);
+  for (const k of kids) await archiveOne(k, by, { with_account: true });
+  await archiveOne(main, by);
+  return (await rest(`clients?id=eq.${id}&select=*`))[0];
+}
+async function restoreOne(c, parentId) {
+  const info = c.deleted_info || {};
+  await rest(`clients?id=eq.${c.id}`, { method: 'PATCH', body: { deleted_at: null, deleted_info: null, is_active: info.was_active !== false, parent_id: parentId || null } });
+}
+// يرجّع المحل مثل ما كان، ولو متجر رئيسي يرجّع معه الفروع اللي انحذفت معه
+async function restoreAccount(id) {
+  const c = (await rest(`clients?id=eq.${id}&select=id,deleted_at,deleted_info`))[0];
+  if (!c) throw new ApiError(404, 'المتجر غير موجود');
+  if (!c.deleted_at) return (await rest(`clients?id=eq.${id}&select=*`))[0];
+  const info = c.deleted_info || {};
+  if (info.parent_id) {
+    const p = (await rest(`clients?id=eq.${int(info.parent_id)}&select=id,deleted_at`).catch(() => []))[0];
+    if (!p) throw new ApiError(400, 'المتجر الرئيسي لهذا الفرع انحذف نهائياً، ما نقدر نرجّع الفرع', 'PARENT_GONE');
+    if (p.deleted_at) throw new ApiError(400, 'استرجع المتجر الرئيسي أول، وبعدها الفرع', 'PARENT_ARCHIVED');
+    await restoreOne(c, p.id);
+  } else {
+    await restoreOne(c, null);
+    const kids = await rest(`clients?deleted_at=not.is.null&deleted_info->>parent_id=eq.${id}&deleted_info->>with_account=eq.true&select=id,deleted_info`).catch(() => []);
+    for (const k of kids) await restoreOne(k, id);
+  }
+  return (await rest(`clients?id=eq.${id}&select=*`))[0];
+}
+const purgeDate = (deletedAt) => new Date(Date.parse(deletedAt) + ARCHIVE_DAYS * 864e5);
+
+module.exports = { purgeStore, purgeExpired, archiveOne, archiveAccount, restoreAccount, purgeDate, ARCHIVE_DAYS };

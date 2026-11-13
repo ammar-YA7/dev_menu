@@ -289,6 +289,65 @@
     banner.innerHTML = `<p class="text-xs font-bold ${full ? 'text-red-800' : 'text-amber-800'} flex items-center gap-2"><i class="ph-bold ${full ? 'ph-warning-circle' : 'ph-clock'}"></i> ${esc(text)}</p>
       <button type="button" onclick="openPlan()" class="${full ? 'bg-red-600 hover:bg-red-700' : 'bg-amber-500 hover:bg-amber-600'} text-white px-4 py-2 rounded-xl text-xs font-bold transition">اشترك في البيجر</button>`;
   }
+  // ─── حذف الحساب: يتوقف فوراً، ويُحذف نهائياً بعد 30 يوماً ما لم يسجّل صاحبه الدخول ويستعده ───
+  const DELETE_DAYS = 30;
+  const purgeText = () => new Date(Date.parse(client.deleted_at) + DELETE_DAYS * 864e5).toLocaleDateString('ar-SA-u-ca-gregory-nu-latn', { day: 'numeric', month: 'long', year: 'numeric' });
+  const deletedByOwner = () => !!(client.deleted_info && client.deleted_info.by === 'owner');
+  const adminView = () => new URLSearchParams(location.search).has('client');
+  let restoreAsked = false;
+  function renderDangerBox() {
+    const box = document.getElementById('danger-box');
+    if (!box) return;
+    if (client.parent_id || adminView()) { box.classList.add('hidden'); return; }
+    box.classList.remove('hidden');
+    if (client.deleted_at) {
+      box.innerHTML = deletedByOwner() ? `
+        <h3 class="text-sm font-bold text-brick flex items-center gap-1.5"><i class="ph-bold ph-clock-countdown"></i> الحساب مجدول للحذف</h3>
+        <p class="text-[13px] text-ink leading-relaxed">تم إيقاف متجرك وجميع فروعه بناءً على طلبك، وستُحذف جميع بيانات الحساب نهائياً بتاريخ <b>${purgeText()}</b>. لاستعادة الحساب كما كان، اضغط «استعادة الحساب» قبل هذا التاريخ.</p>
+        <button type="button" onclick="restoreAccount()" class="bg-brand hover:bg-brand-dark text-cream px-4 py-2.5 rounded-xl text-[13px] font-bold"><i class="ph-bold ph-arrow-counter-clockwise"></i> استعادة الحساب</button>` : `
+        <h3 class="text-sm font-bold text-brick flex items-center gap-1.5"><i class="ph-bold ph-prohibit"></i> الحساب متوقف</h3>
+        <p class="text-[13px] text-ink leading-relaxed">تم إيقاف حسابك من إدارة المنصة، وستُحذف بياناته نهائياً بتاريخ <b>${purgeText()}</b>. للاستفسار أو طلب الاستعادة، تواصل مع الإدارة.</p>
+        <button type="button" onclick="contactAdmin('suspended', 'أرغب في الاستفسار عن إيقاف حسابي واستعادته.')" class="bg-brand text-cream px-4 py-2.5 rounded-xl text-[13px] font-bold"><i class="ph-bold ph-chat-circle-text"></i> تواصل مع الإدارة</button>`;
+      // عند الدخول: نسأله مرة وحدة إذا يبي يستعيد حسابه
+      if (deletedByOwner() && !restoreAsked) { restoreAsked = true; setTimeout(askRestore, 600); }
+      return;
+    }
+    box.innerHTML = `
+      <h3 class="text-sm font-bold text-ink flex items-center gap-1.5"><i class="ph-bold ph-trash"></i> حذف الحساب</h3>
+      <p class="text-[13px] text-ink leading-relaxed">عند حذف الحساب يتوقف متجرك وجميع فروعه فوراً، ولا تظهر المنيو والخدمات لعملائك. وتبقى بياناتك محفوظة لمدة ${DELETE_DAYS} يوماً، يمكنك خلالها استعادة الحساب بتسجيل الدخول. وإذا لم تسجّل الدخول وتستعد الحساب خلال هذه المدة، تُحذف جميع بياناته نهائياً ولا يمكن استرجاعها.</p>
+      <p class="text-[12px] text-ink">تخضع المبالغ المدفوعة لـ<a href="refund.html" target="_blank" rel="noopener" class="underline underline-offset-2">سياسة الإلغاء والاسترداد</a>.</p>
+      <button type="button" onclick="deleteAccount()" class="border border-brick/40 text-brick hover:bg-brick/5 px-4 py-2.5 rounded-xl text-[13px] font-bold"><i class="ph-bold ph-trash"></i> حذف الحساب</button>`;
+  }
+  async function deleteAccount() {
+    const day = new Date(Date.now() + DELETE_DAYS * 864e5).toLocaleDateString('ar-SA-u-ca-gregory-nu-latn', { day: 'numeric', month: 'long', year: 'numeric' });
+    const v = await DMDialog.form({
+      title: 'حذف الحساب', icon: 'ph-warning', tone: 'danger', confirmText: 'حذف الحساب', cancelText: 'تراجع',
+      subtitle: `سيتوقف متجرك وجميع فروعه فوراً، وستُحذف جميع بيانات الحساب نهائياً بتاريخ ${day}، ما لم تسجّل الدخول وتستعد الحساب قبل ذلك.`,
+      fields: [{ name: 'confirm', label: 'للتأكيد، اكتب كلمة «حذف»', required: true, maxlength: 10 }]
+    });
+    if (!v) return;
+    if (String(v.confirm || '').trim() !== 'حذف') return showToast('لم يتم الحذف: اكتب كلمة «حذف» للتأكيد', true);
+    try {
+      const r = await api('account-delete', { confirm: 'حذف' });
+      Object.assign(client, r.store || {});
+      restoreAsked = true;
+      renderSubscriptionStatus();
+      showToast('تم إيقاف الحساب، وأرسلنا تأكيداً إلى بريدك');
+    } catch (e) { showToast(e.message || 'تعذر حذف الحساب', true); }
+  }
+  async function restoreAccount() {
+    try {
+      const r = await api('account-restore', {});
+      Object.assign(client, r.store || {}, { deleted_at: null, deleted_info: null });
+      showToast('تمت استعادة الحساب، وعاد متجرك كما كان');
+      setTimeout(() => location.reload(), 900);
+    } catch (e) { showToast(e.message || 'تعذرت استعادة الحساب', true); }
+  }
+  async function askRestore() {
+    const ok = await DMDialog.confirm({ title: 'حسابك مجدول للحذف', message: `سيُحذف حسابك وجميع بياناته نهائياً بتاريخ ${purgeText()}. هل ترغب في استعادته الآن؟`, confirmText: 'استعادة الحساب', cancelText: 'لاحقاً', tone: 'success' });
+    if (ok) restoreAccount();
+  }
+
   function renderSubscriptionStatus() {
     const box = document.getElementById('subscription-info');
     const status = client.subscription_status;
@@ -307,7 +366,7 @@
     const graceText = graceEnd ? new Date(graceEnd).toLocaleDateString('ar-SA-u-ca-gregory-nu-latn', { day: 'numeric', month: 'long' }) : '';
 
     let pill, pillCls, note = '';
-    if (client.deleted_at)       { pill = 'محذوف'; pillCls = 'bg-brick/10 text-brick'; note = `انحذف متجرك وتوقف عن الزبائن، وينمسح نهائياً يوم ${new Date(Date.parse(client.deleted_at) + 30 * 864e5).toLocaleDateString('ar-SA-u-ca-gregory-nu-latn', { day: 'numeric', month: 'long' })}. إذا تبي ترجعه تواصل مع الإدارة قبلها.`; }
+    if (client.deleted_at)       { pill = 'مجدول للحذف'; pillCls = 'bg-brick/10 text-brick'; note = `الحساب متوقف ومجدول للحذف النهائي بتاريخ ${purgeText()}.`; }
     else if (suspended)          { pill = 'موقوف'; pillCls = 'bg-brick/10 text-brick'; note = 'المتجر موقوف من الإدارة، والمنيو ما يظهر للزبائن.'; }
     else if (expired)            { pill = 'منتهي'; pillCls = 'bg-brick/10 text-brick'; note = 'انتهى اشتراكك، والمنيو ما يظهر للزبائن. اختر باقتك ويرجع على طول.'; }
     else if (free)               { pill = 'الباقة المجانية'; pillCls = 'bg-emerald-600/10 text-emerald-800'; note = `البيجر شغال لك مجاناً (${DMPlans.FREE.pager} رقم بالشهر لفرع واحد). اشترك لتضيف بطاقة النداء والرسائل وبقية الخدمات.`; }
@@ -349,7 +408,9 @@
     const banner = document.getElementById('renew-banner');
     if (!free && (!live || (left !== null && left <= 7))) {   // يظهر قبل الانتهاء بأسبوع، ويحمرّ في آخر 3 أيام
       const danger = !live || inGrace || left <= 3;
-      const text = client.deleted_at ? 'انحذف متجرك والمنيو لا يظهر للزبائن. تواصل مع الإدارة خلال 30 يوم من الحذف إذا تبي ترجعه.'
+      const text = client.deleted_at ? (deletedByOwner()
+          ? `حسابك مجدول للحذف النهائي بتاريخ ${purgeText()}، والمنيو والخدمات لا تظهر لعملائك. يمكنك استعادة الحساب الآن ليعود كما كان.`
+          : `تم إيقاف حسابك من إدارة المنصة، وسيُحذف نهائياً بتاريخ ${purgeText()}. للاستفسار أو الاستعادة، تواصل مع الإدارة.`)
         : suspended ? 'متجرك موقوف من الإدارة، والمنيو لا يظهر للزبائن حالياً.'
         : !live ? 'انتهى اشتراكك، والمنيو لا يظهر للزبائن حالياً. جدّد الآن ليعود فوراً.'
         : inGrace ? `انتهى اشتراكك. المنيو يعمل لعملائك حتى ${graceText} فقط، جدّد الآن حتى لا يتوقف.`
@@ -360,13 +421,16 @@
         <p class="text-xs font-bold ${danger ? 'text-red-800' : 'text-amber-800'} flex items-center gap-2">
           <i class="ph-bold ${danger ? 'ph-warning-circle' : 'ph-clock'}"></i> ${esc(text)}
         </p>
-        ${suspended
+        ${client.deleted_at && deletedByOwner()
+          ? `<button type="button" onclick="restoreAccount()" class="bg-brand hover:bg-brand-dark text-cream px-3.5 py-2 rounded-lg text-[12px] font-bold"><i class="ph-bold ph-arrow-counter-clockwise"></i> استعادة الحساب</button>`
+          : suspended
           ? `<button type="button" onclick="contactAdmin('suspended', 'حسابي موقوف، أبغى أعرف السبب وكيف أرجّعه.')" class="bg-brand text-cream px-3 py-1.5 rounded-lg text-[11px] font-black"><i class="ph-bold ph-chat-circle-text"></i> راسل الإدارة</button>`
           : `<button type="button" onclick="goToPlans()" class="bg-brand hover:bg-brand-dark text-cream px-3.5 py-2 rounded-lg text-[12px] font-bold">${requestedPlan() ? 'تابع طلبك' : 'اختر باقتك'}</button>`}`;
       banner.classList.remove('hidden');
     } else {
       banner.classList.add('hidden');
     }
+    renderDangerBox();
 
     const chip = document.getElementById('store-status');
     const chipColor = inGrace ? 'bg-amber-400' : free ? 'bg-green-400' : live ? (status === 'trial' ? 'bg-blue-400' : 'bg-green-400') : 'bg-red-400';

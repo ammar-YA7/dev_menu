@@ -1442,7 +1442,7 @@
   async function deleteClient(id) {
     openMenu = null; renderStores();
     const c = find(id); if (!c) return;
-    const ok = await confirmDialog({ title: `حذف "${c.name || c.client_slug}"`, message: `${c.parent_id ? 'الفرع' : 'المتجر'} يتوقف للزبائن ويختفي من القائمة. تقدر ترجعه من فلتر «المحذوفة» خلال 30 يوم، وبعدها ينمسح نهائياً هو وكل بياناته.`, confirmText: 'احذف', tone: 'danger' });
+    const ok = await confirmDialog({ title: `حذف "${c.name || c.client_slug}"`, message: `${c.parent_id ? 'الفرع' : `المتجر${branchesOf(c).length ? ` وفروعه (${branchesOf(c).length})` : ''}`} يتوقف للزبائن ويختفي من القائمة. تقدر ترجعه من فلتر «المحذوفة» خلال 30 يوم، وبعدها ينمسح نهائياً هو وكل بياناته.`, confirmText: 'احذف', tone: 'danger' });
     if (!ok) return;
     const error = await post('delete', { id });
     if (error) return showToast(`تعذر الحذف: ${error.message}`, true);
@@ -1466,7 +1466,7 @@
           <span class="shrink-0 text-[10px] font-black px-2 py-0.5 rounded-full border bg-red-500/10 text-red-700 border-red-500/20">محذوف</span>
         </div>
         <div class="text-[11px] space-y-1 bg-red-500/[0.04] border border-red-500/15 rounded-xl p-3">
-          <p class="flex justify-between gap-2"><span class="text-ink/55">انحذف</span><span>${day(c.deleted_at)}</span></p>
+          <p class="flex justify-between gap-2"><span class="text-ink/55">انحذف</span><span>${day(c.deleted_at)} · ${info.by === 'owner' ? '<b class="text-red-700">بطلب صاحبه</b>' : 'من الإدارة'}${info.with_account ? ' (مع حسابه)' : ''}</span></p>
           <p class="flex justify-between gap-2"><span class="text-ink/55">ينمسح نهائياً</span><b class="${left <= 3 ? 'text-red-700' : ''}">${day(purgeDay(c))} · ${left === 0 ? 'اليوم' : `بعد ${left} ${left <= 10 ? 'أيام' : 'يوم'}`}</b></p>
           <p class="flex justify-between gap-2"><span class="text-ink/55">البريد</span><span class="truncate" dir="ltr">${esc(c.email || '—')}</span></p>
         </div>
@@ -1502,10 +1502,10 @@
     activate: 'تفعيل / تجديد', 'set-free': 'تحويل للبيجر المجاني', 'send-invoice': 'إرسال فاتورة', 'set-active': 'تشغيل / إيقاف',
     rename: 'تغيير الاسم', transfer: 'تسليم المتجر لصاحبه', notify: 'إشعار لمحل', 'notify-all': 'إشعار للمشتركين', featured: 'أمثلة الرئيسية',
     'wa-save': 'ربط واتساب', 'wa-test': 'تجربة واتساب', 'wa-delete': 'فصل واتساب', 'business-type': 'نوع النشاط', 'waitlist-addon': 'قائمة الانتظار',
-    features: 'تعديل المميزات', 'branch-create': 'إضافة فرع', delete: 'حذف (أرشفة)', restore: 'استرجاع', purge: 'مسح نهائي',
+    features: 'تعديل المميزات', 'branch-create': 'إضافة فرع', delete: 'حذف (أرشفة)', restore: 'استرجاع', purge: 'مسح نهائي', 'owner-delete': 'صاحب المحل حذف حسابه', 'owner-restore': 'صاحب المحل استرجع حسابه',
     'support-update': 'تحديث طلب', 'prospect-create': 'منيو لعميل محتمل', 'card-maintenance': 'صيانة بطاقة النداء'
   };
-  const AUDIT_TONE = { delete: 'text-red-700', purge: 'text-red-700', restore: 'text-emerald-700', activate: 'text-emerald-700' };
+  const AUDIT_TONE = { delete: 'text-red-700', purge: 'text-red-700', 'owner-delete': 'text-red-700', restore: 'text-emerald-700', 'owner-restore': 'text-emerald-700', activate: 'text-emerald-700' };
   let auditRows = null, auditStore = null;
   async function loadAudit() {
     try { const r = await DM.get(A('audit') + (auditStore ? `&client_id=${auditStore}` : ''), true); auditRows = r.rows || []; if (!r.ready) auditRows.notReady = true; }

@@ -75,6 +75,39 @@ module.exports.pre = async function pre(action, req, b) {
   }
 
   // ─── تحميل لوحة التحكم ───
+  // ─── حذف الحساب بطلب صاحبه: يتوقف فوراً هو وفروعه، ويتمسح نهائياً بعد 30 يوم ───
+  // خلال الـ 30 يوم يقدر يسجّل دخول ويسترجعه (account-restore). اللي حذفته الإدارة ما يسترجعه صاحبه بنفسه
+  if (action === 'account-delete' && req.method === 'POST') {
+    const { user, store } = await context(req);
+    if (req.query.client) throw new ApiError(403, 'حذف المحلات من لوحة الإدارة', 'ADMIN_VIEW');
+    if (store.parent_id) throw new ApiError(400, 'حذف الحساب يكون من المتجر الرئيسي', 'BRANCH');
+    if (String(b.confirm || '').trim() !== 'حذف') throw new ApiError(400, 'اكتب كلمة «حذف» للتأكيد', 'CONFIRM');
+    const SD = require('../store-delete');
+    const client = await SD.archiveAccount(store.id, 'owner');
+    await rest('admin_audit', { method: 'POST', body: { admin_email: user.email, action: 'owner-delete', client_id: store.id, client_name: store.name || null, details: {} } }).catch(() => {});
+    const day = SD.purgeDate(client.deleted_at).toLocaleDateString('ar-SA-u-ca-gregory-nu-latn', { timeZone: 'Asia/Riyadh', day: 'numeric', month: 'long', year: 'numeric' });
+    if (user.email && mailConfigured()) {
+      const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+      const text = `تم استلام طلب حذف حساب "${store.name}" في DEV MENU، وتم إيقاف المتجر وفروعه.\nستُحذف جميع بيانات الحساب نهائياً بتاريخ ${day}.\nإذا رغبت في الاستمرار، سجّل الدخول قبل هذا التاريخ واختر «استعادة الحساب»، ويعود متجرك كما كان.\n${SITE}/login.html`;
+      const html = `<div dir="rtl" style="font-family:Tahoma,Arial,sans-serif;font-size:15px;line-height:1.8;color:#222;max-width:520px;margin:auto">
+        <p style="margin:0 0 10px">تم استلام طلب حذف حساب <b>${esc(store.name)}</b> في DEV MENU، وتم إيقاف المتجر وفروعه.</p>
+        <p style="margin:0 0 10px">ستُحذف جميع بيانات الحساب نهائياً بتاريخ <b>${esc(day)}</b>.</p>
+        <p style="margin:0 0 16px">إذا رغبت في الاستمرار، سجّل الدخول قبل هذا التاريخ واختر «استعادة الحساب»، ويعود متجرك كما كان.</p>
+        <p style="margin:0"><a href="${SITE}/login.html" style="background:#384f3d;color:#fff;padding:10px 18px;border-radius:10px;text-decoration:none;font-weight:bold">تسجيل الدخول</a></p></div>`;
+      await sendMail({ to: user.email, subject: 'تأكيد طلب حذف الحساب', html, text }).catch(() => {});
+    }
+    return { store: client, purge_at: SD.purgeDate(client.deleted_at).toISOString() };
+  }
+  if (action === 'account-restore' && req.method === 'POST') {
+    const { user, store } = await context(req);
+    if (req.query.client) throw new ApiError(403, 'استرجاع المحلات من لوحة الإدارة', 'ADMIN_VIEW');
+    if (!store.deleted_at) return { store };
+    if (!store.deleted_info || store.deleted_info.by !== 'owner') throw new ApiError(403, 'تم إيقاف هذا الحساب من الإدارة، تواصل معنا لاستعادته', 'ADMIN_DELETED');
+    const client = await require('../store-delete').restoreAccount(store.id);
+    await rest('admin_audit', { method: 'POST', body: { admin_email: user.email, action: 'owner-restore', client_id: store.id, client_name: store.name || null, details: {} } }).catch(() => {});
+    return { store: client };
+  }
+
   if (action === 'load') {
     const { user, admin, store } = await context(req, { needStore: false });
     if (!store) return { email: user.email, is_admin: admin, store: null };

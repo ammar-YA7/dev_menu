@@ -9,7 +9,7 @@ const {
 } = require('./_lib/core');
 const { followParentFeatures } = require('./_lib/branch-features');
 const { notifyOwner } = require('./_lib/owner-notify');
-const { purgeStore, ARCHIVE_DAYS } = require('./_lib/store-delete');
+const { purgeStore, archiveOne, archiveAccount, restoreAccount } = require('./_lib/store-delete');
 
 const { sendMail, mailConfigured } = require('./_lib/mail');
 const { PLAN_PRICE, invoiceNumber, invoiceEmail, branchProration, branchInvoiceLines } = require('./_lib/invoice');
@@ -510,32 +510,21 @@ async function run(req, user, action) {
     return { products: products.length, categories: categories.length };
   }
 
-  // «حذف» = أرشفة: المحل يتوقف ويختفي من اللوحة، ويتمسح نهائياً بعد 30 يوم (subscriptions-cron)
-  // الفرع ينفصل عن حسابه وقت الأرشفة (ما ينحسب في السعر ولا يتشغّل مع الحساب)، والاسترجاع يرجعه
+  // «حذف» = أرشفة: يتوقف ويختفي من اللوحة، ويتمسح نهائياً بعد 30 يوم (subscriptions-cron)
+  // المتجر الرئيسي ينأرشف هو وفروعه، والفرع لحاله ينفصل عن حسابه لين يسترجع
   if (action === 'delete') {
     const c = (await rest(`clients?id=eq.${id}&select=id,name,parent_id,is_active,deleted_at`))[0];
     if (!c) throw new ApiError(404, 'المتجر غير موجود');
     if (c.deleted_at) return { client: c };
-    const branches = await rest(`clients?parent_id=eq.${id}&select=id&limit=1`).catch(() => []);
-    if (branches.length) throw new ApiError(400, 'المتجر له فروع، احذف الفروع أولاً', 'HAS_BRANCHES');
-    return patch({ deleted_at: new Date().toISOString(), deleted_info: { was_active: c.is_active !== false, parent_id: c.parent_id || null }, is_active: false, parent_id: null });
+    if (!c.parent_id) return { client: await archiveAccount(id, 'admin') };
+    await archiveOne(c, 'admin');
+    return { client: (await rest(`clients?id=eq.${id}&select=*`))[0] };
   }
 
   if (action === 'restore') {
-    const c = (await rest(`clients?id=eq.${id}&select=id,deleted_at,deleted_info`))[0];
-    if (!c) throw new ApiError(404, 'المتجر غير موجود');
-    if (!c.deleted_at) return { client: c };
-    const info = c.deleted_info || {};
-    let parent = null;
-    if (info.parent_id) {
-      const p = (await rest(`clients?id=eq.${int(info.parent_id)}&select=id,deleted_at`).catch(() => []))[0];
-      if (!p) throw new ApiError(400, 'المتجر الرئيسي لهذا الفرع انحذف نهائياً، ما نقدر نرجّع الفرع', 'PARENT_GONE');
-      if (p.deleted_at) throw new ApiError(400, 'استرجع المتجر الرئيسي أول، وبعدها الفرع', 'PARENT_ARCHIVED');
-      parent = p.id;
-    }
-    const out = await patch({ deleted_at: null, deleted_info: null, is_active: info.was_active !== false, parent_id: parent });
-    if (parent) await syncBranchSubscriptions(parent);   // الفرع ياخذ اشتراك حسابه الحالي
-    return out;
+    const client = await restoreAccount(id);
+    if (client && client.parent_id) await syncBranchSubscriptions(client.parent_id);   // الفرع ياخذ اشتراك حسابه الحالي
+    return { client };
   }
 
   // مسح نهائي الحين لمحل مؤرشف (بدل انتظار الـ 30 يوم)
