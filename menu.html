@@ -1827,7 +1827,7 @@
   function loadBuilder() {
     if (window.DMBuilder) return Promise.resolve();
     return builderLoading || (builderLoading = new Promise((res, rej) => {
-      const sc = document.createElement('script'); sc.src = '/js/builder.js?v=2';
+      const sc = document.createElement('script'); sc.src = '/js/builder.js?v=3';
       sc.onload = res; sc.onerror = () => { builderLoading = null; rej(new Error('builder')); };
       document.head.appendChild(sc);
     }));
@@ -1839,7 +1839,7 @@
       money, sizes: sizesOf(p), sizeLabel: sizeName, unitPrice: (sz) => unitPrice(p, sz),
       price: (sz, extras) => linePrice(p, { size: sz, extras }),
       canOrder: orderingOn() && p.is_available !== false,
-      onAdd: ({ size, extras, qty }) => addToCart(p.id, qty, size, null, extras)
+      onAdd: ({ size, extras, qty, note }) => addToCart(p.id, qty, size, note || null, extras)
     })).catch(() => openModal(p.id, true));   // لو ما تحمّل الملف: نافذة الطبق العادية
   }
 
@@ -2011,7 +2011,8 @@
   }
 
   function addToCart(id, qty, size = null, note = null, extras = []) {
-    note = directMode() ? (String(note || '').trim().slice(0, 100) || null) : null;
+    // الملاحظة: من خانة الكاشير (طلب مباشر)، أو من «ركّب برقرك» (مثل: بدون مخلل) في أي وضع
+    note = String(note || '').trim().slice(0, 100) || null;
     const p = productById(id);
     if (!p || p.is_available === false || !orderingOn()) return;
     if (sizesOf(p).length && unitPrice(p, size) === null) return openModal(id);
@@ -2093,6 +2094,7 @@
             <div class="flex-1 min-w-0">
               <p class="text-sm font-bold text-white leading-snug line-clamp-2">${esc(lineName(p, c))}</p>
               ${c.extras && c.extras.length ? `<p class="text-[11.5px] font-bold text-gray-300 mt-0.5">+ ${esc(exText(p, c.extras))}</p>` : ''}
+              ${c.note && !directMode() ? `<p class="text-[11.5px] font-bold text-amber-200 mt-0.5">${esc(c.note)}</p>` : ''}
               <p class="text-[11px] text-gray-400 mt-0.5">${esc(money(round2(u * c.qty)))}</p>
             </div>
             <div class="flex items-center bg-white/10 border border-white/15 rounded-xl shrink-0" dir="ltr">
@@ -2249,7 +2251,8 @@
       const u = linePrice(p, c); if (u == null) return '';
       const sub = round2(u * c.qty);
       const ex = c.extras && c.extras.length ? (ar ? ` + ${c.extras.map(x => x.o).join('، ')}` : ` + ${exText(p, c.extras)}`) : '';
-      return ar ? `• ${c.qty} × ${p.name}${c.size ? ` (${c.size})` : ''}${ex} — ${sub} ${cur}` : `• ${c.qty} × ${lineName(p, c)}${ex} — ${sub} ${cur}`;
+      const nt = c.note ? ` (${c.note})` : '';
+      return ar ? `• ${c.qty} × ${p.name}${c.size ? ` (${c.size})` : ''}${ex}${nt} — ${sub} ${cur}` : `• ${c.qty} × ${lineName(p, c)}${ex}${nt} — ${sub} ${cur}`;
     }).filter(Boolean);
     const { total } = cartTotals();
     const baseTotal = round2(cart.reduce((n, c) => { const p = productById(c.id); const b = p && basePrice(p, c.size); return b == null ? n : n + (b + exSum(p, c.extras)) * c.qty; }, 0));

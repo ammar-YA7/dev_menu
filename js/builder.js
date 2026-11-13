@@ -111,6 +111,7 @@
     for (let i = 0; i < 44; i++) crumbs += `<circle cx="${f1(16 + r() * 238)}" cy="${f1(12 + r() * 24)}" r="${f1(1 + r() * 2)}" fill="${r() < .5 ? '#ffd27a' : '#b8661c'}" opacity="${f1(.4 + r() * .5)}"/>`;
     return `<svg viewBox="0 0 270 46"><path d="${d}Z" fill="url(#bbgChicken)" stroke="#a65a17" stroke-width="2" stroke-linejoin="round"/>${crumbs}<ellipse cx="96" cy="15" rx="50" ry="3" fill="#fff" opacity=".2"/></svg>`;
   }
+  const BASE_NAMES = { patty: ['لحم', 'Beef'], chicken: ['دجاج', 'Chicken'], cheese: ['جبن شيدر', 'Cheddar'], lettuce: ['خس', 'Lettuce'], tomato: ['طماطم', 'Tomato'], pickles: ['مخلل', 'Pickles'], jalapeno: ['هالبينو', 'Jalapeño'], onion: ['بصل', 'Onion'] };
   const ART = { bun: bottomBun, patty, chicken, cheese, lettuce, tomato, pickles, jalapeno, onion };
   const GEO = {
     bun: { t: 34, sink: 0, w: 260 }, patty: { t: 21, sink: 7, w: 270 }, chicken: { t: 24, sink: 7, w: 270 },
@@ -185,7 +186,7 @@
 .bb-grid { display: grid; grid-template-columns: minmax(0, 420px) minmax(0, 1fr); gap: 18px; max-width: 1180px; margin: 0 auto; padding: 16px max(16px, env(safe-area-inset-right, 0px)) 24px max(16px, env(safe-area-inset-left, 0px)); align-items: start; }
 .bb-plate { position: sticky; top: 0; background: #fff; border: 1px solid #e4e6e9; border-radius: 20px; padding: 14px; display: grid; gap: 10px; }
 .bb-status { margin: 0; font-size: 14px; color: #6b655f; min-height: 1.5em; font-weight: 500; }
-.bb-stagebox { position: relative; height: 340px; border-radius: 14px; overflow: hidden; background: var(--bb-paper); }
+.bb-stagebox { position: relative; height: 380px; border-radius: 14px; overflow: hidden; background: var(--bb-paper); }
 .bb-stage { position: absolute; inset: 0; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 36px; }
 .bb-shadow { position: absolute; bottom: 24px; left: 50%; width: 240px; height: 22px; transform: translateX(-50%); border-radius: 50%; background: radial-gradient(closest-side, rgba(60,30,10,.28), transparent); }
 .bb-wrap { position: relative; width: 260px; flex-shrink: 0; transform-origin: 50% 100%; transition: transform .35s ease; }
@@ -200,6 +201,15 @@
   80% { transform: translateX(calc(-50% + var(--dx, 0px))) translateY(-6px) rotate(var(--rot, 0deg)) scale(.98, 1.04); }
   100% { transform: translateX(calc(-50% + var(--dx, 0px))) translateY(0) rotate(var(--rot, 0deg)); }
 }
+.bb-layer.out { animation: bbOut .35s ease forwards; }
+@keyframes bbOut { to { transform: translateX(calc(-50% + var(--dx, 0px))) translateY(-120px) rotate(8deg); opacity: 0; } }
+.bb-layer.hop { animation: bbHop .45s ease; }
+@keyframes bbHop { 40% { transform: translateX(calc(-50% + var(--dx, 0px))) translateY(-34px) rotate(var(--rot, 0deg)); } }
+.bb-card.off { border-style: dashed; background: #fafafa; }
+.bb-card.off .bb-art { opacity: .3; filter: grayscale(1); }
+.bb-card.off .bb-name { text-decoration: line-through; color: #8a847e; }
+.bb-state { display: block; font-size: 13px; font-weight: 700; color: #2e7d32; }
+.bb-card.off .bb-state { color: #b3261e; }
 .bb-layer.sauce path { stroke-dasharray: 900; stroke-dashoffset: 900; animation: bbDraw .7s ease forwards; }
 @keyframes bbDraw { to { stroke-dashoffset: 0; } }
 .bb-chips { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -242,7 +252,7 @@
 @media (max-width: 860px) {
   .bb-grid { grid-template-columns: minmax(0, 1fr); padding-top: 10px; }
   .bb-plate { position: sticky; top: 0; z-index: 2; padding: 10px; border-radius: 0 0 18px 18px; margin: -10px calc(-1 * max(16px, env(safe-area-inset-left, 0px))) 0; border-top: 0; box-shadow: 0 8px 18px rgba(0,0,0,.06); }
-  .bb-stagebox { height: 210px; }
+  .bb-stagebox { height: 250px; }
   .bb-chips { display: none; }
 }
 @media (max-width: 440px) { .bb-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } .bb-go { font-size: 15px; } }
@@ -266,14 +276,14 @@
     const groups = (Array.isArray(P.extras) ? P.extras : []).filter(g => g && Array.isArray(g.options) && g.options.length);
     const sizes = Array.isArray(opts.sizes) ? opts.sizes : [];
     const base = (P.builder && Array.isArray(P.builder.base) && P.builder.base.length ? P.builder.base : ['patty']).filter(k => ART[k]);
-    let size = sizes.length ? sizes[0].name : null, picked = [], qty = 1, seedN = 21;
+    let size = sizes.length ? sizes[0].name : null, picked = [], removed = new Set(), qty = 1, seedN = 21;
     const layerOf = new Map();   // "g::o" -> عنصر الطبقة
 
     const root = document.createElement('div');
     root.className = 'bb'; root.setAttribute('role', 'dialog'); root.setAttribute('aria-modal', 'true'); root.dir = ar ? 'rtl' : 'ltr';
     root.style.cssText = `--bb-bg:${pal.bg};--bb-paper:${pal.paper};--bb-brand:${pal.brand};--bb-soft:${pal.soft};--bb-on:${pal.on}`;
     const logo = opts.store && opts.store.logo;
-    const steps = [];
+    const steps = [{ kind: 'base' }];
     if (sizes.length) steps.push({ kind: 'size' });
     groups.forEach((g, gi) => steps.push({ kind: 'group', g, gi }));
     root.innerHTML = `
@@ -288,7 +298,9 @@
           <div class="bb-stagebox"><div class="bb-stage"><div class="bb-shadow"></div><div class="bb-wrap"><div class="bb-stack"></div></div></div></div>
           <div class="bb-chips"></div>
         </div>
-        <div class="bb-steps">${steps.map((s, i) => s.kind === 'size' ? `
+        <div class="bb-steps">${steps.map((s, i) => s.kind === 'base' ? `
+          <section class="bb-step ok" data-step="base"><div class="bb-head"><span class="bb-num">${i + 1}</span><h3>${T('مكونات البرقر', 'What is inside')}</h3><span class="bb-rule">${T('اضغط على اللي ما تبيه', 'Tap to remove')}</span></div>
+            <div class="bb-cards">${base.map(k => `<button type="button" class="bb-card on" data-base="${k}"><span class="bb-art">${thumb(k)}</span><span><span class="bb-name">${esc(T(BASE_NAMES[k][0], BASE_NAMES[k][1]))}</span><span class="bb-state">${T('موجود', 'Included')}</span></span><span class="bb-tick">✓</span></button>`).join('')}</div></section>` : s.kind === 'size' ? `
           <section class="bb-step" data-step="size"><div class="bb-head"><span class="bb-num">${i + 1}</span><h3>${T('الحجم', 'Size')}</h3><span class="bb-rule">${T('اختر واحد', 'Pick one')}</span></div>
             <div class="bb-cards">${sizes.map((z, zi) => `<button type="button" class="bb-card noart" data-size="${zi}"><span><span class="bb-name">${esc(opts.sizeLabel ? opts.sizeLabel(z) : z.name)}</span><span class="bb-price">${esc(money(opts.unitPrice ? opts.unitPrice(z.name) : z.price))}</span></span><span class="bb-tick">✓</span></button>`).join('')}</div></section>` : `
           <section class="bb-step" data-step="g${s.gi}"><div class="bb-head"><span class="bb-num">${i + 1}</span><h3>${esc(nm(s.g))}</h3><span class="bb-rule ${s.g.required ? 'need' : ''}">${s.g.required ? T('إجباري · اختر واحد', 'Required · pick one') : T('اختياري', 'Optional')}</span></div>
@@ -309,6 +321,7 @@
     // ─── الكومة ───
     const stack = $('.bb-stack');
     const layers = [];   // { key, el, id }
+    let topL = null;
     function place(key, html, id, extra) {
       const g = GEO[key], el = document.createElement('div');
       el.className = 'bb-layer drop' + (extra ? ' ' + extra : '');
@@ -316,18 +329,31 @@
       el.style.setProperty('--dx', `${Math.round((Math.random() - .5) * (key === 'bun' || key === 'top' ? 4 : 10))}px`);
       el.style.setProperty('--rot', `${((Math.random() - .5) * 2.4).toFixed(2)}deg`);
       el.innerHTML = html; stack.appendChild(el);
-      const L = { key, el, id }; layers.push(L); layout(); return L;
+      const L = { key, el, id };
+      // الخبز العلوي يبقى آخر طبقة: أي شي جديد ينحط تحته، والخبز يقفز ويرجع
+      if (topL && key !== 'top') { layers.splice(layers.indexOf(topL), 0, L); hopTop(); } else layers.push(L);
+      if (key === 'top') topL = L;
+      layout(); return L;
+    }
+    function hopTop() { if (!topL) return; const e = topL.el; e.classList.remove('drop', 'hop'); void e.offsetWidth; e.classList.add('hop'); }
+    function drop(L) {
+      layers.splice(layers.indexOf(L), 1);
+      L.el.classList.remove('drop'); L.el.classList.add('out');
+      setTimeout(() => L.el.remove(), 360);
+      hopTop(); layout();
     }
     function layout() {
       let y = 0;
       layers.forEach((l, i) => { const g = GEO[l.key]; l.el.style.bottom = (y - g.sink) + 'px'; l.el.style.zIndex = i + 1; y += g.t; });
       const box = $('.bb-stagebox'), wrap = $('.bb-wrap');
-      const s = Math.min(1, (box.clientHeight - 90) / (y + 110), (box.clientWidth - 24) / 285);
+      const s = Math.min(1.3, (box.clientHeight - 60) / (y + 120), (box.clientWidth - 24) / 285);
       wrap.style.transform = `scale(${s.toFixed(3)})`;
     }
     // الخبز والطبقات الأساسية تنزل وحدة وحدة
+    const baseL = {};
     place('bun', ART.bun(seedN++));
-    base.forEach((k, i) => setTimeout(() => { if (root.isConnected) place(k, ART[k](seedN++), 'base:' + k); }, 160 * (i + 1)));
+    base.forEach((k, i) => setTimeout(() => { if (root.isConnected && !removed.has(k)) baseL[k] = place(k, ART[k](seedN++), 'base:' + k); }, 150 * (i + 1)));
+    setTimeout(() => { if (root.isConnected && !topL) place('top', topBun(seedN++)); }, 150 * (base.length + 1));
 
     const key = (g, o) => `${g}::${o}`;
     function addLayer(g, o) {
@@ -338,7 +364,7 @@
     }
     function removeLayer(g, o) {
       const L = layerOf.get(key(g.name, o.name)); if (!L) return;
-      L.el.remove(); layers.splice(layers.indexOf(L), 1); layerOf.delete(key(g.name, o.name)); layout();
+      layerOf.delete(key(g.name, o.name)); drop(L);
     }
     function say(t) { $('.bb-status').textContent = t; }
 
@@ -346,6 +372,23 @@
     root.addEventListener('click', (e) => {
       if (e.target.closest('.bb-x')) return close();
       const q = e.target.closest('[data-q]'); if (q) { qty = Math.max(1, Math.min(20, qty + Number(q.dataset.q))); $('.bb-qn').textContent = qty; return refresh(); }
+      const bs = e.target.closest('[data-base]');
+      if (bs) {
+        const k = bs.dataset.base, label = T(BASE_NAMES[k][0], BASE_NAMES[k][1]);
+        if (removed.has(k)) {
+          removed.delete(k);
+          // يرجع مكانه تقريباً: فوق الخبز السفلي وتحت الإضافات
+          const L = place(k, ART[k](seedN++), 'base:' + k);
+          layers.splice(layers.indexOf(L), 1); layers.splice(1 + base.filter(b => b !== k && !removed.has(b) && base.indexOf(b) < base.indexOf(k)).length, 0, L);
+          baseL[k] = L; layout();
+          say(T(`رجّعنا ${label}.`, `${label} is back.`));
+        } else {
+          removed.add(k);
+          if (baseL[k]) { drop(baseL[k]); delete baseL[k]; }
+          say(T(`بدون ${label}.`, `No ${label}.`));
+        }
+        return refresh();
+      }
       const sz = e.target.closest('[data-size]'); if (sz) { size = sizes[Number(sz.dataset.size)].name; say(T('تم اختيار الحجم.', 'Size picked.')); return refresh(); }
       const c = e.target.closest('[data-g]'); if (!c || c.disabled) return;
       const g = groups[Number(c.dataset.g)], o = g.options[Number(c.dataset.o)];
@@ -361,12 +404,14 @@
     });
     const missing = () => groups.find(g => g.required && !picked.some(x => x.g === g.name));
     function refresh() {
+      root.querySelectorAll('[data-base]').forEach(b => { const off = removed.has(b.dataset.base); b.classList.toggle('on', !off); b.classList.toggle('off', off); b.querySelector('.bb-state').textContent = off ? T('بدون', 'Removed') : T('موجود', 'Included'); });
       root.querySelectorAll('[data-size]').forEach(b => b.classList.toggle('on', sizes[Number(b.dataset.size)].name === size));
       root.querySelectorAll('[data-g]').forEach(b => { const g = groups[Number(b.dataset.g)], o = g.options[Number(b.dataset.o)]; b.classList.toggle('on', picked.some(x => x.g === g.name && x.o === o.name)); });
-      root.querySelectorAll('[data-step]').forEach(s => { const k = s.dataset.step; s.classList.toggle('ok', k === 'size' ? !!size : picked.some(x => x.g === groups[Number(k.slice(1))].name)); });
+      root.querySelectorAll('[data-step]').forEach(s => { const k = s.dataset.step; if (k === 'base') return; s.classList.toggle('ok', k === 'size' ? !!size : picked.some(x => x.g === groups[Number(k.slice(1))].name)); });
       const unit = opts.price ? opts.price(size, picked) : null;
       $('.bb-total').textContent = unit == null ? '—' : money(Math.round(unit * qty * 100) / 100);
-      $('.bb-chips').innerHTML = picked.map(x => { const g = groups.find(gg => gg.name === x.g); const o = g && g.options.find(oo => oo.name === x.o); return `<span class="bb-chip">${esc(nm(o) || x.o)}</span>`; }).join('');
+      $('.bb-chips').innerHTML = [...removed].map(k => `<span class="bb-chip">${esc(T('بدون ', 'No ') + T(BASE_NAMES[k][0], BASE_NAMES[k][1]))}</span>`).join('')
+        + picked.map(x => { const g = groups.find(gg => gg.name === x.g); const o = g && g.options.find(oo => oo.name === x.o); return `<span class="bb-chip">+ ${esc(nm(o) || x.o)}</span>`; }).join('');
       const m = missing();
       $('.bb-go').dataset.miss = m ? '1' : '';
     }
@@ -375,14 +420,15 @@
       if (m) { say(T(`اختر ${nm(m)} أول.`, `Choose ${nm(m)} first.`)); const s = root.querySelector(`[data-step="g${groups.indexOf(m)}"]`); if (s) s.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
       // الخبز العلوي ينزل، وبعدها يقفل
       $('.bb-go').disabled = true;
-      place('top', topBun(seedN++));
+      hopTop();
       say(T('شكله يفتح النفس!', 'Looks delicious!'));
+      const note = [...removed].map(k => 'بدون ' + BASE_NAMES[k][0]).join('، ');
       setTimeout(() => {
-        if (opts.canOrder) { opts.onAdd && opts.onAdd({ size, extras: picked.slice(), qty }); close(); return; }
+        if (opts.canOrder) { opts.onAdd && opts.onAdd({ size, extras: picked.slice(), qty, note }); close(); return; }
         // المنيو بدون طلب: ملخص يوريه للكاشير
-        const list = [size, ...picked.map(x => x.o)].filter(Boolean).join('، ');
+        const list = [size, note, ...picked.map(x => '+ ' + x.o)].filter(Boolean).join('، ');
         const d = document.createElement('div'); d.className = 'bb-done';
-        d.innerHTML = `<div><h4>${T('برقرك جاهز', 'Your burger is ready')}</h4><p>${T('اعرض هذا على الكاشير:', 'Show this to the cashier:')}<br><b>${esc(nm(P))}</b>${list ? ` + ${esc(list)}` : ''}</p><button type="button" class="bb-go">${T('تمام', 'OK')}</button></div>`;
+        d.innerHTML = `<div><h4>${T('برقرك جاهز', 'Your burger is ready')}</h4><p>${T('اعرض هذا على الكاشير:', 'Show this to the cashier:')}<br><b>${esc(nm(P))}</b>${list ? `<br>${esc(list)}` : ''}</p><button type="button" class="bb-go">${T('تمام', 'OK')}</button></div>`;
         d.querySelector('button').addEventListener('click', close);
         root.appendChild(d);
       }, 750);
@@ -396,7 +442,7 @@
       opts.onClose && opts.onClose();
     }
     refresh();
-    say(groups.length ? T('اختر إضافاتك، وتنضاف للبرقر قدامك.', 'Pick your extras and watch them stack.') : '');
+    say(T('هذا برقرك. شيل اللي ما تبيه، وزوّد اللي تحبه.', 'Here is your burger. Remove what you do not want, add what you love.'));
     setTimeout(() => { const f = root.querySelector('.bb-card'); if (f) f.focus({ preventScroll: true }); }, 50);
     return { close };
   }
