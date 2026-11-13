@@ -346,8 +346,8 @@
 
     // شريط تنبيه بارز أعلى اللوحة
     const banner = document.getElementById('renew-banner');
-    if (!free && (!live || (left !== null && left <= 3))) {
-      const danger = !live || inGrace;
+    if (!free && (!live || (left !== null && left <= 7))) {   // يظهر قبل الانتهاء بأسبوع، ويحمرّ في آخر 3 أيام
+      const danger = !live || inGrace || left <= 3;
       const text = suspended ? 'متجرك موقوف من الإدارة، والمنيو لا يظهر للزبائن حالياً.'
         : !live ? 'انتهى اشتراكك، والمنيو لا يظهر للزبائن حالياً. جدّد الآن ليعود فوراً.'
         : inGrace ? `انتهى اشتراكك. المنيو يعمل لعملائك حتى ${graceText} فقط، جدّد الآن حتى لا يتوقف.`
