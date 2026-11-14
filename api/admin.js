@@ -332,6 +332,7 @@ async function run(req, user, action) {
     return { ok: true };
   }
   if (action === 'featured') return patch({ is_featured: b.featured === true });
+  if (action === 'pager-card') return patch({ pager_card_off: b.off === true });
   // ─── ربط واتساب خارجي لهذا المحل فقط (المفتاح ما يرجع للمتصفح) ───
   if (action === 'wa-get') {
     const row = (await rest(`client_whatsapp?client_id=eq.${id}&select=provider,instance,api_url,auth_style,auth_header,body_tpl,send_mode,ask_phone,channels,wl_message,wl_template,pull_key_hash,pull_seen_at,template,template_lang,template_vars,message,enabled,last_error,last_sent_at,updated_at`))[0];

@@ -943,6 +943,7 @@
         ${!c.parent_id ? `<button onclick="openTypeDlg(${id})"><i class="ph-bold ph-storefront"></i> نوع النشاط: ${esc(DMSectors.label(c))}</button>` : ''}
         <button onclick="openNotify(${id})"><i class="ph-bold ph-bell"></i> إرسال إشعار</button>
         <button onclick="openWhatsapp(${id})"><i class="ph-bold ph-whatsapp-logo" style="color:#16a34a"></i> ربط واتساب</button>
+        ${DMPlans.has(c, 'pager') ? `<button onclick="setPagerCard(${id}, ${c.pager_card_off !== true})"><i class="ph-bold ${c.pager_card_off ? 'ph-wallet' : 'ph-prohibit'}"></i> ${c.pager_card_off ? 'تشغيل بطاقة النداء' : 'إيقاف بطاقة النداء لهذا المحل'}</button>` : ''}
         <div class="h-px bg-brand/10 my-1"></div>
         ${c.parent_id ? '' : `<button onclick="setFeatured(${id}, ${!c.is_featured})"><i class="ph-bold ph-star" ${c.is_featured ? 'style="color:#d97706"' : ''}></i> ${c.is_featured ? 'إزالة من أمثلة الرئيسية' : 'عرضه في أمثلة الرئيسية'}</button>`}
         <button onclick="setActive(${id}, ${c.is_active === false})"><i class="ph-bold ${c.is_active === false ? 'ph-play' : 'ph-pause'}"></i> ${c.is_active === false ? (c.parent_id ? 'إعادة تشغيل الفرع' : 'إعادة تشغيل المتجر') : (c.parent_id ? 'إيقاف الفرع' : 'إيقاف المتجر')}</button>
@@ -1281,6 +1282,14 @@
     showToast(active ? 'تمت إعادة تشغيل المتجر' : 'تم إيقاف المتجر'); loadClients();
   }
 
+  async function setPagerCard(id, off) {
+    openMenu = null;
+    if (off && !(await DMDialog.confirm({ title: 'إيقاف بطاقة النداء', message: 'لن يظهر زر إضافة بطاقة النداء إلى المحفظة في صفحة البيجر لهذا المحل، ويصل النداء للعميل من الصفحة أو الواتساب. البطاقات المضافة سابقاً تبقى عند أصحابها.', confirmText: 'إيقاف' }))) return;
+    const error = await post('pager-card', { id, off });
+    if (error) return showToast('ما قدرنا نحدّث البيانات. تأكد من الإنترنت', true);
+    showToast(off ? 'تم إيقاف بطاقة النداء لهذا المحل' : 'تم تشغيل بطاقة النداء لهذا المحل');
+    loadClients();
+  }
   async function setFeatured(id, featured) {
     openMenu = null;
     const error = await post('featured', { id, featured });
@@ -1500,7 +1509,7 @@
   // ─── سجل العمليات ───
   const AUDIT_LABEL = {
     activate: 'تفعيل / تجديد', 'set-free': 'تحويل للبيجر المجاني', 'send-invoice': 'إرسال فاتورة', 'set-active': 'تشغيل / إيقاف',
-    rename: 'تغيير الاسم', transfer: 'تسليم المتجر لصاحبه', notify: 'إشعار لمحل', 'notify-all': 'إشعار للمشتركين', featured: 'أمثلة الرئيسية',
+    rename: 'تغيير الاسم', transfer: 'تسليم المتجر لصاحبه', notify: 'إشعار لمحل', 'notify-all': 'إشعار للمشتركين', featured: 'أمثلة الرئيسية', 'pager-card': 'بطاقة النداء',
     'wa-save': 'ربط واتساب', 'wa-test': 'تجربة واتساب', 'wa-delete': 'فصل واتساب', 'business-type': 'نوع النشاط', 'waitlist-addon': 'قائمة الانتظار',
     features: 'تعديل المميزات', 'branch-create': 'إضافة فرع', delete: 'حذف (أرشفة)', restore: 'استرجاع', purge: 'مسح نهائي', 'owner-delete': 'صاحب المحل حذف حسابه', 'owner-restore': 'صاحب المحل استرجع حسابه',
     'support-update': 'تحديث طلب', 'prospect-create': 'منيو لعميل محتمل', 'card-maintenance': 'صيانة بطاقة النداء'

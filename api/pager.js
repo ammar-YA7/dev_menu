@@ -177,6 +177,8 @@ async function loadStore(slug) {
   // الباقة المجانية: البيجر الأساسي بس (بدون بطاقة النداء)
   const plan = (await rest(`clients?id=eq.${store.id}&select=subscription_status,plan_features,parent_id,is_active,trial_ends_at,subscription_end_date`))[0];
   store.free = PLANS.pagerLite(plan);   // الباقة المجانية، أو البيجر المجاني المضاف لمشترك
+  // بطاقة النداء موقوفة لهذا المحل من الإدارة (النداء يوصل من الصفحة أو الواتساب)
+  store.cardOff = (await rest(`clients?id=eq.${store.id}&select=pager_card_off`).catch(() => []))[0]?.pager_card_off === true;
   // الاسم اللي يشوفه الزبون في صفحة البيجر: الفرع ياخذ اسم المحل الرئيسي (ماندولين، مو "ماندولين فرع بيش")
   store.display_name = store.name;
   if (plan && plan.parent_id) {
@@ -200,7 +202,7 @@ module.exports = handler(['GET', 'POST'], async (req, res) => {
     res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=30, stale-while-revalidate=300');   // بيانات المحل العامة: تتخزن 30 ثانية في CDN
     const full = store.free && (await monthTickets(store.id, PLANS.FREE.pager)) >= PLANS.FREE.pager;   // البيجر المجاني خلّص عدده
     // بطاقة النداء تنعرض قبل أخذ الرقم (المحل اللي ما عنده ولاء)
-    const card = wallet.configured() && !store.free && !(await wallet.cardMaintenance()) && !(await loyaltyOf(store.id)).enabled;
+    const card = wallet.configured() && !store.free && !store.cardOff && !(await wallet.cardMaintenance()) && !(await loyaltyOf(store.id)).enabled;
     const car = (await rest(`clients?id=eq.${store.id}&select=pager_car`).catch(() => []))[0]?.pager_car === true;   // خطوة السيارة قبل الرقم
     return { store: { name: store.display_name || store.name, logo_url: store.logo_url, business_type: store.business_type, accent_color: store.accent_color || null }, push_key: pushPublicKey(), brand: await brandOf(store), card, car, ...(full ? { full: true } : {}) };
   }
@@ -305,7 +307,7 @@ module.exports = handler(['GET', 'POST'], async (req, res) => {
     }
     // وقت الكاشير يوصل مع كل تحديث (يتغير فوراً عند الزبون)، والتقدير من الطابور كل 15 ثانية
     const staffEta = t.status === 'waiting' && t.eta_at ? require('./_lib/pager-wait').estimate(t, 0, null) : null;
-    return { ...extras, ...(queue ? { queue } : {}), staff_eta: staffEta, addons: publicAddons(t.addons), game_won: t.game_won === true, demo: DEMO.has(store.client_slug), wallet: wallet.configured() && !store.free && !(await wallet.cardMaintenance()), in_wallet: !!t.wallet_url && !card_gone, card_gone, car_ask, car: t.car || null, wa_ask, wa: wa_ask ? WA.maskPhone(t.wa_phone) : null, review_url: review, social, store: { name: store.display_name || store.name, logo_url: store.logo_url, business_type: store.business_type, accent_color: store.accent_color || null }, ticket: { number: t.number, status: stale ? 'expired' : t.status, ready_at: t.ready_at, invoice_no: t.invoice_no || null }, live: topic('ticket', token),
+    return { ...extras, ...(queue ? { queue } : {}), staff_eta: staffEta, addons: publicAddons(t.addons), game_won: t.game_won === true, demo: DEMO.has(store.client_slug), wallet: wallet.configured() && !store.free && !store.cardOff && !(await wallet.cardMaintenance()), in_wallet: !!t.wallet_url && !card_gone, card_gone, car_ask, car: t.car || null, wa_ask, wa: wa_ask ? WA.maskPhone(t.wa_phone) : null, review_url: review, social, store: { name: store.display_name || store.name, logo_url: store.logo_url, business_type: store.business_type, accent_color: store.accent_color || null }, ticket: { number: t.number, status: stale ? 'expired' : t.status, ready_at: t.ready_at, invoice_no: t.invoice_no || null }, live: topic('ticket', token),
       loyalty: { ...(await loyaltyOf(store.id)), linked: !!t.loyalty_card_id, stamped: !!t.loyalty_stamped,
         ...(await linkedCard(store.id, t.loyalty_card_id)) } };
   }
@@ -341,7 +343,7 @@ module.exports = handler(['GET', 'POST'], async (req, res) => {
     // قبل أخذ الرقم: بطاقة فاضية ("—")، وتتحدث برقمه أول ما ياخذه
     if (!token && b.pre) {
       if ((await loyaltyOf(store.id)).enabled) throw new ApiError(409, 'سجّل في بطاقة الولاء ويوصلك النداء منها', 'USE_LOYALTY');
-      if (store.free) throw new ApiError(409, 'بطاقة النداء مو متاحة الحين', 'NO_CARD');
+      if (store.free || store.cardOff) throw new ApiError(409, 'بطاقة النداء مو متاحة الحين', 'NO_CARD');
       const lang = reqLang(req) === 'en' ? 'en' : null;
       const pc = TOKEN_RE.test(String(b.pc || '')) ? (await rest(`pager_cards?token=eq.${q(b.pc)}&client_id=eq.${await brandOf(store)}&select=wallet_url`).catch(() => []))[0] : null;
       if (pc && pc.wallet_url) return { url: pc.wallet_url, card: b.pc };
@@ -356,7 +358,7 @@ module.exports = handler(['GET', 'POST'], async (req, res) => {
     if (!t) throw new ApiError(404, 'الرقم غير موجود أو انتهى', 'NOT_FOUND');
     // المحل المشترك في الولاء: النداء يوصل من بطاقة الولاء، فما فيه بطاقة نداء
     if ((await loyaltyOf(store.id)).enabled) throw new ApiError(409, 'سجّل في بطاقة الولاء ويوصلك النداء منها', 'USE_LOYALTY');
-    if (store.free) throw new ApiError(409, 'بطاقة النداء مو متاحة الحين', 'NO_CARD');
+    if (store.free || store.cardOff) throw new ApiError(409, 'بطاقة النداء مو متاحة الحين', 'NO_CARD');
     const pc = TOKEN_RE.test(String(b.pc || '')) ? await linkPagerCard(store, token, b.pc) : null;
     if (pc && DEMO.has(store.client_slug)) await rest(`pager_tickets?id=eq.${t.id}`, { method: 'PATCH', body: { created_at: new Date().toISOString() } }).catch(() => {});
     if (pc) return { url: pc.wallet_url, card: b.pc };
