@@ -383,6 +383,46 @@
   #perm .card > div:first-child, #ly-ask .card > div:first-child, #pc-ask .card > div:first-child { background: color-mix(in srgb, var(--brand) 12%, #fff); color: var(--brand); }
   #perm ul, #ly-ask .card > p.text-\[12\.5px\], #pc-ask .card > p.text-\[12\.5px\] { background: #f6f2ea !important; border-color: var(--rule) !important; color: var(--ink) !important; }
 
+  /* ─── الإشعارات مقفلة ─── */
+  .nt-off { background: #fff; border-radius: 20px; padding: 16px; box-shadow: 0 1px 0 var(--rule), 0 12px 28px -22px rgba(60,40,20,.45); }
+  .nt-off.hidden { display: none; }
+  .nt-off-tx { font-size: 15px; font-weight: 600; line-height: 1.7; color: #8a4b0f; margin-bottom: 12px; }
+  .nt-off-tx i { margin-left: 4px; }
+  .nt-panel { height: auto !important; max-height: 88dvh; }
+  .nt-steps { list-style: none; counter-reset: nt; margin: 0; padding: 16px 18px 6px; display: grid; gap: 12px; }
+  .nt-steps li { counter-increment: nt; display: flex; align-items: center; gap: 12px; font-size: 17px; font-weight: 500; line-height: 1.6; }
+  .nt-steps li::before { content: counter(nt); width: 34px; height: 34px; border-radius: 50%; background: var(--brand); color: #fff; font-weight: 700; font-size: 16px; display: grid; place-items: center; flex-shrink: 0; }
+  .nt-steps b { font-weight: 700; }
+  .nt-foot { padding: 12px 18px 18px; }
+  .nt-msg { margin-top: 10px; font-size: 14.5px; font-weight: 600; color: #8a4b0f; text-align: center; line-height: 1.6; }
+
+  /* ─── مقاسات الجوال: أكبر وأوضح ─── */
+  body { padding-left: 16px !important; padding-right: 16px !important; }
+  body > header, main { max-width: 460px !important; }
+  body > header h1 { font-size: 21px; }
+  body > header p { font-size: 13.5px; }
+  #logo { width: 52px; height: 52px; }
+  .btn { font-size: 18px; padding: 19px; }
+  .tkt-hd { font-size: 14.5px; padding: 14px 20px; }
+  .tkt-num { font-size: 124px; }
+  .tkt-inv { font-size: 14.5px; }
+  .tkt-track li { font-size: 14px; }
+  .tkt-track li i { width: 36px; height: 36px; font-size: 17px; }
+  .tkt-track::before, .tkt-track::after { top: 33px; }
+  .q-dots .me { min-width: 40px; height: 40px; font-size: 17px; }
+  .q-text { font-size: 17.5px; } .q-text span { font-size: 15px; }
+  .note { font-size: 16px !important; }
+  .chip { font-size: 15px; padding: 10px 15px; }
+  .ask-tx b, .ups-tx b { font-size: 17px; } .ask-tx small, .ups-tx small { font-size: 14.5px; }
+  #push-btn, #keep-btn, #unlock-btn { font-size: 17px; padding: 18px; }
+  .tips { font-size: 15px; padding: 15px 18px; } .tips li { font-size: 15px; }
+  .stp-h { font-size: 29px; } .stp-sub { font-size: 17px; } .stp-skip { font-size: 16px; }
+  .stp.top .stp-h { font-size: 24px; } .stp.top .stp-sub { font-size: 16px; }
+  .field { font-size: 18px; padding: 14px 16px; }
+  .mg-title { font-size: 19px; } .mg-sub { font-size: 14.5px; }
+  #t-ready { font-size: 34px; } #r-body { font-size: 17px !important; }
+  #v-done h2 { font-size: 24px; } #v-done p { font-size: 16px; }
+  .foot { font-size: 13.5px; }
   /* ─── «جاهز»: الشاشة كلها خضراء، والتذكرة بيضاء في النص ─── */
   body[data-view="ready"] { background: var(--ok); }
   body[data-view="ready"] .tkt-perf::before, body[data-view="ready"] .tkt-perf::after { background: var(--ok); }
@@ -562,7 +602,10 @@
     <button id="push-btn" class="btn btn-brand hidden"><i class="ph-bold ph-bell"></i> فعّل الإشعارات</button>
     <button id="keep-btn" class="btn btn-ghost hidden"><i class="ph-bold ph-speaker-high"></i> فعّل الرنين حتى لو جوالك صامت</button>
     <button id="unlock-btn" class="btn btn-ghost hidden"><i class="ph-bold ph-speaker-high"></i> فعّل صوت التنبيه</button>
-    <p id="push-denied" class="hidden text-[12px] font-bold text-amber-800 bg-amber-50 border border-amber-200 rounded-2xl py-2.5 px-3">الإشعارات مقفلة لهذا الموقع في متصفحك. الرنين يشتغل عادي، ولو تبي الإشعار فعّله من إعدادات المتصفح.</p>
+    <div id="push-denied" class="nt-off hidden">
+      <p class="nt-off-tx"><i class="ph-bold ph-bell-slash"></i> الإشعارات مقفلة في متصفحك، فما يوصلك تنبيه لو طلعت من الصفحة.</p>
+      <button type="button" id="nt-help-btn" class="btn btn-brand"><i class="ph-bold ph-bell-ringing"></i> فعّل الإشعارات</button>
+    </div>
     <!-- تسليم الطلب للسيارة: الزبون يحدد سيارته عشان يجيبون له الطلب -->
     <form id="car-form" class="card p-4 space-y-3 hidden" novalidate>
       <div>
@@ -714,6 +757,21 @@
   </section>
 </main>
 
+<!-- الإشعارات مقفلة: خطوات تفعيلها حسب جوال العميل -->
+<div id="nt-help" class="ask-sheet" role="dialog" aria-modal="true" aria-labelledby="nt-help-title" hidden>
+  <div class="ask-back" data-nt-close></div>
+  <div class="ask-panel nt-panel">
+    <div class="ask-hd">
+      <div class="ask-hd-tx"><b id="nt-help-title">فعّل الإشعارات</b><small>خطوة وحدة وترجع لهالصفحة</small></div>
+      <button type="button" class="ask-x" data-nt-close aria-label="إغلاق"><i class="ph-bold ph-x"></i></button>
+    </div>
+    <ol id="nt-steps" class="nt-steps"></ol>
+    <div class="nt-foot">
+      <button type="button" id="nt-check" class="btn btn-brand"><i class="ph-bold ph-check"></i> فعّلتها</button>
+      <p id="nt-msg" class="nt-msg hidden"></p>
+    </div>
+  </div>
+</div>
 <!-- المنيو كامل (أضف لطلبك) -->
 <div id="mn-sheet" class="ask-sheet" role="dialog" aria-modal="true" aria-labelledby="mn-title" hidden>
   <div class="ask-back" data-mn-close></div>
@@ -1906,6 +1964,34 @@
   $('unlock-btn').onclick = unlockAudio;
   $('keep-btn').onclick = () => { unlockAudio(); startKeeper(); };
   $('push-btn').onclick = askPush;
+  // الإشعارات مقفلة: المتصفح ما يسمح نطلبها مرة ثانية، فنوري العميل الخطوات حسب جواله، ونتحقق لما يرجع
+  function ntSteps() {
+    const ua = navigator.userAgent, ios = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+    if (ios) return ['افتح <b>الإعدادات</b> في جوالك', 'اختر <b>الإشعارات</b>', 'اختر <b>البيجر</b> أو اسم المتصفح', 'شغّل <b>السماح بالإشعارات</b>، وارجع لهالصفحة'];
+    if (/SamsungBrowser/.test(ua)) return ['اضغط <b>☰</b> تحت الشاشة، ثم <b>الإعدادات</b>', 'اختر <b>المواقع والتنزيلات</b> ثم <b>الإشعارات</b>', 'ابحث عن هالموقع وخلّه <b>مسموح</b>', 'ارجع لهالصفحة'];
+    if (/Android/.test(ua)) return ['اضغط على <b>القفل</b> 🔒 جنب رابط الموقع فوق', 'اختر <b>الأذونات</b> أو <b>إعدادات الموقع</b>', 'خلّ <b>الإشعارات</b> على <b>سماح</b>', 'ارجع لهالصفحة'];
+    return ['اضغط على <b>القفل</b> 🔒 جنب رابط الموقع فوق', 'خلّ <b>الإشعارات</b> على <b>سماح</b>', 'ارجع لهالصفحة'];
+  }
+  function ntOpen() {
+    $('nt-steps').innerHTML = ntSteps().map(t => `<li>${t}</li>`).join('');
+    $('nt-msg').classList.add('hidden');
+    $('nt-help').hidden = false; document.documentElement.classList.add('ask-lock');
+  }
+  function ntClose() { $('nt-help').hidden = true; document.documentElement.classList.remove('ask-lock'); }
+  async function ntCheck() {
+    if (pushSupported() && Notification.permission === 'default') { try { await Notification.requestPermission(); } catch {} }
+    if (pushSupported() && Notification.permission === 'granted') { await subscribePush(); renderPush(); ntClose(); return; }
+    $('nt-msg').textContent = 'للحين مقفلة. سوّ الخطوات فوق وبعدها اضغط «فعّلتها»، والرنين شغّال لين ذاك.';
+    $('nt-msg').classList.remove('hidden');
+  }
+  $('nt-help-btn').onclick = () => { startKeeper(); ntOpen(); };
+  $('nt-check').onclick = ntCheck;
+  document.querySelectorAll('[data-nt-close]').forEach(b => { b.onclick = ntClose; });
+  // رجع من الإعدادات: نتحقق بنفسنا
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'visible' || !pushSupported() || Notification.permission !== 'granted' || pushDone()) return;
+    subscribePush().then(() => { renderPush(); if (!$('nt-help').hidden) ntClose(); });
+  });
   $('test-btn').onclick = () => { unlockAudio(); ringOnce(); };
   // "استلمت طلبي": التقييم (النجوم وقوقل ماب) يطلع على طول، لأن الزبون يقفل الصفحة بعد ما يستلم.
   // الرقم يظل عند الكاشير لين يضغط "استلم" (وهو اللي يعطي ختم الولاء)
