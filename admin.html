@@ -502,8 +502,9 @@
       <button data-nav="pagerset" data-free-hide class="nav-item"><i class="ph-bold ph-bell-simple-ringing"></i> إعدادات البيجر</button>
       <a href="pager-desk.html" data-feature="pager" onclick="return openPagerDesk(this)" class="nav-item"><i class="ph-bold ph-bell"></i> <span id="nav-desk-label">شاشة البيجر</span></a>
       <button data-nav="waitlist" class="nav-item"><i class="ph-bold ph-hourglass-medium"></i> قائمة الانتظار <span id="nav-waitlist" class="mr-auto hidden text-[11px] bg-amber-400 text-black px-2 py-0.5 rounded-full font-black">0</span></button>
-      <button data-nav="loyalty" class="nav-item"><i class="ph-bold ph-seal-check"></i> بطاقة الولاء</button>
-      <button data-nav="subs" class="nav-item"><i class="ph-bold ph-package"></i> الاشتراكات</button>
+      <p class="px-3 pt-3 pb-0.5 text-[11px] text-ink font-semibold">بطاقة الولاء</p>
+      <button data-nav="loyalty" class="nav-item"><i class="ph-bold ph-seal-check"></i> بطاقة الأختام</button>
+      <button data-nav="subs" class="nav-item"><i class="ph-bold ph-package"></i> بطاقة الاشتراكات</button>
       <p class="px-3 pt-4 pb-1 text-[11px] text-ink font-semibold">منشأتك</p>
       <button data-nav="branches" class="nav-item"><i class="ph-bold ph-git-branch"></i> الفروع</button>
       <button data-nav="devices" data-needs="menu|pager|waitlist|loyalty" class="nav-item"><i class="ph-bold ph-devices"></i> الأجهزة</button>
@@ -1633,7 +1634,7 @@
         <!-- تشغيل -->
         <div class="pro-card p-5 md:p-6 flex flex-wrap items-center justify-between gap-4">
           <div class="space-y-1 max-w-xl">
-            <h2 class="text-base font-bold">بطاقة الولاء بالأختام</h2>
+            <h2 class="text-base font-bold">بطاقة الأختام</h2>
             <p class="text-[13px] text-ink leading-relaxed">يمسح العميل كرت التسجيل ويسجل مرة واحدة. بعد كل شراء يعرض كود بطاقته للكاشير، والكاشير يمسحه من شاشة الكاشير ويختم له.</p>
           </div>
           <div class="flex flex-wrap items-center gap-3">
@@ -1840,7 +1841,7 @@
                   <div class="text-center pt-9 pb-4">
                     <img id="pv-logo" alt="" class="w-11 h-11 rounded-xl object-cover mx-auto mb-2 bg-white border border-black/5 hidden">
                     <p id="pv-store" class="text-[15px] font-bold"></p>
-                    <p class="text-[11px] opacity-60"><i class="ph-bold ph-seal-check"></i> بطاقة الولاء</p>
+                    <p class="text-[11px] opacity-60"><i class="ph-bold ph-seal-check"></i> بطاقة الأختام</p>
                   </div>
                   <div class="lcard" id="ly-preview">
                     <div class="flex items-start justify-between gap-3">
@@ -1935,13 +1936,35 @@
           <div class="pro-card p-5 flex flex-wrap items-center gap-5">
             <div id="pk-qr" class="w-36 h-36 shrink-0 bg-white rounded-xl p-2"></div>
             <div class="min-w-0 flex-1 space-y-2">
-              <h3 class="text-base font-bold">رمز الاشتراكات</h3>
+              <h3 class="text-base font-bold">رمز بطاقة الاشتراكات</h3>
               <p class="text-[12.5px] text-ink leading-relaxed">ضعه عند الكاشير أو على الطاولات: يمسحه العميل، فيختار باقته ويسجّل اسمه وجواله.</p>
               <p id="pk-link" class="text-xs text-ink truncate" dir="ltr"></p>
               <button type="button" id="pk-copy" class="bg-brand/10 hover:bg-brand/15 text-ink px-3.5 py-2 rounded-xl text-[13px] font-bold border border-brand/25 transition"><i class="ph-bold ph-copy"></i> نسخ الرابط</button>
             </div>
           </div>
 
+          <!-- تصميم بطاقة الاشتراكات: مستقل عن بطاقة الأختام -->
+          <div class="pro-card p-5">
+            <div class="flex flex-wrap gap-6">
+              <div class="w-full sm:w-72 shrink-0">
+                <div id="pkd-pv" class="rounded-2xl overflow-hidden text-white shadow-lg" style="background:#233d2c">
+                  <div class="flex items-center gap-2 p-3"><img id="pkd-pv-logo" alt="" class="w-8 h-8 rounded-lg object-cover bg-white/20 hidden"><b id="pkd-pv-name" class="text-sm truncate"></b><span class="mr-auto text-left text-[11px] leading-tight opacity-90">المتبقي<b class="block text-base">29 / 30</b></span></div>
+                  <div id="pkd-pv-strip" class="h-20 bg-white/10 bg-cover bg-center"></div>
+                  <div class="p-3 grid grid-cols-2 gap-2 text-[11px]"><span><span class="opacity-75 block">الباقة</span><b>30 وجبة</b></span><span><span class="opacity-75 block">الاسم</span><b>محمد</b></span></div>
+                </div>
+                <p class="text-[11px] text-ink text-center mt-2">معاينة تقريبية لبطاقة المحفظة</p>
+              </div>
+              <div class="flex-1 min-w-0 space-y-4">
+                <div><h3 class="text-base font-bold"><i class="ph-bold ph-palette text-emerald-600"></i> تصميم بطاقة الاشتراكات</h3><p class="text-[12.5px] text-ink mt-1">يظهر في بطاقة العميل بالمحفظة وصفحة باقته، ومستقل عن تصميم بطاقة الأختام.</p></div>
+                <div><p class="text-sm font-bold mb-2">لون البطاقة</p><div id="pkd-colors" class="flex flex-wrap gap-2"></div></div>
+                <div class="grid sm:grid-cols-2 gap-3">
+                  <div><p class="text-sm font-bold mb-2">الشعار</p><div class="flex items-center gap-2"><label class="bg-brand/10 hover:bg-brand/15 text-ink px-3.5 py-2 rounded-xl text-[13px] font-bold border border-brand/25 cursor-pointer"><i class="ph-bold ph-upload-simple"></i> رفع<input type="file" accept="image/*" class="hidden" onchange="uploadPkdImage(this, 'logo')"></label><button type="button" id="pkd-logo-clear" onclick="setPkd({ logo: null })" class="hidden text-xs text-rose-600 font-bold">إزالة</button></div></div>
+                  <div><p class="text-sm font-bold mb-2">صورة الغلاف</p><div class="flex items-center gap-2"><label class="bg-brand/10 hover:bg-brand/15 text-ink px-3.5 py-2 rounded-xl text-[13px] font-bold border border-brand/25 cursor-pointer"><i class="ph-bold ph-image"></i> رفع<input type="file" accept="image/*" class="hidden" onchange="uploadPkdImage(this, 'strip')"></label><button type="button" id="pkd-strip-clear" onclick="setPkd({ strip: null })" class="hidden text-xs text-rose-600 font-bold">إزالة</button></div><p class="text-[11px] text-ink mt-1">صورة عرضية، مثل صورة أطباقك أو واجهة المحل.</p></div>
+                </div>
+                <button type="button" id="pkd-save" class="bg-brand text-cream hover:bg-brand-dark px-4 py-2.5 rounded-xl text-[13px] font-bold transition disabled:opacity-50" disabled>حفظ التصميم</button>
+              </div>
+            </div>
+          </div>
           <div class="pro-card p-5 space-y-4">
             <div class="flex flex-wrap items-start justify-between gap-3">
               <div><h3 class="text-base font-bold"><i class="ph-bold ph-package text-emerald-600"></i> باقاتك</h3>
@@ -2611,7 +2634,7 @@
       <button data-nav="customers" data-needs="loyalty" class="more-item"><i class="ph-bold ph-users-three"></i><span>العملاء</span></button>
       <button data-nav="pagerset" data-free-hide class="more-item"><i class="ph-bold ph-bell-simple-ringing"></i><span>إعدادات البيجر</span></button>
       <button data-nav="waitlist" class="more-item"><i class="ph-bold ph-hourglass-medium"></i><span>قائمة الانتظار</span></button>
-      <button data-nav="subs" class="more-item"><i class="ph-bold ph-package"></i><span>الاشتراكات</span></button>
+      <button data-nav="subs" class="more-item"><i class="ph-bold ph-package"></i><span>بطاقة الاشتراكات</span></button>
       <button data-nav="branches" class="more-item"><i class="ph-bold ph-git-branch"></i><span>الفروع</span></button>
       <button data-nav="devices" data-needs="menu|pager|waitlist|loyalty" class="more-item"><i class="ph-bold ph-devices"></i><span>الأجهزة</span></button>
       <button data-nav="settings" class="more-item"><i class="ph-bold ph-palette"></i><span>هوية المنشأة</span></button>

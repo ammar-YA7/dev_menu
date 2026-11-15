@@ -110,6 +110,8 @@
     $('store').textContent = s.name;
     if (s.logo_url) { $('logo').src = s.logo_url; $('logo').classList.remove('hidden'); }
     if (s.color) $('pkg').style.background = s.color;
+    // صورة الغلاف من تصميم بطاقة الاشتراكات
+    if (s.strip) { $('pkg').style.backgroundImage = `linear-gradient(rgba(0,0,0,.45), rgba(0,0,0,.55)), url("${s.strip}")`; $('pkg').style.backgroundSize = 'cover'; $('pkg').style.backgroundPosition = 'center'; }
     $('plan').textContent = `باقة ${c.plan_name}`;
     $('pend').classList.toggle('hidden', !c.pending);
     $('who').textContent = c.name;

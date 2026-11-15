@@ -10,7 +10,7 @@
 //   POST loyalty-pkg-delete     حذف باقة زبون             (صاحب المحل)
 // =====================================================================
 const crypto = require('crypto');
-const { rest, rpc, ApiError, str, int, waNumber, context, familyIds, poke, topic, PLANS, parseMemberQr, pushWalletCards } = require('./shared');
+const { rest, rpc, ApiError, str, int, waNumber, context, familyIds, poke, topic, PLANS, parseMemberQr, pushWalletCards, ownsMediaUrl } = require('./shared');
 const NEXT = require('./next');
 const P = require('../packages');
 const wallet = require('../wallet');
@@ -32,7 +32,8 @@ module.exports.pre = async function pre(action, req) {
       // الكاشير يحتاج الباقات بس (يبيع ويمسح)، والقائمة الكاملة لصاحب المحل
       desk ? Promise.resolve([]) : rest(`loyalty_pkg_cards?client_id=eq.${store.id}&select=*&order=created_at.desc&limit=300`)
     ]);
-    return { plans, cards: cards.map(c => ({ ...P.cardView(c), phone: c.phone || null })) };
+    const design = desk ? null : ((await rest(`clients?id=eq.${store.id}&select=subs_design`).catch(() => []))[0] || {}).subs_design || {};
+    return { plans, design, cards: cards.map(c => ({ ...P.cardView(c), phone: c.phone || null })) };
   }
   return NEXT;
 };
@@ -62,6 +63,26 @@ module.exports.post = async function post(action, req, b, env) {
       await rest('loyalty_pkg_plans', { method: 'POST', body: { client_id: sid, ...body } });
     }
     return { plans: await plansOf(sid) };
+  }
+
+  // تصميم بطاقة الاشتراكات: اللون والشعار وصورة الغلاف، ويتحدث في بطاقات العملاء اللي في المحفظة
+  if (action === 'loyalty-pkg-design') {
+    ownerOnly();
+    const d = b.design || {}, out = {};
+    if (d.color) { if (!/^#[0-9a-f]{6}$/i.test(String(d.color))) throw new ApiError(400, 'اللون غير صحيح'); out.color = String(d.color).toLowerCase(); }
+    for (const k of ['logo', 'strip']) {
+      if (!d[k]) continue;
+      if (!ownsMediaUrl(String(d[k]), sid)) throw new ApiError(400, 'الصورة غير تابعة لمتجرك');
+      out[k] = String(d[k]);
+    }
+    await rest(`clients?id=eq.${sid}`, { method: 'PATCH', body: { subs_design: out } });
+    const cards = await rest(`loyalty_pkg_cards?client_id=eq.${sid}&wallet_serial=not.is.null&select=id&order=last_used_at.desc.nullslast&limit=400`).catch(() => []);
+    let updated = 0; const started = Date.now();
+    for (let i = 0; i < cards.length && Date.now() - started < 40e3; i += 10) {
+      const rs = await Promise.all(cards.slice(i, i + 10).map(c => P.pushCard(sid, c.id).catch(() => null)));
+      updated += rs.filter(r => String(r || '').startsWith('ok')).length;
+    }
+    return { design: out, wallet_updated: updated };
   }
 
   if (action === 'loyalty-pkg-plan-off') {

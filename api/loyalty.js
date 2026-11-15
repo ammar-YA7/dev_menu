@@ -457,9 +457,9 @@ module.exports = handler(['GET', 'POST'], async (req, res) => {
       if (bad || !here) throw new ApiError(404, 'الاشتراكات غير متاحة', 'NOT_AVAILABLE');
       const home = await loyaltyHome(here.id);
       if (!(await storeHasFeature(home, 'subs'))) throw new ApiError(404, 'الاشتراكات غير متاحة حالياً', 'NOT_AVAILABLE');
-      const main = (await rest(`clients?id=eq.${home}&select=name,logo_url,loyalty_settings,currency`))[0] || {};
-      const design = normalizeLoyalty(main.loyalty_settings).design || {};
-      const storeInfo = { name: main.name, logo_url: design.logo || main.logo_url, color: design.color || null, currency: main.currency || 'SAR' };
+      const main = (await rest(`clients?id=eq.${home}&select=name,logo_url,loyalty_settings,currency,subs_design`))[0] || {};
+      const design = P.designOf(main, normalizeLoyalty(main.loyalty_settings));
+      const storeInfo = { name: main.name, logo_url: design.logo, color: design.color, strip: design.strip, currency: main.currency || 'SAR' };
       const plansOf = () => rest(`loyalty_pkg_plans?client_id=eq.${home}&active=is.true&select=id,name,uses,days,price&order=id.asc`);
       // صفحة الاشتراك: الباقات المتاحة يختار منها الزبون
       if (action === 'pkg-plans') return { store: storeInfo, plans: await plansOf() };

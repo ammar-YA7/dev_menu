@@ -19,7 +19,7 @@
     let saved = ''; try { saved = localStorage.getItem('dm_ly_tab') || ''; } catch {}
     setLyTab(['overview', 'design', 'settings', 'messages', 'register'].includes(ly.tab || saved) ? (ly.tab || saved) : 'overview');
     try { [ly.data, ly.members] = await Promise.all([api('loyalty'), api('loyalty-members').then(r => r.members)]); }
-    catch (e) { showToast(e.message || 'تعذر تحميل بطاقة الولاء', true); return; }
+    catch (e) { showToast(e.message || 'تعذر تحميل بطاقة الأختام', true); return; }
     renderLoyalty();
     renderLyMembers();
   }
@@ -593,8 +593,42 @@
   // ─── الباقات المدفوعة مسبقاً (تبويب «الباقات») ───
   const pk = { plans: [], cards: [], q: '' };
   const pkDate = (iso) => new Date(iso).toLocaleDateString('ar-SA-u-nu-latn', { day: 'numeric', month: 'short', year: 'numeric' });
+  // ─── تصميم بطاقة الاشتراكات ───
+  const PKD_COLORS = ['#233d2c', '#3f7a4a', '#1b1b1b', '#0f172a', '#7c2d12', '#be185d', '#1e4fa3', '#6b4e3d'];
+  pk.design = {}; pk.dirty = false;
+  function setPkd(patch) { pk.design = { ...pk.design, ...patch }; pk.dirty = true; renderPkd(); }
+  function renderPkd() {
+    const d = pk.design, color = d.color || (ly.data && ly.data.settings && ly.data.settings.design && ly.data.settings.design.color) || '#233d2c';
+    const logo = d.logo || (ly.data && ly.data.settings && ly.data.settings.design && ly.data.settings.design.logo) || client.logo_url;
+    document.getElementById('pkd-pv').style.background = color;
+    document.getElementById('pkd-pv-name').textContent = client.name || '';
+    const lg = document.getElementById('pkd-pv-logo'); lg.classList.toggle('hidden', !logo); if (logo) lg.src = logo;
+    const st = document.getElementById('pkd-pv-strip'); st.style.backgroundImage = d.strip ? `url("${d.strip}")` : ''; st.classList.toggle('hidden', !d.strip);
+    document.getElementById('pkd-colors').innerHTML = PKD_COLORS.map(c => `<button type="button" aria-label="${c}" onclick="setPkd({ color: '${c}' })" class="w-8 h-8 rounded-full border ${d.color === c ? 'ring-2 ring-offset-2 ring-brand' : 'border-black/10'}" style="background:${c}"></button>`).join('')
+      + `<label class="relative w-8 h-8 rounded-full border border-dashed border-ink/30 grid place-items-center cursor-pointer text-ink" title="لون آخر"><i class="ph-bold ph-paint-brush"></i><input type="color" value="${d.color || '#233d2c'}" class="absolute inset-0 opacity-0 cursor-pointer" onchange="setPkd({ color: this.value })"></label>`;
+    document.getElementById('pkd-logo-clear').classList.toggle('hidden', !d.logo);
+    document.getElementById('pkd-strip-clear').classList.toggle('hidden', !d.strip);
+    document.getElementById('pkd-save').disabled = !pk.dirty;
+  }
+  async function uploadPkdImage(input, key) {
+    const file = input.files && input.files[0]; input.value = '';
+    if (!file) return;
+    const url = await uploadFile(file, key === 'strip' ? 'card_bg' : 'stamp', key === 'strip' ? 1125 : 500);
+    if (!url) return showToast(lastUploadError || 'ما انرفعت الصورة. جرّب صورة أصغر أو تأكد من الإنترنت', true);
+    setPkd({ [key]: url });
+    showToast('انرفعت الصورة، شوف المعاينة واضغط «حفظ التصميم»');
+  }
+  document.getElementById('pkd-save').addEventListener('click', async () => {
+    const btn = document.getElementById('pkd-save'); btn.disabled = true;
+    try {
+      const r = await api('loyalty-pkg-design', { design: pk.design });
+      pk.design = r.design || {}; pk.dirty = false;
+      showToast(r.wallet_updated ? `تم حفظ التصميم، وتحدّثت ${r.wallet_updated} بطاقة في المحفظة` : 'تم حفظ تصميم بطاقة الاشتراكات');
+    } catch (e) { showToast(e.message || 'لم يُحفظ التصميم', true); }
+    renderPkd();
+  });
   async function loadPackages() {
-    try { const r = await api('loyalty-pkg'); pk.plans = r.plans || []; pk.cards = r.cards || []; }
+    try { const r = await api('loyalty-pkg'); pk.plans = r.plans || []; pk.cards = r.cards || []; if (!pk.dirty) pk.design = r.design || {}; }
     catch (e) { showToast(e.message || 'تعذر تحميل الباقات', true); return; }
     renderPackages();
   }
@@ -608,7 +642,7 @@
   }
   document.getElementById('pk-copy').addEventListener('click', async () => { try { await navigator.clipboard.writeText(DM.storeUrl(client.client_slug, 'package')); showToast('تم نسخ الرابط'); } catch {} });
   function renderPackages() {
-    renderSubsQr();
+    renderSubsQr(); renderPkd();
     document.getElementById('pk-plans').innerHTML = pk.plans.length ? pk.plans.map(p => `
       <div class="rounded-xl border border-black/10 p-4 flex items-start justify-between gap-3">
         <div class="min-w-0"><p class="font-bold truncate">${esc(p.name)}</p>

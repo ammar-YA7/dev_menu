@@ -63,6 +63,9 @@ alter table public.loyalty_pkg_cards enable row level security;
 alter table public.loyalty_pkg_uses  enable row level security;
 revoke all on public.loyalty_pkg_plans, public.loyalty_pkg_cards, public.loyalty_pkg_uses from anon, authenticated;
 
+-- تصميم بطاقة الاشتراكات (اللون والشعار وصورة الغلاف)، مستقل عن تصميم بطاقة الأختام
+alter table public.clients add column if not exists subs_design jsonb;
+
 -- استخدام واحد من الرصيد (ذري: مسحتين بنفس اللحظة ما ينقصون مرتين من رصيد واحد باقي)
 create or replace function public.server_pkg_use(p_card bigint, p_branch bigint)
 returns jsonb language plpgsql security definer set search_path = public as $$

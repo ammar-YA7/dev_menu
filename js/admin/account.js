@@ -711,7 +711,7 @@
     g.fillStyle = '#ffffff'; g.fillRect(0, 0, W, H);
     g.fillStyle = '#233d2c'; g.fillRect(0, 0, W, 420);   // أخضر الشعار
     g.fillStyle = '#a7d7ae'; g.font = `700 44px ${FONT}`; g.fillText(client.name || '', cx, 150);
-    g.fillStyle = '#ffffff'; g.font = `700 76px ${FONT}`; g.fillText('امسح وسجّل في بطاقة الولاء', cx, 290);
+    g.fillStyle = '#ffffff'; g.font = `700 76px ${FONT}`; g.fillText('امسح وسجّل في بطاقة الأختام', cx, 290);
     const qr = document.querySelector('#ly-qr canvas') || document.querySelector('#ly-qr img');
     g.fillStyle = '#e2e8f0'; roundRectPath(g, cx - 340, 510, 680, 680, 44); g.fill();   // إطار رمادي رفيع
     g.fillStyle = '#ffffff'; roundRectPath(g, cx - 337, 513, 674, 674, 41); g.fill();

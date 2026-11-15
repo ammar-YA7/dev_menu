@@ -32,9 +32,14 @@ const cardView = (c) => ({
   qr: pkgQr(c), in_wallet: !!c.wallet_url, member: !!c.loyalty_card_id, pending: c.status === 'pending'
 });
 
+// تصميم بطاقة الاشتراكات: الخاص فيها، وإلا لون وشعار بطاقة الأختام
+const designOf = (store, settings) => {
+  const own = store.subs_design || {}, ly = (settings && settings.design) || {};
+  return { color: own.color || ly.color || null, logo: own.logo || ly.logo || store.logo_url || null, strip: own.strip || null };
+};
 function passBody(store, settings, c, notice) {
   const L = (t) => tr(c.lang, t);
-  const d = settings.design || {};
+  const d = designOf(store, settings);
   const body = {
     logoText: String(store.name || 'DEV MENU').slice(0, 40),
     organizationName: String(store.name || 'DEV MENU').slice(0, 64),
@@ -54,13 +59,13 @@ function passBody(store, settings, c, notice) {
     ...(String(notice || '').trim() ? { notification: String(notice).slice(0, 250) } : {})
   };
   if (d.color) { body.color = d.color; delete body.colorPreset; }
-  const logo = d.logo || store.logo_url;
-  if (logo && /^https:\/\//.test(logo)) body.logoURL = logo;
+  if (d.logo && /^https:\/\//.test(d.logo)) body.logoURL = d.logo;
+  if (d.strip && /^https:\/\//.test(d.strip)) body.stripURL = d.strip;
   return body;
 }
 
 async function storeFor(storeId) {
-  const store = (await rest(`clients?id=eq.${storeId}&select=id,name,client_slug,logo_url,loyalty_settings`))[0];
+  const store = (await rest(`clients?id=eq.${storeId}&select=id,name,client_slug,logo_url,loyalty_settings,subs_design`))[0];
   if (!store) throw new ApiError(404, 'المحل غير موجود');
   return { store, settings: normalizeLoyalty(store.loyalty_settings) };
 }
@@ -103,4 +108,4 @@ async function useCard(storeId, cardId, branchId) {
   return r;
 }
 
-module.exports = { pkgQr, isPkgQr, parsePkgQr, pageUrl, cardView, expired, passBody, pushCard, createWallet, useCard };
+module.exports = { designOf, storeFor, pkgQr, isPkgQr, parsePkgQr, pageUrl, cardView, expired, passBody, pushCard, createWallet, useCard };

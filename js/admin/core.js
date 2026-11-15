@@ -95,9 +95,9 @@
     dashboard: ['الرئيسية', 'نظرة عامة على منشأتك وخدماتك'],
     menu:      ['المنيو', 'أضف أطباقك وأقسامك ورتّبها'],
     waitlist:  ['قائمة الانتظار', 'سجّل عملاءك وبلّغهم لما يجي دورهم'],
-    loyalty:   ['بطاقة الولاء', 'تصميم البطاقة وإعداداتها وأرقامها'],
-    subs:      ['الاشتراكات', 'باقات مدفوعة مسبقاً يستخدمها عملاؤك على دفعات'],
-    customers: ['العملاء', 'أعضاء بطاقة الولاء في كل فروعك'],
+    loyalty:   ['بطاقة الأختام', 'تصميم البطاقة وإعداداتها وأرقامها'],
+    subs:      ['بطاقة الاشتراكات', 'باقات مدفوعة مسبقاً يستخدمها عملاؤك على دفعات'],
+    customers: ['العملاء', 'أعضاء بطاقة الأختام في كل فروعك'],
     messages:  ['الرسائل', 'أرسل عروضك وأخبارك لجوالات عملائك'],
     branches:  ['الفروع', 'فروعك ومميزات كل فرع'],
     devices:   ['الأجهزة', 'روابط شاشات المحل: الكاشير وشاشة الزبون والجهاز اللوحي'],
@@ -132,7 +132,7 @@
     a.href = 'pager-desk.html' + location.search; setupMark('pager'); return true;
   }
   // روابط الخدمات المفعّلة
-  const SVC_PAGES = [['menu', 'menu', 'المنيو', 'ph-fork-knife'], ['pager', 'pager', 'البيجر', 'ph-bell'], ['waitlist', 'waitlist', 'قائمة الانتظار', 'ph-hourglass-medium'], ['loyalty', 'loyalty', 'بطاقة الولاء', 'ph-seal-check']];
+  const SVC_PAGES = [['menu', 'menu', 'المنيو', 'ph-fork-knife'], ['pager', 'pager', 'البيجر', 'ph-bell'], ['waitlist', 'waitlist', 'قائمة الانتظار', 'ph-hourglass-medium'], ['loyalty', 'loyalty', 'بطاقة الأختام', 'ph-seal-check'], ['subs', 'package', 'بطاقة الاشتراكات', 'ph-package']];
   function renderServiceLinks() {
     const box = document.getElementById('svc-links');
     if (!box || !client) return;
@@ -244,7 +244,7 @@
     }));
     if (!featureLocked('loyalty')) jobs.push(api('loyalty').catch(() => null).then(d => {
       const st = (d && d.stats) || {};
-      return svcCard('ph-seal-check', 'بطاقة الولاء', '#loyalty',
+      return svcCard('ph-seal-check', 'بطاقة الأختام', '#loyalty',
         tile(st.members || 0, 'عضو') + tile(st.stamps7 || 0, 'ختم هالأسبوع') + tile(st.redeemed || 0, 'مكافأة'),
         d && !d.enabled ? 'البطاقة متوقفة، شغّلها من صفحة الولاء' : `${st.active30 || 0} عضو زاروك آخر 30 يوم`,
         '',   // أزرار المسح والختم صارت فوق في «شغل اليوم»
@@ -437,7 +437,7 @@
     }
     if (has('pager')) steps.push({ title: 'جرّب البيجر', done: !!f.pager,
       hint: 'افتح شاشة البيجر عند الكاشير، وجرّب النداء على جوالك.', href: 'pager-desk.html', label: 'افتح الشاشة' });
-    if (has('loyalty')) steps.push({ title: 'جهّز بطاقة الولاء', done: !!f.loyalty,
+    if (has('loyalty')) steps.push({ title: 'جهّز بطاقة الأختام', done: !!f.loyalty,
       hint: 'حدد عدد الأختام والمكافأة، ثم احفظ.', go: "location.hash='loyalty'", label: 'جهّزها' });
 
     const left = steps.filter(s => !s.done).length;
