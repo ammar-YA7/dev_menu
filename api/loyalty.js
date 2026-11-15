@@ -58,6 +58,14 @@ function checkPresence(ctx, b) {
 
 // متأكدين إن البطاقة في جواله: آخر تحديث وصل لجهاز آيفون (أو نجح لبطاقة قوقل). مجرد تجهيز البطاقة ما يعني إنه ضغط «إضافة»
 const walletSeen = (c) => { const last = String(c.wallet_error || '').split('|').pop(); return !!c.wallet_url && /^ok/.test(last) && (c.wallet_platform === 'google' || /devices=[1-9]/.test(last)); };
+// true/false من شركة المحفظة، أو null لو ما قدرنا نعرف (نرجع للتقدير من آخر تحديث)
+async function walletInstalled(c) {
+  if (!c.wallet_serial || !wallet.configured()) return c.wallet_serial ? null : false;
+  try {
+    const d = await Promise.race([wallet.getPass(c.wallet_serial), new Promise((_, no) => setTimeout(() => no(new Error('timeout')), 2500))]);
+    return (Array.isArray(d.devices) && d.devices.length > 0) || d.googleInstalled === 'saved';
+  } catch { return null; }
+}
 const cardView = (c) => ({ no: c.member_no, qr: c.client_id ? memberQr(c) : null, name: c.name || null, gender: c.gender || null, stamps: c.stamps, visits: c.visits, rewards: c.rewards, last_stamp_at: c.last_stamp_at, in_wallet: !!c.wallet_url && !wallet.passRemoved(c.wallet_error, c.wallet_platform), wallet_seen: walletSeen(c), has_phone: !!c.phone, has_profile: !!(c.name && c.phone && c.gender) });
 
 // بيانات التسجيل: الاسم والجوال والنوع (كلها إجبارية)
@@ -213,8 +221,11 @@ module.exports = handler(['GET', 'POST'], async (req, res) => {
       const m = await latestMessage(ctx.store.id, card.id, ctx.settings);
       const message = m && Date.parse(m.created_at) > Date.now() - 14 * 864e5 ? { id: m.id, body: m.body, at: m.created_at } : null;
       // "ليش ما رجعت؟" صار في شاشة الختم (kiosk) وقت ما يختم، مو في صفحة البطاقة
-      const gifts = await giftsFor(ctx, card);
-      return { ...publicInfo(ctx), card: cardView(card), message, survey: false, gifts };
+      // نسأل شركة المحفظة: البطاقة مضافة في جوال الحين؟ (آيفون: أجهزة مسجلة، أندرويد: محفوظة في Google Wallet)
+      const [gifts, installed] = await Promise.all([giftsFor(ctx, card), walletInstalled(card)]);
+      const view = cardView(card);
+      if (installed !== null) { view.wallet_seen = installed; view.in_wallet = installed; }
+      return { ...publicInfo(ctx), card: view, message, survey: false, gifts };
     }
 
     // بطاقة جديدة (أو رجوع لبطاقته من جوال ثاني بنفس الرقم، وهو داخل المحل) + ختم أول زيارة

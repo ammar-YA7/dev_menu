@@ -632,6 +632,20 @@
   };
 
   $('wallet-again').onclick = () => $('wallet-btn').onclick();
+  // رجع من المحفظة (ضغط «إضافة» أو ألغى): نسأل من جديد هل البطاقة صارت في جواله
+  let walletCheckAt = 0;
+  document.addEventListener('visibilitychange', async () => {
+    if (document.visibilityState !== 'visible' || !card || card.wallet_seen || !walletOn || Date.now() - walletCheckAt < 3000) return;
+    walletCheckAt = Date.now();
+    const t = loadToken(); if (!t) return;
+    for (const wait of [800, 2500]) {
+      await new Promise(r => setTimeout(r, wait));
+      try {
+        const r = await DM.get(`/api/loyalty?action=card&slug=${encodeURIComponent(slug)}&t=${encodeURIComponent(t)}`);
+        if (r.card && r.card.wallet_seen) { card.wallet_seen = true; card.in_wallet = true; renderCard(); return; }
+      } catch {}
+    }
+  });
 
   // ─── البداية ───
   // الرابط اللي على ظهر بطاقة المحفظة فيه رقم البطاقة: نحفظه ونشيله من الرابط

@@ -14,12 +14,6 @@ module.exports = handler(['GET', 'POST'], async (req) => {
   await assertCronKey(req);
   const started = Date.now();
   // الفروع ولاءها على المحل الرئيسي، فالمساعد يشتغل على الرئيسي بس
-  // مؤقت للفحص: شكل رد شركة المحفظة لبطاقة وحدة (المفاتيح والأجهزة بس)
-  if (req.query.only === 'passinfo') {
-    const d = await require('./_lib/wallet').getPass(String(req.query.serial || '')).catch(e => ({ error: e.message, status: e.status }));
-    const walk = (o, depth = 0) => o && typeof o === 'object' && depth < 3 ? Object.fromEntries(Object.entries(o).map(([k, v]) => [k, Array.isArray(v) ? `array(${v.length}) ${JSON.stringify(v[0] || null).slice(0, 200)}` : typeof v === 'object' ? walk(v, depth + 1) : typeof v === 'string' ? v.slice(0, 40) : v])) : o;
-    return walk(d);
-  }
   const stores = await rest('clients?loyalty_enabled=is.true&loyalty_ai=is.true&is_active=is.true&parent_id=is.null&select=id&order=id.asc&limit=200');
   // بطاقات المحفظة اللي فشل تحديثها (مثل رصيد خدمة المحفظة الشهري خلص): نعيد إرسالها بعدد أختامها الصحيح
   const retry = { cards: 0, sent: 0 };
