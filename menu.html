@@ -920,7 +920,29 @@
     } catch (e) { console.error(e); }
   }
   // يترجم كل النصوص دفعة وحدة (6 طلبات بالتوازي) بدل طبق طبق
+  // ترجمات الموقع المجاني تنحفظ في الجوال، فما تنعاد كل مرة يفتح الزبون المنيو
+  const TR_KEY = 'dm_tr_v1';
+  try { Object.assign(translationCache, JSON.parse(localStorage.getItem(TR_KEY) || '{}')); } catch (e) {}
+  const saveTr = () => { try { const e = Object.entries(translationCache); localStorage.setItem(TR_KEY, JSON.stringify(Object.fromEntries(e.slice(-600)))); } catch (e) {} };
+  // الأقسام والأطباق والأوصاف والأحجام يترجمها الخادم مرة وحدة ويحفظها في المنيو: سريعة وأدق، وتطلع لكل الزبائن بعدها فوراً
+  async function serverTranslate() {
+    const miss = allCategories.some(c => !c.name_en && hasArabic(c.name || "")) || allProducts.some(p => (!p.name_en && hasArabic(p.name || "")) || (!p.description_en && hasArabic(p.description || ""))
+      || (Array.isArray(p.sizes) && p.sizes.some(z => z && !z.name_en && hasArabic(String(z.name || "")))));
+    if (!miss || !clientSlug) return;
+    try {
+      const { map } = await DM.post('/api/public?action=translate', { slug: clientSlug });
+      if (!map) return;
+      const get = (t) => t && map[String(t).trim()];
+      allCategories.forEach(c => { if (!c.name_en && get(c.name)) c.name_en = get(c.name); });
+      allProducts.forEach(p => {
+        if (!p.name_en && get(p.name)) p.name_en = get(p.name);
+        if (!p.description_en && get(p.description)) p.description_en = get(p.description);
+        (Array.isArray(p.sizes) ? p.sizes : []).forEach(z => { if (z && !z.name_en && get(z.name)) z.name_en = get(z.name); });
+      });
+    } catch (e) { console.warn('translate', e.message || e); }
+  }
   async function translateAll() {
+    await serverTranslate();
     const texts = new Set();
     allCategories.forEach(c => { if (!c.name_en && c.name) texts.add(c.name); });
     allProducts.forEach(p => {
@@ -935,7 +957,9 @@
     });
     if (project && project.promo_message) texts.add(project.promo_message);
     const list = [...texts].filter(t => !translationCache[t]);
-    for (let i = 0; i < list.length; i += 6) await Promise.all(list.slice(i, i + 6).map(translateText));
+    // الباقي (ملاحظات، فئات فرعية، الإعلان...) عادةً قليل: كلها بالتوازي
+    for (let i = 0; i < list.length; i += 12) await Promise.all(list.slice(i, i + 12).map(translateText));
+    if (list.length) saveTr();
   }
   const tr = (t) => (currentLang === 'en' && t) ? (translationCache[t] || t) : (t || '');
   const productName = (p) => currentLang === 'en' ? (p.name_en || tr(p.name)) : p.name;

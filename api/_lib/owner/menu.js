@@ -328,6 +328,9 @@ module.exports.post = async function post(action, req, b, env) {
       const old = (await rest(`products?id=eq.${id}&client_id=eq.${sid}&select=*`))[0];
       if (!old) throw new ApiError(404, 'الطبق غير موجود');
       if (old.category !== category) payload.sort_order = await nextOrder();
+      // تغيّر الاسم أو الوصف بالعربي والإنجليزي ما تغيّر: الترجمة القديمة ما عادت تطابق، تنمسح وتنترجم من جديد
+      if (old.name !== name && payload.name_en && payload.name_en === old.name_en) payload.name_en = null;
+      if ((old.description || '') !== (payload.description || '') && payload.description_en && payload.description_en === old.description_en) payload.description_en = null;
       // تغيّرت الصورة: المفرّغة القديمة ما عادت تطابق
       if (payload.image_url !== undefined && payload.image_url !== old.image_url) payload.cutout_url = null;
       const rows = await rest(`products?id=eq.${id}&client_id=eq.${sid}`, { method: 'PATCH', body: payload, prefer: 'return=representation' });

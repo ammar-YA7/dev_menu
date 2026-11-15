@@ -7,6 +7,7 @@
 //   POST /api/public?action=coupon          فحص كوبون خصم على سلة الطلب وحساب الخصم
 //   POST /api/public?action=coupon-redeem   تسجيل استخدام الكوبون عند إرسال الطلب
 //   POST /api/public?action=track           تسجيل زيارة/مشاهدة (مجهولة)
+//   POST /api/public?action=translate       ترجمة المنيو للإنجليزي مرة وحدة وحفظها
 // =====================================================================
 const crypto = require('crypto');
 const PLANS = require('./_lib/plans');
@@ -273,6 +274,44 @@ module.exports = handler(['GET', 'POST'], async (req, res) => {
       rpc('server_faq_set', { p_client: store.id, p_qkey: qkey, p_answer: reply, p_version: ver, p_ok: ok }).catch(e => console.warn('faq set', e.message));
     }
     return { reply };
+  }
+
+  // ─── ترجمة المنيو للإنجليزي ───
+  // أول زبون يضغط English: نترجم الأقسام والأطباق والأوصاف والأحجام الناقصة دفعة وحدة ونحفظها في المنيو،
+  // فالزبائن بعده يفتحون الإنجليزي فوراً بدون ترجمة. اللي فيه ترجمة (من صاحب المحل أو من قبل) ما نلمسه
+  if (action === 'translate' && req.method === 'POST') {
+    const b = await readBody(req);
+    const { store, categories, products } = await menuPayload(b.slug);
+    const has = (t) => /[\u0600-\u06FF]/.test(t || '');
+    const texts = new Set();
+    categories.forEach(c => { if (!c.name_en && has(c.name)) texts.add(c.name.trim()); });
+    products.forEach(p => {
+      if (!p.name_en && has(p.name)) texts.add(p.name.trim());
+      if (!p.description_en && has(p.description)) texts.add(p.description.trim());
+      (Array.isArray(p.sizes) ? p.sizes : []).forEach(z => { if (z && !z.name_en && has(z.name)) texts.add(String(z.name).trim()); });
+    });
+    // الترجمات المحفوظة ترجع كلها: الزبون اللي عنده نسخة منيو قديمة من الكاش ياخذها من هنا
+    const map = {};
+    const keep = (ar, en) => { if (ar && en && has(ar)) map[String(ar).trim()] = en; };
+    categories.forEach(c => keep(c.name, c.name_en));
+    products.forEach(p => { keep(p.name, p.name_en); keep(p.description, p.description_en); (Array.isArray(p.sizes) ? p.sizes : []).forEach(z => z && keep(z.name, z.name_en)); });
+    const list = [...texts].slice(0, 400);
+    if (!list.length) return { map };
+    const { translateMenu } = require('./_lib/ai');
+    const en = await translateMenu(list);
+    list.forEach((t, i) => { const v = String(en[i] || '').replace(/[<>]/g, '').trim(); if (v && !has(v)) map[t] = v; });
+    const get = (t, max) => (t && map[t.trim()] ? map[t.trim()].slice(0, max) : null);
+    const jobs = [];
+    categories.forEach(c => { const v = !c.name_en && get(c.name, 60); if (v) jobs.push(() => rest(`categories?id=eq.${c.id}&client_id=eq.${store.id}&name_en=is.null`, { method: 'PATCH', body: { name_en: v } })); });
+    products.forEach(p => {
+      const patch = {};
+      const n = !p.name_en && get(p.name, 100); if (n) patch.name_en = n;
+      const d = !p.description_en && get(p.description, 500); if (d) patch.description_en = d;
+      if (Array.isArray(p.sizes) && p.sizes.some(z => z && !z.name_en && get(z.name, 30))) patch.sizes = p.sizes.map(z => (z && !z.name_en && get(z.name, 30) ? { ...z, name_en: get(z.name, 30) } : z));
+      if (Object.keys(patch).length) jobs.push(() => rest(`products?id=eq.${p.id}&client_id=eq.${store.id}`, { method: 'PATCH', body: patch }));
+    });
+    for (let i = 0; i < jobs.length; i += 10) await Promise.all(jobs.slice(i, i + 10).map(j => j().catch(e => console.warn('translate save', e.message))));
+    return { map };
   }
 
   // ─── أكثر أسئلة زبائن المحل (أزرار جاهزة في المساعد) ───
