@@ -336,6 +336,10 @@
   .stp-skip { display: block; margin: 16px auto 0; font-size: 14.5px; font-weight: 600; color: var(--muted); text-decoration: underline; }
   .car-c { display: flex; align-items: center; gap: 6px; border-radius: 99px; padding: 8px 12px; font-size: 14px; font-weight: 600; border: 1px solid #ddd5c6; background: #fff; }
   .car-c[aria-checked="true"] { border-color: var(--ink); background: var(--ink); color: #fff; }
+  .car-sug { display: flex; gap: 6px; overflow-x: auto; margin-top: 8px; padding-bottom: 2px; scrollbar-width: none; }
+  .car-sug::-webkit-scrollbar { display: none; }
+  .car-sug:empty { display: none; }
+  .car-sug button { flex: none; border-radius: 99px; padding: 6px 12px; font-size: 13.5px; font-weight: 700; border: 1px dashed currentColor; opacity: .8; }
 
   /* ─── اللعبة: لوحة غامقة بلون المحل وسط الورق ─── */
   .mg { background: var(--brand-d); border: 0; border-radius: 20px; }
@@ -459,6 +463,7 @@
           <input id="s-car-model" class="field flex-1 min-w-0 !text-[17px]" maxlength="24" autocomplete="off" placeholder="نوعها، مثل: كامري">
           <input id="s-car-plate" class="field !w-28 text-center !text-[17px] tracking-widest" inputmode="numeric" maxlength="4" autocomplete="off" dir="ltr" placeholder="اللوحة" aria-label="آخر أرقام اللوحة (اختياري)">
         </div>
+        <div id="s-car-sug" class="car-sug" aria-label="أنواع سيارات مقترحة"></div>
         <p id="s-car-err" class="hidden text-[14px] font-bold text-rose-700 mt-2"></p>
         <button id="s-car-next" class="btn btn-wallet mt-3">التالي</button>
         <button type="button" id="s-car-skip" class="stp-skip">بستلمه من الكاشير</button>
@@ -580,6 +585,7 @@
         <input id="car-model" class="field flex-1 min-w-0" maxlength="24" autocomplete="off" placeholder="نوعها، مثل: كامري">
         <input id="car-plate" class="field !w-28 text-center tracking-widest" inputmode="numeric" maxlength="4" autocomplete="off" dir="ltr" placeholder="اللوحة" aria-label="آخر أرقام اللوحة (اختياري)">
       </div>
+      <div id="car-sug" class="car-sug" aria-label="أنواع سيارات مقترحة"></div>
       <p class="text-[11.5px] font-bold opacity-75 -mt-1">أرقام اللوحة اختيارية</p>
       <button id="car-save" class="btn btn-brand !py-3 !text-base">تم</button>
       <p id="car-err" class="hidden text-[12px] font-bold text-rose-700"></p>
@@ -1147,6 +1153,25 @@
   }  // ─── تسليم الطلب للسيارة ───
   const CAR_COLORS = [['أبيض', '#ffffff'], ['أسود', '#111111'], ['فضي', '#c0c4c8'], ['رمادي', '#7a7f85'], ['أحمر', '#c62828'], ['أزرق', '#1e4fa3'], ['بني', '#6d4c41'], ['بيج', '#d9c4a1'], ['أخضر', '#2e7d32'], ['ذهبي', '#c9a227']];
   let carEditing = false, carColor = '';
+  // أنواع السيارات المنتشرة في السعودية: الزبون يضغط بدل ما يكتب، ولو كتب تطلع له المطابقة
+  const CAR_MODELS = ['كامري', 'هايلكس', 'لاندكروزر', 'أكسنت', 'إلنترا', 'يوكن', 'صني', 'كورولا', 'تاهو', 'باترول', 'يارس', 'برادو', 'سوناتا', 'توسان', 'سنتافي',
+    'أكورد', 'سيفيك', 'فورتشنر', 'راف فور', 'أفالون', 'كريتا', 'أزيرا', 'ألتيما', 'إكس تريل', 'سيلفرادو', 'ماليبو', 'إكسبلورر', 'تورس', 'إكسبيديشن', 'إف 150',
+    'سييرا', 'سبورتاج', 'سيراتو', 'سورينتو', 'كي 5', 'ريو', 'بيكانتو', 'مازدا 6', 'سي إكس 5', 'دزاير', 'سويفت', 'أتراج', 'باجيرو', 'شانجان', 'جيلي', 'هافال',
+    'إم جي', 'لكزس', 'مرسيدس', 'بي إم دبليو', 'أودي', 'رنج روفر', 'جيب', 'دودج', 'نيسان', 'تويوتا', 'هيونداي', 'كيا', 'فورد', 'شفرولية', 'جي إم سي'];
+  const carNorm = (t) => String(t || '').replace(/[أإآ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').replace(/\s+/g, ' ').trim().toLowerCase();
+  function carSuggest(inputId, boxId) {
+    const box = $(boxId), input = $(inputId), v = carNorm(input.value);
+    const list = v ? CAR_MODELS.filter(m => carNorm(m).includes(v) && carNorm(m) !== v).slice(0, 6) : CAR_MODELS.slice(0, 8);
+    box.innerHTML = list.map(m => `<button type="button" data-m="${m}">${m}</button>`).join('');
+  }
+  function carPick(inputId, boxId) {
+    $(inputId).addEventListener('input', () => carSuggest(inputId, boxId));
+    $(boxId).onclick = (e) => { const b = e.target.closest('[data-m]'); if (!b) return; $(inputId).value = b.dataset.m; $(boxId).innerHTML = ''; };
+  }
+  // سيارة الزبون تنحفظ في جواله: المرة الجاية تطلع جاهزة ويكفيه يضغط التالي
+  const CAR_KEY = 'dm_car';
+  const savedCar = () => { try { const c = JSON.parse(localStorage.getItem(CAR_KEY) || 'null'); return c && (c.color || c.model) ? c : null; } catch { return null; } };
+  const rememberCar = (c) => { try { localStorage.setItem(CAR_KEY, JSON.stringify({ color: c.color || null, model: c.model || null, plate: c.plate || null })); } catch {} };
   const carText = (c) => [c.model, c.color].filter(Boolean).join(' · ') + (c.plate ? ` · ${c.plate}` : '');
   function paintCarColors() {
     $('car-colors').innerHTML = CAR_COLORS.map(([n, hex]) => `<button type="button" role="radio" aria-checked="${carColor === n}" data-c="${n}" class="flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[12.5px] font-bold border ${carColor === n ? 'bg-white text-[#15271b] border-white' : 'border-white/30'}"><span class="w-4 h-4 rounded-full border border-black/20" style="background:${hex}"></span>${n}</button>`).join('');
@@ -1160,13 +1185,20 @@
     if (ask && !$('car-colors').children.length) paintCarColors();
   }
   $('car-colors').onclick = (e) => { const b = e.target.closest('[data-c]'); if (!b) return; carColor = carColor === b.dataset.c ? '' : b.dataset.c; paintCarColors(); };
-  $('car-chip').onclick = () => { carEditing = true; $('car-chip').classList.add('hidden'); $('car-form').classList.remove('hidden'); };
+  carPick('car-model', 'car-sug');
+  $('car-chip').onclick = () => {
+    carEditing = true; $('car-chip').classList.add('hidden'); $('car-form').classList.remove('hidden');
+    const c = savedCar();
+    if (c && !$('car-model').value && !carColor) { carColor = c.color || ''; $('car-model').value = c.model || ''; $('car-plate').value = c.plate || ''; paintCarColors(); }
+    carSuggest('car-model', 'car-sug');
+  };
   $('car-form').onsubmit = async (e) => {
     e.preventDefault();
     const btn = $('car-save'); btn.disabled = true; $('car-err').classList.add('hidden');
     try {
       const r = await DM.post('/api/pager?action=car', { slug, t: loadToken(), color: carColor, model: $('car-model').value.trim(), plate: $('car-plate').value.trim() });
       carEditing = false;
+      if (r.car) rememberCar(r.car);
       renderCar({ car_ask: true, car: r.car }, 'waiting');
     } catch (err) { $('car-err').textContent = err.message || 'ما انحفظت. تأكد من الإنترنت وحاول مرة ثانية'; $('car-err').classList.remove('hidden'); }
     btn.disabled = false;
@@ -1707,7 +1739,11 @@
     $('s-take-inv').innerHTML = stepInv ? `🧾 فاتورة <span dir="ltr">${stepInv.replace(/[<>&"]/g, '')}</span> <i class="ph-bold ph-pencil-simple text-xs"></i>` : '🧾 عندك رقم فاتورة؟ اكتبه (اختياري)';
     $('s-take-car').classList.toggle('hidden', !stepCar);
     if (stepCar) $('s-take-car').querySelector('span').textContent = carText(stepCar);
-    if (cur === 'car' && !$('s-car-colors').children.length) paintStepColors();
+    if (cur === 'car' && !$('s-car-colors').children.length) {
+      const c = !stepCar && !carSkipped && savedCar();
+      if (c) { sCarColor = c.color || ''; $('s-car-model').value = c.model || ''; $('s-car-plate').value = c.plate || ''; }
+      paintStepColors(); carSuggest('s-car-model', 's-car-sug');
+    }
   }
   // ننقله للخطوة ونفتح الكيبورد على طول لو هي رقم الفاتورة (لازم من ضغطة الزبون عشان الآيفون يفتحه)
   function goStep(k) {
@@ -1727,9 +1763,10 @@
     const model = $('s-car-model').value.replace(/\s+/g, ' ').trim(), plate = $('s-car-plate').value.replace(/[\u0660-\u0669\u06F0-\u06F9]/g, d => String(d.charCodeAt(0) & 15)).replace(/\D/g, '').slice(0, 4);
     if (!sCarColor && !model) { $('s-car-err').textContent = 'اختر لون سيارتك أو اكتب نوعها'; return $('s-car-err').classList.remove('hidden'); }
     $('s-car-err').classList.add('hidden');
-    stepCar = { color: sCarColor || null, model: model || null, plate: plate || null }; carSkipped = false;
+    stepCar = { color: sCarColor || null, model: model || null, plate: plate || null }; carSkipped = false; rememberCar(stepCar);
     document.activeElement && document.activeElement.blur(); goStep('');
   };
+  carPick('s-car-model', 's-car-sug');
   $('s-car-skip').onclick = () => { stepCar = null; carSkipped = true; $('s-car-err').classList.add('hidden'); goStep(''); };
   $('s-card-btn').onclick = async () => {
     const btn = $('s-card-btn'), label = btn.querySelector('span'); btn.disabled = true; label.textContent = 'جاري التجهيز…';
