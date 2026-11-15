@@ -56,7 +56,9 @@ function checkPresence(ctx, b) {
   return d;
 }
 
-const cardView = (c) => ({ no: c.member_no, qr: c.client_id ? memberQr(c) : null, name: c.name || null, gender: c.gender || null, stamps: c.stamps, visits: c.visits, rewards: c.rewards, last_stamp_at: c.last_stamp_at, in_wallet: !!c.wallet_url && !wallet.passRemoved(c.wallet_error, c.wallet_platform), has_phone: !!c.phone, has_profile: !!(c.name && c.phone && c.gender) });
+// متأكدين إن البطاقة في جواله: آخر تحديث وصل لجهاز آيفون (أو نجح لبطاقة قوقل). مجرد تجهيز البطاقة ما يعني إنه ضغط «إضافة»
+const walletSeen = (c) => { const last = String(c.wallet_error || '').split('|').pop(); return !!c.wallet_url && /^ok/.test(last) && (c.wallet_platform === 'google' || /devices=[1-9]/.test(last)); };
+const cardView = (c) => ({ no: c.member_no, qr: c.client_id ? memberQr(c) : null, name: c.name || null, gender: c.gender || null, stamps: c.stamps, visits: c.visits, rewards: c.rewards, last_stamp_at: c.last_stamp_at, in_wallet: !!c.wallet_url && !wallet.passRemoved(c.wallet_error, c.wallet_platform), wallet_seen: walletSeen(c), has_phone: !!c.phone, has_profile: !!(c.name && c.phone && c.gender) });
 
 // بيانات التسجيل: الاسم والجوال والنوع (كلها إجبارية)
 function readProfile(b) {

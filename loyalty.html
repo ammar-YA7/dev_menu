@@ -314,9 +314,10 @@
     $('stamp-btn').classList.toggle('hidden', full || purchaseOnly || (justJoined && walletOn && !card.in_wallet));
     $('c-purchase').classList.toggle('hidden', !purchaseOnly || full);
     $('c-pager-hint').classList.toggle('hidden', !settings.pager_stamp);
-    $('wallet-btn').classList.toggle('hidden', !walletOn || card.in_wallet);
+    // «تمت الإضافة» بس لما نتأكد إنها وصلت جواله، غير كذا يبقى الزر (لو ضغط إضافة وألغى، ما نقول له تمت)
+    $('wallet-btn').classList.toggle('hidden', !walletOn || !!card.wallet_seen);
     $('wallet-btn').querySelector('span').textContent = 'احفظ بطاقتك في المحفظة';
-    $('wallet-done').classList.toggle('hidden', !walletOn || !card.in_wallet);
+    $('wallet-done').classList.toggle('hidden', !walletOn || !card.wallet_seen);
     $('wallet-prompt').classList.toggle('hidden', !walletOn || card.in_wallet || !justJoined);
 
     $('phone-box').classList.toggle('hidden', !!card.has_profile);
