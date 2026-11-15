@@ -23,7 +23,7 @@
 <script src="js/dialog.js"></script>
 <script src="/js/sectors.js"></script>
 <style>
-  :root { --brand: #233d2c; --sand: #f5f2eb; --gold: #c9a227; }
+  :root { --brand: #233d2c; --sand: #f5f2eb; --gold: #3f7a4a; }
   body { font-family: 'IBM Plex Sans Arabic', sans-serif; background: var(--sand); color: #1b3022; }
   .panel { background: #fff; border: 1.5px solid rgba(35,61,44,.12); border-radius: 26px; }
   .tile { border-radius: 22px; padding: 18px 10px 14px; text-align: center; font-weight: 900; transition: transform .12s, box-shadow .2s; user-select: none; }
@@ -87,7 +87,7 @@
   .addon-line small { display: block; font-size: 11px; font-weight: 700; opacity: .6; }
   .addon-line ul { margin: 2px 0 0; padding: 0; list-style: none; } .addon-line li + li { margin-top: 3px; }
   .addon-line li span { font-weight: 600; } .addon-line li em { display: block; font-style: normal; font-weight: 600; font-size: 12px; color: #8a5a00; }
-  .addon-line.game { background: #c9a227; }
+  .addon-line.game { background: #3f7a4a; }
 </style>
 <link rel="stylesheet" href="/css/tw/pager-desk.css">
 <style>body.desk .owner-only { display: none !important; }
@@ -107,7 +107,7 @@
   .tk-list { display: grid; gap: 10px; }
   .tk-in { display: flex; gap: 14px; }
   .tk { container-type: inline-size; background: #fff; border-radius: 14px; padding: 14px; box-shadow: 0 1px 0 rgba(0,0,0,.06), 0 0 0 1px rgba(0,0,0,.05); }
-  .tk-ready { box-shadow: inset 4px 0 0 #c9a227, 0 1px 0 rgba(0,0,0,.06), 0 0 0 1px rgba(0,0,0,.05); }
+  .tk-ready { box-shadow: inset 4px 0 0 #3f7a4a, 0 1px 0 rgba(0,0,0,.06), 0 0 0 1px rgba(0,0,0,.05); }
   .tk-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
   .tk-hd { display: flex; align-items: center; gap: 10px; }
   .tk-n { font-size: 44px; line-height: 1; font-weight: 800; color: #1a1a1a; font-variant-numeric: tabular-nums; letter-spacing: -1px; min-width: 64px; }
@@ -132,7 +132,7 @@
   .tk-order .q { min-width: 28px; height: 28px; border-radius: 8px; background: #1a1a1a; color: #fff; font-size: 15px; font-weight: 800; display: grid; place-items: center; flex-shrink: 0; }
   .tk-order .nm { font-size: 16px; line-height: 1.4; padding-top: 2px; } .tk-order .nm b { font-weight: 800; } .tk-order .nm span { font-weight: 600; color: #555; }
   .tk-order .nm em { display: block; font-style: normal; font-size: 14px; font-weight: 700; color: #a1121f; }
-  .tk-reward { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 12px; border-radius: 10px; background: #c9a227; color: #1a1a1a; font-size: 14px; font-weight: 800; }
+  .tk-reward { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 12px; border-radius: 10px; background: #3f7a4a; color: #fff; font-size: 14px; font-weight: 800; }
   .tk-act { width: 210px; flex-shrink: 0; display: flex; flex-direction: column; justify-content: flex-end; gap: 8px; }
   .tk-main { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 62px; border-radius: 12px; background: var(--brand); color: #fff; font-size: 20px; font-weight: 800; box-shadow: var(--shadow-primary); }
   .tk-main i { font-size: 23px; } .tk-main:active { transform: scale(.98); } .tk-main:disabled { opacity: .6; }
@@ -161,10 +161,10 @@
   .tk-hd { flex-wrap: wrap; }
   .tk-dine.del { background: #1f5c3a; } .tk-when { display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 700; padding: 8px 12px; border-radius: 10px; background: #fde3e1; color: #7a1018; } .tk-when b { font-weight: 800; }
   .tk-addr { font-size: 15px; font-weight: 700; color: #1a1a1a; background: #f3f6f3; border-radius: 10px; padding: 8px 12px; line-height: 1.5; } .tk-addr-act { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; } .tk-addr-act a { display: inline-flex; align-items: center; gap: 5px; min-height: 38px; padding: 0 12px; border-radius: 9px; background: #fff; box-shadow: inset 0 0 0 1.5px #1a1a1a; color: #1a1a1a; font-size: 14px; font-weight: 800; text-decoration: none; }
-  .tk-dine { display: flex; align-items: center; gap: 8px; font-size: 17px; font-weight: 800; padding: 8px 12px; border-radius: 10px; background: #1a1a1a; color: #fff; } .tk-dine.out { background: #c9a227; color: #1a1a1a; } .tk-dine i { font-size: 20px; }
+  .tk-dine { display: flex; align-items: center; gap: 8px; font-size: 17px; font-weight: 800; padding: 8px 12px; border-radius: 10px; background: #1a1a1a; color: #fff; } .tk-dine.out { background: #3f7a4a; color: #fff; } .tk-dine i { font-size: 20px; }
 
   @media (max-width: 520px) { #ord-note { display: none; } .col-hd h2 { white-space: nowrap; } }
-  @media (prefers-reduced-motion: reduce) { .tile-new { animation: none; outline: 4px solid #c9a227; } }
+  @media (prefers-reduced-motion: reduce) { .tile-new { animation: none; outline: 4px solid #3f7a4a; } }
 </style>
 <!-- تجربة: شكل shadcn مثل لوحة التحكم. للرجوع احذف هالسطر -->
 <link rel="stylesheet" href="/css/skin-shadcn-desk.css">
@@ -178,15 +178,15 @@
     <div class="flex items-center gap-3 min-w-0 flex-1">
       <a href="admin.html" class="owner-only shrink-0 w-10 h-10 rounded-xl bg-white border border-[#233d2c]/15 grid place-items-center text-[#233d2c]" title="لوحة التحكم" aria-label="لوحة التحكم"><i class="ph-bold ph-arrow-right"></i></a>
       <div class="min-w-0">
-        <h1 class="text-[15px] lg:text-base font-black leading-snug truncate"><i class="ph-bold ph-bell text-[#c9a227]"></i> <span id="desk-title">شاشة البيجر</span></h1>
+        <h1 class="text-[15px] lg:text-base font-black leading-snug truncate"><i class="ph-bold ph-bell text-[#3f7a4a]"></i> <span id="desk-title">شاشة البيجر</span></h1>
         <p class="text-[12px] font-bold opacity-75 leading-snug truncate"><span id="store-name">…</span><span class="hidden xl:inline"> · <span id="desk-sub">اضغط «جاهز» تحت الرقم لما يجهز الطلب، ويرن جوال الزبون</span></span></p>
       </div>
     </div>
     <!-- أزرار الكاشير اليومية (الولاء) -->
     <div class="desk-actions order-last lg:order-none w-full lg:w-auto flex gap-2 [&>*]:flex-1 lg:[&>*]:flex-none [&>*]:whitespace-nowrap">
       <button id="scan-btn" class="act bg-[#384f3d] text-white hidden"><i class="ph-bold ph-camera"></i> <span>امسح بطاقة</span></button>
-      <button id="stamp-btn" class="act bg-[#c9a227] text-[#15271b] hidden"><i class="ph-bold ph-seal-check"></i> <span>كود ختم</span></button>
-      <button id="transfer-btn" class="act bg-[#fbf6e6] border border-[#c9a227]/60 text-[#5c470c] hidden"><i class="ph-bold ph-arrows-left-right"></i> <span>نقل رصيد</span></button>
+      <button id="stamp-btn" class="act bg-[#3f7a4a] text-white hidden"><i class="ph-bold ph-seal-check"></i> <span>كود ختم</span></button>
+      <button id="transfer-btn" class="act bg-[#eef4ee] border border-[#3f7a4a]/60 text-[#233d2c] hidden"><i class="ph-bold ph-arrows-left-right"></i> <span>نقل رصيد</span></button>
       <button id="pkg-btn" class="act bg-white border border-[#233d2c]/20 text-[#233d2c] hidden"><i class="ph-bold ph-package"></i> <span>باقة جديدة</span></button>
     </div>
     <!-- الأدوات: قائمة تنفتح، والصوت واللغة -->
@@ -214,8 +214,8 @@
     <h2 class="text-lg font-black mb-1">بطاقة الولاء</h2>
     <p class="text-sm font-bold opacity-85 mb-5">بعد ما يدفع الزبون: اطلب منه يفتح بطاقته وامسح الكود اللي فيها.</p>
     <div class="grid sm:grid-cols-3 gap-3">
-      <button data-open="scan-btn" class="bg-[#384f3d] text-white rounded-2xl p-5 text-right"><i class="ph-bold ph-camera text-3xl text-[#c9a227]"></i><b class="block text-lg mt-2">امسح بطاقة زبون</b><span class="text-xs opacity-85">بالكاميرا أو برقم العضوية</span></button>
-      <button data-open="stamp-btn" class="bg-[#c9a227] text-[#15271b] rounded-2xl p-5 text-right"><i class="ph-bold ph-seal-check text-3xl"></i><b class="block text-lg mt-2">كود ختم</b><span class="text-xs opacity-85">الزبون يمسحه من جواله</span></button>
+      <button data-open="scan-btn" class="bg-[#384f3d] text-white rounded-2xl p-5 text-right"><i class="ph-bold ph-camera text-3xl text-[#7fb685]"></i><b class="block text-lg mt-2">امسح بطاقة زبون</b><span class="text-xs opacity-85">بالكاميرا أو برقم العضوية</span></button>
+      <button data-open="stamp-btn" class="bg-[#3f7a4a] text-white rounded-2xl p-5 text-right"><i class="ph-bold ph-seal-check text-3xl"></i><b class="block text-lg mt-2">كود ختم</b><span class="text-xs opacity-85">الزبون يمسحه من جواله</span></button>
       <button data-open="join-btn" class="bg-white border border-[#233d2c]/15 rounded-2xl p-5 text-right"><i class="ph-bold ph-user-plus text-3xl"></i><b class="block text-lg mt-2">QR تسجيل الولاء</b><span class="text-xs opacity-85">للزبون الجديد يسجل في البطاقة</span></button>
       <a href="kiosk.html" onclick="this.href='kiosk.html'+location.search" class="sm:col-span-3 bg-white border border-[#233d2c]/15 rounded-2xl p-4 text-right flex items-center gap-3"><i class="ph-bold ph-device-tablet text-3xl"></i><span><b class="block">شاشة الختم للزبون</b><span class="text-xs opacity-85">تابلت ثابت: الزبون يقرّب كوده من الكاميرا وينختم تلقائياً</span></span></a>
     </div>
@@ -249,7 +249,7 @@
 <!-- رقم الفاتورة -->
 <div id="inv-modal" class="fixed inset-0 z-50 bg-black/50 hidden items-center justify-center p-5">
   <form id="inv-form" class="bg-white rounded-[28px] p-7 w-full max-w-sm space-y-4">
-    <h3 id="inv-title" class="text-lg font-black">🧾 رقم الفاتورة للبيجر <span id="inv-num" class="text-[#c9a227]"></span></h3>
+    <h3 id="inv-title" class="text-lg font-black">🧾 رقم الفاتورة للبيجر <span id="inv-num" class="text-[#3f7a4a]"></span></h3>
     <input id="inv-input" type="text" inputmode="numeric" autocomplete="off" dir="ltr" maxlength="20" placeholder="1045" class="w-full text-center text-3xl font-black tracking-widest bg-[#f5f2eb] border-2 border-[#233d2c]/15 rounded-2xl py-4 outline-none focus:border-[#233d2c]">
     <p id="inv-err" class="hidden text-sm font-bold text-rose-700"></p>
     <div class="flex gap-2">
@@ -262,7 +262,7 @@
 <!-- وقت الانتظار لرقم (بعض الأصناف تتأخر) -->
 <div id="eta-modal" class="fixed inset-0 z-50 bg-black/50 hidden items-center justify-center p-5">
   <div class="bg-white rounded-[28px] p-7 w-full max-w-sm space-y-4">
-    <h3 class="text-lg font-black">⏱ متى يجهز طلب رقم <span id="eta-num" class="text-[#c9a227]"></span>؟</h3>
+    <h3 class="text-lg font-black">⏱ متى يجهز طلب رقم <span id="eta-num" class="text-[#3f7a4a]"></span>؟</h3>
     <p class="text-sm font-semibold opacity-70">يظهر للزبون في صفحة رقمه بدل التقدير التلقائي.</p>
     <div id="eta-opts" class="grid grid-cols-3 gap-2"></div>
     <div class="flex gap-2">
@@ -276,7 +276,7 @@
 <!-- صرف المكافأة -->
 <div id="rw-modal" class="fixed inset-0 z-[60] bg-black/60 hidden items-center justify-center p-5">
   <div class="bg-white rounded-[28px] w-full max-w-sm p-6 text-center space-y-4">
-    <div class="w-16 h-16 rounded-2xl bg-[#c9a227]/20 text-[#8a6d0f] grid place-items-center mx-auto text-3xl"><i class="ph-bold ph-gift"></i></div>
+    <div class="w-16 h-16 rounded-2xl bg-[#3f7a4a]/20 text-[#3f7a4a] grid place-items-center mx-auto text-3xl"><i class="ph-bold ph-gift"></i></div>
     <div><p class="text-xl font-black">عنده مكافأة جاهزة</p><p id="rw-who" class="text-sm font-bold opacity-85 mt-1"></p></div>
     <div id="rw-list" class="space-y-2"></div>
     <button id="rw-later" class="w-full bg-[#f5f2eb] font-black rounded-2xl py-3">خلّها لبعدين</button>
@@ -300,7 +300,7 @@
 <div id="tr-modal" class="fixed inset-0 z-50 bg-black/70 hidden items-center justify-center p-5">
   <div class="bg-white rounded-[28px] w-full max-w-sm p-5 space-y-3 text-right" dir="rtl">
     <div class="flex items-start justify-between gap-2">
-      <div><p class="text-lg font-black"><i class="ph-bold ph-arrows-left-right text-[#c9a227]"></i> نقل رصيد قديم</p>
+      <div><p class="text-lg font-black"><i class="ph-bold ph-arrows-left-right text-[#3f7a4a]"></i> نقل رصيد قديم</p>
       <p class="text-[12px] font-bold opacity-80">للعميل اللي عنده أختام في بطاقة ورق أو تطبيق ثاني. ما ينضاف له ختم زيارة.</p></div>
       <button id="tr-close" class="w-9 h-9 rounded-xl bg-[#f5f2eb] shrink-0" aria-label="إغلاق"><i class="ph-bold ph-x"></i></button>
     </div>
@@ -310,7 +310,7 @@
     </form>
     <p class="text-[11px] font-bold opacity-70 -mt-1">لازم العميل يكون مسجّل في بطاقة الولاء أول. لو ما سجّل، خله يمسح «QR تسجيل الولاء».</p>
     <p id="tr-err" class="hidden text-[13px] font-bold text-rose-700"></p>
-    <div id="tr-step" class="hidden space-y-3 rounded-2xl bg-[#fbf6e6] border border-[#c9a227]/40 p-3">
+    <div id="tr-step" class="hidden space-y-3 rounded-2xl bg-[#eef4ee] border border-[#3f7a4a]/40 p-3">
       <div><p id="tr-name" class="font-black text-base"></p><p id="tr-now" class="text-[12px] font-bold opacity-80"></p></div>
       <div id="tr-pickbox"><p class="text-sm font-bold mb-2">كم ختم في بطاقته القديمة؟</p>
         <div id="tr-nums" class="grid grid-cols-5 gap-1.5"></div>
@@ -322,7 +322,7 @@
 <!-- باقة مدفوعة مسبقاً: الزبون دفع في الكاشير، نسجّل له الباقة وتطلع له بطاقتها -->
 <div id="pkg-modal" class="fixed inset-0 z-50 bg-black/75 hidden items-center justify-center p-5">
   <div class="bg-white rounded-[28px] w-full max-w-sm p-6 space-y-3">
-    <p class="text-lg font-black text-center"><i class="ph-bold ph-package text-[#c9a227]"></i> باقة جديدة لزبون</p>
+    <p class="text-lg font-black text-center"><i class="ph-bold ph-package text-[#3f7a4a]"></i> باقة جديدة لزبون</p>
     <form id="pkg-form" class="space-y-3" novalidate>
       <p class="text-[13px] font-bold opacity-75 text-center">بعد ما يدفع الزبون ثمن الباقة</p>
       <div id="pkg-plans" class="grid gap-2" role="radiogroup" aria-label="الباقة"></div>
@@ -348,10 +348,10 @@
 </div>
 <div id="scan-modal" class="fixed inset-0 z-50 bg-black/80 hidden items-center justify-center p-5">
   <div class="bg-white rounded-[28px] w-full max-w-sm p-5 text-center space-y-3">
-    <p class="text-lg font-black"><i class="ph-bold ph-camera text-[#c9a227]"></i> وجّه الكاميرا على كود الزبون</p>
+    <p class="text-lg font-black"><i class="ph-bold ph-camera text-[#3f7a4a]"></i> وجّه الكاميرا على كود الزبون</p>
     <div class="relative rounded-2xl overflow-hidden bg-black aspect-square">
       <video id="scan-video" playsinline muted class="w-full h-full object-cover"></video>
-      <div class="absolute inset-[18%] border-4 border-[#c9a227] rounded-2xl pointer-events-none"></div>
+      <div class="absolute inset-[18%] border-4 border-[#7fb685] rounded-2xl pointer-events-none"></div>
       <div id="scan-result" class="absolute inset-0 hidden flex-col items-center justify-center gap-2 p-4 text-white text-center"></div>
     </div>
     <form id="scan-manual" class="flex gap-2" dir="rtl">
@@ -365,7 +365,7 @@
 <!-- كود ختم بطاقة الولاء: يطلع بعد الدفع، والزبون يمسحه -->
 <div id="stamp-modal" class="fixed inset-0 z-50 bg-black/75 hidden items-center justify-center p-5">
   <div class="bg-white rounded-[28px] w-full max-w-sm p-6 text-center space-y-4">
-    <p class="text-lg font-black"><i class="ph-bold ph-seal-check text-[#c9a227]"></i> خلّ الزبون يمسح الكود</p>
+    <p class="text-lg font-black"><i class="ph-bold ph-seal-check text-[#3f7a4a]"></i> خلّ الزبون يمسح الكود</p>
     <div id="stamp-qr" class="w-64 h-64 mx-auto grid place-items-center"></div>
     <p id="stamp-state" class="text-sm font-bold opacity-85"></p>
     <div class="flex gap-2">
@@ -474,7 +474,7 @@
   function openInvoice(id) {
     const t = tickets.find(x => x.id === id); if (!t) return;
     invId = id;
-    $('inv-title').innerHTML = `🧾 رقم الفاتورة للبيجر <span class="text-[#c9a227]">${t.number}</span>`;
+    $('inv-title').innerHTML = `🧾 رقم الفاتورة للبيجر <span class="text-[#3f7a4a]">${t.number}</span>`;
     $('inv-input').value = t.invoice_no || '';
     $('inv-err').classList.add('hidden'); $('inv-modal').classList.replace('hidden', 'flex');
     setTimeout(() => $('inv-input').focus(), 50);
@@ -813,7 +813,7 @@
         // سجّل واختار الباقة بنفسه: الكاشير يفعّلها بعد ما يستلم المبلغ
         const el = $('scan-result');
         el.className = 'absolute inset-0 flex flex-col items-center justify-center gap-2 p-4 text-white text-center bg-[#233d2c]';
-        el.innerHTML = `<i class="ph-bold ph-hourglass-medium text-6xl text-[#c9a227]"></i><b class="text-xl">باقة جديدة بانتظار الدفع</b>${line}<span class="font-bold">${c.total} مرة${r.price != null ? ` · ${esc(fmtM(Number(r.price)))}` : ''}</span><button type="button" data-activate="${c.id}" class="mt-2 w-full bg-[#c9a227] text-[#15271b] rounded-2xl py-3 font-black"><i class="ph-bold ph-check-circle"></i> استلمت المبلغ، فعّل الباقة</button>`;
+        el.innerHTML = `<i class="ph-bold ph-hourglass-medium text-6xl text-[#7fb685]"></i><b class="text-xl">باقة جديدة بانتظار الدفع</b>${line}<span class="font-bold">${c.total} مرة${r.price != null ? ` · ${esc(fmtM(Number(r.price)))}` : ''}</span><button type="button" data-activate="${c.id}" class="mt-2 w-full bg-[#3f7a4a] text-white rounded-2xl py-3 font-black"><i class="ph-bold ph-check-circle"></i> استلمت المبلغ، فعّل الباقة</button>`;
         clearTimeout(el._h); el._h = setTimeout(() => { el.className = 'absolute inset-0 hidden'; }, 30000);
       } else scanShow(false, `<i class="ph-bold ph-package text-7xl"></i><b class="text-2xl">${esc(r.note || 'ما انخصمت')}</b>${line}<span class="font-bold">باقي ${c.remaining} من ${c.total}</span>`);
     } catch (e) { scanShow(false, `<i class="ph-bold ph-warning-circle text-6xl"></i><b>${esc(e.message || 'ما انخصمت. حاول مرة ثانية')}</b>`); }
@@ -915,14 +915,14 @@
         el.className = 'absolute inset-0 flex flex-col items-center justify-center gap-2.5 p-4 text-white text-center bg-[#233d2c]';
         el.innerHTML = `<b class="text-lg">${esc(r.who.name)}</b><span class="text-xs font-bold opacity-85" dir="ltr">#${esc(r.who.no)}</span>`
           + r.packages.map(p => `<button type="button" data-pkuse="${p.id}" class="w-full bg-white text-[#233d2c] rounded-2xl py-3 font-black"><i class="ph-bold ph-package"></i> خصم من باقة ${esc(p.plan_name)}<span class="block text-xs font-bold opacity-70">باقي ${p.remaining} من ${p.total}</span></button>`).join('')
-          + `<button type="button" data-dostamp class="w-full bg-[#c9a227] text-[#15271b] rounded-2xl py-2.5 font-black ${r.stamp_due ? '' : 'opacity-60'}"><i class="ph-bold ph-seal-check"></i> ختم عادي (${Math.min(r.stamps, r.needed)} من ${r.needed})</button>`;
+          + `<button type="button" data-dostamp class="w-full bg-[#3f7a4a] text-white rounded-2xl py-2.5 font-black ${r.stamp_due ? '' : 'opacity-60'}"><i class="ph-bold ph-seal-check"></i> ختم عادي (${Math.min(r.stamps, r.needed)} من ${r.needed})</button>`;
         clearTimeout(el._h); el._h = setTimeout(() => { el.className = 'absolute inset-0 hidden'; }, 20000);
         setTimeout(() => { scanBusy = false; }, 1500);
         return;
       }
       lastScan = r;
       const who = esc(r.who.name), n = Math.min(r.stamps, r.needed);
-      const dots = `<span class="flex flex-wrap justify-center gap-1.5 mt-1">${Array.from({ length: r.needed }, (_, i) => `<span class="w-4 h-4 rounded-full ${i < n ? 'bg-[#c9a227]' : 'bg-white/25'}"></span>`).join('')}</span>`;
+      const dots = `<span class="flex flex-wrap justify-center gap-1.5 mt-1">${Array.from({ length: r.needed }, (_, i) => `<span class="w-4 h-4 rounded-full ${i < n ? 'bg-white' : 'bg-white/25'}"></span>`).join('')}</span>`;
       const no = `<span class="text-xs font-bold opacity-85" dir="ltr">#${esc(r.who.no)}</span>`;
       if (r.stamped) {
         scanShow(true, `<i class="ph-bold ph-check-circle text-7xl"></i><b class="text-2xl">تم ${r.count > 1 ? 'الختم دبل' : 'الختم'}</b><b class="text-lg">${who}</b>${no}${dots}<span class="font-bold">${n} من ${r.needed}${n >= r.needed ? ' · المكافأة جاهزة' : ''}</span>`);
@@ -970,8 +970,8 @@
   function openReward(who, rewards) {
     rwMember = who;
     $('rw-who').textContent = who.name || '';
-    $('rw-list').innerHTML = rewards.map((r, i) => `<div class="flex items-center justify-between gap-3 bg-[#fbf6e6] border border-[#c9a227]/40 rounded-2xl p-3">
-      <span class="font-black text-right"><i class="ph-bold ph-gift text-[#8a6d0f]"></i> ${esc(r.label)}</span>
+    $('rw-list').innerHTML = rewards.map((r, i) => `<div class="flex items-center justify-between gap-3 bg-[#eef4ee] border border-[#3f7a4a]/40 rounded-2xl p-3">
+      <span class="font-black text-right"><i class="ph-bold ph-gift text-[#3f7a4a]"></i> ${esc(r.label)}</span>
       <button class="bg-[#384f3d] text-white font-black rounded-xl px-4 py-2.5 shrink-0" data-rw-type="${r.type}" data-rw-code="${esc(r.code || '')}">اصرف الحين</button></div>`).join('');
     $('rw-modal').classList.replace('hidden', 'flex');
   }
@@ -1048,7 +1048,7 @@
       stampCode = r.code; stampExpires = Date.parse(r.expires_at);
       $('stamp-qr').innerHTML = '';
       new QRCodeStyling({ width: 256, height: 256, data: r.url, margin: 4, qrOptions: { errorCorrectionLevel: 'M' },
-        dotsOptions: { type: 'rounded', color: '#233d2c' }, cornersSquareOptions: { type: 'extra-rounded', color: '#1b3022' }, cornersDotOptions: { color: '#c9a227' }, backgroundOptions: { color: '#ffffff' } }).append($('stamp-qr'));
+        dotsOptions: { type: 'rounded', color: '#233d2c' }, cornersSquareOptions: { type: 'extra-rounded', color: '#1b3022' }, cornersDotOptions: { color: '#3f7a4a' }, backgroundOptions: { color: '#ffffff' } }).append($('stamp-qr'));
       let tick = 0;
       stampTimer = setInterval(async () => {
         const left = Math.max(0, Math.round((stampExpires - Date.now()) / 1000));
@@ -1104,13 +1104,13 @@
       <div class="bg-white rounded-2xl border border-[#233d2c]/10 p-4">
         <div class="flex flex-wrap items-baseline justify-between gap-2"><p class="font-black">الزحمة حسب الساعة</p>
           <p class="text-xs font-bold opacity-85">${peak ? `الذروة ${hl(peak.h)} (${peak.n} رقم)` : ''}${slow ? ` · أبطأ ساعة ${hl(slow.h)} (${mins(slow.wait)} انتظار)` : ''}</p></div>
-        <div class="flex items-end gap-1 h-36 mt-4" dir="ltr">${r.hours.map(h => `<div class="flex-1 flex flex-col items-center justify-end h-full" title="${hl(h.h)}: ${h.n} رقم${h.wait != null ? `، انتظار ${mins(h.wait)}` : ''}"><div class="w-full rounded-t ${h.wait != null && h.wait > (r.wait.avg || 0) * 1.4 ? 'bg-[#c9a227]' : 'bg-[#384f3d]/75'}" style="height:${h.n ? Math.max(4, h.n / maxN * 100) : 0}%"></div></div>`).join('')}</div>
+        <div class="flex items-end gap-1 h-36 mt-4" dir="ltr">${r.hours.map(h => `<div class="flex-1 flex flex-col items-center justify-end h-full" title="${hl(h.h)}: ${h.n} رقم${h.wait != null ? `، انتظار ${mins(h.wait)}` : ''}"><div class="w-full rounded-t ${h.wait != null && h.wait > (r.wait.avg || 0) * 1.4 ? 'bg-[#3f7a4a]' : 'bg-[#384f3d]/75'}" style="height:${h.n ? Math.max(4, h.n / maxN * 100) : 0}%"></div></div>`).join('')}</div>
         <div class="flex justify-between text-[11px] font-bold opacity-85 mt-1" dir="ltr"><span>12 ص</span><span>6 ص</span><span>12 م</span><span>6 م</span><span>11 م</span></div>
-        <p class="text-[11px] font-bold opacity-85 mt-2"><span class="inline-block w-2.5 h-2.5 rounded-sm bg-[#c9a227] align-middle"></span> ساعات انتظارها أطول من المعتاد</p>
+        <p class="text-[11px] font-bold opacity-85 mt-2"><span class="inline-block w-2.5 h-2.5 rounded-sm bg-[#3f7a4a] align-middle"></span> ساعات انتظارها أطول من المعتاد</p>
       </div>
       ${R.n ? `<div class="bg-white rounded-2xl border border-[#233d2c]/10 p-4 space-y-3">
         <p class="font-black">تقييمات الزبائن</p>
-        ${[5, 4, 3, 2, 1].map(k => `<div class="flex items-center gap-2 text-xs font-bold"><span class="w-8" dir="ltr">${k} ★</span><div class="flex-1 h-2.5 rounded-full bg-[#384f3d]/10 overflow-hidden"><div class="h-full ${k >= 4 ? 'bg-emerald-600' : k === 3 ? 'bg-[#c9a227]' : 'bg-rose-600'}" style="width:${R.dist[k - 1] / R.n * 100}%"></div></div><span class="w-8 text-left">${R.dist[k - 1]}</span></div>`).join('')}
+        ${[5, 4, 3, 2, 1].map(k => `<div class="flex items-center gap-2 text-xs font-bold"><span class="w-8" dir="ltr">${k} ★</span><div class="flex-1 h-2.5 rounded-full bg-[#384f3d]/10 overflow-hidden"><div class="h-full ${k >= 4 ? 'bg-emerald-600' : k === 3 ? 'bg-[#3f7a4a]' : 'bg-rose-600'}" style="width:${R.dist[k - 1] / R.n * 100}%"></div></div><span class="w-8 text-left">${R.dist[k - 1]}</span></div>`).join('')}
         ${R.notes.length ? `<div class="divide-y divide-[#233d2c]/10 text-sm">${R.notes.map(x => `<p class="py-2"><b class="${x.r >= 4 ? 'text-emerald-700' : 'text-rose-700'}" dir="ltr">${x.r} ★</b> ${esc(x.note)}</p>`).join('')}</div>` : ''}
       </div>` : ''}
       <p class="text-[11px] font-bold opacity-85">متوسط الخدمة (من أخذ الرقم لين الاستلام): ${mins(r.service.avg)} · ألغيت ${r.cancelled}</p>`;
@@ -1169,7 +1169,7 @@
   const isDesk = DM.deskMode();
   function deskGone(msg) {
     DM.leaveDesk();
-    document.querySelector('main').innerHTML = `<div class="max-w-md mx-auto text-center py-20 space-y-3"><i class="ph-bold ph-lock-key text-5xl text-[#c9a227]"></i><p class="font-black text-lg">${esc(msg)}</p></div>`;
+    document.querySelector('main').innerHTML = `<div class="max-w-md mx-auto text-center py-20 space-y-3"><i class="ph-bold ph-lock-key text-5xl text-[#3f7a4a]"></i><p class="font-black text-lg">${esc(msg)}</p></div>`;
   }
   if (isDesk) { document.body.classList.add('desk'); load(); }
   else if (!DM.signedIn()) location.replace('login.html');
