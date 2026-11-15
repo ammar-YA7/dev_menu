@@ -27,7 +27,7 @@
   .btn-gold { background: var(--gold); color: #15271b; }
   .btn-ghost { background: color-mix(in srgb, var(--brand) 8%, #fff); color: var(--brand); border: 2px solid color-mix(in srgb, var(--brand) 45%, transparent); }
   /* زر المحفظة: أسود مثل زر آبل الرسمي، يبان على أي لون */
-  body.no-stamps #c-stamps, body.no-stamps #c-left, body.no-stamps #c-count, body.no-stamps #c-reward, body.no-stamps #stamp-btn, body.no-stamps #c-purchase,
+  body.no-stamps #c-stamps, body.no-stamps #c-reward, body.no-stamps #stamp-btn, body.no-stamps #c-purchase,
   body.no-stamps #j-card, body.no-stamps #j-purchase, body.no-stamps #c-survey, body.no-stamps .happy-box { display: none !important; }
   .pk-opt { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; text-align: right; border: 1.5px solid rgba(35,61,44,.18); border-radius: 16px; padding: 12px 14px; background: #fff; font-weight: 700; }
   .pk-opt[aria-checked="true"] { border-color: var(--brand); background: color-mix(in srgb, var(--brand) 7%, #fff); }
@@ -697,6 +697,12 @@
   // المحل عنده الاشتراكات بس: نخفي الأختام والمكافأة
   function applyStampsMode() {
     document.body.classList.toggle('no-stamps', !stampsOn);
+    if (stampsOn) return;
+    // بدون أختام: البطاقة نفسها تعرض الباقة ورصيدها
+    const live = packages.find(p => !p.pending), wait = packages.find(p => p.pending);
+    if ($('c-left')) $('c-left').textContent = live ? `باقة ${live.plan_name}` : wait ? `باقة ${wait.plan_name}: بانتظار الدفع` : 'اختر باقتك من تحت';
+    if ($('c-count')) $('c-count').textContent = live ? `${live.remaining}/${live.total}` : '';
+    const wp = document.querySelector('#wallet-prompt .text-sm'); if (wp) wp.textContent = 'عشان تشوف رصيد باقتك بسرعة من جوالك، ويوصلك تنبيه لما تقرب تخلص.';
   }
   // رجع من المحفظة (ضغط «إضافة» أو ألغى): نسأل من جديد هل البطاقة صارت في جواله
   let walletCheckAt = 0;
