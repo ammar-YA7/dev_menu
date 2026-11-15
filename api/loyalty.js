@@ -227,13 +227,20 @@ module.exports = handler(['GET', 'POST'], async (req, res) => {
       let card = (await rest(`loyalty_cards?client_id=eq.${ctx.store.id}&phone=eq.${q(profile.phone)}&select=*`))[0];
       // الحماية: بطاقة مسجلة باسم شخص (اكتمل تسجيلها) ما تنعطى لأي أحد يكتب نفس الجوال.
       // المسموح بس البطاقة اللي ما أحد استلمها (مستوردة من نظام سابق أو قديمة بدون بيانات)
-      if (card && card.gender) throw new ApiError(409, 'هذا الجوال مسجل ببطاقة من قبل. افتح بطاقتك من محفظة جوالك أو من الجوال اللي سجلت منه، أو اطلب رابطها من الكاشير', 'PHONE_TAKEN');
+      // إلا لو بطاقته ما انضافت للمحفظة أبداً (مثل لو تعطّلت الإضافة وقت تسجيله) وهو نفس الشخص:
+      // نفس الاسم، أو معه إثبات إنه في المحل (كود الكاشير أو رقم بيجر). فنرجّع له بطاقته وتطلع له «أضف للمحفظة»
+      const nm = (t) => String(t || '').replace(/[أإآ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').replace(/\s+/g, ' ').trim().toLowerCase();
+      const sameName = card && nm(card.name).split(' ')[0] && nm(card.name).split(' ')[0] === nm(profile.name).split(' ')[0];
+      const reclaim = !!(card && card.gender && !card.wallet_serial && (sameName || b.code || ticket));
+      if (card && card.gender && !reclaim) throw new ApiError(409, 'هذا الجوال مسجل ببطاقة من قبل. افتح بطاقتك من محفظة جوالك أو من الجوال اللي سجلت منه، أو اطلب رابطها من الكاشير', 'PHONE_TAKEN');
       const isNew = !card;
       if (!card) {
         card = (await rest('loyalty_cards', {
           method: 'POST', prefer: 'return=representation',
           body: { client_id: ctx.store.id, branch_id: ctx.branch.id, branch_ids: [ctx.branch.id], token: crypto.randomBytes(18).toString('base64url'), lang: reqLang(req), ...profile }
         }))[0];
+      } else if (reclaim) {
+        // نفس بطاقته بأختامها، ما نغيّر اسمه
       } else if (!card.name || card.name === 'عضو' || !card.gender) {
         // بطاقة مستوردة من نظام سابق (أو قديمة بدون بيانات): نكمّلها باسمه وجنسه
         const name = card.name && card.name !== 'عضو' ? card.name : profile.name;
