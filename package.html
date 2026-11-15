@@ -44,11 +44,11 @@
   .state { text-align: center; padding: 60px 10px; }
   .warn { background: #fff4e5; color: #8a4b00; border-radius: 14px; padding: 10px 14px; font-size: 14px; font-weight: 600; margin-top: 12px; text-align: center; }
   .hidden { display: none !important; }
-  .plan { display: block; width: 100%; text-align: right; background: #fff; border: 2px solid rgba(35,61,44,.15); border-radius: 18px; padding: 14px 16px; font: inherit; color: inherit; cursor: pointer; }
-  .plan[aria-checked="true"] { border-color: var(--brand); background: rgba(35,61,44,.06); }
-  .plan b { display: block; font-size: 17px; }
-  .plan span { font-size: 13px; opacity: .7; }
-  .plan .pr { float: left; font-weight: 700; font-size: 16px; opacity: 1; }
+  .opt { display: block; width: 100%; text-align: right; background: #fff; border: 2px solid rgba(35,61,44,.15); border-radius: 18px; padding: 14px 16px; font: inherit; color: inherit; cursor: pointer; }
+  .opt[aria-checked="true"] { border-color: var(--brand); background: rgba(35,61,44,.06); }
+  .opt b { display: block; font-size: 17px; }
+  .opt span { font-size: 13px; opacity: .7; }
+  .opt .pr { float: left; font-weight: 700; font-size: 16px; opacity: 1; }
   .in { display: block; width: 100%; margin-bottom: 10px; border: 1.5px solid rgba(35,61,44,.2); border-radius: 14px; padding: 13px 14px; font: inherit; font-weight: 600; background: #fff; }
   .pend { background: #fff8e1; color: #6b4e00; border-radius: 16px; padding: 14px; margin-top: 12px; text-align: center; font-weight: 700; }
   .other { display: block; margin: 18px auto 0; background: none; border: 0; font: inherit; font-size: 13px; opacity: .65; text-decoration: underline; cursor: pointer; color: inherit; }
@@ -64,7 +64,7 @@
     <div id="j-plans" style="display:grid;gap:10px"></div>
     <form id="j-form" class="box" style="text-align:right" novalidate>
       <input id="j-name" maxlength="40" autocomplete="name" placeholder="اسمك" class="in">
-      <input id="j-phone" type="tel" inputmode="tel" maxlength="16" autocomplete="tel" dir="ltr" placeholder="رقم جوالك 05xxxxxxxx" class="in">
+      <input id="j-phone" type="tel" inputmode="tel" maxlength="16" autocomplete="tel" dir="auto" placeholder="رقم جوالك" aria-label="رقم جوالك" class="in">
       <p id="j-err" class="warn hidden" style="margin-top:0"></p>
       <button id="j-go" class="btn btn-wallet" style="background:var(--brand)">سجّل في الباقة</button>
     </form>
@@ -131,7 +131,7 @@
   let plans = [], pick = null, cur = 'SAR';
   const money = (n) => DM.money ? DM.money(Number(n), cur) : `${n}`;
   function paintPlans() {
-    $('j-plans').innerHTML = plans.map(p => `<button type="button" class="plan" role="radio" aria-checked="${pick === p.id}" data-p="${p.id}">${p.price != null ? `<span class="pr">${money(p.price)}</span>` : ''}<b>${String(p.name).replace(/[<>&"]/g, '')}</b><span>${p.uses} مرة${p.days ? ` · صالحة ${p.days} يوم من التفعيل` : ''}</span></button>`).join('');
+    $('j-plans').innerHTML = plans.map(p => `<button type="button" class="opt" role="radio" aria-checked="${pick === p.id}" data-p="${p.id}">${p.price != null ? `<span class="pr">${money(p.price)}</span>` : ''}<b>${String(p.name).replace(/[<>&"]/g, '')}</b><span>${p.uses} مرة${p.days ? ` · صالحة ${p.days} يوم من التفعيل` : ''}</span></button>`).join('');
   }
   $('j-plans').onclick = (e) => { const b = e.target.closest('[data-p]'); if (!b) return; pick = Number(b.dataset.p); paintPlans(); };
   async function showJoin() {
