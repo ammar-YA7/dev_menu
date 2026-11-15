@@ -960,9 +960,13 @@
     });
     if (project && project.promo_message) texts.add(project.promo_message);
     const list = [...texts].filter(t => !translationCache[t]);
-    // الباقي (ملاحظات، فئات فرعية، الإعلان...) عادةً قليل: كلها بالتوازي
+    // الباقي (ملاحظات، فئات فرعية، الإعلان...) يكمل في الخلفية: الصفحة تتحول للإنجليزي فوراً، وتتحدث لما يوصل
+    if (list.length) translateRest(list);
+  }
+  async function translateRest(list) {
     for (let i = 0; i < list.length; i += 12) await Promise.all(list.slice(i, i + 12).map(translateText));
-    if (list.length) saveTr();
+    saveTr();
+    if (currentLang === 'en') applyLang();
   }
   const tr = (t) => (currentLang === 'en' && t) ? (translationCache[t] || t) : (t || '');
   const productName = (p) => currentLang === 'en' ? (p.name_en || tr(p.name)) : p.name;
@@ -1209,6 +1213,10 @@
     } else {
       currentLang = 'ar';
     }
+    applyLang();
+  }
+  function applyLang() {
+    const btnText = document.getElementById('lang-btn-text');
     document.documentElement.lang = currentLang;
     document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
     document.getElementById('search-input').placeholder = currentLang === 'ar' ? 'ابحث عن طبقك المفضل...' : 'Search for your favorite dish...';
