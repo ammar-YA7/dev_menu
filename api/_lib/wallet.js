@@ -239,4 +239,6 @@ const passRemoved = (err, platform) => {
 const walletPlatform = (req) => /Android/i.test(String((req && req.headers && req.headers['user-agent']) || '')) ? 'google' : 'apple';
 // التحديث وصل للزبون؟ (devices يحسب أجهزة الآيفون بس، فبطاقة قوقل نعتبرها وصلت لو التحديث نجح)
 const reached = (r, platform) => String(r).startsWith('ok') && (platform === 'google' || !/devices=0\b/.test(r));
-module.exports = { walletPlatform, reached, cardMaintenance, passRemoved, configured, createPass, updatePass, revokePass, buildCtx, cardUrl, createPagerPass, updatePagerPass, endPagerPass, pagerStep };
+// حالة بطاقة وحدة عند شركة المحفظة (هل هي مضافة في جوال؟)
+async function getPass(serial) { return call('GET', `/${encodeURIComponent(serial)}`); }
+module.exports = { getPass, walletPlatform, reached, cardMaintenance, passRemoved, configured, createPass, updatePass, revokePass, buildCtx, cardUrl, createPagerPass, updatePagerPass, endPagerPass, pagerStep };
