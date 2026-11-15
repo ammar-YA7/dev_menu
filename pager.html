@@ -1973,7 +1973,7 @@
     return ['اضغط على <b>القفل</b> 🔒 جنب رابط الموقع فوق', 'خلّ <b>الإشعارات</b> على <b>سماح</b>', 'ارجع لهالصفحة'];
   }
   function ntOpen() {
-    $('nt-steps').innerHTML = ntSteps().map(t => `<li>${t}</li>`).join('');
+    $('nt-steps').innerHTML = ntSteps().map(t => `<li><span>${t}</span></li>`).join('');
     $('nt-msg').classList.add('hidden');
     $('nt-help').hidden = false; document.documentElement.classList.add('ask-lock');
   }
