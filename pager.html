@@ -20,18 +20,8 @@
 <style>
   :root { --brand: #233d2c; --sand: #f5f2eb; --gold: #c9a227; }
   body { font-family: 'IBM Plex Sans Arabic', sans-serif; background: var(--sand); color: #1b3022; min-height: 100vh; min-height: 100dvh; -webkit-text-size-adjust: 100%; }
-  .card { background: #fff; border: 1.5px solid rgba(35,61,44,.12); border-radius: 28px; box-shadow: 0 30px 60px -36px rgba(35,61,44,.45); }
   .btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; border-radius: 18px; padding: 18px; font-weight: 900; font-size: 17px; transition: transform .15s; }
   .btn:active { transform: scale(.98); }
-  .btn-brand { background: var(--brand); color: var(--sand); box-shadow: 0 16px 30px -14px rgba(35,61,44,.6); }
-  .btn-ghost { background: #fff; color: var(--brand); border: 1.5px solid rgba(35,61,44,.2); }
-  .num { font-size: 120px; line-height: 1; font-weight: 900; letter-spacing: -2px; color: var(--brand); }
-  .pulse-dot { width: 10px; height: 10px; border-radius: 50%; background: #10b981; box-shadow: 0 0 0 0 rgba(16,185,129,.6); animation: pd 1.8s infinite; }
-  @keyframes pd { 70% { box-shadow: 0 0 0 12px rgba(16,185,129,0); } 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); } }
-  body.ringing { animation: flash 0.9s infinite; }
-  @keyframes flash { 0%, 100% { background: #233d2c; } 50% { background: #c9a227; } }
-  body.ringing .card { animation: shake .5s infinite; }
-  body.ringing > header, body.ringing > p { color: #fff; }
   @keyframes shake { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-2deg); } 75% { transform: rotate(2deg); } }
   /* ─── لعبة الانتظار: طابق البطاقات ─── */
   @keyframes pop { from { transform: translateY(24px) scale(.96); opacity: 0; } to { transform: none; opacity: 1; } }
@@ -68,15 +58,6 @@
   .mg-won-rule { display: block; width: 40px; height: 1px; background: #23302a; opacity: .25; margin: 14px auto 12px; }
   .mg-won b { display: block; font-size: 40px; font-weight: 600; line-height: 1.1; margin-top: 4px; font-variant-numeric: tabular-nums; }
   @media (prefers-reduced-motion: reduce) { .mm-card { transition: none; } .mm-card.pop { animation: none; } }
-  .ticket { position: relative; background: linear-gradient(160deg, #2c4a36 0%, #233d2c 45%, #15271b 100%); color: #fff; border-radius: 30px; padding: 28px 22px; box-shadow: 0 30px 60px -30px rgba(21,39,27,.75); overflow: hidden; }
-  .ticket::before, .ticket::after { content: ''; position: absolute; width: 26px; height: 26px; border-radius: 50%; background: var(--sand); top: 62%; }
-  .ticket::before { left: -13px; } .ticket::after { right: -13px; }
-  .ticket .num { color: #fff; font-size: 108px; margin: 4px 0 6px; }
-  .ticket .tear { border-top: 2px dashed rgba(255,255,255,.25); margin: 18px 6px 14px; }
-  .ticket.ready { background: linear-gradient(160deg, #e2bd3f 0%, #c9a227 55%, #a8851a 100%); color: #15271b; }
-  .ticket.ready .num { color: #15271b; }
-  /* ─── صفحة الانتظار مبسطة ─── */
-  #v-waiting .w-track { display: none; }
   .w-acts { display: grid; grid-template-columns: 1fr; gap: 10px; }
   .w-acts.two { grid-template-columns: 1fr 1fr; }
   .w-acts:not(:has(> :not(.hidden))) { display: none; }
@@ -245,13 +226,6 @@
   .ask-form button:disabled { opacity: .45; }
   html.ask-lock, html.ask-lock body { overflow: hidden; }
   html.is-preview #lang-btn, html.is-preview .lang-switch { display: none !important; }
-  .ticket.ready::before, .ticket.ready::after, .ticket.plain::before, .ticket.plain::after { display: none; }
-  .ticket::before, .ticket::after { top: auto; bottom: 52px; }
-  .ring-ic { width: 64px; height: 64px; border-radius: 22px; background: rgba(255,255,255,.12); color: #e9c95a; display: grid; place-items: center; font-size: 30px; }
-  .ticket.ready .ring-ic { background: rgba(21,39,27,.12); color: #15271b; }
-  .ringing-ic { animation: shake .5s infinite; }
-  .btn-gold { background: #c9a227; color: #15271b; box-shadow: 0 16px 30px -14px rgba(138,109,15,.7); }
-  .btn-take { background: #fff; color: #15271b; box-shadow: 0 16px 30px -14px rgba(0,0,0,.6); }
   .btn-wallet { background: #000; color: #fff; }
   /* بطاقة المحفظة: بيضاء فوق الخلفية الغامقة عشان تبان، وفيها شكل بطاقة صغيرة */
   .pw { background: #fff; color: #15271b; border-radius: 24px; padding: 16px; box-shadow: 0 24px 48px -28px rgba(0,0,0,.7); }
@@ -260,29 +234,21 @@
     background: linear-gradient(180deg, var(--brand) 0 62%, color-mix(in srgb, var(--brand) 78%, #000) 62%); box-shadow: 0 8px 16px -8px rgba(0,0,0,.5); }
   .pw-title { font-size: 16px; font-weight: 900; line-height: 1.4; }
   .pw-sub { font-size: 13px; font-weight: 600; line-height: 1.65; color: #3b4a40; margin-top: 3px; }
-  .pw-link { display: flex !important; align-items: center; gap: 12px; background: #fff !important; color: #15271b !important; border-radius: 20px !important; padding: 14px !important; box-shadow: 0 24px 48px -28px rgba(0,0,0,.7); }
-  .pw-link .pw-pass { width: 40px; height: 50px; font-size: 19px; }
   .chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 800; padding: 8px 12px; border-radius: 999px; background: #fff; border: 1.5px solid rgba(35,61,44,.12); }
   .chip.ok { color: #047857; border-color: rgba(4,120,87,.25); background: #ecfdf5; }
-  .steps { display: grid; gap: 8px; }
-  .steps li { display: flex; align-items: center; gap: 10px; background: #fff; border: 1.5px solid rgba(35,61,44,.1); border-radius: 18px; padding: 12px 14px; font-size: 14px; font-weight: 700; }
-  .steps b { width: 26px; height: 26px; border-radius: 9px; background: var(--brand); color: #e9c95a; display: grid; place-items: center; font-size: 13px; flex-shrink: 0; }
   .field { width: 100%; background: #f8f6f1; border: 1.5px solid rgba(35,61,44,.18); border-radius: 14px; padding: 12px 14px; font-size: 16px; font-weight: 600; }
-  .field:focus { outline: none; border-color: #233d2c; background: #fff; }
-  .jn-g[aria-checked="true"] { background: #233d2c; color: #fff; border-color: #233d2c; }
   .tips { background: #fff; border: 1.5px solid rgba(35,61,44,.1); border-radius: 18px; padding: 12px 16px; font-size: 13px; font-weight: 700; }
   .tips summary { cursor: pointer; opacity: .75; list-style: none; }
   .tips summary::-webkit-details-marker { display: none; }
   .tips ul { margin-top: 10px; display: grid; gap: 6px; opacity: .75; }
   .tips li i { margin-left: 6px; }
-  body.ringing #got-btn { background: #fff; color: #15271b; }
 
   /* ═══ تصميم «التذكرة»: ورق فاتح، ورقم الطلب تذكرة مطبوعة بلون المحل، و«جاهز» الشاشة كلها تخضرّ ═══ */
   :root { --paper: #f4efe6; --ink: #1f1b16; --muted: #756e63; --rule: #e6dfd2; --ok: #2f7a4a; --ok-d: #1f5a35;
     --brand-d: color-mix(in srgb, var(--brand) 82%, #000); }
   body { background: var(--paper); color: var(--ink); transition: background .35s; }
   body > header h1 { color: var(--ink); font-weight: 700; }
-  body > header p { color: var(--muted); opacity: 1 !important; font-weight: 500; }
+  body > header p { color: var(--muted); font-weight: 500; }
   #logo { border-radius: 12px; border-color: var(--rule); }
   .foot { margin-top: 28px; font-size: 12px; font-weight: 600; color: #a39b8d; display: flex; align-items: center; gap: 8px; }
   .foot img { width: 22px; height: 22px; border-radius: 6px; object-fit: cover; }
@@ -298,7 +264,6 @@
   .field { background: #faf8f4; border: 1px solid #ddd5c6; border-radius: 14px; color: var(--ink); }
   .field:focus { background: #fff; border-color: var(--brand); }
   .jn-g[aria-checked="true"] { background: var(--brand); color: #fff; border-color: var(--brand); }
-  .text-emerald-800 { color: var(--ok-d) !important; }
 
   /* ─── التذكرة ─── */
   .tkt { position: relative; background: #fff; border-radius: 24px; box-shadow: 0 1px 0 var(--rule), 0 18px 36px -24px rgba(60,40,20,.5); }
@@ -376,19 +341,17 @@
   .mg { background: var(--brand-d); border: 0; border-radius: 20px; }
   .mm-front { color: #233d2c; }
   .star { color: #ddd5c6; } .star.on { color: #f59e0b; }
-  #rate-box { background: #f6f2ea !important; color: var(--ink); }
 
   /* ─── النوافذ (الإشعارات، الولاء، بطاقة النداء) ─── */
-  #perm .card, #ly-ask .card, #pc-ask .card { background: #fff !important; color: var(--ink); }
-  #perm .card > div:first-child, #ly-ask .card > div:first-child, #pc-ask .card > div:first-child { background: color-mix(in srgb, var(--brand) 12%, #fff); color: var(--brand); }
-  #perm ul, #ly-ask .card > p.text-\[12\.5px\], #pc-ask .card > p.text-\[12\.5px\] { background: #f6f2ea !important; border-color: var(--rule) !important; color: var(--ink) !important; }
+  .mdl-ic { width: 64px; height: 64px; margin: 0 auto; border-radius: 20px; display: grid; place-items: center; font-size: 30px; background: color-mix(in srgb, var(--brand) 12%, #fff); color: var(--brand); }
+  .mdl-box { background: #f6f2ea; border: 1px solid var(--rule); border-radius: 16px; color: var(--ink); }
 
   /* ─── الإشعارات مقفلة ─── */
   .nt-off { background: #fff; border-radius: 20px; padding: 16px; box-shadow: 0 1px 0 var(--rule), 0 12px 28px -22px rgba(60,40,20,.45); }
   .nt-off.hidden { display: none; }
   .nt-off-tx { font-size: 15px; font-weight: 600; line-height: 1.7; color: #8a4b0f; margin-bottom: 12px; }
   .nt-off-tx i { margin-left: 4px; }
-  .nt-panel { height: auto !important; max-height: 88dvh; }
+  .ask-panel.nt-panel { height: auto; max-height: 88dvh; }
   .nt-steps { list-style: none; counter-reset: nt; margin: 0; padding: 16px 18px 6px; display: grid; gap: 12px; }
   .nt-steps li { counter-increment: nt; display: flex; align-items: center; gap: 12px; font-size: 17px; font-weight: 500; line-height: 1.6; }
   .nt-steps li::before { content: counter(nt); width: 34px; height: 34px; border-radius: 50%; background: var(--brand); color: #fff; font-weight: 700; font-size: 16px; display: grid; place-items: center; flex-shrink: 0; }
@@ -398,8 +361,7 @@
 
   .perm-fix { margin-inline-start: 6px; padding: 4px 12px; border-radius: 999px; background: var(--brand); color: #fff; font-size: 13px; font-weight: 700; }
   /* ─── مقاسات الجوال: أكبر وأوضح ─── */
-  body { padding-left: 16px !important; padding-right: 16px !important; }
-  body > header, main { max-width: 460px !important; }
+  .pg-w { width: 100%; max-width: 460px; }
   body > header h1 { font-size: 21px; }
   body > header p { font-size: 13.5px; }
   #logo { width: 52px; height: 52px; }
@@ -412,7 +374,7 @@
   .tkt-track::before, .tkt-track::after { top: 33px; }
   .q-dots .me { min-width: 40px; height: 40px; font-size: 17px; }
   .q-text { font-size: 17.5px; } .q-text span { font-size: 15px; }
-  .note { font-size: 16px !important; }
+  .note { font-size: 16px; }
   .chip { font-size: 15px; padding: 10px 15px; }
   .ask-tx b, .ups-tx b { font-size: 17px; } .ask-tx small, .ups-tx small { font-size: 14.5px; }
   #push-btn, #keep-btn, #unlock-btn { font-size: 17px; padding: 18px; }
@@ -421,7 +383,7 @@
   .stp.top .stp-h { font-size: 24px; } .stp.top .stp-sub { font-size: 16px; }
   .field { font-size: 18px; padding: 14px 16px; }
   .mg-title { font-size: 19px; } .mg-sub { font-size: 14.5px; }
-  #t-ready { font-size: 34px; } #r-body { font-size: 17px !important; }
+  #t-ready { font-size: 34px; } #r-body { font-size: 17px; }
   #v-done h2 { font-size: 24px; } #v-done p { font-size: 16px; }
   .foot { font-size: 13.5px; }
   /* ─── «جاهز»: الشاشة كلها خضراء، والتذكرة بيضاء في النص ─── */
@@ -429,30 +391,29 @@
   body[data-view="ready"] .tkt-perf::before, body[data-view="ready"] .tkt-perf::after { background: var(--ok); }
   body[data-view="ready"] > header h1, body[data-view="ready"] > header p, body[data-view="ready"] .foot { color: #fff; }
   body[data-view="ready"] .foot { opacity: .7; }
-  #t-ready { color: #fff; font-size: 30px; font-weight: 700; }
-  #r-body { color: #dcefe3; font-size: 15px !important; }
+  #t-ready { color: #fff; font-weight: 700; }
+  #r-body { color: #dcefe3; }
   #got-btn { background: #fff; color: var(--ok-d); box-shadow: 0 14px 28px -16px rgba(0,0,0,.45); font-size: 17px; }
   body.ringing { animation: flashOk 1s infinite; }
   @keyframes flashOk { 0%, 100% { background: var(--ok); } 50% { background: #49a96b; } }
   body.ringing .tkt-perf::before, body.ringing .tkt-perf::after { animation: flashOk 1s infinite; }
-  body.ringing .card { animation: none; }
   body.ringing .tkt { animation: shake .5s infinite; }
   @media (prefers-reduced-motion: reduce) { body.ringing, body.ringing .tkt { animation: none; } }
   .hidden { display: none !important; }
 </style>
 <link rel="stylesheet" href="/css/tw/pager.css">
 </head>
-<body class="flex flex-col items-center px-5 py-8">
+<body class="flex flex-col items-center px-4 py-8">
 
-<header class="w-full max-w-sm flex items-center gap-3 mb-5">
+<header class="pg-w flex items-center gap-3 mb-5">
   <img id="logo" alt="" class="w-12 h-12 rounded-2xl object-cover bg-white border border-[#233d2c]/10 hidden">
   <div class="min-w-0 flex-1">
     <h1 id="store-name" class="text-lg font-black truncate">…</h1>
-    <p class="text-[12px] font-bold opacity-55"><i class="ph-bold ph-bell"></i> البيجر الرقمي</p>
+    <p class="text-[12px]"><i class="ph-bold ph-bell"></i> البيجر الرقمي</p>
   </div>
 </header>
 
-<main class="w-full max-w-sm space-y-3.5">
+<main class="pg-w space-y-3.5">
   <!-- جاري التحميل -->
   <section id="v-loading" class="card p-10 text-center"><i class="ph-bold ph-spinner-gap ph-spin text-2xl opacity-50"></i></section>
 
@@ -729,7 +690,7 @@
         <li class="gold now"><i class="ph-bold ph-bell-ringing"></i>جاهز</li>
       </ul>
     </div>
-    <p id="r-body" class="note !text-[15px]"></p>
+    <p id="r-body" class="note"></p>
     <button id="got-btn" class="btn btn-brand"><i class="ph-bold ph-check"></i> <span id="t-got"></span></button>
     <a id="r-loyalty" class="hidden block text-[13px] font-black rounded-2xl py-3 px-3"></a>
   </section>
@@ -847,10 +808,10 @@
 <!-- موافقة الإشعارات والصوت: تطلع أول ما ياخذ رقمه -->
 <div id="perm" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center bg-black/55 p-4" role="dialog" aria-modal="true" aria-labelledby="perm-title">
   <div class="card w-full max-w-sm p-6 text-center space-y-4" style="animation: pop .35s cubic-bezier(.3,1.4,.5,1)">
-    <div class="w-16 h-16 rounded-2xl bg-white/15 text-[#e9c95a] grid place-items-center mx-auto text-3xl"><i class="ph-bold ph-bell-ringing"></i></div>
+    <div class="mdl-ic"><i class="ph-bold ph-bell-ringing"></i></div>
     <h2 id="perm-title" class="text-xl font-black">رقمك <span id="perm-num"></span>. نفعّل لك التنبيه؟</h2>
     <p id="perm-sub" class="text-sm font-bold opacity-70 leading-relaxed">عشان يرن جوالك ويوصلك إشعار <span class="t-when"></span>، حتى لو كان على الصامت أو قفلت الشاشة.</p>
-    <ul class="text-[13px] font-bold text-right space-y-2 bg-white/10 border border-white/20 rounded-2xl p-4 text-white">
+    <ul class="mdl-box text-[14px] font-bold text-right space-y-2 p-4">
       <li id="perm-n"><i class="ph-bold ph-bell ml-1"></i> الإشعارات: <span></span></li>
       <li id="perm-s"><i class="ph-bold ph-speaker-high ml-1"></i> الصوت: <span></span></li>
     </ul>
@@ -862,10 +823,10 @@
 <!-- بعد أخذ الرقم: دعوة للتسجيل في بطاقة الولاء (مرة لكل رقم) -->
 <div id="ly-ask" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center bg-black/55 p-4" role="dialog" aria-modal="true" aria-labelledby="ly-ask-title">
   <div class="card w-full max-w-sm p-6 text-center space-y-4" style="animation: pop .35s cubic-bezier(.3,1.4,.5,1)">
-    <div class="w-16 h-16 rounded-2xl bg-white/15 text-[#e9c95a] grid place-items-center mx-auto text-3xl"><i class="ph-bold ph-seal-check"></i></div>
+    <div class="mdl-ic"><i class="ph-bold ph-seal-check"></i></div>
     <h2 id="ly-ask-title" class="text-xl font-black">خذ ختم على هالطلب</h2>
     <p id="ly-ask-sub" class="text-sm font-bold opacity-70 leading-relaxed"></p>
-    <p class="text-[12.5px] font-bold opacity-70 leading-relaxed bg-white/10 border border-white/20 rounded-2xl p-3"><i class="ph-bold ph-wallet"></i> أضف البطاقة للمحفظة ويوصلك إشعار <span class="t-when"></span> حتى لو كنت في تطبيق ثاني.</p>
+    <p class="text-[12.5px] font-bold opacity-70 leading-relaxed mdl-box p-3"><i class="ph-bold ph-wallet"></i> أضف البطاقة للمحفظة ويوصلك إشعار <span class="t-when"></span> حتى لو كنت في تطبيق ثاني.</p>
     <button id="ly-ask-yes" class="btn btn-brand"><i class="ph-bold ph-user-plus"></i> سجّلني</button>
     <button id="ly-ask-no" class="text-xs font-black opacity-50 underline">لاحقاً</button>
   </div>
@@ -874,10 +835,10 @@
 <!-- بعد أخذ الرقم (محل بدون ولاء): دعوة لإضافة بطاقة النداء، وما تطلع لو البطاقة محفوظة في الجوال -->
 <div id="pc-ask" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center bg-black/55 p-4" role="dialog" aria-modal="true" aria-labelledby="pc-ask-title">
   <div class="card w-full max-w-sm p-6 text-center space-y-4" style="animation: pop .35s cubic-bezier(.3,1.4,.5,1)">
-    <div class="w-16 h-16 rounded-2xl bg-white/15 text-[#e9c95a] grid place-items-center mx-auto text-3xl"><i class="ph-bold ph-bell-ringing"></i></div>
+    <div class="mdl-ic"><i class="ph-bold ph-bell-ringing"></i></div>
     <h2 id="pc-ask-title" class="text-xl font-black">أضف بطاقة النداء</h2>
     <p class="text-sm font-bold opacity-70 leading-relaxed">يوصلك إشعار <span class="t-when"></span> حتى لو كنت في تطبيق ثاني أو سكّرت المتصفح.</p>
-    <p class="text-[12.5px] font-bold opacity-70 leading-relaxed bg-white/10 border border-white/20 rounded-2xl p-3"><i class="ph-bold ph-wallet"></i> تضيفها مرة وحدة، وكل ما تاخذ رقم تتحدث برقمك.</p>
+    <p class="text-[12.5px] font-bold opacity-70 leading-relaxed mdl-box p-3"><i class="ph-bold ph-wallet"></i> تضيفها مرة وحدة، وكل ما تاخذ رقم تتحدث برقمك.</p>
     <button id="pc-ask-yes" class="btn btn-wallet"><i class="ph-bold ph-wallet"></i> أضف بطاقة النداء</button>
     <button id="pc-ask-no" class="text-xs font-black opacity-50 underline">لاحقاً</button>
   </div>
@@ -1106,8 +1067,16 @@
     if (/^#[0-9a-f]{6}$/i.test(s.accent_color || '')) setBrand(s.accent_color);
     if (s.logo_url && s.logo_url !== setStore.logo) { setStore.logo = s.logo_url; logoColor(s.logo_url).then(c => { if (c) setBrand(c); }); }
   }
+  // لون المحل: لو فاتح (أصفر، بيج...) نغمّقه لين الكتابة البيضاء عليه تنقرا (تباين 4.5 على الأقل)
+  function readable(hex) {
+    let [r, g, b] = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16));
+    const lum = (c) => { c /= 255; return c <= .03928 ? c / 12.92 : ((c + .055) / 1.055) ** 2.4; };
+    const contrast = () => 1.05 / (.2126 * lum(r) + .7152 * lum(g) + .0722 * lum(b) + .05);
+    for (let i = 0; i < 20 && contrast() < 4.5; i++) { r *= .9; g *= .9; b *= .9; }
+    return '#' + [r, g, b].map(c => Math.round(c).toString(16).padStart(2, '0')).join('');
+  }
   function setBrand(hex) {
-    document.documentElement.style.setProperty('--brand', hex);
+    document.documentElement.style.setProperty('--brand', readable(hex));
   }
   // اللون الغالب في الشعار: نتجاهل الأبيض والشفاف والرمادي، ونغمّق اللون لو كان فاتح عشان الكتابة البيضاء تبان
   function logoColor(url) {
