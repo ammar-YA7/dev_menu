@@ -181,6 +181,11 @@
       <p class="text-sm opacity-70">عشان ما تضيع أختامك لو مسحت بيانات المتصفح، وتشوفها بسرعة من جوالك.</p>
     </div>
     <button id="wallet-btn" type="button" class="btn btn-wallet hidden"><i class="ph-bold ph-wallet"></i> <span>احفظ بطاقتك في المحفظة</span></button>
+    <!-- البطاقة مضافة للمحفظة: بدل الزر نأكد له، ورابط صغير لو حذفها من جواله -->
+    <div id="wallet-done" class="hidden text-center space-y-1.5">
+      <p class="inline-flex items-center gap-2 font-bold text-[#233d2c] bg-[#233d2c]/[.07] rounded-full px-4 py-2"><i class="ph-bold ph-check-circle text-lg"></i> تمت إضافة بطاقتك في المحفظة</p>
+      <button id="wallet-again" type="button" class="block mx-auto text-xs font-semibold opacity-60 underline">ما تلقاها في جوالك؟ أضفها مرة ثانية</button>
+    </div>
     <form id="phone-box" class="card p-5 space-y-3 hidden" novalidate>
       <p class="font-bold">كمّل بياناتك</p>
       <p class="text-xs opacity-60">عشان ترجع لبطاقتك لو غيّرت جوالك، ويعرفك المحل.</p>
@@ -309,8 +314,9 @@
     $('stamp-btn').classList.toggle('hidden', full || purchaseOnly || (justJoined && walletOn && !card.in_wallet));
     $('c-purchase').classList.toggle('hidden', !purchaseOnly || full);
     $('c-pager-hint').classList.toggle('hidden', !settings.pager_stamp);
-    $('wallet-btn').classList.toggle('hidden', !walletOn);
-    $('wallet-btn').querySelector('span').textContent = card.in_wallet ? 'افتح البطاقة في المحفظة' : 'احفظ بطاقتك في المحفظة';
+    $('wallet-btn').classList.toggle('hidden', !walletOn || card.in_wallet);
+    $('wallet-btn').querySelector('span').textContent = 'احفظ بطاقتك في المحفظة';
+    $('wallet-done').classList.toggle('hidden', !walletOn || !card.in_wallet);
     $('wallet-prompt').classList.toggle('hidden', !walletOn || card.in_wallet || !justJoined);
 
     $('phone-box').classList.toggle('hidden', !!card.has_profile);
@@ -623,6 +629,8 @@
       msg('err', 'ph-warning-circle', e.message || 'تعذر تجهيز البطاقة للمحفظة، جرّب بعد شوي');
     } finally { setBusy(btn, false); }
   };
+
+  $('wallet-again').onclick = () => $('wallet-btn').onclick();
 
   // ─── البداية ───
   // الرابط اللي على ظهر بطاقة المحفظة فيه رقم البطاقة: نحفظه ونشيله من الرابط
