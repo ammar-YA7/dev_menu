@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<script src="/js/i18n.js?v=8" data-dict="pager"></script>
+<script src="/js/i18n.js?v=9" data-dict="pager"></script>
 <link rel="stylesheet" href="/css/base.css">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
@@ -278,8 +278,8 @@
   .tkt-perf::before { right: -29px; } .tkt-perf::after { left: -29px; }
   /* مراحل الطلب داخل التذكرة: خط يتعبى من اليمين مع تقدم التحضير */
   .tkt-track { display: grid; grid-template-columns: repeat(3, 1fr); position: relative; margin: 0; padding: 16px 8px 18px; }
-  .tkt-track::before, .tkt-track::after { content: ''; position: absolute; top: 31px; right: 16.66%; height: 3px; border-radius: 2px; }
-  .tkt-track::before { left: 16.66%; background: #eee7da; }
+  .tkt-track::before, .tkt-track::after { content: ''; position: absolute; top: 31px; inset-inline-start: 16.66%; height: 3px; border-radius: 2px; }
+  .tkt-track::before { inset-inline-end: 16.66%; background: #eee7da; }
   .tkt-track::after { background: var(--brand); width: calc(33.33% + 33.33% * var(--pp, 0)); transition: width .8s ease; }
   .tkt.ready .tkt-track::after { width: 66.66%; background: var(--ok); }
   .tkt-track li { list-style: none; text-align: center; position: relative; z-index: 1; font-size: 12px; font-weight: 600; color: #9a9284; }
@@ -1250,7 +1250,7 @@
     const a = Math.max(0, Number(q.ahead) || 0), shown = Math.min(a, 6);
     $('q-dots').innerHTML = Array.from({ length: shown }, (_, i) => `<i class="${i === 0 ? 'cook' : ''}"></i>`).join('')
       + (a > shown ? `<span class="more" dir="ltr">+${a - shown}</span>` : '') + `<span class="me">${num}</span>`;
-    $('q-ahead').textContent = a === 0 ? 'طلبك هو اللي يتجهز الحين' : `قدامك ${arCount(a, 'طلب واحد', 'طلبين', 'طلبات')}`;
+    $('q-ahead').textContent = a === 0 ? 'طلبك هو اللي يتجهز الحين' : (a > 10 ? `قدامك ${a} طلب` : `قدامك ${arCount(a, 'طلب واحد', 'طلبين', 'طلبات')}`);
     // الكاشير حدد الوقت: هو المعتمد
     // الكاشير حدد الوقت = رقم واحد. وإلا مدة تقريبية (من - إلى) تحسب الطلبات اللي قدامه
     const e = staffEta || q;
@@ -1943,7 +1943,12 @@
   $('push-btn').onclick = askPush;
   // الإشعارات مقفلة: المتصفح ما يسمح نطلبها مرة ثانية، فنوري العميل الخطوات حسب جواله، ونتحقق لما يرجع
   function ntSteps() {
+    const en = window.DMi18n && DMi18n.lang === 'en';
     const ua = navigator.userAgent, ios = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+    if (en) {
+      if (/iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) return ['Open your phone <b>Settings</b>', 'Tap <b>Notifications</b>', 'Choose <b>Pager</b> or your browser', 'Turn on <b>Allow Notifications</b>, then come back here'];
+      return ['Tap the <b>lock</b> 🔒 next to the site address', 'Open <b>Permissions</b> or <b>Site settings</b>', 'Set <b>Notifications</b> to <b>Allow</b>', 'Come back to this page'];
+    }
     if (ios) return ['افتح <b>الإعدادات</b> في جوالك', 'اختر <b>الإشعارات</b>', 'اختر <b>البيجر</b> أو اسم المتصفح', 'شغّل <b>السماح بالإشعارات</b>، وارجع لهالصفحة'];
     if (/SamsungBrowser/.test(ua)) return ['اضغط <b>☰</b> تحت الشاشة، ثم <b>الإعدادات</b>', 'اختر <b>المواقع والتنزيلات</b> ثم <b>الإشعارات</b>', 'ابحث عن هالموقع وخلّه <b>مسموح</b>', 'ارجع لهالصفحة'];
     if (/Android/.test(ua)) return ['اضغط على <b>القفل</b> 🔒 جنب رابط الموقع فوق', 'اختر <b>الأذونات</b> أو <b>إعدادات الموقع</b>', 'خلّ <b>الإشعارات</b> على <b>سماح</b>', 'ارجع لهالصفحة'];

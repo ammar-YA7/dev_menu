@@ -280,7 +280,7 @@ def build(slug):
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<script src="/js/i18n.js?v=8" data-dict="{slug}"></script>
+<script src="/js/i18n.js?v=9" data-dict="{slug}"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="icon" type="image/png" sizes="192x192" href="/images/icon-192.png">
