@@ -1897,7 +1897,7 @@
           const price = Number(o.price) || 0;
           return `<button type="button" ${on ? '' : 'disabled'} data-exo="${gi}:${oi}" class="ex-opt ${sel ? 'on' : ''} flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl text-[13px] font-bold">
             <span class="flex items-center gap-2"><span class="ex-box ${g.required ? 'radio' : ''}"></span>${esc((currentLang !== 'ar' && o.name_en) || o.name)}</span>
-            <span class="opacity-80">${price ? `+${esc(money(price))}` : T('مجاناً', 'Free')}</span></button>`;
+            ${price ? `<span class="opacity-80">+${esc(money(price))}</span>` : ''}</button>`;
         }).join('')}</div></div>`;
     }).join('');
   }
