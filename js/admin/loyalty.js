@@ -608,7 +608,7 @@
           <button type="button" data-pk-edit="${p.id}" class="w-8 h-8 rounded-lg hover:bg-black/5" aria-label="تعديل"><i class="ph-bold ph-pencil-simple"></i></button>
           <button type="button" data-pk-off="${p.id}" class="w-8 h-8 rounded-lg hover:bg-rose-50 text-rose-600" aria-label="حذف"><i class="ph-bold ph-trash"></i></button>
         </div>
-      </div>`).join('') : '<p class="text-sm text-ink sm:col-span-2">لا توجد باقات بعد. أضف باقتك الأولى، مثل «٣٠ وجبة» أو «١٠ أكواب قهوة».</p>';
+      </div>`).join('') : '<p class="text-sm text-ink sm:col-span-2">لا توجد باقات بعد. أضف باقتك الأولى، مثل «30 وجبة» أو «10 أكواب قهوة».</p>';
     document.getElementById('pk-sell').disabled = !pk.plans.length;
     document.getElementById('pk-sell').classList.toggle('opacity-50', !pk.plans.length);
     const q = pk.q.trim(), list = pk.cards.filter(c => !q || String(c.name).includes(q) || String(c.phone || '').includes(q.replace(/^0/, '')));
@@ -631,7 +631,7 @@
       title: id ? 'تعديل الباقة' : 'باقة جديدة', icon: 'ph-package', confirmText: 'حفظ',
       subtitle: 'التعديل يسري على الباقات الجديدة، وباقات العملاء الحالية تبقى كما هي.',
       fields: [
-        { name: 'name', label: 'اسم الباقة', value: p.name || '', maxlength: 40, required: true, placeholder: DMSectors.isFood(client) ? 'مثال: ٣٠ وجبة غداء' : 'مثال: ٥ غسلات' },
+        { name: 'name', label: 'اسم الباقة', value: p.name || '', maxlength: 40, required: true, placeholder: DMSectors.isFood(client) ? 'مثال: 30 وجبة غداء' : 'مثال: 5 غسلات' },
         { name: 'uses', label: 'عدد مرات الاستخدام', value: p.uses ? String(p.uses) : '', maxlength: 4, required: true, dir: 'ltr', placeholder: '30' },
         { name: 'days', label: 'صلاحية الباقة بالأيام', value: p.days ? String(p.days) : '', maxlength: 4, dir: 'ltr', placeholder: '60', hint: 'اتركه فارغاً إذا كانت الباقة بدون تاريخ انتهاء.' },
         { name: 'price', label: 'سعر الباقة', value: p.price != null ? String(p.price) : '', maxlength: 8, dir: 'ltr', placeholder: '450', hint: 'للعرض فقط في شاشة الكاشير، والدفع يتم في المحل.' }
