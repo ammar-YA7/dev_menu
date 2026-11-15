@@ -13,11 +13,12 @@
     document.querySelectorAll('[data-lytab]').forEach(el => el.classList.toggle('hidden', !el.dataset.lytab.split(' ').includes(tab)));
     document.getElementById('ly-grid').classList.toggle('hidden', !['settings', 'messages', 'register'].includes(tab));
     try { localStorage.setItem('dm_ly_tab', tab); } catch {}
+    if (tab === 'packages' && typeof loadPackages === 'function') loadPackages();
   }
   document.querySelectorAll('[data-lyt]').forEach(b => b.addEventListener('click', () => setLyTab(b.dataset.lyt)));
   async function onLoyaltyPage() {
     let saved = ''; try { saved = localStorage.getItem('dm_ly_tab') || ''; } catch {}
-    setLyTab(['overview', 'design', 'settings', 'messages', 'register'].includes(ly.tab || saved) ? (ly.tab || saved) : 'overview');
+    setLyTab(['overview', 'design', 'settings', 'messages', 'register', 'packages'].includes(ly.tab || saved) ? (ly.tab || saved) : 'overview');
     try { [ly.data, ly.members] = await Promise.all([api('loyalty'), api('loyalty-members').then(r => r.members)]); }
     catch (e) { showToast(e.message || 'تعذر تحميل بطاقة الولاء', true); return; }
     renderLoyalty();
@@ -589,3 +590,111 @@
     btn.disabled = false; btn.innerHTML = '<i class="ph-bold ph-file-arrow-up"></i> استورد';
   }
 
+
+  // ─── الباقات المدفوعة مسبقاً (تبويب «الباقات») ───
+  const pk = { plans: [], cards: [], q: '' };
+  const pkDate = (iso) => new Date(iso).toLocaleDateString('ar-SA-u-nu-latn', { day: 'numeric', month: 'short', year: 'numeric' });
+  async function loadPackages() {
+    try { const r = await api('loyalty-pkg'); pk.plans = r.plans || []; pk.cards = r.cards || []; }
+    catch (e) { showToast(e.message || 'تعذر تحميل الباقات', true); return; }
+    renderPackages();
+  }
+  function renderPackages() {
+    document.getElementById('pk-plans').innerHTML = pk.plans.length ? pk.plans.map(p => `
+      <div class="rounded-xl border border-black/10 p-4 flex items-start justify-between gap-3">
+        <div class="min-w-0"><p class="font-bold truncate">${esc(p.name)}</p>
+          <p class="text-xs text-ink mt-1">${p.uses} مرة${p.days ? ` · صالحة ${p.days} يوماً` : ' · بدون انتهاء'}${p.price != null ? ` · ${esc(DM.money ? DM.money(Number(p.price), client.currency || 'SAR') : p.price)}` : ''}</p></div>
+        <div class="flex gap-1 shrink-0">
+          <button type="button" data-pk-edit="${p.id}" class="w-8 h-8 rounded-lg hover:bg-black/5" aria-label="تعديل"><i class="ph-bold ph-pencil-simple"></i></button>
+          <button type="button" data-pk-off="${p.id}" class="w-8 h-8 rounded-lg hover:bg-rose-50 text-rose-600" aria-label="حذف"><i class="ph-bold ph-trash"></i></button>
+        </div>
+      </div>`).join('') : '<p class="text-sm text-ink sm:col-span-2">لا توجد باقات بعد. أضف باقتك الأولى، مثل «٣٠ وجبة» أو «١٠ أكواب قهوة».</p>';
+    document.getElementById('pk-sell').disabled = !pk.plans.length;
+    document.getElementById('pk-sell').classList.toggle('opacity-50', !pk.plans.length);
+    const q = pk.q.trim(), list = pk.cards.filter(c => !q || String(c.name).includes(q) || String(c.phone || '').includes(q.replace(/^0/, '')));
+    const active = pk.cards.filter(c => c.remaining > 0 && !c.expired).length;
+    document.getElementById('pk-sub').textContent = pk.cards.length ? `${pk.cards.length} باقة، منها ${active} سارية` : '';
+    document.getElementById('pk-cards').innerHTML = list.length ? list.map(c => {
+      const state = c.expired ? '<span class="text-amber-700">منتهية</span>' : c.remaining <= 0 ? '<span class="text-rose-600">خلصت</span>' : '';
+      return `<div class="py-3 flex items-center justify-between gap-3">
+        <div class="min-w-0"><p class="font-bold truncate">${esc(c.name)} <span class="text-xs font-normal text-ink">#${c.id}</span></p>
+          <p class="text-xs text-ink mt-0.5">${esc(c.plan_name)}${c.phone ? ` · <span dir="ltr">${esc(c.phone)}</span>` : ''}${c.expires_at ? ` · تنتهي ${pkDate(c.expires_at)}` : ''}${c.in_wallet ? ' · في المحفظة' : ''}</p></div>
+        <div class="flex items-center gap-3 shrink-0">
+          <div class="text-left"><p class="font-black text-lg leading-none">${c.remaining}<span class="text-xs font-normal text-ink"> / ${c.total}</span></p><p class="text-[11px] mt-1">${state}</p></div>
+          <button type="button" data-pk-card="${c.id}" class="w-8 h-8 rounded-lg hover:bg-black/5" aria-label="إدارة الباقة"><i class="ph-bold ph-dots-three-vertical"></i></button>
+        </div></div>`;
+    }).join('') : `<p class="text-sm text-ink py-3">${pk.cards.length ? 'لا توجد نتائج.' : 'لم تُبع أي باقة بعد. بعد ما يدفع العميل، سجّل له الباقة من هنا أو من شاشة الكاشير.'}</p>`;
+  }
+  async function editPackagePlan(id) {
+    const p = pk.plans.find(x => x.id === id) || {};
+    const r = await DMDialog.form({
+      title: id ? 'تعديل الباقة' : 'باقة جديدة', icon: 'ph-package', confirmText: 'حفظ',
+      subtitle: 'التعديل يسري على الباقات الجديدة، وباقات العملاء الحالية تبقى كما هي.',
+      fields: [
+        { name: 'name', label: 'اسم الباقة', value: p.name || '', maxlength: 40, required: true, placeholder: DMSectors.isFood(client) ? 'مثال: ٣٠ وجبة غداء' : 'مثال: ٥ غسلات' },
+        { name: 'uses', label: 'عدد مرات الاستخدام', value: p.uses ? String(p.uses) : '', maxlength: 4, required: true, dir: 'ltr', placeholder: '30' },
+        { name: 'days', label: 'صلاحية الباقة بالأيام', value: p.days ? String(p.days) : '', maxlength: 4, dir: 'ltr', placeholder: '60', hint: 'اتركه فارغاً إذا كانت الباقة بدون تاريخ انتهاء.' },
+        { name: 'price', label: 'سعر الباقة', value: p.price != null ? String(p.price) : '', maxlength: 8, dir: 'ltr', placeholder: '450', hint: 'للعرض فقط في شاشة الكاشير، والدفع يتم في المحل.' }
+      ]
+    });
+    if (!r) return;
+    const num = (v) => String(v || '').replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).trim();
+    try { pk.plans = (await api('loyalty-pkg-plan', { id: id || null, name: r.name, uses: num(r.uses), days: num(r.days), price: num(r.price) })).plans; renderPackages(); showToast('تم حفظ الباقة'); }
+    catch (e) { showToast(e.message || 'تعذر حفظ الباقة', true); }
+  }
+  async function sellPackage() {
+    if (!pk.plans.length) return;
+    const r = await DMDialog.form({
+      title: 'باقة لعميل', icon: 'ph-user-plus', confirmText: 'سجّل الباقة',
+      subtitle: 'بعد أن يدفع العميل ثمن الباقة في المحل.',
+      fields: [
+        { name: 'plan', label: 'الباقة', type: 'choice', required: true, value: pk.plans[0].id, options: pk.plans.map(p => ({ value: p.id, label: `${p.name} (${p.uses} مرة)` })) },
+        { name: 'name', label: 'اسم العميل', maxlength: 40, required: true },
+        { name: 'phone', label: 'جوال العميل', maxlength: 16, dir: 'ltr', placeholder: '05xxxxxxxx', hint: 'لإرسال رابط الباقة له عبر واتساب.' }
+      ]
+    });
+    if (!r) return;
+    try {
+      const out = await api('loyalty-pkg-sell', { plan_id: Number(r.plan), name: r.name, phone: r.phone });
+      await loadPackages();
+      const msg = `هلا ${out.card.name} 🌿\nهذي باقتك (${out.card.plan_name}): ${out.card.total} مرة.\nافتحها وأضفها لمحفظة جوالك، واعرض الكود للكاشير كل مرة:\n${out.url}`;
+      const send = await DMDialog.confirm({ title: 'تم تسجيل الباقة', message: out.phone ? 'أرسل رابط الباقة للعميل عبر واتساب ليضيفها إلى محفظته.' : 'انسخ رابط الباقة وأرسله للعميل ليضيفها إلى محفظته.', confirmText: out.phone ? 'أرسل واتساب' : 'انسخ الرابط', cancelText: 'لاحقاً', tone: 'success' });
+      if (!send) return;
+      if (out.phone) window.open(`https://wa.me/${out.phone}?text=${encodeURIComponent(msg)}`, '_blank', 'noopener');
+      else { try { await navigator.clipboard.writeText(out.url); showToast('تم نسخ الرابط'); } catch {} }
+    } catch (e) { showToast(e.message || 'تعذر تسجيل الباقة', true); }
+  }
+  async function manageCard(id) {
+    const c = pk.cards.find(x => x.id === id); if (!c) return;
+    const r = await DMDialog.form({
+      title: `${c.name}: ${c.plan_name}`, icon: 'ph-package', confirmText: 'حفظ',
+      fields: [
+        { name: 'remaining', label: 'الرصيد المتبقي', value: String(c.remaining), maxlength: 4, required: true, dir: 'ltr' },
+        { name: 'expires', label: 'تاريخ الانتهاء', value: c.expires_at ? c.expires_at.slice(0, 10) : '', maxlength: 10, dir: 'ltr', placeholder: '2026-12-31', hint: 'بصيغة سنة-شهر-يوم، واتركه فارغاً لإلغاء الانتهاء.' },
+        { name: 'del', label: 'حذف الباقة', type: 'choice', value: 'no', options: [{ value: 'no', label: 'إبقاء الباقة' }, { value: 'yes', label: 'حذف الباقة نهائياً' }] }
+      ]
+    });
+    if (!r) return;
+    try {
+      if (r.del === 'yes') {
+        if (!(await DMDialog.confirm({ title: 'حذف الباقة', message: `تُحذف باقة ${c.name} وتُلغى من محفظته، ولا يمكن استرجاعها.`, confirmText: 'احذف', cancelText: 'تراجع', tone: 'danger' }))) return;
+        await api('loyalty-pkg-delete', { id }); showToast('تم حذف الباقة');
+      } else {
+        const exp = String(r.expires || '').trim();
+        await api('loyalty-pkg-edit', { id, remaining: String(r.remaining).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)), expires_at: exp ? `${exp}T20:59:59Z` : null });
+        showToast('تم التحديث، وتتحدث بطاقة العميل في محفظته');
+      }
+      await loadPackages();
+    } catch (e) { showToast(e.message || 'تعذر التحديث', true); }
+  }
+  document.getElementById('pk-add').addEventListener('click', () => editPackagePlan(null));
+  document.getElementById('pk-sell').addEventListener('click', sellPackage);
+  document.getElementById('pk-search').addEventListener('input', (e) => { pk.q = e.target.value; renderPackages(); });
+  document.getElementById('pk-plans').addEventListener('click', async (e) => {
+    const ed = e.target.closest('[data-pk-edit]'), off = e.target.closest('[data-pk-off]');
+    if (ed) return editPackagePlan(Number(ed.dataset.pkEdit));
+    if (off && await DMDialog.confirm({ title: 'حذف الباقة', message: 'لن تظهر الباقة للبيع بعد الآن، وباقات العملاء الحالية تبقى سارية.', confirmText: 'احذف', cancelText: 'تراجع', tone: 'danger' })) {
+      try { pk.plans = (await api('loyalty-pkg-plan-off', { id: Number(off.dataset.pkOff) })).plans; renderPackages(); } catch (err) { showToast(err.message, true); }
+    }
+  });
+  document.getElementById('pk-cards').addEventListener('click', (e) => { const b = e.target.closest('[data-pk-card]'); if (b) manageCard(Number(b.dataset.pkCard)); });

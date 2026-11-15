@@ -446,6 +446,31 @@ module.exports = handler(['GET', 'POST'], async (req, res) => {
     }
 
     // إضافة البطاقة للمحفظة: نجهزها أول مرة يطلبها الزبون بس (عشان ما نستهلك رصيد الخدمة على الكل)
+    // ─── الباقات المدفوعة مسبقاً: صفحة الزبون (رصيده) وإضافتها للمحفظة ───
+    if ((action === 'pkg' && req.method === 'GET') || (action === 'pkg-wallet' && req.method === 'POST')) {
+      const P = require('./_lib/packages');
+      const slug = action === 'pkg' ? req.query.slug : b.slug, t = String((action === 'pkg' ? req.query.t : b.t) || '');
+      const { store: here, bad } = await findPublicStore(slug, 'id,name,client_slug,logo_url');
+      if (bad || !here) throw new ApiError(404, 'الباقة غير متاحة', 'NOT_AVAILABLE');
+      const home = await loyaltyHome(here.id);
+      if (!(await storeHasFeature(home, 'loyalty'))) throw new ApiError(404, 'الباقة غير متاحة', 'NOT_AVAILABLE');
+      if (!TOKEN_RE.test(t)) throw new ApiError(404, 'الباقة غير موجودة', 'NOT_FOUND');
+      const card = (await rest(`loyalty_pkg_cards?token=eq.${q(t)}&client_id=eq.${home}&select=*`))[0];
+      if (!card) throw new ApiError(404, 'الباقة غير موجودة', 'NOT_FOUND');
+      if (action === 'pkg-wallet') return { url: await P.createWallet(home, card, req) };
+      const main = (await rest(`clients?id=eq.${home}&select=name,logo_url,loyalty_settings`))[0] || {};
+      const view = P.cardView(card);
+      if (card.wallet_serial) {
+        // مضافة في جواله الحين؟ (نفس طريقة بطاقة الولاء)
+        try {
+          const d = await Promise.race([wallet.getPass(card.wallet_serial), new Promise((_, no) => setTimeout(() => no(new Error('timeout')), 2500))]);
+          view.in_wallet = (Array.isArray(d.devices) && d.devices.length > 0) || d.googleInstalled === 'saved';
+        } catch { view.in_wallet = null; }
+      } else view.in_wallet = false;
+      const design = normalizeLoyalty(main.loyalty_settings).design || {};
+      return { store: { name: main.name, logo_url: design.logo || main.logo_url, color: design.color || null }, card: view, wallet: wallet.configured() };
+    }
+
     if (action === 'wallet' && req.method === 'POST') {
       const ctx = await loadStore(b.slug);
       const card = await cardByToken(ctx, b.t);

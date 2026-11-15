@@ -1649,6 +1649,7 @@
           <button type="button" role="tab" data-lyt="settings"><i class="ph-bold ph-sliders-horizontal"></i> الإعدادات</button>
           <button type="button" role="tab" data-lyt="messages"><i class="ph-bold ph-chat-circle-text"></i> الرسائل</button>
           <button type="button" role="tab" data-lyt="register"><i class="ph-bold ph-qr-code"></i> كرت التسجيل</button>
+          <button type="button" role="tab" data-lyt="packages"><i class="ph-bold ph-package"></i> الباقات</button>
         </div>
         <p id="ly-shared" class="hidden text-[12px] font-bold text-emerald-800 bg-emerald-500/5 border border-emerald-600/20 rounded-xl px-3 py-2.5"><i class="ph-bold ph-git-branch"></i> بطاقة الولاء واحدة لكل فروعك: يجمع العميل أختامه ويصرف مكافأته من أي فرع، والأعضاء والإعدادات مشتركة. موقع المحل فقط لكل فرع على حدة.</p>
         <div id="ly-grid" class="max-w-3xl">
@@ -1920,6 +1921,25 @@
           <div class="grid md:grid-cols-2 gap-5">
             <div class="pro-card p-5"><p class="text-sm font-bold mb-3"><i class="ph-bold ph-question text-ink"></i> لماذا لم يعودوا؟ <span class="font-normal text-ink text-xs">(آخر 3 شهور)</span></p><div id="ly-fb-stats" class="space-y-2.5 text-sm"></div></div>
             <div class="pro-card p-5"><p class="text-sm font-bold mb-3"><i class="ph-bold ph-heart text-ink"></i> الهدايا لأصدقائهم</p><div id="ly-gift-stats" class="grid grid-cols-2 gap-2"></div></div>
+          </div>
+        </div>
+
+        <!-- الباقات المدفوعة مسبقاً: العميل يدفع في المحل ويستخدم الباقة على دفعات، ورصيده في بطاقة المحفظة -->
+        <div data-lytab="packages" class="hidden space-y-5">
+          <div class="pro-card p-5 space-y-4">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+              <div><h3 class="text-base font-bold"><i class="ph-bold ph-package text-emerald-600"></i> الباقات المدفوعة مسبقاً</h3>
+                <p class="text-[12.5px] text-ink mt-1 leading-relaxed max-w-xl">يشتري العميل الباقة ويدفع ثمنها في المحل، فتصدر له بطاقة في محفظة الجوال تعرض رصيده. وعند كل استخدام يمسح الكاشير الكود فينقص الرصيد واحداً، وتتحدث البطاقة فوراً. مثال: ٣٠ وجبة، أو ١٠ أكواب قهوة.</p></div>
+              <button type="button" id="pk-add" class="bg-brand text-cream hover:bg-brand-dark px-3.5 py-2 rounded-xl text-[13px] font-bold transition"><i class="ph-bold ph-plus"></i> إضافة باقة</button>
+            </div>
+            <div id="pk-plans" class="grid sm:grid-cols-2 gap-3"></div>
+          </div>
+          <div class="pro-card p-5 space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div><h3 class="text-base font-bold">باقات العملاء</h3><p id="pk-sub" class="text-xs text-ink mt-0.5"></p></div>
+              <div class="flex gap-2"><input id="pk-search" class="input-pro !py-2 text-sm w-44" placeholder="ابحث بالاسم أو الجوال"><button type="button" id="pk-sell" class="bg-brand text-cream hover:bg-brand-dark px-3.5 py-2 rounded-xl text-[13px] font-bold transition whitespace-nowrap"><i class="ph-bold ph-user-plus"></i> باقة لعميل</button></div>
+            </div>
+            <div id="pk-cards" class="divide-y divide-black/5"></div>
           </div>
         </div>
 

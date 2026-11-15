@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="/css/base.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
+<meta name="theme-color" content="#233d2c">
+<meta name="robots" content="noindex">
+<title>باقتك | DEV MENU</title>
+<link rel="stylesheet" href="/css/fonts.css">
+<link rel="stylesheet" href="/css/icons.css">
+<script src="js/api.js"></script>
+<script src="/js/vendor/qrcode.min.js"></script>
+<style>
+  /* صفحة الباقة المدفوعة مسبقاً: الرصيد + الكود للكاشير + إضافتها للمحفظة */
+  :root { --brand: #233d2c; --sand: #f5f2eb; --ink: #1b3022; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'IBM Plex Sans Arabic', sans-serif; background: var(--sand); color: var(--ink); min-height: 100dvh; }
+  main { max-width: 440px; margin: 0 auto; padding: 28px 16px 40px; }
+  .head { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-bottom: 18px; text-align: center; }
+  .head img { width: 64px; height: 64px; border-radius: 18px; object-fit: cover; background: #fff; }
+  .head h1 { margin: 0; font-size: 20px; font-weight: 700; }
+  .pkg { background: var(--brand); color: #fff; border-radius: 26px; padding: 22px; box-shadow: 0 30px 60px -36px rgba(35,61,44,.6); }
+  .pkg .top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .pkg .plan { font-size: 13px; opacity: .8; margin: 0 0 2px; }
+  .pkg .who { font-size: 19px; font-weight: 700; margin: 0; }
+  .pkg .left { text-align: left; }
+  .pkg .n { font-size: 46px; font-weight: 700; line-height: 1; }
+  .pkg .of { font-size: 13px; opacity: .8; }
+  .bar { height: 8px; border-radius: 99px; background: rgba(255,255,255,.18); margin: 18px 0 10px; overflow: hidden; }
+  .bar i { display: block; height: 100%; background: #fff; border-radius: 99px; }
+  .meta { font-size: 13px; opacity: .85; display: flex; justify-content: space-between; gap: 8px; }
+  .box { background: #fff; border: 1.5px solid rgba(35,61,44,.12); border-radius: 24px; padding: 20px; margin-top: 14px; text-align: center; }
+  .box b { display: block; margin-bottom: 12px; }
+  #qr { display: inline-block; padding: 8px; background: #fff; }
+  .small { font-size: 13px; opacity: .65; margin-top: 8px; }
+  .btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; border: 0; border-radius: 16px; padding: 17px; font: inherit; font-weight: 700; font-size: 17px; margin-top: 14px; cursor: pointer; }
+  .btn-wallet { background: #000; color: #fff; }
+  .btn:disabled { opacity: .55; }
+  .done { display: inline-flex; align-items: center; gap: 8px; margin-top: 14px; font-weight: 700; color: var(--brand); background: rgba(35,61,44,.07); border-radius: 99px; padding: 9px 16px; }
+  .again { display: block; margin: 6px auto 0; background: none; border: 0; font: inherit; font-size: 12px; opacity: .6; text-decoration: underline; cursor: pointer; color: inherit; }
+  .state { text-align: center; padding: 60px 10px; }
+  .warn { background: #fff4e5; color: #8a4b00; border-radius: 14px; padding: 10px 14px; font-size: 14px; font-weight: 600; margin-top: 12px; text-align: center; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <div id="loading" class="state">جاري التحميل…</div>
+  <div id="err" class="state hidden"></div>
+  <div id="view" class="hidden">
+    <div class="head"><img id="logo" alt="" class="hidden"><h1 id="store"></h1></div>
+    <div class="pkg" id="pkg">
+      <div class="top">
+        <div><p class="plan" id="plan"></p><p class="who" id="who"></p></div>
+        <div class="left"><div class="n" id="left"></div><div class="of" id="of"></div></div>
+      </div>
+      <div class="bar"><i id="bar"></i></div>
+      <div class="meta"><span id="exp"></span><span id="last"></span></div>
+    </div>
+    <p id="warn" class="warn hidden"></p>
+    <div class="box">
+      <b><i class="ph-bold ph-qr-code"></i> اعرض الكود للكاشير كل ما تستخدم الباقة</b>
+      <div id="qr"></div>
+      <p class="small" id="no"></p>
+    </div>
+    <button id="wallet-btn" class="btn btn-wallet hidden"><i class="ph-bold ph-wallet"></i> <span>احفظ باقتك في المحفظة</span></button>
+    <div id="wallet-done" class="hidden" style="text-align:center">
+      <span class="done"><i class="ph-bold ph-check-circle"></i> باقتك مضافة في المحفظة</span>
+      <button id="wallet-again" class="again" type="button">ما تلقاها في جوالك؟ أضفها مرة ثانية</button>
+    </div>
+  </div>
+</main>
+<script>
+  const $ = (id) => document.getElementById(id);
+  const P = new URLSearchParams(location.search);
+  const slug = (P.get('client') || (DM.hostSlug ? DM.hostSlug() : '')).trim().toLowerCase();
+  const KEY = `dm_pkg_${slug}`;
+  if (P.get('t')) { try { localStorage.setItem(KEY, P.get('t')); } catch {} P.delete('t'); history.replaceState(null, '', location.pathname + (P.toString() ? `?${P}` : '')); }
+  const token = (() => { try { return localStorage.getItem(KEY) || ''; } catch { return ''; } })();
+  let data = null;
+  const fmt = (iso) => new Date(iso).toLocaleDateString('ar-SA-u-nu-latn', { day: 'numeric', month: 'long', year: 'numeric' });
+
+  function render() {
+    const c = data.card, s = data.store;
+    document.title = `${c.plan_name} | ${s.name}`;
+    $('store').textContent = s.name;
+    if (s.logo_url) { $('logo').src = s.logo_url; $('logo').classList.remove('hidden'); }
+    if (s.color) $('pkg').style.background = s.color;
+    $('plan').textContent = `باقة ${c.plan_name}`;
+    $('who').textContent = c.name;
+    $('left').textContent = c.remaining;
+    $('of').textContent = `باقي من ${c.total}`;
+    $('bar').style.width = `${Math.max(0, Math.min(100, (c.remaining / c.total) * 100))}%`;
+    $('exp').textContent = c.expires_at ? `تنتهي ${fmt(c.expires_at)}` : '';
+    $('last').textContent = c.last_used_at ? `آخر استخدام ${fmt(c.last_used_at)}` : '';
+    const warn = c.expired ? 'الباقة منتهية. تقدر تجددها من المحل' : c.remaining <= 0 ? 'خلصت الباقة. تقدر تجددها من المحل' : c.remaining <= 2 ? `باقي لك ${c.remaining} بس، قربت تخلص` : '';
+    $('warn').textContent = warn; $('warn').classList.toggle('hidden', !warn);
+    $('qr').innerHTML = '';
+    new QRCode($('qr'), { text: c.qr, width: 176, height: 176, colorDark: '#13261b', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+    $('no').textContent = `رقم الباقة #${c.id}`;
+    $('wallet-btn').classList.toggle('hidden', !data.wallet || c.in_wallet === true);
+    $('wallet-done').classList.toggle('hidden', !data.wallet || c.in_wallet !== true);
+  }
+
+  async function load(quiet) {
+    if (!slug || !token) { $('loading').classList.add('hidden'); $('err').textContent = 'افتح الباقة من الرابط اللي وصلك من المحل'; $('err').classList.remove('hidden'); return; }
+    try {
+      data = await DM.get(`/api/loyalty?action=pkg&slug=${encodeURIComponent(slug)}&t=${encodeURIComponent(token)}`);
+      $('loading').classList.add('hidden'); $('view').classList.remove('hidden'); render();
+    } catch (e) {
+      if (quiet) return;
+      $('loading').classList.add('hidden'); $('err').textContent = e.message || 'ما قدرنا نفتح الباقة'; $('err').classList.remove('hidden');
+    }
+  }
+
+  async function addWallet() {
+    const btn = $('wallet-btn'); btn.disabled = true;
+    try {
+      const r = await DM.post('/api/loyalty?action=pkg-wallet', { slug, t: token });
+      location.href = DM.walletHref ? DM.walletHref(r.url) : r.url;
+    } catch (e) { alert(e.message || 'تعذر تجهيز البطاقة للمحفظة، جرّب بعد شوي'); }
+    btn.disabled = false;
+  }
+  $('wallet-btn').onclick = addWallet;
+  $('wallet-again').onclick = addWallet;
+  // رجع من المحفظة أو من الكاشير: نحدّث الرصيد وحالة المحفظة
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && data) setTimeout(() => load(true), 900); });
+  load();
+</script>
+</body>
+</html>

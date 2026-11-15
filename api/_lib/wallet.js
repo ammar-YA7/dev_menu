@@ -241,4 +241,20 @@ const walletPlatform = (req) => /Android/i.test(String((req && req.headers && re
 const reached = (r, platform) => String(r).startsWith('ok') && (platform === 'google' || !/devices=0\b/.test(r));
 // حالة بطاقة وحدة عند شركة المحفظة (هل هي مضافة في جوال؟)
 async function getPass(serial) { return call('GET', `/${encodeURIComponent(serial)}`); }
-module.exports = { getPass, walletPlatform, reached, cardMaintenance, passRemoved, configured, createPass, updatePass, revokePass, buildCtx, cardUrl, createPagerPass, updatePagerPass, endPagerPass, pagerStep };
+// بطاقات غير الولاء (مثل الباقات المدفوعة): نرسل المحتوى جاهز
+async function createRaw(body) {
+  if (!configured()) throw new ApiError(503, 'إضافة البطاقة للمحفظة مو متاحة حالياً', 'WALLET_OFF');
+  try { return await call('POST', '', body); }
+  catch (e) {
+    if (e.status === 429) throw new ApiError(503, 'المحفظة مشغولة الحين، جرّب بعد شوي', 'WALLET_LIMIT');
+    // شعار أو لون رفضته الخدمة: نعيد بدونها
+    if (e.status >= 400 && e.status < 500 && e.status !== 401) { const { logoURL, color, ...plain } = body; try { return await call('POST', '', { ...plain, colorPreset: 'green' }); } catch {} }
+    throw new ApiError(502, 'تعذر تجهيز البطاقة للمحفظة، جرّب بعد شوي', 'WALLET_FAILED');
+  }
+}
+async function updateRaw(serial, body) {
+  if (!configured() || !serial) return 'not configured';
+  try { const r = await call('PUT', `/${encodeURIComponent(serial)}`, body); return `ok devices=${r.notifiedDevices ?? '?'} unchanged=${r.unchanged ?? '?'} at=${new Date().toISOString().slice(0, 19)}`; }
+  catch (e) { return `${e.status || ''} ${e.message || ''}`.trim().slice(0, 300); }
+}
+module.exports = { createRaw, updateRaw, getPass, walletPlatform, reached, cardMaintenance, passRemoved, configured, createPass, updatePass, revokePass, buildCtx, cardUrl, createPagerPass, updatePagerPass, endPagerPass, pagerStep };

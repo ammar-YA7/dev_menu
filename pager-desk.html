@@ -187,6 +187,7 @@
       <button id="scan-btn" class="act bg-[#384f3d] text-white hidden"><i class="ph-bold ph-camera"></i> <span>امسح بطاقة</span></button>
       <button id="stamp-btn" class="act bg-[#c9a227] text-[#15271b] hidden"><i class="ph-bold ph-seal-check"></i> <span>كود ختم</span></button>
       <button id="transfer-btn" class="act bg-[#fbf6e6] border border-[#c9a227]/60 text-[#5c470c] hidden"><i class="ph-bold ph-arrows-left-right"></i> <span>نقل رصيد</span></button>
+      <button id="pkg-btn" class="act bg-white border border-[#233d2c]/20 text-[#233d2c] hidden"><i class="ph-bold ph-package"></i> <span>باقة جديدة</span></button>
     </div>
     <!-- الأدوات: قائمة تنفتح، والصوت واللغة -->
     <div class="flex items-center gap-2 shrink-0">
@@ -315,6 +316,27 @@
         <button id="tr-go" disabled class="mt-3 w-full bg-[#384f3d] disabled:opacity-40 text-white font-black rounded-2xl py-3">اختر العدد</button></div>
       <p id="tr-done" class="hidden text-[13px] font-bold"></p>
     </div>
+  </div>
+</div>
+<!-- باقة مدفوعة مسبقاً: الزبون دفع في الكاشير، نسجّل له الباقة وتطلع له بطاقتها -->
+<div id="pkg-modal" class="fixed inset-0 z-50 bg-black/75 hidden items-center justify-center p-5">
+  <div class="bg-white rounded-[28px] w-full max-w-sm p-6 space-y-3">
+    <p class="text-lg font-black text-center"><i class="ph-bold ph-package text-[#c9a227]"></i> باقة جديدة لزبون</p>
+    <form id="pkg-form" class="space-y-3" novalidate>
+      <p class="text-[13px] font-bold opacity-75 text-center">بعد ما يدفع الزبون ثمن الباقة</p>
+      <div id="pkg-plans" class="grid gap-2" role="radiogroup" aria-label="الباقة"></div>
+      <input id="pkg-name" maxlength="40" autocomplete="off" placeholder="اسم الزبون" class="w-full rounded-2xl border border-[#233d2c]/20 px-4 py-3 font-bold">
+      <input id="pkg-phone" type="tel" inputmode="tel" maxlength="16" autocomplete="off" dir="ltr" placeholder="جواله (اختياري، نرسل له الباقة واتساب)" class="w-full rounded-2xl border border-[#233d2c]/20 px-4 py-3 font-bold text-center">
+      <p id="pkg-err" class="hidden text-[13px] font-bold text-rose-700 text-center"></p>
+      <button id="pkg-go" class="w-full bg-[#384f3d] text-white font-black rounded-2xl py-3">سجّل الباقة</button>
+    </form>
+    <div id="pkg-done" class="hidden text-center space-y-3">
+      <p class="font-black"><i class="ph-bold ph-check-circle text-emerald-700"></i> <span id="pkg-done-t"></span></p>
+      <p class="text-[13px] font-bold opacity-75">خلّ الزبون يمسح الكود بجواله ويضيف باقته للمحفظة</p>
+      <div id="pkg-qr" class="w-56 h-56 mx-auto grid place-items-center"></div>
+      <a id="pkg-wa" target="_blank" rel="noopener" class="hidden w-full bg-[#1f8f4e] text-white font-black rounded-2xl py-3 flex items-center justify-center gap-2"><i class="ph-bold ph-whatsapp-logo"></i> أرسلها له واتساب</a>
+    </div>
+    <button id="pkg-close" class="w-full bg-[#f5f2eb] font-black rounded-2xl py-3">إغلاق</button>
   </div>
 </div>
 <div id="scan-modal" class="fixed inset-0 z-50 bg-black/80 hidden items-center justify-center p-5">
@@ -718,6 +740,7 @@
       $('stamp-btn').classList.toggle('hidden', !r.loyalty);
       $('scan-btn').classList.toggle('hidden', !r.loyalty);
       $('transfer-btn').classList.toggle('hidden', !r.loyalty);
+      if (r.loyalty && !load.pkg) { load.pkg = true; loadPkgPlans(); }
       $('join-btn').classList.toggle('hidden', !r.loyalty);
       // شاشة الزبون: أكواد الخدمات (ومعها الختم للي عنده الولاء)
       $('kiosk-btn').classList.toggle('hidden', !r.loyalty && r.pager === false);
@@ -767,6 +790,63 @@
     el.innerHTML = html;
     clearTimeout(el._h); el._h = setTimeout(() => { el.className = 'absolute inset-0 hidden'; }, 4500);
   }
+  // ─── الباقات المدفوعة مسبقاً: مسح كود الباقة ينقص واحد، مع تراجع لو انمسح بالغلط ───
+  async function usePackage(payload) {
+    if (scanBusy) return;
+    scanBusy = true;
+    try {
+      const r = await call('loyalty-pkg-use', payload), c = r.card;
+      const line = `<b class="text-lg">${esc(c.name)}</b><span class="text-sm font-bold opacity-90">باقة ${esc(c.plan_name)}</span>`;
+      if (r.ok) {
+        scanShow(true, `<i class="ph-bold ph-check-circle text-7xl"></i><b class="text-2xl">انخصم من الباقة</b>${line}<span class="font-black text-xl">باقي ${c.remaining} من ${c.total}</span><button type="button" data-undo="${r.use_id}" class="mt-1 bg-white/20 border border-white/40 rounded-full px-4 py-1.5 text-sm font-bold"><i class="ph-bold ph-arrow-counter-clockwise"></i> تراجع</button>`);
+        clearTimeout($('scan-result')._h); $('scan-result')._h = setTimeout(() => { $('scan-result').className = 'absolute inset-0 hidden'; }, 8000);
+        if (navigator.vibrate) navigator.vibrate(80);
+      } else scanShow(false, `<i class="ph-bold ph-package text-7xl"></i><b class="text-2xl">${esc(r.note || 'ما انخصمت')}</b>${line}<span class="font-bold">باقي ${c.remaining} من ${c.total}</span>`);
+    } catch (e) { scanShow(false, `<i class="ph-bold ph-warning-circle text-6xl"></i><b>${esc(e.message || 'ما انخصمت. حاول مرة ثانية')}</b>`); }
+    setTimeout(() => { scanBusy = false; }, 1500);
+  }
+  $('scan-result').addEventListener('click', async (e) => {
+    const b = e.target.closest('[data-undo]'); if (!b) return;
+    b.disabled = true;
+    try { const r = await call('loyalty-pkg-undo', { use_id: Number(b.dataset.undo) }); scanShow(true, `<i class="ph-bold ph-arrow-counter-clockwise text-6xl"></i><b class="text-2xl">تم التراجع</b><span class="font-black text-xl">باقي ${r.card.remaining} من ${r.card.total}</span>`); }
+    catch (err) { scanShow(false, `<b>${esc(err.message || 'ما قدرنا نتراجع')}</b>`); }
+  });
+  // بيع باقة
+  let pkgPlans = [], pkgPick = null;
+  async function loadPkgPlans() {
+    try { pkgPlans = (await call('loyalty-pkg')).plans || []; } catch { pkgPlans = []; }
+    $('pkg-btn').classList.toggle('hidden', !pkgPlans.length);
+  }
+  function paintPkgPlans() {
+    $('pkg-plans').innerHTML = pkgPlans.map(p => `<button type="button" role="radio" aria-checked="${pkgPick === p.id}" data-p="${p.id}" class="rounded-2xl border px-4 py-3 text-right font-bold ${pkgPick === p.id ? 'bg-[#233d2c] text-white border-[#233d2c]' : 'border-[#233d2c]/20'}">${esc(p.name)}<span class="block text-xs font-semibold opacity-75">${p.uses} مرة${p.days ? ` · صالحة ${p.days} يوم` : ''}${p.price != null ? ` · ${esc(fmtM(Number(p.price)))}` : ''}</span></button>`).join('');
+  }
+  $('pkg-plans').onclick = (e) => { const b = e.target.closest('[data-p]'); if (!b) return; pkgPick = Number(b.dataset.p); paintPkgPlans(); };
+  $('pkg-btn').onclick = () => {
+    pkgPick = pkgPlans.length === 1 ? pkgPlans[0].id : null; paintPkgPlans();
+    $('pkg-name').value = ''; $('pkg-phone').value = ''; $('pkg-err').classList.add('hidden');
+    $('pkg-form').classList.remove('hidden'); $('pkg-done').classList.add('hidden');
+    $('pkg-modal').classList.remove('hidden'); $('pkg-modal').classList.add('flex');
+  };
+  $('pkg-close').onclick = () => { $('pkg-modal').classList.add('hidden'); $('pkg-modal').classList.remove('flex'); };
+  $('pkg-form').onsubmit = async (e) => {
+    e.preventDefault();
+    const err = (m) => { $('pkg-err').textContent = m; $('pkg-err').classList.remove('hidden'); };
+    if (!pkgPick) return err('اختر الباقة');
+    if ($('pkg-name').value.trim().length < 2) return err('اكتب اسم الزبون');
+    const btn = $('pkg-go'); btn.disabled = true;
+    try {
+      const r = await call('loyalty-pkg-sell', { plan_id: pkgPick, name: $('pkg-name').value.trim(), phone: $('pkg-phone').value.trim() });
+      $('pkg-done-t').textContent = `باقة ${r.card.plan_name} لـ ${r.card.name}: ${r.card.total} مرة`;
+      $('pkg-qr').innerHTML = '';
+      new QRCodeStyling({ width: 220, height: 220, data: r.url, margin: 4, qrOptions: { errorCorrectionLevel: 'M' },
+        dotsOptions: { type: 'rounded', color: '#233d2c' }, cornersSquareOptions: { type: 'extra-rounded', color: '#1b3022' }, backgroundOptions: { color: '#ffffff' } }).append($('pkg-qr'));
+      $('pkg-wa').classList.toggle('hidden', !r.phone);
+      if (r.phone) $('pkg-wa').href = `https://wa.me/${r.phone}?text=${encodeURIComponent(`هلا ${r.card.name} 🌿\nهذي باقتك (${r.card.plan_name}): ${r.card.total} مرة.\nافتحها وأضفها لمحفظة جوالك، واعرض الكود للكاشير كل مرة:\n${r.url}`)}`;
+      $('pkg-form').classList.add('hidden'); $('pkg-done').classList.remove('hidden');
+    } catch (ex) { err(ex.message || 'ما انحفظت، حاول مرة ثانية'); }
+    btn.disabled = false;
+  };
+
   async function stampMember(payload) {
     if (scanBusy) return;
     scanBusy = true;
@@ -795,7 +875,7 @@
       // نفس الكود ما ينقرأ مرتين ورا بعض خلال 6 ثواني
       if (code && code.data && !(code.data === lastQr && Date.now() - lastQrAt < 6000)) {
         lastQr = code.data; lastQrAt = Date.now();
-        stampMember({ qr: code.data });
+        if (/^DMP1\./.test(code.data)) usePackage({ qr: code.data }); else stampMember({ qr: code.data });
       }
     }
     scanLoop = requestAnimationFrame(scanTick);
