@@ -1154,15 +1154,14 @@
   const CAR_COLORS = [['أبيض', '#ffffff'], ['أسود', '#111111'], ['فضي', '#c0c4c8'], ['رمادي', '#7a7f85'], ['أحمر', '#c62828'], ['أزرق', '#1e4fa3'], ['بني', '#6d4c41'], ['بيج', '#d9c4a1'], ['أخضر', '#2e7d32'], ['ذهبي', '#c9a227']];
   let carEditing = false, carColor = '';
   // أنواع السيارات المنتشرة في السعودية: الزبون يضغط بدل ما يكتب، ولو كتب تطلع له المطابقة
-  const CAR_MODELS = ['كامري', 'هايلكس', 'لاندكروزر', 'أكسنت', 'إلنترا', 'يوكن', 'صني', 'كورولا', 'تاهو', 'باترول', 'يارس', 'برادو', 'سوناتا', 'توسان', 'سنتافي',
-    'أكورد', 'سيفيك', 'فورتشنر', 'راف فور', 'أفالون', 'كريتا', 'أزيرا', 'ألتيما', 'إكس تريل', 'سيلفرادو', 'ماليبو', 'إكسبلورر', 'تورس', 'إكسبيديشن', 'إف 150',
-    'سييرا', 'سبورتاج', 'سيراتو', 'سورينتو', 'كي 5', 'ريو', 'بيكانتو', 'مازدا 6', 'سي إكس 5', 'دزاير', 'سويفت', 'أتراج', 'باجيرو', 'شانجان', 'جيلي', 'هافال',
-    'إم جي', 'لكزس', 'مرسيدس', 'بي إم دبليو', 'أودي', 'رنج روفر', 'جيب', 'دودج', 'نيسان', 'تويوتا', 'هيونداي', 'كيا', 'فورد', 'شفرولية', 'جي إم سي'];
+  const CAR_MODELS = [['كامري', 'Camry'], ['هايلكس', 'Hilux'], ['لاندكروزر', 'Land Cruiser'], ['أكسنت', 'Accent'], ['إلنترا', 'Elantra'], ['يوكن', 'Yukon'], ['صني', 'Sunny'], ['كورولا', 'Corolla'], ['تاهو', 'Tahoe'], ['باترول', 'Patrol'], ['يارس', 'Yaris'], ['برادو', 'Prado'], ['سوناتا', 'Sonata'], ['توسان', 'Tucson'], ['سنتافي', 'Santa Fe'], ['أكورد', 'Accord'], ['سيفيك', 'Civic'], ['فورتشنر', 'Fortuner'], ['راف فور', 'RAV4'], ['أفالون', 'Avalon'], ['كريتا', 'Creta'], ['أزيرا', 'Azera'], ['ألتيما', 'Altima'], ['إكس تريل', 'X-Trail'], ['سيلفرادو', 'Silverado'], ['ماليبو', 'Malibu'], ['إكسبلورر', 'Explorer'], ['تورس', 'Taurus'], ['إكسبيديشن', 'Expedition'], ['إف 150', 'F-150'], ['سييرا', 'Sierra'], ['سبورتاج', 'Sportage'], ['سيراتو', 'Cerato'], ['سورينتو', 'Sorento'], ['كي 5', 'K5'], ['ريو', 'Rio'], ['بيكانتو', 'Picanto'], ['مازدا 6', 'Mazda 6'], ['سي إكس 5', 'CX-5'], ['دزاير', 'Dzire'], ['سويفت', 'Swift'], ['أتراج', 'Attrage'], ['باجيرو', 'Pajero'], ['شانجان', 'Changan'], ['جيلي', 'Geely'], ['هافال', 'Haval'], ['إم جي', 'MG'], ['لكزس', 'Lexus'], ['مرسيدس', 'Mercedes'], ['بي إم دبليو', 'BMW'], ['أودي', 'Audi'], ['رنج روفر', 'Range Rover'], ['جيب', 'Jeep'], ['دودج', 'Dodge'], ['نيسان', 'Nissan'], ['تويوتا', 'Toyota'], ['هيونداي', 'Hyundai'], ['كيا', 'Kia'], ['فورد', 'Ford'], ['شفرولية', 'Chevrolet'], ['جي إم سي', 'GMC']];
   const carNorm = (t) => String(t || '').replace(/[أإآ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').replace(/\s+/g, ' ').trim().toLowerCase();
   function carSuggest(inputId, boxId) {
     const box = $(boxId), input = $(inputId), v = carNorm(input.value);
-    const list = v ? CAR_MODELS.filter(m => carNorm(m).includes(v) && carNorm(m) !== v).slice(0, 6) : CAR_MODELS.slice(0, 8);
-    box.innerHTML = list.map(m => `<button type="button" data-m="${m}">${m}</button>`).join('');
+    const en = window.DMi18n && DMi18n.lang === 'en';
+    // يطابق بالعربي والإنجليزي (يكتب «كام» أو «cam»)، ويعرض بلغة الصفحة
+    const list = (v ? CAR_MODELS.filter(([a, e]) => (carNorm(a).includes(v) || carNorm(e).includes(v)) && carNorm(a) !== v && carNorm(e) !== v).slice(0, 6) : CAR_MODELS.slice(0, 8)).map(([a, e]) => (en ? e : a));
+    box.innerHTML = list.map(m => `<button type="button" data-m="${m}" dir="auto">${m}</button>`).join('');
   }
   function carPick(inputId, boxId) {
     $(inputId).addEventListener('input', () => carSuggest(inputId, boxId));
