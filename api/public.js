@@ -164,7 +164,8 @@ const SHARE_PAGES = {
   links: ['links', (n) => `روابط ${n}`],
   waitlist: ['waitlist', (n) => `سجّل في قائمة الانتظار عند ${n}`],
   pager: ['pager', (n) => `خذ رقمك من البيجر عند ${n}`],
-  loyalty: ['loyalty', (n) => `بطاقة الولاء من ${n}`]
+  loyalty: ['loyalty', (n) => `بطاقة الولاء من ${n}`],
+  package: ['package', (n) => `باقات الاشتراك عند ${n}`]
 };
 const escAttr = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 

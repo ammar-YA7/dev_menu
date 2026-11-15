@@ -26,7 +26,7 @@ const plansOf = (sid) => rest(`loyalty_pkg_plans?client_id=eq.${sid}&active=is.t
 module.exports.pre = async function pre(action, req) {
   if (action === 'loyalty-pkg' && req.method === 'GET') {
     const { store, desk } = await context(req);
-    if (!PLANS.has(store, 'loyalty')) throw new ApiError(403, 'الباقات ضمن بطاقة الولاء، وهي مو ضمن باقتك', 'ADDON_OFF');
+    if (!PLANS.has(store, 'subs')) throw new ApiError(403, 'الاشتراكات مو ضمن باقتك. أضفها من «اشتراكك» في لوحة التحكم', 'ADDON_OFF');
     const [plans, cards] = await Promise.all([
       plansOf(store.id),
       // الكاشير يحتاج الباقات بس (يبيع ويمسح)، والقائمة الكاملة لصاحب المحل
@@ -106,10 +106,27 @@ module.exports.post = async function post(action, req, b, env) {
     else id = int(b.card_id);
     const card = Number.isInteger(id) ? (await rest(`loyalty_pkg_cards?id=eq.${id}&client_id=eq.${sid}&select=*`))[0] : null;
     if (!card) throw new ApiError(404, 'ما لقينا الباقة', 'NO_PKG');
+    // سجّل واختار الباقة بنفسه: الكاشير يفعّلها بعد ما يدفع
+    if (card.status === 'pending') return { ok: false, pending: true, note: 'الباقة بانتظار التفعيل بعد الدفع', card: P.cardView(card), price: (await rest(`loyalty_pkg_plans?id=eq.${card.plan_id || 0}&select=price`).catch(() => []))[0]?.price ?? null };
     const r = await P.useCard(sid, card.id, here.id);
     const fresh = (await rest(`loyalty_pkg_cards?id=eq.${card.id}&select=*`))[0];
     const note = r.ok ? null : r.reason === 'EMPTY' ? 'الباقة خلصت، ما باقي فيها رصيد' : r.reason === 'EXPIRED' ? 'الباقة منتهية' : 'ما انخصمت';
     return { ok: !!r.ok, use_id: r.use_id || null, reason: r.reason || null, note, card: P.cardView(fresh) };
+  }
+
+  // الكاشير استلم المبلغ وفعّل الباقة: الرصيد كامل، والصلاحية تبدأ من اليوم
+  if (action === 'loyalty-pkg-activate') {
+    const card = (await rest(`loyalty_pkg_cards?id=eq.${int(b.card_id)}&client_id=eq.${sid}&select=*`))[0];
+    if (!card) throw new ApiError(404, 'ما لقينا الباقة', 'NO_PKG');
+    if (card.status !== 'pending') return { card: P.cardView(card) };
+    const plan = card.plan_id ? (await rest(`loyalty_pkg_plans?id=eq.${card.plan_id}&select=days`))[0] : null;
+    const rows = await rest(`loyalty_pkg_cards?id=eq.${card.id}&status=eq.pending`, { method: 'PATCH', prefer: 'return=representation', body: {
+      status: 'active', remaining: card.total, branch_id: here.id, created_at: new Date().toISOString(),
+      expires_at: plan && plan.days ? new Date(Date.now() + plan.days * 864e5).toISOString() : null } });
+    const fresh = rows[0] || card;
+    P.pushCard(sid, card.id, `تفعّلت باقتك ${card.plan_name}: ${card.total} مرة`).catch(() => {});
+    poke(topic('owner', sid), 'loyalty').catch(() => {});
+    return { card: P.cardView(fresh) };
   }
 
   if (action === 'loyalty-pkg-undo') {
@@ -129,6 +146,7 @@ module.exports.post = async function post(action, req, b, env) {
       const n = int(b.remaining);
       if (!Number.isInteger(n) || n < 0 || n > 1000) throw new ApiError(400, 'الرصيد غير صحيح');
       patch.remaining = n; if (n > card.total) patch.total = n;
+      if (card.status === 'pending' && n > 0) patch.status = 'active';   // صاحب المحل فعّلها من اللوحة
     }
     if (b.expires_at !== undefined) {
       if (b.expires_at === null || b.expires_at === '') patch.expires_at = null;

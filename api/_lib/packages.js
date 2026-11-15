@@ -4,7 +4,7 @@
 // الكاشير يمسح كود البطاقة (DMP1.<رقم>.<توقيع>) وينقص واحد، والبطاقة تتحدث على طول.
 // =====================================================================
 const crypto = require('crypto');
-const { rest, rpc, ApiError, SITE } = require('./core');
+const { rest, rpc, ApiError, storeLink } = require('./core');
 const wallet = require('./wallet');
 const { tr } = require('./i18n');
 const { normalizeLoyalty } = require('./loyalty');
@@ -21,7 +21,7 @@ function parsePkgQr(storeIds, value) {
   return [].concat(storeIds).some(s => crypto.timingSafeEqual(Buffer.from(m[2]), Buffer.from(sign(s, id)))) ? id : null;
 }
 
-const pageUrl = (store, c) => `${SITE}/package.html?client=${encodeURIComponent(store.client_slug)}&t=${encodeURIComponent(c.token)}`;
+const pageUrl = (store, c) => { const u = storeLink(store.client_slug, 'package'); return `${u}${u.includes('?') ? '&' : '?'}t=${encodeURIComponent(c.token)}`; };
 const expired = (c) => !!c.expires_at && Date.parse(c.expires_at) <= Date.now();
 const dateText = (iso) => new Date(iso).toLocaleDateString('ar-SA-u-nu-latn', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Riyadh' });
 
@@ -29,7 +29,7 @@ const dateText = (iso) => new Date(iso).toLocaleDateString('ar-SA-u-nu-latn', { 
 const cardView = (c) => ({
   id: c.id, plan_name: c.plan_name, name: c.name, total: c.total, remaining: c.remaining,
   expires_at: c.expires_at || null, expired: expired(c), last_used_at: c.last_used_at || null, created_at: c.created_at,
-  qr: pkgQr(c), in_wallet: !!c.wallet_url, member: !!c.loyalty_card_id
+  qr: pkgQr(c), in_wallet: !!c.wallet_url, member: !!c.loyalty_card_id, pending: c.status === 'pending'
 });
 
 function passBody(store, settings, c, notice) {
@@ -40,7 +40,9 @@ function passBody(store, settings, c, notice) {
     organizationName: String(store.name || 'DEV MENU').slice(0, 64),
     description: L(`باقة ${c.plan_name}: ${store.name || ''}`).slice(0, 120),
     colorPreset: 'green',
-    headerFields: [{ label: L('المتبقي'), value: `${c.remaining} / ${c.total}`, changeMessage: L('باقي لك %@') }],
+    headerFields: c.status === 'pending'
+      ? [{ label: L('الحالة'), value: L('بانتظار التفعيل'), changeMessage: L('%@') }]
+      : [{ label: L('المتبقي'), value: `${c.remaining} / ${c.total}`, changeMessage: L('باقي لك %@') }],
     secondaryFields: [{ label: L('الباقة'), value: String(c.plan_name).slice(0, 40) }, { label: L('الاسم'), value: String(c.name).slice(0, 40) }],
     auxiliaryFields: c.expires_at ? [{ label: L('تنتهي'), value: dateText(c.expires_at) }] : [],
     backFields: [

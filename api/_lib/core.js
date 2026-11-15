@@ -164,7 +164,7 @@ const SUBDOMAINS = !process.env.SITE_URL;   // روابط المتاجر الم�
 function storeLink(slug, page = 'menu') {
   const s = String(slug || '').toLowerCase();
   if (SUBDOMAINS && /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(s) && !['app', 'www'].includes(s)) {
-    return `https://${s}.devmenu.digital${{ menu: '/', links: '/links', waitlist: '/waitlist', pager: '/pager', loyalty: '/loyalty' }[page] || '/'}`;
+    return `https://${s}.devmenu.digital${{ menu: '/', links: '/links', waitlist: '/waitlist', pager: '/pager', loyalty: '/loyalty', package: '/package' }[page] || '/'}`;
   }
   return `${SITE}/${page}.html?client=${encodeURIComponent(s)}`;
 }

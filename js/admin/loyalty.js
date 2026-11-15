@@ -13,12 +13,11 @@
     document.querySelectorAll('[data-lytab]').forEach(el => el.classList.toggle('hidden', !el.dataset.lytab.split(' ').includes(tab)));
     document.getElementById('ly-grid').classList.toggle('hidden', !['settings', 'messages', 'register'].includes(tab));
     try { localStorage.setItem('dm_ly_tab', tab); } catch {}
-    if (tab === 'packages' && typeof loadPackages === 'function') loadPackages();
   }
   document.querySelectorAll('[data-lyt]').forEach(b => b.addEventListener('click', () => setLyTab(b.dataset.lyt)));
   async function onLoyaltyPage() {
     let saved = ''; try { saved = localStorage.getItem('dm_ly_tab') || ''; } catch {}
-    setLyTab(['overview', 'design', 'settings', 'messages', 'register', 'packages'].includes(ly.tab || saved) ? (ly.tab || saved) : 'overview');
+    setLyTab(['overview', 'design', 'settings', 'messages', 'register'].includes(ly.tab || saved) ? (ly.tab || saved) : 'overview');
     try { [ly.data, ly.members] = await Promise.all([api('loyalty'), api('loyalty-members').then(r => r.members)]); }
     catch (e) { showToast(e.message || 'تعذر تحميل بطاقة الولاء', true); return; }
     renderLoyalty();
@@ -599,7 +598,17 @@
     catch (e) { showToast(e.message || 'تعذر تحميل الباقات', true); return; }
     renderPackages();
   }
+  function renderSubsQr() {
+    const url = DM.storeUrl(client.client_slug, 'package');
+    document.getElementById('pk-link').textContent = url.replace(/^https?:\/\//, '');
+    const box = document.getElementById('pk-qr');
+    if (box.dataset.url === url || !window.QRCode) return;
+    box.dataset.url = url; box.innerHTML = '';
+    new QRCode(box, { text: url, width: 128, height: 128, colorDark: '#1b3022', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+  }
+  document.getElementById('pk-copy').addEventListener('click', async () => { try { await navigator.clipboard.writeText(DM.storeUrl(client.client_slug, 'package')); showToast('تم نسخ الرابط'); } catch {} });
   function renderPackages() {
+    renderSubsQr();
     document.getElementById('pk-plans').innerHTML = pk.plans.length ? pk.plans.map(p => `
       <div class="rounded-xl border border-black/10 p-4 flex items-start justify-between gap-3">
         <div class="min-w-0"><p class="font-bold truncate">${esc(p.name)}</p>
@@ -612,10 +621,10 @@
     document.getElementById('pk-sell').disabled = !pk.plans.length;
     document.getElementById('pk-sell').classList.toggle('opacity-50', !pk.plans.length);
     const q = pk.q.trim(), list = pk.cards.filter(c => !q || String(c.name).includes(q) || String(c.phone || '').includes(q.replace(/^0/, '')));
-    const active = pk.cards.filter(c => c.remaining > 0 && !c.expired).length;
-    document.getElementById('pk-sub').textContent = pk.cards.length ? `${pk.cards.length} باقة، منها ${active} سارية` : '';
+    const active = pk.cards.filter(c => c.remaining > 0 && !c.expired).length, waiting = pk.cards.filter(c => c.pending).length;
+    document.getElementById('pk-sub').textContent = pk.cards.length ? `${pk.cards.length} باقة، منها ${active} سارية${waiting ? ` و${waiting} بانتظار الدفع` : ''}` : '';
     document.getElementById('pk-cards').innerHTML = list.length ? list.map(c => {
-      const state = c.expired ? '<span class="text-amber-700">منتهية</span>' : c.remaining <= 0 ? '<span class="text-rose-600">خلصت</span>' : '';
+      const state = c.pending ? '<span class="text-amber-700">بانتظار الدفع</span>' : c.expired ? '<span class="text-amber-700">منتهية</span>' : c.remaining <= 0 ? '<span class="text-rose-600">خلصت</span>' : '';
       return `<div class="py-3 flex items-center justify-between gap-3">
         <div class="min-w-0"><p class="font-bold truncate">${esc(c.name)} <span class="text-xs font-normal text-ink">#${c.id}</span></p>
           <p class="text-xs text-ink mt-0.5">${esc(c.plan_name)}${c.phone ? ` · <span dir="ltr">${esc(c.phone)}</span>` : ''}${c.expires_at ? ` · تنتهي ${pkDate(c.expires_at)}` : ''}${c.in_wallet ? ' · في المحفظة' : ''}</p></div>

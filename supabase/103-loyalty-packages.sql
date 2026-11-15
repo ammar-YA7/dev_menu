@@ -1,6 +1,6 @@
 -- =====================================================================
--- DEV MENU — باقات مدفوعة مسبقاً (ضمن بطاقة الولاء)
--- الزبون يشتري من المحل باقة (مثلاً 30 وجبة أو 10 قهوات) ويدفع في الكاشير،
+-- DEV MENU — الاشتراكات: باقات مدفوعة مسبقاً (خدمة مستقلة «subs»)
+-- الزبون يختار باقة (مثلاً 30 وجبة) ويسجّل بنفسه، يدفع في الكاشير والكاشير يمسح كوده فتتفعّل،
 -- وتطلع له بطاقة في المحفظة فيها الرصيد. كل ما يمسح الكاشير الكود ينقص واحد.
 --   loyalty_pkg_plans  الباقات اللي يعرّفها صاحب المحل
 --   loyalty_pkg_cards  باقات الزبائن (الرصيد، تاريخ الانتهاء، بطاقة المحفظة)
@@ -42,6 +42,8 @@ create table if not exists public.loyalty_pkg_cards (
   created_at      timestamptz not null default now()
 );
 create index if not exists loyalty_pkg_cards_client_idx on public.loyalty_pkg_cards (client_id, created_at desc);
+-- pending: الزبون سجّل واختار الباقة، وتنتظر الكاشير يفعّلها بعد الدفع (رصيدها صفر لين تتفعّل)
+alter table public.loyalty_pkg_cards add column if not exists status text not null default 'active';
 -- الباقة مربوطة بعضوية الولاء: الكاشير يمسح كود بطاقة الزبون وتنسجل عليه، وتطلع في نفس بطاقته
 alter table public.loyalty_pkg_cards add column if not exists loyalty_card_id bigint references public.loyalty_cards(id) on delete set null;
 create index if not exists loyalty_pkg_cards_member_idx on public.loyalty_pkg_cards (loyalty_card_id) where loyalty_card_id is not null;

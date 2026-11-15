@@ -213,7 +213,7 @@ module.exports.post = async function post(action, req, b, env) {
     const who = { id: card.id, no: card.member_no, name: card.name || `عضو #${card.member_no}`, transferred: card.transferred_at ? card.transferred : null };
     const rewards = await readyRewards(sid, card, settings);
     // عنده باقة سارية: الكاشير يختار «خصم من الباقة» أو «ختم» (شاشة الختم للزبون تختم على طول)
-    if (!b.kiosk && b.mode !== 'stamp') {
+    if (!b.kiosk && b.mode !== 'stamp' && PLANS.has(store, 'subs')) {
       const pkgs = await rest(`loyalty_pkg_cards?loyalty_card_id=eq.${card.id}&remaining=gt.0&select=*&order=created_at.asc`).catch(() => []);
       const live = pkgs.filter(p => !p.expires_at || Date.parse(p.expires_at) > Date.now());
       if (live.length) {

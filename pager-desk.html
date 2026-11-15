@@ -195,6 +195,7 @@
         <button id="tools-btn" type="button" class="mini bg-white border border-[#233d2c]/15 h-10 inline-flex items-center gap-1.5" aria-haspopup="true" aria-expanded="false"><i class="ph-bold ph-squares-four"></i> <span>أدوات</span></button>
         <div id="tools-menu" class="hidden absolute end-0 top-full mt-2 w-60 bg-white rounded-xl p-1.5 z-50 shadow-[0_12px_32px_-12px_rgba(0,0,0,.35),0_0_0_1px_rgba(0,0,0,.08)]" role="menu">
           <button id="join-btn" role="menuitem" class="tool hidden"><i class="ph-bold ph-user-plus"></i> QR تسجيل الولاء</button>
+          <button id="subs-qr-btn" role="menuitem" class="tool hidden"><i class="ph-bold ph-package"></i> QR الاشتراكات</button>
           <button id="qr-btn" role="menuitem" class="tool hidden"><i class="ph-bold ph-qr-code"></i> QR البيجر</button>
           <a id="kiosk-btn" role="menuitem" href="kiosk.html" onclick="this.href='kiosk.html'+location.search" class="tool hidden"><i class="ph-bold ph-device-tablet"></i> شاشة الزبون</a>
           <button id="stats-btn" role="menuitem" class="tool owner-only hidden"><i class="ph-bold ph-chart-bar"></i> الإحصائيات</button>
@@ -744,9 +745,10 @@
         // غير المطاعم: «المنيو» ← «القائمة» و«طبق» ← «منتج» في الشاشة كلها (ومرة وحدة، وتتابع اللي ينضاف)
         if (!deskLocalized && !DMSectors.isFood(r)) { deskLocalized = true; DMSectors.localizeDom(document.body, r, true); } } maxRings = r.max_rings || 5;
       $('stamp-btn').classList.toggle('hidden', !r.loyalty);
-      $('scan-btn').classList.toggle('hidden', !r.loyalty);
+      $('scan-btn').classList.toggle('hidden', !r.loyalty && !r.subs);
+      $('subs-qr-btn').classList.toggle('hidden', !r.subs);
       $('transfer-btn').classList.toggle('hidden', !r.loyalty);
-      if (r.loyalty && !load.pkg) { load.pkg = true; loadPkgPlans(); }
+      if (r.subs && !load.pkg) { load.pkg = true; loadPkgPlans(); }
       $('join-btn').classList.toggle('hidden', !r.loyalty);
       // شاشة الزبون: أكواد الخدمات (ومعها الختم للي عنده الولاء)
       $('kiosk-btn').classList.toggle('hidden', !r.loyalty && r.pager === false);
@@ -807,12 +809,25 @@
         scanShow(true, `<i class="ph-bold ph-check-circle text-7xl"></i><b class="text-2xl">انخصم من الباقة</b>${line}<span class="font-black text-xl">باقي ${c.remaining} من ${c.total}</span><button type="button" data-undo="${r.use_id}" class="mt-1 bg-white/20 border border-white/40 rounded-full px-4 py-1.5 text-sm font-bold"><i class="ph-bold ph-arrow-counter-clockwise"></i> تراجع</button>`);
         clearTimeout($('scan-result')._h); $('scan-result')._h = setTimeout(() => { $('scan-result').className = 'absolute inset-0 hidden'; }, 8000);
         if (navigator.vibrate) navigator.vibrate(80);
+      } else if (r.pending) {
+        // سجّل واختار الباقة بنفسه: الكاشير يفعّلها بعد ما يستلم المبلغ
+        const el = $('scan-result');
+        el.className = 'absolute inset-0 flex flex-col items-center justify-center gap-2 p-4 text-white text-center bg-[#233d2c]';
+        el.innerHTML = `<i class="ph-bold ph-hourglass-medium text-6xl text-[#c9a227]"></i><b class="text-xl">باقة جديدة بانتظار الدفع</b>${line}<span class="font-bold">${c.total} مرة${r.price != null ? ` · ${esc(fmtM(Number(r.price)))}` : ''}</span><button type="button" data-activate="${c.id}" class="mt-2 w-full bg-[#c9a227] text-[#15271b] rounded-2xl py-3 font-black"><i class="ph-bold ph-check-circle"></i> استلمت المبلغ، فعّل الباقة</button>`;
+        clearTimeout(el._h); el._h = setTimeout(() => { el.className = 'absolute inset-0 hidden'; }, 30000);
       } else scanShow(false, `<i class="ph-bold ph-package text-7xl"></i><b class="text-2xl">${esc(r.note || 'ما انخصمت')}</b>${line}<span class="font-bold">باقي ${c.remaining} من ${c.total}</span>`);
     } catch (e) { scanShow(false, `<i class="ph-bold ph-warning-circle text-6xl"></i><b>${esc(e.message || 'ما انخصمت. حاول مرة ثانية')}</b>`); }
     setTimeout(() => { scanBusy = false; }, 1500);
   }
   let lastChoose = null;
   $('scan-result').addEventListener('click', async (e) => {
+    const act = e.target.closest('[data-activate]');
+    if (act) {
+      act.disabled = true;
+      try { const r = await call('loyalty-pkg-activate', { card_id: Number(act.dataset.activate) }); scanShow(true, `<i class="ph-bold ph-check-circle text-7xl"></i><b class="text-2xl">تفعّلت الباقة</b><b class="text-lg">${esc(r.card.name)}</b><span class="font-black text-xl">${r.card.remaining} مرة</span>`); if (navigator.vibrate) navigator.vibrate(80); }
+      catch (err) { scanShow(false, `<b>${esc(err.message || 'ما تفعّلت، حاول مرة ثانية')}</b>`); }
+      return;
+    }
     const pu = e.target.closest('[data-pkuse]'), ds = e.target.closest('[data-dostamp]');
     if (pu) { scanBusy = false; return usePackage({ card_id: Number(pu.dataset.pkuse) }); }
     if (ds && lastChoose) { scanBusy = false; return stampMember({ ...lastChoose.payload, mode: 'stamp' }); }
@@ -1114,11 +1129,13 @@
   document.querySelectorAll('[data-open]').forEach(b => { b.onclick = () => $(b.dataset.open).click(); });
   const QR_KINDS = {
     pager: { title: 'امسح وخذ رقمك', steps: ['امسح الرمز بكاميرا جوالك', 'قل رقمك للموظف', 'يرن جوالك لما يجي دورك'] },
-    loyalty: { title: 'امسح وسجّل بطاقتك', steps: ['امسح الرمز وسجّل اسمك مرة وحدة', 'بعد كل شراء اعرض كود بطاقتك للكاشير', 'اجمع الأختام وخذ مكافأتك'] }
+    loyalty: { title: 'امسح وسجّل بطاقتك', steps: ['امسح الرمز وسجّل اسمك مرة وحدة', 'بعد كل شراء اعرض كود بطاقتك للكاشير', 'اجمع الأختام وخذ مكافأتك'] },
+    package: { title: 'اشترك في باقة', steps: ['امسح الرمز واختر باقتك وسجّل', 'ادفع في الكاشير واعرض له الكود ويفعّلها', 'كل مرة اعرض الكود وينخصم من باقتك'] }
   };
   let qrKind = 'pager';
   $('join-btn').onclick = () => { qrKind = 'loyalty'; openPrintQr(); };
   $('qr-btn').onclick = () => { qrKind = 'pager'; openPrintQr(); };
+  $('subs-qr-btn').onclick = () => { qrKind = 'package'; openPrintQr(); };
   function openPrintQr() {
     if (!slug) return;
     const url = DM.storeUrl(slug, qrKind);   // كود ثابت ما ينتهي

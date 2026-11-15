@@ -503,6 +503,7 @@
       <a href="pager-desk.html" data-feature="pager" onclick="return openPagerDesk(this)" class="nav-item"><i class="ph-bold ph-bell"></i> <span id="nav-desk-label">شاشة البيجر</span></a>
       <button data-nav="waitlist" class="nav-item"><i class="ph-bold ph-hourglass-medium"></i> قائمة الانتظار <span id="nav-waitlist" class="mr-auto hidden text-[11px] bg-amber-400 text-black px-2 py-0.5 rounded-full font-black">0</span></button>
       <button data-nav="loyalty" class="nav-item"><i class="ph-bold ph-seal-check"></i> بطاقة الولاء</button>
+      <button data-nav="subs" class="nav-item"><i class="ph-bold ph-package"></i> الاشتراكات</button>
       <p class="px-3 pt-4 pb-1 text-[11px] text-ink font-semibold">منشأتك</p>
       <button data-nav="branches" class="nav-item"><i class="ph-bold ph-git-branch"></i> الفروع</button>
       <button data-nav="devices" data-needs="menu|pager|waitlist|loyalty" class="nav-item"><i class="ph-bold ph-devices"></i> الأجهزة</button>
@@ -1649,7 +1650,6 @@
           <button type="button" role="tab" data-lyt="settings"><i class="ph-bold ph-sliders-horizontal"></i> الإعدادات</button>
           <button type="button" role="tab" data-lyt="messages"><i class="ph-bold ph-chat-circle-text"></i> الرسائل</button>
           <button type="button" role="tab" data-lyt="register"><i class="ph-bold ph-qr-code"></i> كرت التسجيل</button>
-          <button type="button" role="tab" data-lyt="packages"><i class="ph-bold ph-package"></i> الباقات</button>
         </div>
         <p id="ly-shared" class="hidden text-[12px] font-bold text-emerald-800 bg-emerald-500/5 border border-emerald-600/20 rounded-xl px-3 py-2.5"><i class="ph-bold ph-git-branch"></i> بطاقة الولاء واحدة لكل فروعك: يجمع العميل أختامه ويصرف مكافأته من أي فرع، والأعضاء والإعدادات مشتركة. موقع المحل فقط لكل فرع على حدة.</p>
         <div id="ly-grid" class="max-w-3xl">
@@ -1924,12 +1924,28 @@
           </div>
         </div>
 
+        <!-- الأعضاء -->
+      </section>
+
+
+      <!-- ═════════════════ الاشتراكات (الباقات المدفوعة مسبقاً) ═════════════════ -->
+      <section data-page="subs" class="hidden space-y-5">
         <!-- الباقات المدفوعة مسبقاً: العميل يدفع في المحل ويستخدم الباقة على دفعات، ورصيده في بطاقة المحفظة -->
-        <div data-lytab="packages" class="hidden space-y-5">
+        <div class="space-y-5">
+          <div class="pro-card p-5 flex flex-wrap items-center gap-5">
+            <div id="pk-qr" class="w-36 h-36 shrink-0 bg-white rounded-xl p-2"></div>
+            <div class="min-w-0 flex-1 space-y-2">
+              <h3 class="text-base font-bold">رمز الاشتراكات</h3>
+              <p class="text-[12.5px] text-ink leading-relaxed">ضعه عند الكاشير أو على الطاولات: يمسحه العميل، فيختار باقته ويسجّل اسمه وجواله.</p>
+              <p id="pk-link" class="text-xs text-ink truncate" dir="ltr"></p>
+              <button type="button" id="pk-copy" class="bg-brand/10 hover:bg-brand/15 text-ink px-3.5 py-2 rounded-xl text-[13px] font-bold border border-brand/25 transition"><i class="ph-bold ph-copy"></i> نسخ الرابط</button>
+            </div>
+          </div>
+
           <div class="pro-card p-5 space-y-4">
             <div class="flex flex-wrap items-start justify-between gap-3">
-              <div><h3 class="text-base font-bold"><i class="ph-bold ph-package text-emerald-600"></i> الباقات المدفوعة مسبقاً</h3>
-                <p class="text-[12.5px] text-ink mt-1 leading-relaxed max-w-xl">يشتري العميل الباقة ويدفع ثمنها في المحل، فتصدر له بطاقة في محفظة الجوال تعرض رصيده. وعند كل استخدام يمسح الكاشير الكود فينقص الرصيد واحداً، وتتحدث البطاقة فوراً. مثال: 30 وجبة، أو 10 أكواب قهوة.</p></div>
+              <div><h3 class="text-base font-bold"><i class="ph-bold ph-package text-emerald-600"></i> باقاتك</h3>
+                <p class="text-[12.5px] text-ink mt-1 leading-relaxed max-w-xl">يختار العميل باقته ويسجّل بنفسه من رمز الاشتراكات، ثم يدفع في المحل ويعرض الكود للكاشير فيفعّلها. وعند كل استخدام يمسح الكاشير الكود فينقص الرصيد واحداً، وتتحدث بطاقته في المحفظة فوراً. مثال: 30 وجبة، أو 10 أكواب قهوة.</p></div>
               <button type="button" id="pk-add" class="bg-brand text-cream hover:bg-brand-dark px-3.5 py-2 rounded-xl text-[13px] font-bold transition"><i class="ph-bold ph-plus"></i> إضافة باقة</button>
             </div>
             <div id="pk-plans" class="grid sm:grid-cols-2 gap-3"></div>
@@ -1943,7 +1959,6 @@
           </div>
         </div>
 
-        <!-- الأعضاء -->
       </section>
 
       <!-- ═════════════════ العملاء ═════════════════ -->
@@ -2596,6 +2611,7 @@
       <button data-nav="customers" data-needs="loyalty" class="more-item"><i class="ph-bold ph-users-three"></i><span>العملاء</span></button>
       <button data-nav="pagerset" data-free-hide class="more-item"><i class="ph-bold ph-bell-simple-ringing"></i><span>إعدادات البيجر</span></button>
       <button data-nav="waitlist" class="more-item"><i class="ph-bold ph-hourglass-medium"></i><span>قائمة الانتظار</span></button>
+      <button data-nav="subs" class="more-item"><i class="ph-bold ph-package"></i><span>الاشتراكات</span></button>
       <button data-nav="branches" class="more-item"><i class="ph-bold ph-git-branch"></i><span>الفروع</span></button>
       <button data-nav="devices" data-needs="menu|pager|waitlist|loyalty" class="more-item"><i class="ph-bold ph-devices"></i><span>الأجهزة</span></button>
       <button data-nav="settings" class="more-item"><i class="ph-bold ph-palette"></i><span>هوية المنشأة</span></button>

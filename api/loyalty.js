@@ -450,18 +450,41 @@ module.exports = handler(['GET', 'POST'], async (req, res) => {
 
     // إضافة البطاقة للمحفظة: نجهزها أول مرة يطلبها الزبون بس (عشان ما نستهلك رصيد الخدمة على الكل)
     // ─── الباقات المدفوعة مسبقاً: صفحة الزبون (رصيده) وإضافتها للمحفظة ───
-    if ((action === 'pkg' && req.method === 'GET') || (action === 'pkg-wallet' && req.method === 'POST')) {
+    if (['pkg', 'pkg-plans'].includes(action) && req.method === 'GET' || ['pkg-wallet', 'pkg-join'].includes(action) && req.method === 'POST') {
       const P = require('./_lib/packages');
-      const slug = action === 'pkg' ? req.query.slug : b.slug, t = String((action === 'pkg' ? req.query.t : b.t) || '');
+      const get = req.method === 'GET', slug = get ? req.query.slug : b.slug, t = String((get ? req.query.t : b.t) || '');
       const { store: here, bad } = await findPublicStore(slug, 'id,name,client_slug,logo_url');
-      if (bad || !here) throw new ApiError(404, 'الباقة غير متاحة', 'NOT_AVAILABLE');
+      if (bad || !here) throw new ApiError(404, 'الاشتراكات غير متاحة', 'NOT_AVAILABLE');
       const home = await loyaltyHome(here.id);
-      if (!(await storeHasFeature(home, 'loyalty'))) throw new ApiError(404, 'الباقة غير متاحة', 'NOT_AVAILABLE');
+      if (!(await storeHasFeature(home, 'subs'))) throw new ApiError(404, 'الاشتراكات غير متاحة حالياً', 'NOT_AVAILABLE');
+      const main = (await rest(`clients?id=eq.${home}&select=name,logo_url,loyalty_settings,currency`))[0] || {};
+      const design = normalizeLoyalty(main.loyalty_settings).design || {};
+      const storeInfo = { name: main.name, logo_url: design.logo || main.logo_url, color: design.color || null, currency: main.currency || 'SAR' };
+      const plansOf = () => rest(`loyalty_pkg_plans?client_id=eq.${home}&active=is.true&select=id,name,uses,days,price&order=id.asc`);
+      // صفحة الاشتراك: الباقات المتاحة يختار منها الزبون
+      if (action === 'pkg-plans') return { store: storeInfo, plans: await plansOf() };
+      // الزبون اختار باقة وسجّل: تنتظر الكاشير يفعّلها بعد الدفع
+      if (action === 'pkg-join') {
+        const plan = (await plansOf()).find(p => p.id === Number(b.plan_id));
+        if (!plan) throw new ApiError(400, 'اختر الباقة');
+        const name = String(b.name || '').replace(/\s+/g, ' ').trim().slice(0, 40);
+        if (name.length < 2) throw new ApiError(400, 'اكتب اسمك');
+        const phone = optionalPhone(b.phone);
+        if (!phone) throw new ApiError(400, 'اكتب رقم جوالك');
+        // نفس الجوال سجّل نفس الباقة اليوم وما تفعّلت: نرجّع له نفسها بدل ما نكرر
+        const dup = (await rest(`loyalty_pkg_cards?client_id=eq.${home}&phone=eq.${q(phone)}&plan_id=eq.${plan.id}&status=eq.pending&created_at=gte.${q(new Date(Date.now() - 864e5).toISOString())}&select=token&limit=1`))[0];
+        if (dup) return { token: dup.token };
+        const pending = await rest(`loyalty_pkg_cards?client_id=eq.${home}&phone=eq.${q(phone)}&status=eq.pending&select=id`);
+        if (pending.length >= 3) throw new ApiError(429, 'عندك باقات بانتظار التفعيل، فعّلها من الكاشير أول');
+        const card = (await rest('loyalty_pkg_cards', { method: 'POST', prefer: 'return=representation', body: {
+          client_id: home, plan_id: plan.id, plan_name: plan.name, name, phone, total: plan.uses, remaining: 0, status: 'pending',
+          token: crypto.randomBytes(18).toString('base64url'), branch_id: here.id, lang: reqLang(req) } }))[0];
+        return { token: card.token };
+      }
       if (!TOKEN_RE.test(t)) throw new ApiError(404, 'الباقة غير موجودة', 'NOT_FOUND');
       const card = (await rest(`loyalty_pkg_cards?token=eq.${q(t)}&client_id=eq.${home}&select=*`))[0];
       if (!card) throw new ApiError(404, 'الباقة غير موجودة', 'NOT_FOUND');
       if (action === 'pkg-wallet') return { url: await P.createWallet(home, card, req) };
-      const main = (await rest(`clients?id=eq.${home}&select=name,logo_url,loyalty_settings`))[0] || {};
       const view = P.cardView(card);
       if (card.wallet_serial) {
         // مضافة في جواله الحين؟ (نفس طريقة بطاقة الولاء)
@@ -470,8 +493,7 @@ module.exports = handler(['GET', 'POST'], async (req, res) => {
           view.in_wallet = (Array.isArray(d.devices) && d.devices.length > 0) || d.googleInstalled === 'saved';
         } catch { view.in_wallet = null; }
       } else view.in_wallet = false;
-      const design = normalizeLoyalty(main.loyalty_settings).design || {};
-      return { store: { name: main.name, logo_url: design.logo || main.logo_url, color: design.color || null }, card: view, wallet: wallet.configured() };
+      return { store: storeInfo, card: view, wallet: wallet.configured() };
     }
 
     if (action === 'wallet' && req.method === 'POST') {

@@ -96,6 +96,7 @@
     menu:      ['المنيو', 'أضف أطباقك وأقسامك ورتّبها'],
     waitlist:  ['قائمة الانتظار', 'سجّل عملاءك وبلّغهم لما يجي دورهم'],
     loyalty:   ['بطاقة الولاء', 'تصميم البطاقة وإعداداتها وأرقامها'],
+    subs:      ['الاشتراكات', 'باقات مدفوعة مسبقاً يستخدمها عملاؤك على دفعات'],
     customers: ['العملاء', 'أعضاء بطاقة الولاء في كل فروعك'],
     messages:  ['الرسائل', 'أرسل عروضك وأخبارك لجوالات عملائك'],
     branches:  ['الفروع', 'فروعك ومميزات كل فرع'],
@@ -106,7 +107,7 @@
   };
   // المميزات اللي مو ضمن باقة المشترك: الصفحة تعرض "أضفها لباقتك" بدل محتواها
   // الرسائل: من بطاقة الولاء، أو من بطاقة النداء (إضافة على البيجر)
-  const PAGE_FEATURE = { menu: 'menu', pagerset: 'pager', waitlist: 'waitlist', loyalty: 'loyalty', customers: 'loyalty', messages: () => DMPlans.has(client, 'loyalty') || DMPlans.has(client, 'pager') ? null : 'pager' };
+  const PAGE_FEATURE = { menu: 'menu', pagerset: 'pager', waitlist: 'waitlist', loyalty: 'loyalty', subs: 'subs', customers: 'loyalty', messages: () => DMPlans.has(client, 'loyalty') || DMPlans.has(client, 'pager') ? null : 'pager' };
   // الخدمات اللي مو ضمن باقته (في التجربة أو الاشتراك) تختفي من اللوحة كلها
   const featureLocked = (key) => !!client && ['active', 'trial'].includes(client.subscription_status) && !DMPlans.has(client, key);
   let lockedKey = null;
@@ -320,6 +321,7 @@
     // صفحات الولاء والعملاء والرسائل تاخذ بياناتها من بطاقة الولاء
     if (['loyalty', 'customers'].includes(page) || (page === 'messages' && DMPlans.has(client, 'loyalty'))) onLoyaltyPage();
     if (page === 'messages') renderNotifyCard();
+    if (page === 'subs' && typeof loadPackages === 'function') loadPackages();
   }
   function toggleMore(on) { const m = document.getElementById('more-sheet'); m.classList.toggle('hidden', !on); m.classList.toggle('flex', on); }
   document.querySelectorAll('[data-nav]').forEach(b => b.addEventListener('click', () => {
