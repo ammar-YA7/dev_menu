@@ -1887,6 +1887,13 @@
     const box = document.getElementById('modalExtras');
     const gs = extrasOf(p), on = orderingOn() && p.is_available !== false;
     box.classList.toggle('hidden', !gs.length);
+    // الطلب من المنيو مقفل: الإضافات تطلع للعلم بس (الاسم والسعر)، بدون «إجباري» ولا مربعات اختيار
+    if (!on) {
+      box.innerHTML = gs.map(g => `<div class="ex-group"><b class="block text-sm font-black text-white mb-1.5">${esc((currentLang !== 'ar' && g.name_en) || g.name)}</b>
+        <div class="flex flex-wrap gap-1.5">${g.options.map(o => { const price = Number(o.price) || 0;
+          return `<span class="inline-flex items-center gap-1.5 bg-white/10 border border-white/15 text-gray-100 text-[12.5px] font-bold px-3 py-1.5 rounded-full">${esc((currentLang !== 'ar' && o.name_en) || o.name)}${price ? `<span class="opacity-75 font-semibold" dir="ltr">+${esc(money(price))}</span>` : ''}</span>`; }).join('')}</div></div>`).join('');
+      return;
+    }
     box.innerHTML = gs.map((g, gi) => {
       const picked = modalExtras.filter(x => x.g === g.name).length;
       const rule = g.required ? T('إجباري · اختر واحد', 'Required · pick one') : T('اختياري', 'Optional');
