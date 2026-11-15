@@ -42,6 +42,9 @@ create table if not exists public.loyalty_pkg_cards (
   created_at      timestamptz not null default now()
 );
 create index if not exists loyalty_pkg_cards_client_idx on public.loyalty_pkg_cards (client_id, created_at desc);
+-- الباقة مربوطة بعضوية الولاء: الكاشير يمسح كود بطاقة الزبون وتنسجل عليه، وتطلع في نفس بطاقته
+alter table public.loyalty_pkg_cards add column if not exists loyalty_card_id bigint references public.loyalty_cards(id) on delete set null;
+create index if not exists loyalty_pkg_cards_member_idx on public.loyalty_pkg_cards (loyalty_card_id) where loyalty_card_id is not null;
 
 create table if not exists public.loyalty_pkg_uses (
   id          bigserial primary key,

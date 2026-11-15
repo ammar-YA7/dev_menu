@@ -212,6 +212,15 @@ module.exports.post = async function post(action, req, b, env) {
     if (!card) throw new ApiError(404, 'ما لقينا عضو بهذا الرقم', 'NO_MEMBER');
     const who = { id: card.id, no: card.member_no, name: card.name || `عضو #${card.member_no}`, transferred: card.transferred_at ? card.transferred : null };
     const rewards = await readyRewards(sid, card, settings);
+    // عنده باقة سارية: الكاشير يختار «خصم من الباقة» أو «ختم» (شاشة الختم للزبون تختم على طول)
+    if (!b.kiosk && b.mode !== 'stamp') {
+      const pkgs = await rest(`loyalty_pkg_cards?loyalty_card_id=eq.${card.id}&remaining=gt.0&select=*&order=created_at.asc`).catch(() => []);
+      const live = pkgs.filter(p => !p.expires_at || Date.parse(p.expires_at) > Date.now());
+      if (live.length) {
+        const P = require('../packages');
+        return { choose: true, who, stamps: card.stamps, needed: settings.needed, packages: live.map(P.cardView), stamp_due: !cooldownLeft(card, settings) && card.stamps < settings.needed };
+      }
+    }
     if (card.stamps >= settings.needed) return { stamped: false, rewards, who, reason: 'FULL', note: 'بطاقته مكتملة، يستخدم مكافأته أول', stamps: card.stamps, needed: settings.needed };
     const next = cooldownLeft(card, settings);
     if (next) return { stamped: false, who, reason: 'COOLDOWN', note: `انختم قبل شوي، الختم الجاي بعد ${leftText(next)}`, stamps: card.stamps, needed: settings.needed };

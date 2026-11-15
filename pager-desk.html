@@ -325,14 +325,20 @@
     <form id="pkg-form" class="space-y-3" novalidate>
       <p class="text-[13px] font-bold opacity-75 text-center">بعد ما يدفع الزبون ثمن الباقة</p>
       <div id="pkg-plans" class="grid gap-2" role="radiogroup" aria-label="الباقة"></div>
-      <input id="pkg-name" maxlength="40" autocomplete="off" placeholder="اسم الزبون" class="w-full rounded-2xl border border-[#233d2c]/20 px-4 py-3 font-bold">
-      <input id="pkg-phone" type="tel" inputmode="tel" maxlength="16" autocomplete="off" dir="ltr" placeholder="جواله (اختياري، نرسل له الباقة واتساب)" class="w-full rounded-2xl border border-[#233d2c]/20 px-4 py-3 font-bold text-center">
+      <!-- الأساس: يمسح كود بطاقة الولاء حق الزبون، فتنسجل الباقة على عضويته -->
+      <button type="button" id="pkg-scan" class="w-full bg-[#384f3d] text-white font-black rounded-2xl py-3.5 flex items-center justify-center gap-2"><i class="ph-bold ph-camera"></i> امسح كود بطاقة الزبون</button>
+      <div class="flex gap-2"><input id="pkg-no" inputmode="numeric" placeholder="أو رقم عضويته" class="flex-1 min-w-0 rounded-2xl border border-[#233d2c]/20 px-4 py-3 font-bold text-center" dir="ltr"><button type="button" id="pkg-no-go" class="bg-[#233d2c] text-white font-black rounded-2xl px-5">سجّل</button></div>
+      <button type="button" id="pkg-new-t" class="block mx-auto text-[13px] font-bold underline opacity-70">ما عنده بطاقة؟ سجّله باسمه</button>
+      <div id="pkg-new" class="hidden space-y-3">
+        <input id="pkg-name" maxlength="40" autocomplete="off" placeholder="اسم الزبون" class="w-full rounded-2xl border border-[#233d2c]/20 px-4 py-3 font-bold">
+        <input id="pkg-phone" type="tel" inputmode="tel" maxlength="16" autocomplete="off" dir="ltr" placeholder="جواله (اختياري، نرسل له الباقة واتساب)" class="w-full rounded-2xl border border-[#233d2c]/20 px-4 py-3 font-bold text-center">
+        <button id="pkg-go" class="w-full bg-[#384f3d] text-white font-black rounded-2xl py-3">سجّل الباقة</button>
+      </div>
       <p id="pkg-err" class="hidden text-[13px] font-bold text-rose-700 text-center"></p>
-      <button id="pkg-go" class="w-full bg-[#384f3d] text-white font-black rounded-2xl py-3">سجّل الباقة</button>
     </form>
     <div id="pkg-done" class="hidden text-center space-y-3">
       <p class="font-black"><i class="ph-bold ph-check-circle text-emerald-700"></i> <span id="pkg-done-t"></span></p>
-      <p class="text-[13px] font-bold opacity-75">خلّ الزبون يمسح الكود بجواله ويضيف باقته للمحفظة</p>
+      <p id="pkg-done-h" class="text-[13px] font-bold opacity-75">خلّ الزبون يمسح الكود بجواله ويضيف باقته للمحفظة</p>
       <div id="pkg-qr" class="w-56 h-56 mx-auto grid place-items-center"></div>
       <a id="pkg-wa" target="_blank" rel="noopener" class="hidden w-full bg-[#1f8f4e] text-white font-black rounded-2xl py-3 flex items-center justify-center gap-2"><i class="ph-bold ph-whatsapp-logo"></i> أرسلها له واتساب</a>
     </div>
@@ -805,7 +811,11 @@
     } catch (e) { scanShow(false, `<i class="ph-bold ph-warning-circle text-6xl"></i><b>${esc(e.message || 'ما انخصمت. حاول مرة ثانية')}</b>`); }
     setTimeout(() => { scanBusy = false; }, 1500);
   }
+  let lastChoose = null;
   $('scan-result').addEventListener('click', async (e) => {
+    const pu = e.target.closest('[data-pkuse]'), ds = e.target.closest('[data-dostamp]');
+    if (pu) { scanBusy = false; return usePackage({ card_id: Number(pu.dataset.pkuse) }); }
+    if (ds && lastChoose) { scanBusy = false; return stampMember({ ...lastChoose.payload, mode: 'stamp' }); }
     const b = e.target.closest('[data-undo]'); if (!b) return;
     b.disabled = true;
     try { const r = await call('loyalty-pkg-undo', { use_id: Number(b.dataset.undo) }); scanShow(true, `<i class="ph-bold ph-arrow-counter-clockwise text-6xl"></i><b class="text-2xl">تم التراجع</b><span class="font-black text-xl">باقي ${r.card.remaining} من ${r.card.total}</span>`); }
@@ -823,14 +833,45 @@
   $('pkg-plans').onclick = (e) => { const b = e.target.closest('[data-p]'); if (!b) return; pkgPick = Number(b.dataset.p); paintPkgPlans(); };
   $('pkg-btn').onclick = () => {
     pkgPick = pkgPlans.length === 1 ? pkgPlans[0].id : null; paintPkgPlans();
-    $('pkg-name').value = ''; $('pkg-phone').value = ''; $('pkg-err').classList.add('hidden');
+    $('pkg-name').value = ''; $('pkg-phone').value = ''; $('pkg-no').value = ''; $('pkg-err').classList.add('hidden'); $('pkg-new').classList.add('hidden'); $('pkg-qr').classList.remove('hidden'); $('pkg-done-h').textContent = 'خلّ الزبون يمسح الكود بجواله ويضيف باقته للمحفظة';
     $('pkg-form').classList.remove('hidden'); $('pkg-done').classList.add('hidden');
     $('pkg-modal').classList.remove('hidden'); $('pkg-modal').classList.add('flex');
   };
   $('pkg-close').onclick = () => { $('pkg-modal').classList.add('hidden'); $('pkg-modal').classList.remove('flex'); };
+  const pkgErr = (m) => { $('pkg-err').textContent = m; $('pkg-err').classList.remove('hidden'); };
+  $('pkg-new-t').onclick = () => { $('pkg-new').classList.toggle('hidden'); if (!$('pkg-new').classList.contains('hidden')) $('pkg-name').focus(); };
+  // يمسح كود بطاقة الزبون: الكاميرا نفسها، والكود اللي ينقرأ يروح للباقة بدل الختم
+  let pkgSellScan = false;
+  $('pkg-scan').onclick = () => {
+    if (!pkgPick) return pkgErr('اختر الباقة أول');
+    pkgSellScan = true; $('pkg-modal').classList.add('hidden'); $('pkg-modal').classList.remove('flex'); openScanner();
+  };
+  $('pkg-no-go').onclick = () => { const no = normDigits($('pkg-no').value).replace(/\D/g, ''); if (!pkgPick) return pkgErr('اختر الباقة أول'); if (!no) return pkgErr('اكتب رقم العضوية'); sellPackage({ member_no: no }); };
+  async function sellPackage(who) {
+    $('pkg-err').classList.add('hidden');
+    try {
+      const r = await call('loyalty-pkg-sell', { plan_id: pkgPick, ...who });
+      if (pkgSellScan) { pkgSellScan = false; closeScanner(); $('pkg-modal').classList.remove('hidden'); $('pkg-modal').classList.add('flex'); }
+      $('pkg-done-t').textContent = `باقة ${r.card.plan_name} لـ ${r.card.name}: ${r.card.total} مرة`;
+      // عضو عنده بطاقة في المحفظة: الباقة صارت فيها، ما يحتاج يمسح شي
+      const inCard = r.member && r.member.in_wallet;
+      $('pkg-done-h').textContent = inCard ? 'انضافت الباقة في بطاقته اللي في المحفظة، وكل مرة امسح نفس بطاقته واختر «خصم من الباقة».' : 'خلّ الزبون يمسح الكود بجواله ويضيف باقته للمحفظة';
+      $('pkg-qr').classList.toggle('hidden', !!inCard);
+      $('pkg-qr').innerHTML = '';
+      if (!inCard) new QRCodeStyling({ width: 220, height: 220, data: r.url, margin: 4, qrOptions: { errorCorrectionLevel: 'M' },
+        dotsOptions: { type: 'rounded', color: '#233d2c' }, cornersSquareOptions: { type: 'extra-rounded', color: '#1b3022' }, backgroundOptions: { color: '#ffffff' } }).append($('pkg-qr'));
+      $('pkg-wa').classList.toggle('hidden', !r.phone || !!inCard);
+      if (r.phone) $('pkg-wa').href = `https://wa.me/${r.phone}?text=${encodeURIComponent(`هلا ${r.card.name} 🌿\nهذي باقتك (${r.card.plan_name}): ${r.card.total} مرة.\nافتحها وأضفها لمحفظة جوالك، واعرض الكود للكاشير كل مرة:\n${r.url}`)}`;
+      $('pkg-form').classList.add('hidden'); $('pkg-done').classList.remove('hidden');
+      if (navigator.vibrate) navigator.vibrate(80);
+    } catch (ex) {
+      if (pkgSellScan) { scanShow(false, `<i class="ph-bold ph-warning-circle text-6xl"></i><b>${esc(ex.message || 'ما انسجلت الباقة')}</b>`); setTimeout(() => { scanBusy = false; }, 1500); return; }
+      pkgErr(ex.message || 'ما انحفظت، حاول مرة ثانية');
+    }
+  }
   $('pkg-form').onsubmit = async (e) => {
     e.preventDefault();
-    const err = (m) => { $('pkg-err').textContent = m; $('pkg-err').classList.remove('hidden'); };
+    const err = pkgErr;
     if (!pkgPick) return err('اختر الباقة');
     if ($('pkg-name').value.trim().length < 2) return err('اكتب اسم الزبون');
     const btn = $('pkg-go'); btn.disabled = true;
@@ -852,6 +893,18 @@
     scanBusy = true;
     try {
       const r = await call('loyalty-scan', payload);
+      // عنده باقة سارية: الكاشير يختار «خصم من الباقة» أو «ختم»
+      if (r.choose) {
+        lastChoose = { payload, r };
+        const el = $('scan-result');
+        el.className = 'absolute inset-0 flex flex-col items-center justify-center gap-2.5 p-4 text-white text-center bg-[#233d2c]';
+        el.innerHTML = `<b class="text-lg">${esc(r.who.name)}</b><span class="text-xs font-bold opacity-85" dir="ltr">#${esc(r.who.no)}</span>`
+          + r.packages.map(p => `<button type="button" data-pkuse="${p.id}" class="w-full bg-white text-[#233d2c] rounded-2xl py-3 font-black"><i class="ph-bold ph-package"></i> خصم من باقة ${esc(p.plan_name)}<span class="block text-xs font-bold opacity-70">باقي ${p.remaining} من ${p.total}</span></button>`).join('')
+          + `<button type="button" data-dostamp class="w-full bg-[#c9a227] text-[#15271b] rounded-2xl py-2.5 font-black ${r.stamp_due ? '' : 'opacity-60'}"><i class="ph-bold ph-seal-check"></i> ختم عادي (${Math.min(r.stamps, r.needed)} من ${r.needed})</button>`;
+        clearTimeout(el._h); el._h = setTimeout(() => { el.className = 'absolute inset-0 hidden'; }, 20000);
+        setTimeout(() => { scanBusy = false; }, 1500);
+        return;
+      }
       lastScan = r;
       const who = esc(r.who.name), n = Math.min(r.stamps, r.needed);
       const dots = `<span class="flex flex-wrap justify-center gap-1.5 mt-1">${Array.from({ length: r.needed }, (_, i) => `<span class="w-4 h-4 rounded-full ${i < n ? 'bg-[#c9a227]' : 'bg-white/25'}"></span>`).join('')}</span>`;
@@ -875,7 +928,8 @@
       // نفس الكود ما ينقرأ مرتين ورا بعض خلال 6 ثواني
       if (code && code.data && !(code.data === lastQr && Date.now() - lastQrAt < 6000)) {
         lastQr = code.data; lastQrAt = Date.now();
-        if (/^DMP1\./.test(code.data)) usePackage({ qr: code.data }); else stampMember({ qr: code.data });
+        if (pkgSellScan) { if (/^DMV1\./.test(code.data)) { scanBusy = true; sellPackage({ member_qr: code.data }); } else scanShow(false, '<b>امسح كود بطاقة الولاء حق الزبون</b>'); }
+        else if (/^DMP1\./.test(code.data)) usePackage({ qr: code.data }); else stampMember({ qr: code.data });
       }
     }
     scanLoop = requestAnimationFrame(scanTick);
@@ -889,6 +943,8 @@
     } catch { scanShow(false, '<i class="ph-bold ph-camera-slash text-5xl"></i><b>ما قدرنا نفتح الكاميرا</b><span class="text-sm">اكتب رقم العضوية تحت</span>'); }
   }
   function closeScanner() {
+    if (pkgSellScan) { pkgSellScan = false; $('pkg-modal').classList.remove('hidden'); $('pkg-modal').classList.add('flex'); }
+    scanBusy = false;
     cancelAnimationFrame(scanLoop);
     if (scanStream) scanStream.getTracks().forEach(t => t.stop());
     scanStream = null;

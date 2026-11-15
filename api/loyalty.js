@@ -222,10 +222,13 @@ module.exports = handler(['GET', 'POST'], async (req, res) => {
       const message = m && Date.parse(m.created_at) > Date.now() - 14 * 864e5 ? { id: m.id, body: m.body, at: m.created_at } : null;
       // "ليش ما رجعت؟" صار في شاشة الختم (kiosk) وقت ما يختم، مو في صفحة البطاقة
       // نسأل شركة المحفظة: البطاقة مضافة في جوال الحين؟ (آيفون: أجهزة مسجلة، أندرويد: محفوظة في Google Wallet)
-      const [gifts, installed] = await Promise.all([giftsFor(ctx, card), walletInstalled(card)]);
+      const [gifts, installed, pkgs] = await Promise.all([giftsFor(ctx, card), walletInstalled(card),
+        rest(`loyalty_pkg_cards?loyalty_card_id=eq.${card.id}&select=id,plan_name,remaining,total,expires_at&order=created_at.desc&limit=5`).catch(() => [])]);
       const view = cardView(card);
       if (installed !== null) { view.wallet_seen = installed; view.in_wallet = installed; }
-      return { ...publicInfo(ctx), card: view, message, survey: false, gifts };
+      // باقاته المدفوعة مسبقاً (السارية) تطلع تحت بطاقته
+      const packages = pkgs.filter(p => p.remaining > 0 && (!p.expires_at || Date.parse(p.expires_at) > Date.now()));
+      return { ...publicInfo(ctx), card: view, message, survey: false, gifts, packages };
     }
 
     // بطاقة جديدة (أو رجوع لبطاقته من جوال ثاني بنفس الرقم، وهو داخل المحل) + ختم أول زيارة

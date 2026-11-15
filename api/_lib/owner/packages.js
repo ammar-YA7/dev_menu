@@ -10,7 +10,7 @@
 //   POST loyalty-pkg-delete     حذف باقة زبون             (صاحب المحل)
 // =====================================================================
 const crypto = require('crypto');
-const { rest, rpc, ApiError, str, int, waNumber, context, familyIds, poke, topic, PLANS } = require('./shared');
+const { rest, rpc, ApiError, str, int, waNumber, context, familyIds, poke, topic, PLANS, parseMemberQr, pushWalletCards } = require('./shared');
 const NEXT = require('./next');
 const P = require('../packages');
 const wallet = require('../wallet');
@@ -73,19 +73,31 @@ module.exports.post = async function post(action, req, b, env) {
   if (action === 'loyalty-pkg-sell') {
     const plan = (await rest(`loyalty_pkg_plans?id=eq.${int(b.plan_id)}&client_id=eq.${sid}&active=is.true&select=*`))[0];
     if (!plan) throw new ApiError(404, 'اختر باقة');
-    const name = cleanName(b.name, 'اسم الزبون');
-    let phone = null;
-    if (String(b.phone || '').trim()) { try { phone = waNumber(b.phone); } catch { throw new ApiError(400, 'رقم الجوال غير صحيح'); } }
+    // الطريقة الأساسية: الكاشير يمسح كود بطاقة الولاء حق الزبون، فتنسجل الباقة على عضويته (اسمه وجواله منها)
+    let member = null;
+    if (b.member_qr || b.member_no) {
+      const mid = b.member_qr ? parseMemberQr(await familyIds(store), b.member_qr) : null;
+      const no = b.member_qr ? null : parseInt(String(b.member_no).replace(/[^\d]/g, ''), 10);
+      member = mid ? (await rest(`loyalty_cards?id=eq.${mid}&client_id=eq.${sid}&select=*`))[0]
+        : Number.isInteger(no) ? (await rest(`loyalty_cards?member_no=eq.${no}&client_id=eq.${sid}&select=*`))[0] : null;
+      if (!member) throw new ApiError(404, b.member_qr ? 'هذا مو كود بطاقة من محلنا' : 'ما لقينا عضو بهذا الرقم', 'NO_MEMBER');
+    }
+    const name = member ? (member.name || `عضو #${member.member_no}`) : cleanName(b.name, 'اسم الزبون');
+    let phone = member ? (member.phone || null) : null;
+    if (!member && String(b.phone || '').trim()) { try { phone = waNumber(b.phone); } catch { throw new ApiError(400, 'رقم الجوال غير صحيح'); } }
     const card = (await rest('loyalty_pkg_cards', {
       method: 'POST', prefer: 'return=representation',
       body: {
         client_id: sid, plan_id: plan.id, plan_name: plan.name, name, phone, total: plan.uses, remaining: plan.uses,
         expires_at: plan.days ? new Date(Date.now() + plan.days * 864e5).toISOString() : null,
-        token: crypto.randomBytes(18).toString('base64url'), branch_id: here.id, lang: b.lang === 'en' ? 'en' : 'ar'
+        token: crypto.randomBytes(18).toString('base64url'), branch_id: here.id, lang: member ? (member.lang || 'ar') : (b.lang === 'en' ? 'en' : 'ar'),
+        loyalty_card_id: member ? member.id : null
       }
     }))[0];
     poke(topic('owner', sid), 'loyalty').catch(() => {});
-    return { card: P.cardView(card), url: P.pageUrl(store, card), phone };
+    // عضو عنده بطاقة في المحفظة: الباقة تطلع فيها على طول، وما يحتاج بطاقة ثانية
+    if (member && member.wallet_serial) await pushWalletCards(sid, { cardIds: [member.id], notice: `انضافت لك باقة ${card.plan_name}: ${card.total} مرة` }).catch(() => 0);
+    return { card: P.cardView(card), url: P.pageUrl(store, card), phone, member: member ? { no: member.member_no, in_wallet: !!member.wallet_serial } : null };
   }
 
   if (action === 'loyalty-pkg-use') {

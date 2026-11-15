@@ -29,7 +29,7 @@ const dateText = (iso) => new Date(iso).toLocaleDateString('ar-SA-u-nu-latn', { 
 const cardView = (c) => ({
   id: c.id, plan_name: c.plan_name, name: c.name, total: c.total, remaining: c.remaining,
   expires_at: c.expires_at || null, expired: expired(c), last_used_at: c.last_used_at || null, created_at: c.created_at,
-  qr: pkgQr(c), in_wallet: !!c.wallet_url
+  qr: pkgQr(c), in_wallet: !!c.wallet_url, member: !!c.loyalty_card_id
 });
 
 function passBody(store, settings, c, notice) {
@@ -73,7 +73,10 @@ function useNotice(c) {
 
 async function pushCard(storeId, cardId, notice = '') {
   const c = (await rest(`loyalty_pkg_cards?id=eq.${cardId}&select=*`))[0];
-  if (!c || !c.wallet_serial) return null;
+  if (!c) return null;
+  // مربوطة بعضوية: الرصيد يطلع في بطاقة الولاء نفسها
+  if (c.loyalty_card_id) await require('./loyalty-assistant').pushWalletCards(storeId, { cardIds: [c.loyalty_card_id], notice: notice || null }).catch(() => 0);
+  if (!c.wallet_serial) return null;
   const { store, settings } = await storeFor(storeId);
   const err = await wallet.updateRaw(c.wallet_serial, passBody(store, settings, c, notice));
   await rest(`loyalty_pkg_cards?id=eq.${c.id}`, { method: 'PATCH', body: { wallet_error: err } }).catch(() => {});

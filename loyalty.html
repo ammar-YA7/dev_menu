@@ -181,6 +181,8 @@
       <p class="text-sm opacity-70">عشان ما تضيع أختامك لو مسحت بيانات المتصفح، وتشوفها بسرعة من جوالك.</p>
     </div>
     <button id="wallet-btn" type="button" class="btn btn-wallet hidden"><i class="ph-bold ph-wallet"></i> <span>احفظ بطاقتك في المحفظة</span></button>
+    <!-- باقاته المدفوعة مسبقاً: الرصيد، والكاشير يخصم منها بمسح نفس الكود -->
+    <div id="c-pkgs" class="hidden space-y-2"></div>
     <!-- البطاقة مضافة للمحفظة: بدل الزر نأكد له، ورابط صغير لو حذفها من جواله -->
     <div id="wallet-done" class="hidden text-center space-y-1.5">
       <p class="inline-flex items-center gap-2 font-bold text-[#233d2c] bg-[#233d2c]/[.07] rounded-full px-4 py-2"><i class="ph-bold ph-check-circle text-lg"></i> تمت إضافة بطاقتك في المحفظة</p>
@@ -632,6 +634,15 @@
   };
 
   $('wallet-again').onclick = () => $('wallet-btn').onclick();
+  let packages = [];
+  function renderPackages() {
+    const box = $('c-pkgs');
+    box.classList.toggle('hidden', !packages.length);
+    box.innerHTML = packages.map(p => `<div class="card p-4 flex items-center justify-between gap-3">
+      <div class="min-w-0"><p class="font-bold truncate"><i class="ph-bold ph-package"></i> باقة ${String(p.plan_name).replace(/[<>&"]/g, '')}</p>
+        <p class="text-xs opacity-70 mt-0.5">اعرض الكود للكاشير ويخصم منها${p.expires_at ? ` · تنتهي ${new Date(p.expires_at).toLocaleDateString('ar-SA-u-nu-latn', { day: 'numeric', month: 'long' })}` : ''}</p></div>
+      <p class="text-left shrink-0"><b class="text-2xl">${p.remaining}</b><span class="text-xs opacity-70"> / ${p.total}</span></p></div>`).join('');
+  }
   // رجع من المحفظة (ضغط «إضافة» أو ألغى): نسأل من جديد هل البطاقة صارت في جواله
   let walletCheckAt = 0;
   document.addEventListener('visibilitychange', async () => {
@@ -662,7 +673,7 @@
       if (token) {
         const r = await DM.get(`/api/loyalty?action=card&slug=${encodeURIComponent(slug)}&t=${encodeURIComponent(token)}`);
         setStore(r.store); settings = enReward(r.settings); card = r.card; walletOn = !!r.wallet;
-        happyNow = !!r.happy_now; gifts = r.gifts || []; survey = !!r.survey;
+        happyNow = !!r.happy_now; gifts = r.gifts || []; survey = !!r.survey; packages = r.packages || []; renderPackages();
         // جاي بكود الكاشير أو من صفحة البيجر: نختم على طول
         if (stampCodeParam || ptParam) {
           renderCard();

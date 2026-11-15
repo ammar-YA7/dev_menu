@@ -5,7 +5,7 @@
 // نرسل أقل بيانات ممكنة: اسم المحل وعدد الأختام (بدون أي بيانات عن الزبون)
 // =====================================================================
 const { tr } = require('./i18n');
-const { ApiError } = require('./core');
+const { ApiError, rest } = require('./core');
 const { stampStrip } = require('./strip');
 
 const BASE = 'https://api.walletwallet.dev/api/passes';
@@ -27,7 +27,7 @@ async function call(method, path, body) {
 }
 
 // محتوى البطاقة. full = مزايا الباقة المدفوعة (الشعار، الموقع على شاشة القفل)
-function passBody({ store, settings, card, url, restoreUrl, lat, lng, notice, strip, nearText, fresh }, full = true) {
+function passBody({ store, settings, card, url, restoreUrl, lat, lng, notice, strip, nearText, fresh, pkg }, full = true) {
   const n = settings.needed, s = Math.min(card.stamps, n);
   const L = (t) => tr(card.lang, t);   // لغة الزبون (آخر لغة فتح فيها بطاقته)
   const body = {
@@ -41,6 +41,7 @@ function passBody({ store, settings, card, url, restoreUrl, lat, lng, notice, st
     headerFields: [{ label: L('الأختام'), value: `${s} / ${n}`, ...(fresh && String(notice || '').trim() ? {} : { changeMessage: L('✅ انضاف ختمك، صار عندك %@') }) }],
     // المكافأة وحامل البطاقة بس (عدد الأختام فوق، والأختام نفسها في الصورة)
     secondaryFields: [{ label: L(s >= n ? 'مكافأتك جاهزة' : 'المكافأة'), value: (card.lang === 'en' && settings.reward_en) || settings.reward }, ...(card.name ? [{ label: L('صاحب البطاقة'), value: String(card.name).slice(0, 40) }] : [])],
+    ...(pkg ? { auxiliaryFields: [{ label: L(`باقة ${pkg.plan_name}`).slice(0, 40), value: L(`باقي ${pkg.remaining} من ${pkg.total}`), changeMessage: L('باقتك: %@') }] } : {}),
     backFields: [
       { label: L('رقم العضوية'), value: `#${card.member_no || ''}` },
       { label: L('زياراتك'), value: String(card.visits || 0) },
@@ -68,11 +69,20 @@ function passBody({ store, settings, card, url, restoreUrl, lat, lng, notice, st
   return body;
 }
 
+// باقة العضو السارية (الباقات المدفوعة مسبقاً): تطلع في بطاقة الولاء نفسها برصيدها
+async function memberPkg(card) {
+  if (!card || !card.id) return null;
+  try {
+    const rows = await rest(`loyalty_pkg_cards?loyalty_card_id=eq.${Number(card.id)}&remaining=gt.0&select=plan_name,remaining,total,expires_at&order=created_at.desc&limit=5`);
+    return rows.find(r => !r.expires_at || Date.parse(r.expires_at) > Date.now()) || null;
+  } catch { return null; }   // قبل ملف 103: بدون باقات
+}
+
 // بطاقة جديدة. لو الباقة المجانية رفضت المزايا المدفوعة نعيد بدونها
 async function createPass(ctx) {
   if (!configured()) throw new ApiError(503, 'إضافة البطاقة للمحفظة مو متاحة حالياً', 'WALLET_OFF');
   if (!String(ctx.notice || '').trim()) ctx = { ...ctx, notice: firstNotice(ctx.store, ctx.card && ctx.card.lang) };
-  ctx = { ...ctx, strip: await stampStrip(ctx.settings, ctx.card) };
+  ctx = { ...ctx, strip: await stampStrip(ctx.settings, ctx.card), pkg: await memberPkg(ctx.card) };
   try { return await call('POST', '', passBody(ctx, true)); }
   catch (e) {
     if (e.status >= 400 && e.status < 500 && e.status !== 401 && e.status !== 429) {
@@ -87,7 +97,7 @@ async function createPass(ctx) {
 // يرجّع null لو نجح، أو سبب الفشل (ينحفظ مع البطاقة عشان نعرف وش صار، والنجاح يبدأ بـ ok)
 async function updatePass(serial, ctx) {
   if (!configured() || !serial) return 'not configured';
-  ctx = { ...ctx, strip: await stampStrip(ctx.settings, ctx.card) };
+  ctx = { ...ctx, strip: await stampStrip(ctx.settings, ctx.card), pkg: await memberPkg(ctx.card) };
   try {
     const lb = passBody(ctx, true);
     const r = await call('PUT', `/${encodeURIComponent(serial)}`, lb);
@@ -257,4 +267,4 @@ async function updateRaw(serial, body) {
   try { const r = await call('PUT', `/${encodeURIComponent(serial)}`, body); return `ok devices=${r.notifiedDevices ?? '?'} unchanged=${r.unchanged ?? '?'} at=${new Date().toISOString().slice(0, 19)}`; }
   catch (e) { return `${e.status || ''} ${e.message || ''}`.trim().slice(0, 300); }
 }
-module.exports = { createRaw, updateRaw, getPass, walletPlatform, reached, cardMaintenance, passRemoved, configured, createPass, updatePass, revokePass, buildCtx, cardUrl, createPagerPass, updatePagerPass, endPagerPass, pagerStep };
+module.exports = { memberPkg, createRaw, updateRaw, getPass, walletPlatform, reached, cardMaintenance, passRemoved, configured, createPass, updatePass, revokePass, buildCtx, cardUrl, createPagerPass, updatePagerPass, endPagerPass, pagerStep };
