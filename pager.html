@@ -396,6 +396,7 @@
   .nt-foot { padding: 12px 18px 18px; }
   .nt-msg { margin-top: 10px; font-size: 14.5px; font-weight: 600; color: #8a4b0f; text-align: center; line-height: 1.6; }
 
+  .perm-fix { margin-inline-start: 6px; padding: 4px 12px; border-radius: 999px; background: var(--brand); color: #fff; font-size: 13px; font-weight: 700; }
   /* ─── مقاسات الجوال: أكبر وأوضح ─── */
   body { padding-left: 16px !important; padding-right: 16px !important; }
   body > header, main { max-width: 460px !important; }
@@ -1068,7 +1069,7 @@
     $('keep-on').classList.add('hidden');
     $('push-btn').classList.toggle('hidden', on || denied || !supported);
     $('keep-btn').classList.toggle('hidden', kept);
-    $('push-denied').classList.toggle('hidden', !denied);
+    $('push-denied').classList.add('hidden');   // التنبيه يطلع مرة وحدة في نافذة البداية، مو في صفحة الانتظار
     $('unlock-btn').classList.toggle('hidden', !on || audioReady());
   }
 
@@ -1879,6 +1880,12 @@
     const viaWallet = lastLoyalty && lastLoyalty.enabled;
     const n = !pushSupported() ? (viaWallet ? (lastLoyalty.wallet ? 'توصلك من بطاقة الولاء في المحفظة ✅' : 'أضف بطاقة الولاء للمحفظة ويوصلك الإشعار منها') : 'مو متاحة في هالمتصفح (الرنين يكفي)') : Notification.permission === 'denied' ? 'مقفلة من إعدادات المتصفح' : pushDone() ? 'مفعّلة ✅' : 'بنطلب موافقتك';
     $('perm-n').querySelector('span').textContent = n;
+    // مقفلة: زر يوري العميل خطوات تفعيلها من إعدادات جواله
+    if (pushSupported() && Notification.permission === 'denied') {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'perm-fix'; b.textContent = 'فعّلها';
+      b.onclick = () => { $('perm').classList.replace('flex', 'hidden'); startKeeper(); ntOpen(); };
+      $('perm-n').querySelector('span').append(' ', b);
+    }
     $('perm-s').querySelector('span').textContent = keeperOn() && audioReady() ? 'شغّال ✅' : 'يحتاج ضغطة منك';
   }
   function offerPerm(always = false) {
