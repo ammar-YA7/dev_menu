@@ -18,17 +18,19 @@ module.exports = handler(['GET', 'POST'], async (req) => {
   // بطاقات المحفظة اللي فشل تحديثها (مثل رصيد خدمة المحفظة الشهري خلص): نعيد إرسالها بعدد أختامها الصحيح
   const retry = { cards: 0, sent: 0 };
   try {
-    const failed = await rest(`loyalty_cards?wallet_serial=not.is.null&wallet_error=like.429*&select=id,client_id&order=last_stamp_at.desc.nullslast&limit=300`);
+    const failed = await rest(`loyalty_cards?wallet_serial=not.is.null&wallet_error=like.429*&select=id,client_id&order=last_stamp_at.desc.nullslast&limit=${req.query.only === 'wallet' ? 1000 : 300}`);
     const byStore = {};
     failed.forEach(c => (byStore[c.client_id] = byStore[c.client_id] || []).push(c.id));
     for (const [sid, ids] of Object.entries(byStore)) {
-      if (Date.now() - started > 20e3) break;
+      if (Date.now() - started > (req.query.only === 'wallet' ? 50e3 : 20e3)) break;
       retry.cards += ids.length;
       retry.sent += await pushWalletCards(Number(sid), { cardIds: ids }).catch(() => 0);
       if (!retry.sent) break;   // لسا الرصيد خالص: ما نكمل ونصرف الوقت
     }
   } catch (e) { retry.error = e.message; }
   console.log('WALLET_RETRY', JSON.stringify(retry));
+  // ?only=wallet: إعادة بطاقات المحفظة بس (بدون رسائل المساعد ولا وحشتنا، عشان ما تتكرر للزبائن)
+  if (req.query.only === 'wallet') return { retry };
   const results = [];
   for (const s of stores) {
     if (Date.now() - started > 45e3) break;   // الباقي ياخذ دوره بكرة
