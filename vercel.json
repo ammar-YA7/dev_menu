@@ -99,5 +99,15 @@
     "formats": [
       "image/webp"
     ]
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/cashier",
+      "destination": "/pager-desk.html"
+    },
+    {
+      "source": "/cashier.html",
+      "destination": "/pager-desk.html"
+    }
+  ]
 }

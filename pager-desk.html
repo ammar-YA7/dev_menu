@@ -188,6 +188,7 @@
       <button id="stamp-btn" class="act bg-[#3f7a4a] text-white hidden"><i class="ph-bold ph-seal-check"></i> <span>كود ختم</span></button>
       <button id="transfer-btn" class="act bg-[#eef4ee] border border-[#3f7a4a]/60 text-[#233d2c] hidden"><i class="ph-bold ph-arrows-left-right"></i> <span>نقل رصيد</span></button>
       <button id="pkg-btn" class="act bg-white border border-[#233d2c]/20 text-[#233d2c] hidden"><i class="ph-bold ph-package"></i> <span>باقة جديدة</span></button>
+      <a id="cashier-link" href="cashier.html" onclick="this.href='cashier.html'+location.search" class="act bg-white border border-[#233d2c]/20 text-[#233d2c] hidden"><i class="ph-bold ph-cash-register"></i> <span>شاشة الكاشير</span></a>
     </div>
     <!-- الأدوات: قائمة تنفتح، والصوت واللغة -->
     <div class="flex items-center gap-2 shrink-0">
@@ -209,15 +210,17 @@
   <div id="net-bar" class="hidden bg-[#b42318] text-white text-[13px] font-bold px-4 py-2.5 text-center" role="status"></div>
 </header>
 <main class="max-w-6xl mx-auto px-4 py-6 space-y-6">
-  <!-- مشترك الولاء بدون البيجر: الشاشة للأختام بس -->
+  <!-- شاشة الكاشير: بطاقة العميل (الأختام والاشتراكات). شاشة البيجر لحالها -->
   <section id="loyalty-desk" class="panel p-6 hidden">
-    <h2 class="text-lg font-black mb-1">بطاقة الأختام</h2>
-    <p class="text-sm font-bold opacity-85 mb-5">بعد ما يدفع الزبون: اطلب منه يفتح بطاقته وامسح الكود اللي فيها.</p>
-    <div class="grid sm:grid-cols-3 gap-3">
-      <button data-open="scan-btn" class="bg-[#384f3d] text-white rounded-2xl p-5 text-right"><i class="ph-bold ph-camera text-3xl text-[#7fb685]"></i><b class="block text-lg mt-2">امسح بطاقة زبون</b><span class="text-xs opacity-85">بالكاميرا أو برقم العضوية</span></button>
-      <button data-open="stamp-btn" class="bg-[#3f7a4a] text-white rounded-2xl p-5 text-right"><i class="ph-bold ph-seal-check text-3xl"></i><b class="block text-lg mt-2">كود ختم</b><span class="text-xs opacity-85">الزبون يمسحه من جواله</span></button>
-      <button data-open="join-btn" class="bg-white border border-[#233d2c]/15 rounded-2xl p-5 text-right"><i class="ph-bold ph-user-plus text-3xl"></i><b class="block text-lg mt-2">QR تسجيل الولاء</b><span class="text-xs opacity-85">للزبون الجديد يسجل في البطاقة</span></button>
-      <a href="kiosk.html" onclick="this.href='kiosk.html'+location.search" class="sm:col-span-3 bg-white border border-[#233d2c]/15 rounded-2xl p-4 text-right flex items-center gap-3"><i class="ph-bold ph-device-tablet text-3xl"></i><span><b class="block">شاشة الختم للزبون</b><span class="text-xs opacity-85">تابلت ثابت: الزبون يقرّب كوده من الكاميرا وينختم تلقائياً</span></span></a>
+    <h2 class="text-lg font-black mb-1">بطاقة العميل</h2>
+    <p id="ld-sub" class="text-sm font-bold opacity-85 mb-5">بعد ما يدفع الزبون: اطلب منه يفتح بطاقته وامسح الكود اللي فيها.</p>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <button data-open="scan-btn" class="bg-[#233d2c] text-white rounded-2xl p-5 text-right"><i class="ph-bold ph-camera text-3xl text-[#7fb685]"></i><b class="block text-lg mt-2">امسح بطاقة الزبون</b><span id="ld-scan-sub" class="text-xs opacity-85">ختم، أو خصم من باقته، أو تفعيلها</span></button>
+      <button data-open="stamp-btn" data-ld="stamps" class="bg-[#3f7a4a] text-white rounded-2xl p-5 text-right"><i class="ph-bold ph-seal-check text-3xl"></i><b class="block text-lg mt-2">كود ختم</b><span class="text-xs opacity-85">الزبون يمسحه من جواله</span></button>
+      <button data-open="pkg-btn" data-ld="subs" class="bg-[#eaf3ec] text-[#233d2c] border border-[#3f7a4a]/30 rounded-2xl p-5 text-right"><i class="ph-bold ph-package text-3xl"></i><b class="block text-lg mt-2">باقة جديدة</b><span class="text-xs opacity-85">بعد ما يدفع ثمن الباقة</span></button>
+      <button data-open="join-btn" class="bg-white border border-[#233d2c]/15 rounded-2xl p-5 text-right"><i class="ph-bold ph-user-plus text-3xl"></i><b class="block text-lg mt-2">QR تسجيل البطاقة</b><span class="text-xs opacity-85">للزبون الجديد يسجّل بنفسه</span></button>
+      <button data-open="transfer-btn" data-ld="stamps" class="bg-white border border-[#233d2c]/15 rounded-2xl p-4 text-right flex items-center gap-3"><i class="ph-bold ph-arrows-left-right text-2xl"></i><span><b class="block">نقل رصيد قديم</b><span class="text-xs opacity-85">من نظام أختام سابق</span></span></button>
+      <a href="kiosk.html" data-ld="stamps" onclick="this.href='kiosk.html'+location.search" class="sm:col-span-1 lg:col-span-3 bg-white border border-[#233d2c]/15 rounded-2xl p-4 text-right flex items-center gap-3"><i class="ph-bold ph-device-tablet text-2xl"></i><span><b class="block">شاشة الختم للزبون</b><span class="text-xs opacity-85">تابلت ثابت: الزبون يقرّب كوده من الكاميرا وينختم تلقائياً</span></span></a>
     </div>
   </section>
 
@@ -406,6 +409,9 @@
   const $ = (id) => document.getElementById(id);
   // داخل لوحة التحكم: تنفتح الأداة فوق اللوحة، ولما تتسكر كل النوافذ نبلغ اللوحة تقفل الإطار
   const EMBED = P.get('embed') === '1' && window.parent !== window;
+  // شاشتين منفصلتين من نفس الملف: شاشة البيجر (الأرقام والطلبات) وشاشة الكاشير (/cashier: بطاقة العميل)
+  // أدوات اللوحة المضمّنة (?open=scan) تشتغل بوضع الكاشير
+  const CASHIER = /\/cashier(\.html)?$/.test(location.pathname) || P.get('mode') === 'cashier' || EMBED;
   if (EMBED) document.body.classList.add('embed');
   function watchEmbed() {
     let t = null;
@@ -769,7 +775,23 @@
       $('qr-btn').classList.toggle('hidden', !pager);
       $('stats-btn').classList.toggle('hidden', !pager);
       document.querySelectorAll('[data-pager]').forEach(el => el.classList.toggle('hidden', !pager));
-      $('loyalty-desk').classList.toggle('hidden', pager || hasOrders || !cards);
+      $('loyalty-desk').classList.toggle('hidden', CASHIER ? !cards : (pager || hasOrders || !cards));
+      document.querySelectorAll('#loyalty-desk [data-ld]').forEach(el => el.classList.toggle('hidden', !r[el.dataset.ld]));
+      $('ld-scan-sub').textContent = r.stamps && r.subs ? 'ختم، أو خصم من باقته، أو تفعيلها' : r.subs ? 'خصم من باقته، أو تفعيلها بعد الدفع' : 'بالكاميرا أو برقم العضوية';
+      if (CASHIER) {
+        // شاشة الكاشير: بطاقة العميل بس، بدون أرقام البيجر وطلبات المنيو
+        ['qr-btn', 'stats-btn', 'sound-btn', 'search-wrap', 'orders-wrap'].forEach(id => $(id) && $(id).classList.add('hidden'));
+        document.querySelectorAll('[data-pager]').forEach(el => el.classList.add('hidden'));
+        $('desk-title').textContent = 'شاشة الكاشير';
+        $('desk-sub').textContent = cards ? 'امسح بطاقة الزبون بعد ما يدفع' : 'فعّل بطاقة الأختام أو الاشتراكات من لوحة التحكم';
+        document.title = 'شاشة الكاشير | DEV MENU';
+      } else {
+        // شاشة البيجر: الأرقام والطلبات بس. أدوات البطاقة صارت في شاشة الكاشير
+        ['scan-btn', 'stamp-btn', 'transfer-btn', 'pkg-btn', 'join-btn'].forEach(id => $(id).classList.add('hidden'));
+        $('cashier-link').classList.toggle('hidden', !cards);
+        // محل بدون البيجر وطلبات المنيو: شاشته هي شاشة الكاشير
+        if (!pager && !hasOrders && cards && !load.moved) { load.moved = true; return location.replace('cashier.html' + location.search); }
+      }
       if (!pager && !hasOrders) $('desk-title').textContent = 'شاشة الكاشير';
       if (!pager && !hasOrders) $('desk-sub').textContent = cards ? 'بعد ما يدفع الزبون امسح بطاقته وانختم له' : 'شغّل بطاقة الولاء من لوحة التحكم';
       // جاي من أزرار الرئيسية في لوحة التحكم (?open=scan|stamp|join): نفتح الأداة مرة وحدة
@@ -780,9 +802,9 @@
       // ما نلمس الأرقام اللي جاري تحديثها
       deskCur = r.currency || deskCur;
       tickets = r.tickets.map(t => busy.has(t.id) ? (tickets.find(x => x.id === t.id) || t) : t);
-      netOk(); if (!EMBED) noticeNew();
+      netOk(); if (!EMBED && !CASHIER) noticeNew();
       if (invId) return void (timer = setTimeout(load, 4000));   // النافذة مفتوحة: لا نعيد الرسم
-      render(); if (!EMBED) ringDue();
+      render(); if (!EMBED && !CASHIER) ringDue();
     } catch (e) {
       // انقطع النت أو الخادم ما رد: شريط ثابت بدل رسالة تتكرر كل 4 ثواني
       if (!e.status || e.status >= 500 || !navigator.onLine) netDown();
@@ -843,7 +865,8 @@
   let pkgPlans = [], pkgPick = null;
   async function loadPkgPlans() {
     try { pkgPlans = (await call('loyalty-pkg')).plans || []; } catch { pkgPlans = []; }
-    $('pkg-btn').classList.toggle('hidden', !pkgPlans.length);
+    $('pkg-btn').classList.toggle('hidden', !pkgPlans.length || !CASHIER);
+    document.querySelectorAll('[data-open="pkg-btn"]').forEach(el => el.classList.toggle('hidden', !pkgPlans.length));
   }
   function paintPkgPlans() {
     $('pkg-plans').innerHTML = pkgPlans.map(p => `<button type="button" role="radio" aria-checked="${pkgPick === p.id}" data-p="${p.id}" class="rounded-2xl border px-4 py-3 text-right font-bold ${pkgPick === p.id ? 'bg-[#233d2c] text-white border-[#233d2c]' : 'border-[#233d2c]/20'}">${esc(p.name)}<span class="block text-xs font-semibold opacity-75">${p.uses} مرة${p.days ? ` · صالحة ${p.days} يوم` : ''}${p.price != null ? ` · ${esc(fmtM(Number(p.price)))}` : ''}</span></button>`).join('');

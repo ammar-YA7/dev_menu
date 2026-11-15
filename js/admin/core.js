@@ -126,7 +126,8 @@
     openPlan();
   }
   // شاشة الكاشير تشتغل للبيجر وللولاء (مسح بطاقات الزبائن)
-  const deskLocked = () => featureLocked('pager') && featureLocked('loyalty') && !(client && client.menu_order_mode && !featureLocked('menu'));
+  const deskLocked = () => featureLocked('pager') && featureLocked('loyalty') && featureLocked('subs') && !(client && client.menu_order_mode && !featureLocked('menu'));
+  const orderModeOn = () => !!(client && client.menu_order_mode && !featureLocked('menu'));
   function openPagerDesk(a) {
     if (deskLocked()) { location.hash = 'pager'; showPage('pager'); return false; }
     a.href = 'pager-desk.html' + location.search; setupMark('pager'); return true;
@@ -155,7 +156,8 @@
     if (!deskLocked()) {
       const key = client.desk_key ? encodeURIComponent(client.desk_key) : '';
       rows.push(['kiosk', 'شاشة الزبون (للتابلت)', 'ph-device-tablet', key && `${location.origin}/kiosk.html?k=${key}`, 'تفتح بدون حسابك، وتعرض أكواد خدماتك']);
-      rows.push(['desk', 'شاشة الكاشير', 'ph-cash-register', key && `${location.origin}/pager-desk.html?k=${key}`, 'للموظف، بدون حسابك']);
+      if (!featureLocked('pager') || orderModeOn()) rows.push(['desk', 'شاشة البيجر', 'ph-bell', key && `${location.origin}/pager-desk.html?k=${key}`, 'أرقام الطلبات، للموظف بدون حسابك']);
+      if (DMPlans.has(client, 'loyalty') || DMPlans.has(client, 'subs')) rows.push(['cashier', 'شاشة الكاشير', 'ph-cash-register', key && `${location.origin}/cashier.html?k=${key}`, 'بطاقة العميل: الختم والباقات، للموظف بدون حسابك']);
     }
     const hint = document.getElementById('svc-links-hint');
     if (hint) hint.textContent = free ? 'صفحة الروابط السريعة متاحة مع الاشتراك. وهذي روابط البيجر وشاشاته.' : 'الرابط الرئيسي يفتح صفحة الروابط السريعة التي تضم كل خدماتك، ضعه في بايو انستجرام وتيك توك. وتحته رابط كل خدمة على حدة.';
@@ -217,7 +219,7 @@
     const f = document.createElement('iframe');
     f.id = 'ly-tool';
     f.allow = 'camera; clipboard-write';
-    f.src = `pager-desk.html${location.search ? `${location.search}&` : '?'}open=${open}&embed=1`;
+    f.src = `cashier.html${location.search ? `${location.search}&` : '?'}open=${open}&embed=1`;
     f.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;border:0;z-index:90;background:transparent';
     document.body.appendChild(f);
   }
