@@ -7,7 +7,7 @@
 // =====================================================================
 const { rest, handler } = require('./_lib/core');
 const { assertCronKey } = require('./_lib/cron');
-const { runAssistant } = require('./_lib/loyalty-assistant');
+const { runAssistant, pushWalletCards } = require('./_lib/loyalty-assistant');
 const { runWinback } = require('./_lib/winback');
 
 module.exports = handler(['GET', 'POST'], async (req) => {
@@ -15,6 +15,20 @@ module.exports = handler(['GET', 'POST'], async (req) => {
   const started = Date.now();
   // الفروع ولاءها على المحل الرئيسي، فالمساعد يشتغل على الرئيسي بس
   const stores = await rest('clients?loyalty_enabled=is.true&loyalty_ai=is.true&is_active=is.true&parent_id=is.null&select=id&order=id.asc&limit=200');
+  // بطاقات المحفظة اللي فشل تحديثها (مثل رصيد خدمة المحفظة الشهري خلص): نعيد إرسالها بعدد أختامها الصحيح
+  const retry = { cards: 0, sent: 0 };
+  try {
+    const failed = await rest(`loyalty_cards?wallet_serial=not.is.null&wallet_error=like.429*&select=id,client_id&order=last_stamp_at.desc.nullslast&limit=300`);
+    const byStore = {};
+    failed.forEach(c => (byStore[c.client_id] = byStore[c.client_id] || []).push(c.id));
+    for (const [sid, ids] of Object.entries(byStore)) {
+      if (Date.now() - started > 20e3) break;
+      retry.cards += ids.length;
+      retry.sent += await pushWalletCards(Number(sid), { cardIds: ids }).catch(() => 0);
+      if (!retry.sent) break;   // لسا الرصيد خالص: ما نكمل ونصرف الوقت
+    }
+  } catch (e) { retry.error = e.message; }
+  console.log('WALLET_RETRY', JSON.stringify(retry));
   const results = [];
   for (const s of stores) {
     if (Date.now() - started > 45e3) break;   // الباقي ياخذ دوره بكرة
@@ -30,7 +44,7 @@ module.exports = handler(['GET', 'POST'], async (req) => {
     catch (e) { winback.push({ store: s.id, error: e.code || e.message }); }
   }
   console.log('PAGER_WINBACK', JSON.stringify(winback));
-  return { stores: stores.length, results, winback };
+  return { stores: stores.length, retry, results, winback };
 });
 
 module.exports.config = { maxDuration: 60 };
