@@ -356,7 +356,7 @@
     </div>
     <form id="scan-manual" class="flex gap-2" dir="rtl">
       <input id="scan-id" inputmode="numeric" placeholder="أو اكتب رقم العضوية" class="flex-1 min-w-0 rounded-2xl border border-[#233d2c]/20 px-4 py-3 font-bold text-center" dir="ltr">
-      <button class="bg-[#384f3d] text-white font-black rounded-2xl px-5">ختم</button>
+      <button id="scan-manual-go" class="bg-[#384f3d] text-white font-black rounded-2xl px-5">ختم</button>
     </form>
     <button id="scan-close" class="w-full bg-[#f5f2eb] font-black rounded-2xl py-3">إغلاق</button>
   </div>
@@ -746,6 +746,7 @@
         if (!deskLocalized && !DMSectors.isFood(r)) { deskLocalized = true; DMSectors.localizeDom(document.body, r, true); } } maxRings = r.max_rings || 5;
       // البطاقة وحدة: الأختام (r.stamps) والاشتراكات (r.subs)
       const cards = !!(r.stamps || r.subs); deskCards = { stamps: !!r.stamps, subs: !!r.subs };
+      $('scan-manual-go').textContent = r.stamps ? 'ختم' : 'بحث';
       $('stamp-btn').classList.toggle('hidden', !r.stamps);
       $('scan-btn').classList.toggle('hidden', !cards);
       $('subs-qr-btn').classList.add('hidden');   // الاشتراكات من نفس رمز تسجيل البطاقة
