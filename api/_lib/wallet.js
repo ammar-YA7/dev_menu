@@ -27,7 +27,7 @@ async function call(method, path, body) {
 }
 
 // محتوى البطاقة. full = مزايا الباقة المدفوعة (الشعار، الموقع على شاشة القفل)
-function passBody({ store, settings, card, url, restoreUrl, lat, lng, notice, strip, nearText, fresh, pkg }, full = true) {
+function passBody({ store, settings, card, url, restoreUrl, lat, lng, notice, strip, nearText, fresh, pkg, stampsOff, subsDesign }, full = true) {
   const n = settings.needed, s = Math.min(card.stamps, n);
   const L = (t) => tr(card.lang, t);   // لغة الزبون (آخر لغة فتح فيها بطاقته)
   const body = {
@@ -56,6 +56,16 @@ function passBody({ store, settings, card, url, restoreUrl, lat, lng, notice, st
     // فبدون رسالة ما نرسل الخانة أصلاً، والبطاقة تحتفظ برسالتها الحالية
     ...(String(notice || '').trim() ? { notification: String(notice).slice(0, 250) } : {})
   };
+  // المحل عنده الاشتراكات بس: البطاقة تعرض الباقة ورصيدها بدل الأختام والمكافأة
+  if (stampsOff) {
+    body.description = L(`بطاقة ${store.name || ''}`).slice(0, 120);
+    body.headerFields = pkg ? [{ label: L('المتبقي'), value: `${pkg.remaining} / ${pkg.total}`, changeMessage: L('باقي لك %@') }] : [{ label: L('الباقة'), value: L('لا توجد') }];
+    body.secondaryFields = [...(pkg ? [{ label: L('الباقة'), value: String(pkg.plan_name).slice(0, 40) }] : []), ...(card.name ? [{ label: L('الاسم'), value: String(card.name).slice(0, 40) }] : [])];
+    delete body.auxiliaryFields;
+    body.backFields = body.backFields.filter(f => ![L('زياراتك'), L('طريقة الختم')].includes(f.label));
+    body.backFields.splice(1, 0, { label: L('طريقة الاستخدام'), value: L('اعرض الكود للكاشير كل ما تستخدم باقتك، وينقص الرصيد واحد.') });
+    if (pkg && pkg.expires_at) body.auxiliaryFields = [{ label: L('تنتهي'), value: new Date(pkg.expires_at).toLocaleDateString('ar-SA-u-nu-latn', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Riyadh' }) }];
+  }
   if (full) {
     // لون المحل بدل اللون الجاهز (ما نرسل الاثنين، عشان الجاهز ما يغطي عليه)
     if (settings.design && settings.design.color) { body.color = settings.design.color; delete body.colorPreset; }
@@ -64,6 +74,12 @@ function passBody({ store, settings, card, url, restoreUrl, lat, lng, notice, st
     if (logo && /^https:\/\//.test(logo)) body.logoURL = logo;
     // صورة الأختام بنفس شكل بطاقة DEV MENU
     if (strip) body.stripURL = strip;
+    // بطاقة الاشتراكات بس: لونها وشعارها وغلافها من تصميم الاشتراكات
+    if (stampsOff && subsDesign) {
+      if (subsDesign.color) { body.color = subsDesign.color; delete body.colorPreset; }
+      if (subsDesign.logo) body.logoURL = subsDesign.logo;
+      if (subsDesign.strip) body.stripURL = subsDesign.strip;
+    }
     if (Number.isFinite(lat) && Number.isFinite(lng)) body.locations = [{ latitude: lat, longitude: lng, relevantText: String(nearText || L(`أنت قريب من ${store.name}، خذ ختمك`)).slice(0, 80) }];
   }
   return body;
@@ -78,11 +94,32 @@ async function memberPkg(card) {
   } catch { return null; }   // قبل ملف 103: بدون باقات
 }
 
+// المحل يستخدم الأختام؟ (مشترك فيها ومشغّلها). اللي عنده الاشتراكات بس، بطاقته تعرض الباقة بدل الأختام
+const stampCache = new Map();
+async function stampsInfo(clientId) {
+  clientId = Number(clientId);
+  const hit = stampCache.get(clientId);
+  if (hit && hit.at > Date.now() - 60e3) return hit.v;
+  let v = { on: true, subsDesign: null };
+  try {
+    const s = (await rest(`clients?id=eq.${Number(clientId)}&select=loyalty_enabled,subscription_status,plan_features,parent_id,is_active,trial_ends_at,subscription_end_date,subs_design`))[0];
+    if (s) v = { on: !!s.loyalty_enabled && require('./plans').has(s, 'loyalty'), subsDesign: s.subs_design || null };
+  } catch {}
+  stampCache.set(clientId, { v, at: Date.now() });
+  return v;
+}
+async function extrasFor(card) {
+  if (!card || !card.client_id) return { pkg: null, stampsOff: false };
+  const [pkg, info] = await Promise.all([memberPkg(card), stampsInfo(card.client_id)]);
+  return { pkg, stampsOff: !info.on, subsDesign: info.subsDesign };
+}
+
 // بطاقة جديدة. لو الباقة المجانية رفضت المزايا المدفوعة نعيد بدونها
 async function createPass(ctx) {
   if (!configured()) throw new ApiError(503, 'إضافة البطاقة للمحفظة مو متاحة حالياً', 'WALLET_OFF');
   if (!String(ctx.notice || '').trim()) ctx = { ...ctx, notice: firstNotice(ctx.store, ctx.card && ctx.card.lang) };
-  ctx = { ...ctx, strip: await stampStrip(ctx.settings, ctx.card), pkg: await memberPkg(ctx.card) };
+  ctx = { ...ctx, ...(await extrasFor(ctx.card)) };
+  ctx.strip = ctx.stampsOff ? null : await stampStrip(ctx.settings, ctx.card);
   try { return await call('POST', '', passBody(ctx, true)); }
   catch (e) {
     if (e.status >= 400 && e.status < 500 && e.status !== 401 && e.status !== 429) {
@@ -97,7 +134,8 @@ async function createPass(ctx) {
 // يرجّع null لو نجح، أو سبب الفشل (ينحفظ مع البطاقة عشان نعرف وش صار، والنجاح يبدأ بـ ok)
 async function updatePass(serial, ctx) {
   if (!configured() || !serial) return 'not configured';
-  ctx = { ...ctx, strip: await stampStrip(ctx.settings, ctx.card), pkg: await memberPkg(ctx.card) };
+  ctx = { ...ctx, ...(await extrasFor(ctx.card)) };
+  ctx.strip = ctx.stampsOff ? null : await stampStrip(ctx.settings, ctx.card);
   try {
     const lb = passBody(ctx, true);
     const r = await call('PUT', `/${encodeURIComponent(serial)}`, lb);
@@ -267,4 +305,4 @@ async function updateRaw(serial, body) {
   try { const r = await call('PUT', `/${encodeURIComponent(serial)}`, body); return `ok devices=${r.notifiedDevices ?? '?'} unchanged=${r.unchanged ?? '?'} at=${new Date().toISOString().slice(0, 19)}`; }
   catch (e) { return `${e.status || ''} ${e.message || ''}`.trim().slice(0, 300); }
 }
-module.exports = { memberPkg, createRaw, updateRaw, getPass, walletPlatform, reached, cardMaintenance, passRemoved, configured, createPass, updatePass, revokePass, buildCtx, cardUrl, createPagerPass, updatePagerPass, endPagerPass, pagerStep };
+module.exports = { stampsCacheClear: (id) => stampCache.delete(Number(id)), memberPkg, createRaw, updateRaw, getPass, walletPlatform, reached, cardMaintenance, passRemoved, configured, createPass, updatePass, revokePass, buildCtx, cardUrl, createPagerPass, updatePagerPass, endPagerPass, pagerStep };

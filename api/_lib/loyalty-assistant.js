@@ -72,7 +72,8 @@ const ctxFor = (store, settings, card, notice, fresh = false) => wallet.buildCtx
 // تحديث بطاقات المحفظة (كلها أو اللي نحددها). notices: card.id → نص الرسالة الجديدة
 async function pushWalletCards(storeId, { cardIds = null, notice = null, notices = null } = {}) {
   if (!wallet.configured()) return 0;
-  if (!(await storeHasFeature(storeId, 'loyalty'))) return 0;   // اشتراك منتهي أو موقوف
+  // اشتراك منتهي أو موقوف (البطاقة للأختام أو الاشتراكات)
+  if (!(await storeHasFeature(storeId, 'loyalty')) && !(await storeHasFeature(storeId, 'subs'))) return 0;
   const store = (await rest(`clients?id=eq.${storeId}&select=${STORE_FIELDS}`))[0];
   if (!store) return 0;
   const settings = normalizeLoyalty(store.loyalty_settings);

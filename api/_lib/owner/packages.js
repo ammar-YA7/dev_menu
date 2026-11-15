@@ -76,12 +76,9 @@ module.exports.post = async function post(action, req, b, env) {
       out[k] = String(d[k]);
     }
     await rest(`clients?id=eq.${sid}`, { method: 'PATCH', body: { subs_design: out } });
-    const cards = await rest(`loyalty_pkg_cards?client_id=eq.${sid}&wallet_serial=not.is.null&select=id&order=last_used_at.desc.nullslast&limit=400`).catch(() => []);
-    let updated = 0; const started = Date.now();
-    for (let i = 0; i < cards.length && Date.now() - started < 40e3; i += 10) {
-      const rs = await Promise.all(cards.slice(i, i + 10).map(c => P.pushCard(sid, c.id).catch(() => null)));
-      updated += rs.filter(r => String(r || '').startsWith('ok')).length;
-    }
+    // بطاقات العملاء (بطاقة وحدة لكل عميل) تتحدث بالشكل الجديد
+    require('../wallet').stampsCacheClear(sid);
+    const updated = await pushWalletCards(sid).catch(() => 0);
     return { design: out, wallet_updated: updated };
   }
 
@@ -103,9 +100,17 @@ module.exports.post = async function post(action, req, b, env) {
         : Number.isInteger(no) ? (await rest(`loyalty_cards?member_no=eq.${no}&client_id=eq.${sid}&select=*`))[0] : null;
       if (!member) throw new ApiError(404, b.member_qr ? 'هذا مو كود بطاقة من محلنا' : 'ما لقينا عضو بهذا الرقم', 'NO_MEMBER');
     }
-    const name = member ? (member.name || `عضو #${member.member_no}`) : cleanName(b.name, 'اسم الزبون');
-    let phone = member ? (member.phone || null) : null;
-    if (!member && String(b.phone || '').trim()) { try { phone = waNumber(b.phone); } catch { throw new ApiError(400, 'رقم الجوال غير صحيح'); } }
+    // ما عنده بطاقة (أو ما مسحها): نلقى بطاقته بجواله، وإلا نفتح له بطاقة. فالعميل دايم عنده بطاقة وحدة فيها باقته
+    if (!member) {
+      const nm = cleanName(b.name, 'اسم الزبون');
+      let ph = null;
+      if (String(b.phone || '').trim()) { try { ph = waNumber(b.phone); } catch { throw new ApiError(400, 'رقم الجوال غير صحيح'); } }
+      member = ph ? (await rest(`loyalty_cards?client_id=eq.${sid}&phone=eq.${encodeURIComponent(ph)}&select=*`))[0] : null;
+      if (!member) member = (await rest('loyalty_cards', { method: 'POST', prefer: 'return=representation', body: {
+        client_id: sid, branch_id: here.id, branch_ids: [here.id], token: crypto.randomBytes(18).toString('base64url'), name: nm, phone: ph, lang: b.lang === 'en' ? 'en' : 'ar' } }))[0];
+    }
+    const name = member.name || `عضو #${member.member_no}`;
+    const phone = member.phone || null;
     const card = (await rest('loyalty_pkg_cards', {
       method: 'POST', prefer: 'return=representation',
       body: {
@@ -117,8 +122,11 @@ module.exports.post = async function post(action, req, b, env) {
     }))[0];
     poke(topic('owner', sid), 'loyalty').catch(() => {});
     // عضو عنده بطاقة في المحفظة: الباقة تطلع فيها على طول، وما يحتاج بطاقة ثانية
-    if (member && member.wallet_serial) await pushWalletCards(sid, { cardIds: [member.id], notice: `انضافت لك باقة ${card.plan_name}: ${card.total} مرة` }).catch(() => 0);
-    return { card: P.cardView(card), url: P.pageUrl(store, card), phone, member: member ? { no: member.member_no, in_wallet: !!member.wallet_serial } : null };
+    if (member.wallet_serial) await pushWalletCards(sid, { cardIds: [member.id], notice: `انضافت لك باقة ${card.plan_name}: ${card.total} مرة` }).catch(() => 0);
+    // رابط بطاقة العميل (فيها الباقة): يفتحه ويضيفها للمحفظة
+    const base = require('../core').storeLink(store.client_slug, 'loyalty');
+    const url = `${base}${base.includes('?') ? '&' : '?'}t=${encodeURIComponent(member.token)}`;
+    return { card: P.cardView(card), url, phone, member: { no: member.member_no, in_wallet: !!member.wallet_serial } };
   }
 
   if (action === 'loyalty-pkg-use') {

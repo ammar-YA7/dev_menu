@@ -34,9 +34,12 @@ async function loadStore(slug) {
     rest(`clients?id=eq.${home}&select=id,name,client_slug,logo_url,loyalty_enabled,loyalty_settings,loyalty_lat,loyalty_lng,loyalty_near_lines,business_type,business_label`).then(r => r[0] || {}),
     home === here.id ? null : rest(`clients?id=eq.${here.id}&select=loyalty_lat,loyalty_lng`).then(r => r[0] || {})
   ]);
-  if (!main.loyalty_enabled || !(await storeHasFeature(home, 'loyalty'))) throw new ApiError(404, 'بطاقة الولاء غير متاحة حالياً', 'NOT_AVAILABLE');
+  // البطاقة وحدة للعميل: فيها الأختام (لو المحل مشترك فيها ومشغّلها) والاشتراكات (لو مشترك فيها)
+  const [hasStamps, subs] = await Promise.all([storeHasFeature(home, 'loyalty'), storeHasFeature(home, 'subs')]);
+  const stamps = !!main.loyalty_enabled && hasStamps;
+  if (!stamps && !subs) throw new ApiError(404, 'بطاقة الولاء غير متاحة حالياً', 'NOT_AVAILABLE');
   const own = spot && validPoint(spot.loyalty_lat, spot.loyalty_lng);
-  return { store: { id: main.id, name: main.name, client_slug: main.client_slug, logo_url: main.logo_url, business_type: main.business_type, business_label: main.business_label }, branch: here,
+  return { stamps, subs, store: { id: main.id, name: main.name, client_slug: main.client_slug, logo_url: main.logo_url, business_type: main.business_type, business_label: main.business_label }, branch: here,
            settings: normalizeLoyalty(main.loyalty_settings, main), lat: own ? spot.loyalty_lat : main.loyalty_lat, lng: own ? spot.loyalty_lng : main.loyalty_lng, nearLines: main.loyalty_near_lines,
            homeLat: main.loyalty_lat, homeLng: main.loyalty_lng };
 }
@@ -118,9 +121,37 @@ const publicInfo = (ctx) => ({
   store: { name: ctx.store.name, logo_url: ctx.store.logo_url },
   settings: { needed: ctx.settings.needed, reward: ctx.settings.reward, reward_en: ctx.settings.reward_en, cooldown_hours: ctx.settings.cooldown_hours, design: ctx.settings.design,
               happy: ctx.settings.happy, gifts: ctx.settings.gifts.enabled, stamp_mode: ctx.settings.stamp_mode, pager_stamp: ctx.settings.pager_stamp },
-  happy_now: isHappyNow(ctx.settings),
+  happy_now: ctx.stamps && isHappyNow(ctx.settings),
+  stamps_on: !!ctx.stamps, subs_on: !!ctx.subs,
   wallet: wallet.configured()
 });
+// ─── الاشتراكات (باقات مدفوعة مسبقاً) داخل نفس البطاقة ───
+// باقاته (السارية واللي بانتظار الدفع) والباقات المتاحة يختار منها
+async function packagesFor(ctx, card) {
+  const P = require('./_lib/packages');
+  const [rows, plans] = await Promise.all([
+    rest(`loyalty_pkg_cards?loyalty_card_id=eq.${card.id}&select=*&order=created_at.desc&limit=10`).catch(() => []),
+    rest(`loyalty_pkg_plans?client_id=eq.${ctx.store.id}&active=is.true&select=id,name,uses,days,price&order=id.asc`).catch(() => [])
+  ]);
+  const packages = rows.map(P.cardView).filter(p => p.pending || (p.remaining > 0 && !p.expired));
+  const cur = ((await rest(`clients?id=eq.${ctx.store.id}&select=currency`).catch(() => []))[0] || {}).currency || 'SAR';
+  return { packages, plans, currency: cur };
+}
+// العميل اختار باقة من بطاقته: تنتظر الكاشير يفعّلها بعد الدفع
+async function requestPackage(ctx, card, planId) {
+  const plan = (await rest(`loyalty_pkg_plans?id=eq.${Number(planId) || 0}&client_id=eq.${ctx.store.id}&active=is.true&select=*`))[0];
+  if (!plan) throw new ApiError(400, 'اختر الباقة');
+  const pending = await rest(`loyalty_pkg_cards?loyalty_card_id=eq.${card.id}&status=eq.pending&select=id,plan_id`);
+  if (pending.some(p => p.plan_id === plan.id)) return;   // نفس الباقة طالبها من قبل وتنتظر التفعيل
+  if (pending.length >= 2) throw new ApiError(429, 'عندك باقات بانتظار التفعيل، فعّلها من الكاشير أول');
+  await rest('loyalty_pkg_cards', { method: 'POST', body: {
+    client_id: ctx.store.id, plan_id: plan.id, plan_name: plan.name, name: card.name || `عضو #${card.member_no}`, phone: card.phone || null,
+    total: plan.uses, remaining: 0, status: 'pending', token: crypto.randomBytes(18).toString('base64url'),
+    branch_id: ctx.branch.id, lang: card.lang || 'ar', loyalty_card_id: card.id } });
+}
+
+// الأختام متوقفة في هالمحل (عنده الاشتراكات بس)
+const needStamps = (ctx) => { if (!ctx.stamps) throw new ApiError(409, 'هذا المحل ما يستخدم الأختام', 'STAMPS_OFF'); };
 
 // ختم زيارة (ختمين في ساعات الهدوء)
 async function stampCard(ctx, card, distance) {
@@ -196,7 +227,13 @@ module.exports = handler(['GET', 'POST'], async (req, res) => {
   const b = req.method === 'POST' ? readBody(req) : {};
   try {
     if (action === 'info' && req.method === 'GET') {
-      const info = publicInfo(await loadStore(req.query.slug));
+      const ctx = await loadStore(req.query.slug);
+      const info = publicInfo(ctx);
+      // الاشتراكات: الباقات تطلع في صفحة التسجيل يختار منها (اختياري)
+      if (ctx.subs) {
+        info.plans = await rest(`loyalty_pkg_plans?client_id=eq.${ctx.store.id}&active=is.true&select=id,name,uses,days,price&order=id.asc`).catch(() => []);
+        info.currency = ((await rest(`clients?id=eq.${ctx.store.id}&select=currency`).catch(() => []))[0] || {}).currency || 'SAR';
+      }
       res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=30, stale-while-revalidate=300');   // بيانات المحل العامة: تتخزن 30 ثانية في CDN
       return info;
     }
@@ -222,13 +259,19 @@ module.exports = handler(['GET', 'POST'], async (req, res) => {
       const message = m && Date.parse(m.created_at) > Date.now() - 14 * 864e5 ? { id: m.id, body: m.body, at: m.created_at } : null;
       // "ليش ما رجعت؟" صار في شاشة الختم (kiosk) وقت ما يختم، مو في صفحة البطاقة
       // نسأل شركة المحفظة: البطاقة مضافة في جوال الحين؟ (آيفون: أجهزة مسجلة، أندرويد: محفوظة في Google Wallet)
-      const [gifts, installed, pkgs] = await Promise.all([giftsFor(ctx, card), walletInstalled(card),
-        rest(`loyalty_pkg_cards?loyalty_card_id=eq.${card.id}&select=id,plan_name,remaining,total,expires_at&order=created_at.desc&limit=5`).catch(() => [])]);
+      const [gifts, installed, pk] = await Promise.all([ctx.stamps ? giftsFor(ctx, card) : [], walletInstalled(card), ctx.subs ? packagesFor(ctx, card) : {}]);
       const view = cardView(card);
       if (installed !== null) { view.wallet_seen = installed; view.in_wallet = installed; }
-      // باقاته المدفوعة مسبقاً (السارية) تطلع تحت بطاقته
-      const packages = pkgs.filter(p => p.remaining > 0 && (!p.expires_at || Date.parse(p.expires_at) > Date.now()));
-      return { ...publicInfo(ctx), card: view, message, survey: false, gifts, packages };
+      return { ...publicInfo(ctx), card: view, message, survey: false, gifts, ...pk };
+    }
+
+    // ─── العميل يختار باقة من بطاقته (يدفع في الكاشير ويفعّلها له) ───
+    if (action === 'pkg-request' && req.method === 'POST') {
+      const ctx = await loadStore(b.slug);
+      if (!ctx.subs) throw new ApiError(409, 'الاشتراكات غير متاحة في هذا المحل', 'SUBS_OFF');
+      const card = await cardByToken(ctx, b.t);
+      await requestPackage(ctx, card, b.plan_id);
+      return { ...publicInfo(ctx), card: cardView(card), ...(await packagesFor(ctx, card)) };
     }
 
     // بطاقة جديدة (أو رجوع لبطاقته من جوال ثاني بنفس الرقم، وهو داخل المحل) + ختم أول زيارة
@@ -264,12 +307,12 @@ module.exports = handler(['GET', 'POST'], async (req, res) => {
         card = { ...card, name, gender: card.gender || profile.gender };
       }
       let out;
-      if (b.code) {
+      if (b.code && ctx.stamps) {
         if (!isNew) await assertNotCooling(ctx, card, b.code);
         await consumeStampCode(ctx.store.id, b.code, card.id);
         const r = await purchaseStamp(ctx.store.id, card.id, ctx.settings, ctx.branch.id);
         out = { ...r, card: cardView((await rest(`loyalty_cards?id=eq.${card.id}&select=*`))[0]) };
-      } else if (ticket) {
+      } else if (ticket && ctx.stamps) {
         // نربط البطاقة برقم البيجر: ينختم لما يستلم طلبه (أو الحين لو استلم)
         await rest(`pager_tickets?id=eq.${ticket.id}`, { method: 'PATCH', body: { loyalty_card_id: card.id } });
         let r = { stamped: false, count: 0, reason: 'PAGER_PENDING' };
@@ -285,8 +328,11 @@ module.exports = handler(['GET', 'POST'], async (req, res) => {
       // جاي من رابط هدية: نستلمها مع التسجيل
       let gift_error = null;
       if (b.gift) { try { await claimGift(ctx, card, b.gift, isNew); } catch (e) { gift_error = e.message; } }
-      const welcome = isNew ? await welcomeMessage(ctx, { ...card, ...out.card }) : null;
-      return { ...publicInfo(ctx), token: card.token, is_new: isNew, ...out, message: welcome, gifts: await giftsFor(ctx, card), gift_error };
+      const welcome = isNew && ctx.stamps ? await welcomeMessage(ctx, { ...card, ...out.card }) : null;
+      // اختار باقة وهو يسجّل: تنضاف لبطاقته بانتظار الدفع
+      let pkg_error = null;
+      if (ctx.subs && b.plan_id) { try { await requestPackage(ctx, card, b.plan_id); } catch (e) { pkg_error = e.message; } }
+      return { ...publicInfo(ctx), token: card.token, is_new: isNew, ...out, message: welcome, gifts: ctx.stamps ? await giftsFor(ctx, card) : [], gift_error, pkg_error, ...(ctx.subs ? await packagesFor(ctx, card) : {}) };
     }
 
     // إكمال البيانات (للبطاقات القديمة اللي انسجلت بدون اسم). لو الرقم مربوط ببطاقة ثانية ندمجهم
@@ -326,7 +372,7 @@ module.exports = handler(['GET', 'POST'], async (req, res) => {
     // صرف المكافأة والهدايا صار عند الموظف بس (يمسح كود العضو أو من رقم البيجر)
     if ((action === 'redeem' || action === 'gift-redeem') && req.method === 'POST') throw new ApiError(409, 'اعرض كود بطاقتك للموظف ويصرفها لك', 'STAFF_REDEEM');
     if (action === 'redeem-legacy' && req.method === 'POST') {
-      const ctx = await loadStore(b.slug);
+      const ctx = await loadStore(b.slug); needStamps(ctx);
       const card = await cardByToken(ctx, b.t);
       if (card.stamps < ctx.settings.needed) throw new ApiError(409, 'ما كملت الأختام للحين', 'NOT_ENOUGH');
       const distance = checkPresence(ctx, b);
@@ -340,7 +386,7 @@ module.exports = handler(['GET', 'POST'], async (req, res) => {
 
     // ─── ختم بكود الكاشير (بعد الدفع) ───
     if (action === 'stamp-code' && req.method === 'POST') {
-      const ctx = await loadStore(b.slug);
+      const ctx = await loadStore(b.slug); needStamps(ctx);
       const card = await cardByToken(ctx, b.t);
       await assertNotCooling(ctx, card, b.code);
       await consumeStampCode(ctx.store.id, b.code, card.id);
@@ -351,7 +397,7 @@ module.exports = handler(['GET', 'POST'], async (req, res) => {
 
     // ─── ربط بطاقة موجودة برقم بيجر (من صفحة البيجر) ───
     if (action === 'pager-link' && req.method === 'POST') {
-      const ctx = await loadStore(b.slug);
+      const ctx = await loadStore(b.slug); needStamps(ctx);
       const card = await cardByToken(ctx, b.t);
       const ticket = await pagerTicket(ctx.branch.id, b.pt);
       if (!ticket || Date.now() - Date.parse(ticket.created_at) > 18 * 3600e3) throw new ApiError(409, 'رقم البيجر منتهي', 'BAD_TICKET');
@@ -397,7 +443,7 @@ module.exports = handler(['GET', 'POST'], async (req, res) => {
 
     // ─── أهدِ مكافأتك لصديق برقم عضويته: تنقص أختامك وتنتقل الهدية لبطاقته على طول ───
     if (action === 'gift' && req.method === 'POST') {
-      const ctx = await loadStore(b.slug);
+      const ctx = await loadStore(b.slug); needStamps(ctx);
       if (!ctx.settings.gifts.enabled) throw new ApiError(403, 'الإهداء متوقف في هذا المحل');
       const card = await cardByToken(ctx, b.t);
       const toId = parseInt(String(b.to || '').replace(/[^\d]/g, ''), 10);
@@ -430,7 +476,7 @@ module.exports = handler(['GET', 'POST'], async (req, res) => {
 
     // ─── استلام هدية لبطاقة موجودة ───
     if (action === 'gift-claim' && req.method === 'POST') {
-      const ctx = await loadStore(b.slug);
+      const ctx = await loadStore(b.slug); needStamps(ctx);
       const card = await cardByToken(ctx, b.t);
       await claimGift(ctx, card, b.code, false);
       return { ok: true, gifts: await giftsFor(ctx, card) };

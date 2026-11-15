@@ -598,6 +598,10 @@
   pk.design = {}; pk.dirty = false;
   function setPkd(patch) { pk.design = { ...pk.design, ...patch }; pk.dirty = true; renderPkd(); }
   function renderPkd() {
+    // عنده بطاقة الأختام: البطاقة وحدة وتصميمها من «بطاقة الأختام»
+    const withStamps = DMPlans.has(client, 'loyalty');
+    document.getElementById('pkd-card').classList.toggle('hidden', withStamps);
+    document.getElementById('pkd-note').classList.toggle('hidden', !withStamps);
     const d = pk.design, color = d.color || (ly.data && ly.data.settings && ly.data.settings.design && ly.data.settings.design.color) || '#233d2c';
     const logo = d.logo || (ly.data && ly.data.settings && ly.data.settings.design && ly.data.settings.design.logo) || client.logo_url;
     document.getElementById('pkd-pv').style.background = color;
@@ -633,14 +637,14 @@
     renderPackages();
   }
   function renderSubsQr() {
-    const url = DM.storeUrl(client.client_slug, 'package');
+    const url = DM.storeUrl(client.client_slug, 'loyalty');   // رمز واحد: يسجّل في البطاقة ويختار باقته
     document.getElementById('pk-link').textContent = url.replace(/^https?:\/\//, '');
     const box = document.getElementById('pk-qr');
     if (box.dataset.url === url || !window.QRCode) return;
     box.dataset.url = url; box.innerHTML = '';
     new QRCode(box, { text: url, width: 128, height: 128, colorDark: '#1b3022', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
   }
-  document.getElementById('pk-copy').addEventListener('click', async () => { try { await navigator.clipboard.writeText(DM.storeUrl(client.client_slug, 'package')); showToast('تم نسخ الرابط'); } catch {} });
+  document.getElementById('pk-copy').addEventListener('click', async () => { try { await navigator.clipboard.writeText(DM.storeUrl(client.client_slug, 'loyalty')); showToast('تم نسخ الرابط'); } catch {} });
   function renderPackages() {
     renderSubsQr(); renderPkd();
     document.getElementById('pk-plans').innerHTML = pk.plans.length ? pk.plans.map(p => `

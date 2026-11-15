@@ -194,7 +194,7 @@
       <div id="tools" class="relative">
         <button id="tools-btn" type="button" class="mini bg-white border border-[#233d2c]/15 h-10 inline-flex items-center gap-1.5" aria-haspopup="true" aria-expanded="false"><i class="ph-bold ph-squares-four"></i> <span>أدوات</span></button>
         <div id="tools-menu" class="hidden absolute end-0 top-full mt-2 w-60 bg-white rounded-xl p-1.5 z-50 shadow-[0_12px_32px_-12px_rgba(0,0,0,.35),0_0_0_1px_rgba(0,0,0,.08)]" role="menu">
-          <button id="join-btn" role="menuitem" class="tool hidden"><i class="ph-bold ph-user-plus"></i> QR بطاقة الأختام</button>
+          <button id="join-btn" role="menuitem" class="tool hidden"><i class="ph-bold ph-user-plus"></i> QR تسجيل البطاقة</button>
           <button id="subs-qr-btn" role="menuitem" class="tool hidden"><i class="ph-bold ph-package"></i> QR بطاقة الاشتراكات</button>
           <button id="qr-btn" role="menuitem" class="tool hidden"><i class="ph-bold ph-qr-code"></i> QR البيجر</button>
           <a id="kiosk-btn" role="menuitem" href="kiosk.html" onclick="this.href='kiosk.html'+location.search" class="tool hidden"><i class="ph-bold ph-device-tablet"></i> شاشة الزبون</a>
@@ -744,14 +744,16 @@
       if (r.business_type) { T = DMSectors.terms(r); $('t-dwait').textContent = T.deskWait; $('t-dready').textContent = T.deskReady;
         // غير المطاعم: «المنيو» ← «القائمة» و«طبق» ← «منتج» في الشاشة كلها (ومرة وحدة، وتتابع اللي ينضاف)
         if (!deskLocalized && !DMSectors.isFood(r)) { deskLocalized = true; DMSectors.localizeDom(document.body, r, true); } } maxRings = r.max_rings || 5;
-      $('stamp-btn').classList.toggle('hidden', !r.loyalty);
-      $('scan-btn').classList.toggle('hidden', !r.loyalty && !r.subs);
-      $('subs-qr-btn').classList.toggle('hidden', !r.subs);
-      $('transfer-btn').classList.toggle('hidden', !r.loyalty);
+      // البطاقة وحدة: الأختام (r.stamps) والاشتراكات (r.subs)
+      const cards = !!(r.stamps || r.subs); deskCards = { stamps: !!r.stamps, subs: !!r.subs };
+      $('stamp-btn').classList.toggle('hidden', !r.stamps);
+      $('scan-btn').classList.toggle('hidden', !cards);
+      $('subs-qr-btn').classList.add('hidden');   // الاشتراكات من نفس رمز تسجيل البطاقة
+      $('transfer-btn').classList.toggle('hidden', !r.stamps);
       if (r.subs && !load.pkg) { load.pkg = true; loadPkgPlans(); }
-      $('join-btn').classList.toggle('hidden', !r.loyalty);
+      $('join-btn').classList.toggle('hidden', !cards);
       // شاشة الزبون: أكواد الخدمات (ومعها الختم للي عنده الولاء)
-      $('kiosk-btn').classList.toggle('hidden', !r.loyalty && r.pager === false);
+      $('kiosk-btn').classList.toggle('hidden', !r.stamps && r.pager === false);
       // انتشرت نسخة جديدة من الموقع والشاشة مفتوحة من قبل: نحدّثها لحالها (لو ما فيه نافذة مفتوحة)
       if (r.build && !EMBED) {
         if (load.build && load.build !== r.build && ![...document.querySelectorAll('[id$="-modal"]')].some(m => !m.classList.contains('hidden'))) return location.reload();
@@ -766,12 +768,12 @@
       $('qr-btn').classList.toggle('hidden', !pager);
       $('stats-btn').classList.toggle('hidden', !pager);
       document.querySelectorAll('[data-pager]').forEach(el => el.classList.toggle('hidden', !pager));
-      $('loyalty-desk').classList.toggle('hidden', pager || hasOrders || !r.loyalty);
+      $('loyalty-desk').classList.toggle('hidden', pager || hasOrders || !cards);
       if (!pager && !hasOrders) $('desk-title').textContent = 'شاشة الكاشير';
-      if (!pager && !hasOrders) $('desk-sub').textContent = r.loyalty ? 'بعد ما يدفع الزبون امسح بطاقته وانختم له' : 'شغّل بطاقة الولاء من لوحة التحكم';
+      if (!pager && !hasOrders) $('desk-sub').textContent = cards ? 'بعد ما يدفع الزبون امسح بطاقته وانختم له' : 'شغّل بطاقة الولاء من لوحة التحكم';
       // جاي من أزرار الرئيسية في لوحة التحكم (?open=scan|stamp|join): نفتح الأداة مرة وحدة
       const open = { scan: 'scan-btn', stamp: 'stamp-btn', join: 'join-btn' }[P.get('open')];
-      if (open && r.loyalty && !load.opened) { load.opened = true; $(open).click(); if (EMBED) watchEmbed(); }
+      if (open && cards && !load.opened) { load.opened = true; $(open).click(); if (EMBED) watchEmbed(); }
       // تحديث لحظي: رقم جديد أو عميل شاف التنبيه يظهر هنا على طول
       if (r.live && !liveOn && !EMBED) { liveOn = true; DM.live(r.live, () => load()); }
       // ما نلمس الأرقام اللي جاري تحديثها
@@ -914,8 +916,11 @@
         const el = $('scan-result');
         el.className = 'absolute inset-0 flex flex-col items-center justify-center gap-2.5 p-4 text-white text-center bg-[#233d2c]';
         el.innerHTML = `<b class="text-lg">${esc(r.who.name)}</b><span class="text-xs font-bold opacity-85" dir="ltr">#${esc(r.who.no)}</span>`
-          + r.packages.map(p => `<button type="button" data-pkuse="${p.id}" class="w-full bg-white text-[#233d2c] rounded-2xl py-3 font-black"><i class="ph-bold ph-package"></i> خصم من باقة ${esc(p.plan_name)}<span class="block text-xs font-bold opacity-70">باقي ${p.remaining} من ${p.total}</span></button>`).join('')
-          + `<button type="button" data-dostamp class="w-full bg-[#3f7a4a] text-white rounded-2xl py-2.5 font-black ${r.stamp_due ? '' : 'opacity-60'}"><i class="ph-bold ph-seal-check"></i> ختم عادي (${Math.min(r.stamps, r.needed)} من ${r.needed})</button>`;
+          + r.packages.map(p => p.pending
+            ? `<button type="button" data-activate="${p.id}" class="w-full bg-[#eaf3ec] text-[#233d2c] rounded-2xl py-3 font-black"><i class="ph-bold ph-check-circle"></i> استلمت المبلغ، فعّل باقة ${esc(p.plan_name)}<span class="block text-xs font-bold opacity-70">${p.total} مرة${p.price != null ? ` · ${esc(fmtM(Number(p.price)))}` : ''}</span></button>`
+            : `<button type="button" data-pkuse="${p.id}" class="w-full bg-white text-[#233d2c] rounded-2xl py-3 font-black"><i class="ph-bold ph-package"></i> خصم من باقة ${esc(p.plan_name)}<span class="block text-xs font-bold opacity-70">باقي ${p.remaining} من ${p.total}</span></button>`).join('')
+          + (r.stamps_on === false ? (r.packages.length ? '' : '<span class="font-bold">ما عنده باقة. سجّل له باقة من «باقة جديدة»</span>')
+            : `<button type="button" data-dostamp class="w-full bg-[#3f7a4a] text-white rounded-2xl py-2.5 font-black ${r.stamp_due ? '' : 'opacity-60'}"><i class="ph-bold ph-seal-check"></i> ختم عادي (${Math.min(r.stamps, r.needed)} من ${r.needed})</button>`);
         clearTimeout(el._h); el._h = setTimeout(() => { el.className = 'absolute inset-0 hidden'; }, 20000);
         setTimeout(() => { scanBusy = false; }, 1500);
         return;
@@ -1130,16 +1135,18 @@
   const QR_KINDS = {
     pager: { title: 'امسح وخذ رقمك', steps: ['امسح الرمز بكاميرا جوالك', 'قل رقمك للموظف', 'يرن جوالك لما يجي دورك'] },
     loyalty: { title: 'امسح وسجّل بطاقتك', steps: ['امسح الرمز وسجّل اسمك مرة وحدة', 'بعد كل شراء اعرض كود بطاقتك للكاشير', 'اجمع الأختام وخذ مكافأتك'] },
+    cards: { title: 'امسح وسجّل بطاقتك', steps: ['امسح الرمز وسجّل اسمك، واختر باقتك لو تبي', 'اعرض كود بطاقتك للكاشير', 'ينخصم من باقتك أو ينضاف ختمك'] },
+    subsonly: { title: 'امسح واشترك في باقة', steps: ['امسح الرمز وسجّل واختر باقتك', 'ادفع في الكاشير واعرض له الكود ويفعّلها', 'كل مرة اعرض الكود وينخصم من باقتك'] },
     package: { title: 'اشترك في باقة', steps: ['امسح الرمز واختر باقتك وسجّل', 'ادفع في الكاشير واعرض له الكود ويفعّلها', 'كل مرة اعرض الكود وينخصم من باقتك'] }
   };
-  let qrKind = 'pager';
-  $('join-btn').onclick = () => { qrKind = 'loyalty'; openPrintQr(); };
+  let qrKind = 'pager', qrSteps = null, deskCards = {};
+  $('join-btn').onclick = () => { qrKind = 'loyalty'; qrSteps = deskCards.subs ? (deskCards.stamps ? 'cards' : 'subsonly') : 'loyalty'; openPrintQr(); };
   $('qr-btn').onclick = () => { qrKind = 'pager'; openPrintQr(); };
   $('subs-qr-btn').onclick = () => { qrKind = 'package'; openPrintQr(); };
   function openPrintQr() {
     if (!slug) return;
     const url = DM.storeUrl(slug, qrKind);   // كود ثابت ما ينتهي
-    const k = qrKind === 'pager' ? { ...QR_KINDS.pager, steps: ['امسح الرمز بكاميرا جوالك', T.tell.replace('ورّ هذا الرقم', 'قل رقمك'), `يرن جوالك ${T.ringWhen}`] } : QR_KINDS[qrKind];
+    const k = qrKind === 'pager' ? { ...QR_KINDS.pager, steps: ['امسح الرمز بكاميرا جوالك', T.tell.replace('ورّ هذا الرقم', 'قل رقمك'), `يرن جوالك ${T.ringWhen}`] } : QR_KINDS[qrKind === 'loyalty' && qrSteps ? qrSteps : qrKind];
     $('qr-title').textContent = k.title;
     $('qr-steps').innerHTML = k.steps.map((t, i) => `<div><b>${i + 1}</b><span>${t}</span></div>`).join('');
     $('qr-store').textContent = $('store-name').textContent;

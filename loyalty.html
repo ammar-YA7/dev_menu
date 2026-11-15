@@ -27,6 +27,11 @@
   .btn-gold { background: var(--gold); color: #15271b; }
   .btn-ghost { background: color-mix(in srgb, var(--brand) 8%, #fff); color: var(--brand); border: 2px solid color-mix(in srgb, var(--brand) 45%, transparent); }
   /* زر المحفظة: أسود مثل زر آبل الرسمي، يبان على أي لون */
+  body.no-stamps #c-stamps, body.no-stamps #c-left, body.no-stamps #c-count, body.no-stamps #c-reward, body.no-stamps #stamp-btn, body.no-stamps #c-purchase,
+  body.no-stamps #j-card, body.no-stamps #j-purchase, body.no-stamps #c-survey, body.no-stamps .happy-box { display: none !important; }
+  .pk-opt { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; text-align: right; border: 1.5px solid rgba(35,61,44,.18); border-radius: 16px; padding: 12px 14px; background: #fff; font-weight: 700; }
+  .pk-opt[aria-checked="true"] { border-color: var(--brand); background: color-mix(in srgb, var(--brand) 7%, #fff); }
+  .pk-opt small { display: block; font-weight: 500; opacity: .65; font-size: 12px; }
   .btn-wallet { background: #000; color: #fff; box-shadow: 0 10px 22px -12px rgba(0,0,0,.6); }
   .field { width: 100%; background: #f8f6f1; border: 1.5px solid rgba(35,61,44,.18); border-radius: 14px; padding: 14px 15px; font-size: 16px; color: var(--ink); }
   .field:focus { outline: none; border-color: var(--brand); background: #fff; }
@@ -108,6 +113,10 @@
           <button type="button" class="gender field !text-center font-semibold" data-g="f" role="radio" aria-checked="false">أنثى</button>
         </div>
       </div>
+      <div id="j-plans-box" class="hidden">
+        <span class="text-sm font-semibold block mb-1.5">تبي باقة اشتراك؟ <small class="font-normal opacity-60">(اختياري، تدفعها في الكاشير)</small></span>
+        <div id="j-plans" class="grid gap-2" role="radiogroup" aria-label="الباقة"></div>
+      </div>
       <button id="join-btn" type="submit" class="btn btn-brand"><i class="ph-bold ph-user-plus"></i> سجّل في البطاقة</button>
       <p id="j-note" class="text-xs opacity-60 text-center leading-relaxed">بعد التسجيل يطلع لك كود، تعرضه للكاشير بعد كل شراء وينضاف ختمك. ولو غيّرت جوالك، ترجع لبطاقتك بنفس الرقم.</p>
     </form>
@@ -158,6 +167,8 @@
       </div>
     </div>
 
+    <!-- الاشتراكات (باقات مدفوعة مسبقاً) في نفس البطاقة: رصيده، واللي بانتظار الدفع، والباقات يختار منها -->
+    <div id="c-pkgs" class="hidden space-y-2"></div>
     <div id="c-msg" class="msg hidden"></div>
     <div id="c-qr-box" class="card p-5 text-center space-y-3 hidden">
       <p id="c-qr-title" class="text-lg font-bold"><i class="ph-bold ph-qr-code"></i> بعد ما تدفع، اعرض الكود للكاشير</p>
@@ -181,8 +192,6 @@
       <p class="text-sm opacity-70">عشان ما تضيع أختامك لو مسحت بيانات المتصفح، وتشوفها بسرعة من جوالك.</p>
     </div>
     <button id="wallet-btn" type="button" class="btn btn-wallet hidden"><i class="ph-bold ph-wallet"></i> <span>احفظ بطاقتك في المحفظة</span></button>
-    <!-- باقاته المدفوعة مسبقاً: الرصيد، والكاشير يخصم منها بمسح نفس الكود -->
-    <div id="c-pkgs" class="hidden space-y-2"></div>
     <!-- البطاقة مضافة للمحفظة: بدل الزر نأكد له، ورابط صغير لو حذفها من جواله -->
     <div id="wallet-done" class="hidden text-center space-y-1.5">
       <p class="inline-flex items-center gap-2 font-bold text-[#233d2c] bg-[#233d2c]/[.07] rounded-full px-4 py-2"><i class="ph-bold ph-check-circle text-lg"></i> تمت إضافة بطاقتك في المحفظة</p>
@@ -331,7 +340,8 @@
     $('c-holder').textContent = card.name || 'عضو';
     // كود العضوية للكاشير (ما يطلع والبطاقة مكتملة)
     $('c-qr-box').classList.toggle('hidden', !card.qr);
-    $('c-qr-title').innerHTML = full || (gifts && gifts.length) ? '<i class="ph-bold ph-gift"></i> اعرض الكود للكاشير يصرف مكافأتك' : '<i class="ph-bold ph-qr-code"></i> بعد ما تدفع، اعرض الكود للكاشير';
+    $('c-qr-title').innerHTML = !stampsOn ? '<i class="ph-bold ph-qr-code"></i> اعرض الكود للكاشير' : full || (gifts && gifts.length) ? '<i class="ph-bold ph-gift"></i> اعرض الكود للكاشير يصرف مكافأتك' : '<i class="ph-bold ph-qr-code"></i> بعد ما تدفع، اعرض الكود للكاشير';
+    applyStampsMode(); renderPackages();
     if (card.qr && $('c-qr').dataset.v !== card.qr) {
       $('c-qr').dataset.v = card.qr; $('c-qr').innerHTML = '';
       new QRCode($('c-qr'), { text: card.qr, width: 176, height: 176, colorDark: '#13261b', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
@@ -424,7 +434,8 @@
     setBusy(btn, true, 'نتأكد من موقعك');
     try {
       const proof = stampCodeParam ? { code: stampCodeParam } : ptParam ? { pt: ptParam } : {};
-      const r = await DM.post('/api/loyalty?action=join', { slug, ...profile, ...proof, gift: giftCode || undefined });
+      const r = await DM.post('/api/loyalty?action=join', { slug, ...profile, ...proof, gift: giftCode || undefined, plan_id: jPick || undefined });
+      setSubs(r);
       if (DM.rememberMe) DM.rememberMe(profile);
       if (stampCodeParam || ptParam) dropParams('c', 'pt');
       saveToken(r.token);
@@ -433,7 +444,8 @@
       afterStamp(r);
       walletFirst();
       if (r.reason === 'PAGER_PENDING') msg('ok', 'ph-bell', 'سجّلت! ينضاف لك ختم أول ما تستلم طلبك');
-      if (r.reason === 'REGISTERED') msg('ok', 'ph-check-circle', 'سجّلت! بعد ما تدفع، اعرض الكود اللي تحت للكاشير وينضاف ختمك');
+      if (r.reason === 'REGISTERED') msg('ok', 'ph-check-circle', !stampsOn ? (jPick ? 'سجّلت! ادفع في الكاشير واعرض له الكود ويفعّل باقتك' : 'سجّلت! اعرض الكود للكاشير') : jPick ? 'سجّلت! ادفع في الكاشير واعرض له الكود: يفعّل باقتك وينضاف ختمك' : 'سجّلت! بعد ما تدفع، اعرض الكود اللي تحت للكاشير وينضاف ختمك');
+      if (r.pkg_error) msg('warn', 'ph-package', r.pkg_error);
       if (r.gift_error) msg('warn', 'ph-gift', r.gift_error);
       if (giftCode) { params.delete('gift'); history.replaceState(null, '', location.pathname + (params.toString() ? `?${params}` : '')); }
       if (!r.is_new) msg('ok', 'ph-check-circle', r.stamped ? 'رجعت لبطاقتك، وانضاف ختم اليوم' : 'رجعت لبطاقتك');
@@ -634,14 +646,57 @@
   };
 
   $('wallet-again').onclick = () => $('wallet-btn').onclick();
-  let packages = [];
+  // ─── الاشتراكات (باقات مدفوعة مسبقاً) في نفس البطاقة ───
+  let packages = [], plans = [], pkCur = 'SAR', stampsOn = true, subsOn = false, jPick = null;
+  const pkEsc = (t) => String(t ?? '').replace(/[<>&"]/g, '');
+  const pkMoney = (n) => DM.money ? DM.money(Number(n), pkCur) : String(n);
+  const pkDate = (iso) => new Date(iso).toLocaleDateString('ar-SA-u-nu-latn', { day: 'numeric', month: 'long' });
+  function setSubs(r) {
+    if (!r) return;
+    if ('stamps_on' in r) stampsOn = r.stamps_on !== false;
+    if ('subs_on' in r) subsOn = !!r.subs_on;
+    if (r.packages) packages = r.packages;
+    if (r.plans) plans = r.plans;
+    if (r.currency) pkCur = r.currency;
+  }
+  const planLine = (p) => `${p.uses} مرة${p.days ? ` · صالحة ${p.days} يوم` : ''}`;
   function renderPackages() {
     const box = $('c-pkgs');
-    box.classList.toggle('hidden', !packages.length);
-    box.innerHTML = packages.map(p => `<div class="card p-4 flex items-center justify-between gap-3">
-      <div class="min-w-0"><p class="font-bold truncate"><i class="ph-bold ph-package"></i> باقة ${String(p.plan_name).replace(/[<>&"]/g, '')}</p>
-        <p class="text-xs opacity-70 mt-0.5">اعرض الكود للكاشير ويخصم منها${p.expires_at ? ` · تنتهي ${new Date(p.expires_at).toLocaleDateString('ar-SA-u-nu-latn', { day: 'numeric', month: 'long' })}` : ''}</p></div>
-      <p class="text-left shrink-0"><b class="text-2xl">${p.remaining}</b><span class="text-xs opacity-70"> / ${p.total}</span></p></div>`).join('');
+    const mine = packages.filter(p => !p.pending), waiting = packages.filter(p => p.pending);
+    const offer = subsOn ? plans.filter(pl => !waiting.some(w => w.plan_name === pl.name)) : [];
+    let html = mine.map(p => `<div class="card p-4 flex items-center justify-between gap-3">
+      <div class="min-w-0"><p class="font-bold truncate"><i class="ph-bold ph-package"></i> باقة ${pkEsc(p.plan_name)}</p>
+        <p class="text-xs opacity-70 mt-0.5">اعرض الكود للكاشير ويخصم منها${p.expires_at ? ` · تنتهي ${pkDate(p.expires_at)}` : ''}</p></div>
+      <p class="text-left shrink-0"><b class="text-3xl">${p.remaining}</b><span class="text-xs opacity-70"> / ${p.total}</span></p></div>`).join('');
+    html += waiting.map(p => `<div class="card p-4 space-y-1" style="border-color:color-mix(in srgb, var(--brand) 40%, transparent)">
+      <p class="font-bold"><i class="ph-bold ph-hourglass-medium"></i> باقة ${pkEsc(p.plan_name)}: بانتظار الدفع</p>
+      <p class="text-sm opacity-75">ادفع في الكاشير واعرض له الكود تحت، ويفعّلها لك (${p.total} مرة).</p></div>`).join('');
+    if (offer.length && !mine.length) html += `<div class="card p-4 space-y-2.5"><p class="font-bold"><i class="ph-bold ph-package"></i> اشترك في باقة ووفّر</p>
+      ${offer.map(pl => `<button type="button" class="pk-opt" data-req="${pl.id}"><span>${pkEsc(pl.name)}<small>${planLine(pl)}</small></span>${pl.price != null ? `<b class="shrink-0">${pkMoney(pl.price)}</b>` : ''}</button>`).join('')}
+      <p class="text-xs opacity-60">تختارها هنا، وتدفعها في الكاشير ويفعّلها لك.</p></div>`;
+    box.innerHTML = html;
+    box.classList.toggle('hidden', !html);
+  }
+  $('c-pkgs').addEventListener('click', async (e) => {
+    const b = e.target.closest('[data-req]'); if (!b || busy) return;
+    const pl = plans.find(x => x.id === Number(b.dataset.req)); if (!pl) return;
+    if (!confirm(`تختار باقة «${pl.name}»${pl.price != null ? ` بـ ${pkMoney(pl.price)}` : ''}؟ تدفعها في الكاشير ويفعّلها لك.`)) return;
+    b.disabled = true;
+    try { const r = await DM.post('/api/loyalty?action=pkg-request', { slug, t: loadToken(), plan_id: pl.id }); setSubs(r); renderPackages(); msg('ok', 'ph-check-circle', 'تم! ادفع في الكاشير واعرض له الكود ويفعّل باقتك'); $('c-qr-box').scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+    catch (err) { msg('err', 'ph-warning-circle', err.message || 'ما انحفظ، جرّب مرة ثانية'); }
+    b.disabled = false;
+  });
+  // التسجيل: باقة اختيارية
+  function renderJoinPlans() {
+    const show = subsOn && plans.length;
+    $('j-plans-box').classList.toggle('hidden', !show);
+    if (!show) return;
+    $('j-plans').innerHTML = plans.map(pl => `<button type="button" class="pk-opt" role="radio" aria-checked="${jPick === pl.id}" data-jp="${pl.id}"><span>${pkEsc(pl.name)}<small>${planLine(pl)}</small></span>${pl.price != null ? `<b class="shrink-0">${pkMoney(pl.price)}</b>` : ''}</button>`).join('');
+  }
+  $('j-plans').addEventListener('click', (e) => { const b = e.target.closest('[data-jp]'); if (!b) return; const id = Number(b.dataset.jp); jPick = jPick === id ? null : id; renderJoinPlans(); });
+  // المحل عنده الاشتراكات بس: نخفي الأختام والمكافأة
+  function applyStampsMode() {
+    document.body.classList.toggle('no-stamps', !stampsOn);
   }
   // رجع من المحفظة (ضغط «إضافة» أو ألغى): نسأل من جديد هل البطاقة صارت في جواله
   let walletCheckAt = 0;
@@ -673,7 +728,7 @@
       if (token) {
         const r = await DM.get(`/api/loyalty?action=card&slug=${encodeURIComponent(slug)}&t=${encodeURIComponent(token)}`);
         setStore(r.store); settings = enReward(r.settings); card = r.card; walletOn = !!r.wallet;
-        happyNow = !!r.happy_now; gifts = r.gifts || []; survey = !!r.survey; packages = r.packages || []; renderPackages();
+        happyNow = !!r.happy_now; gifts = r.gifts || []; survey = !!r.survey; setSubs(r);
         // جاي بكود الكاشير أو من صفحة البيجر: نختم على طول
         if (stampCodeParam || ptParam) {
           renderCard();
@@ -703,7 +758,9 @@
         return;
       }
       const r = await DM.get(`/api/loyalty?action=info&slug=${encodeURIComponent(slug)}`);
-      setStore(r.store); settings = enReward(r.settings); happyNow = !!r.happy_now;
+      setStore(r.store); settings = enReward(r.settings); happyNow = !!r.happy_now; setSubs(r);
+      applyStampsMode(); renderJoinPlans();
+      if (!stampsOn) $('j-note').textContent = 'بعد التسجيل يطلع لك كود، تعرضه للكاشير. ولو غيّرت جوالك، ترجع لبطاقتك بنفس الرقم.';
       renderHappy();
       if (giftCode) {
         try {

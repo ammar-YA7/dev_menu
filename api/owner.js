@@ -31,7 +31,9 @@ async function main(req) {
   if (['pager-update', 'pager-invoice', 'pager-ring', 'pager-eta', 'pager-addons-seen'].includes(action) && !PLANS.has(store, 'pager')) throw new ApiError(403, 'البيجر مو ضمن باقتك', 'ADDON_OFF');
   if (['pager-message', 'pager-message-push', 'pager-winback'].includes(action) && !PLANS.has(store, 'notify')) throw new ApiError(403, '"رسائل لزبائنك" مو ضمن باقتك. أضفها من "اشتراكك" في لوحة التحكم', 'ADDON_OFF');
   if (String(action || '').startsWith('loyalty-pkg') && !PLANS.has(store, 'subs')) throw new ApiError(403, 'الاشتراكات مو ضمن باقتك أو انتهى اشتراكك', 'ADDON_OFF');
-  if (['loyalty-stamp-code', 'loyalty-scan', 'loyalty-transfer', 'loyalty-give-stamp', 'loyalty-member-delete', 'loyalty-import', 'loyalty-redeem', 'loyalty-message', 'loyalty-message-push', 'loyalty-ai', 'loyalty-ai-run', 'loyalty-ai-preview'].includes(action) && !PLANS.has(store, 'loyalty')) throw new ApiError(403, 'بطاقة الولاء متوقفة: مو ضمن باقتك أو انتهى اشتراكك. جدّد من "اشتراكك" في لوحة التحكم', 'ADDON_OFF');
+  // مسح بطاقة العميل: للأختام أو الاشتراكات (البطاقة وحدة)
+  if (action === 'loyalty-scan' && !PLANS.has(store, 'loyalty') && !PLANS.has(store, 'subs')) throw new ApiError(403, 'بطاقة الولاء متوقفة: مو ضمن باقتك أو انتهى اشتراكك', 'ADDON_OFF');
+  if (['loyalty-stamp-code', 'loyalty-transfer', 'loyalty-give-stamp', 'loyalty-member-delete', 'loyalty-import', 'loyalty-redeem', 'loyalty-message', 'loyalty-message-push', 'loyalty-ai', 'loyalty-ai-run', 'loyalty-ai-preview'].includes(action) && !PLANS.has(store, 'loyalty')) throw new ApiError(403, 'بطاقة الولاء متوقفة: مو ضمن باقتك أو انتهى اشتراكك. جدّد من "اشتراكك" في لوحة التحكم', 'ADDON_OFF');
   // خدمة مو ضمن باقة المشترك (في التجربة أو الاشتراك): نفس قفل اللوحة (featureLocked في admin.html)،
   // عشان محل البيجر بس ما يعدّل المنيو أو إعدادات الولاء من خارج اللوحة
   const notInPlan = (key) => ['active', 'trial'].includes(store.subscription_status) && !PLANS.has(store, key);

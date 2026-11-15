@@ -202,7 +202,10 @@ module.exports.post = async function post(action, req, b, env) {
   // ─── الكاشير يمسح كود عضوية الزبون (أو يكتب رقمه) ويختمه بعد الدفع ───
   if (action === 'loyalty-scan') {
     const x = (await rest(`clients?id=eq.${sid}&select=loyalty_enabled,loyalty_settings`))[0] || {};
-    if (!x.loyalty_enabled) throw new ApiError(409, 'شغّل بطاقة الولاء أول من لوحة التحكم');
+    // البطاقة وحدة: فيها الأختام (لو مشترك ومشغّلها) والاشتراكات (لو مشترك)
+    const stampsOn = !!x.loyalty_enabled && PLANS.has(store, 'loyalty'), subsOn = PLANS.has(store, 'subs');
+    if (!stampsOn && !subsOn) throw new ApiError(409, 'شغّل بطاقة الولاء أول من لوحة التحكم');
+    if (b.kiosk && !stampsOn) throw new ApiError(409, 'اعرض كودك للكاشير', 'STAMPS_OFF');
     const settings = normalizeLoyalty(x.loyalty_settings);
     let id = null;
     if (b.qr) { id = parseMemberQr(await familyIds(store), b.qr); if (!id) throw new ApiError(400, 'هذا مو كود عضوية من بطاقتنا', 'BAD_QR'); }
@@ -213,14 +216,18 @@ module.exports.post = async function post(action, req, b, env) {
     const who = { id: card.id, no: card.member_no, name: card.name || `عضو #${card.member_no}`, transferred: card.transferred_at ? card.transferred : null };
     const rewards = await readyRewards(sid, card, settings);
     // عنده باقة سارية: الكاشير يختار «خصم من الباقة» أو «ختم» (شاشة الختم للزبون تختم على طول)
-    if (!b.kiosk && b.mode !== 'stamp' && PLANS.has(store, 'subs')) {
-      const pkgs = await rest(`loyalty_pkg_cards?loyalty_card_id=eq.${card.id}&remaining=gt.0&select=*&order=created_at.asc`).catch(() => []);
-      const live = pkgs.filter(p => !p.expires_at || Date.parse(p.expires_at) > Date.now());
-      if (live.length) {
+    // عنده باقة (سارية أو بانتظار الدفع): الكاشير يختار «خصم من الباقة» أو «فعّل» أو «ختم»
+    if (!b.kiosk && b.mode !== 'stamp' && subsOn) {
+      const pkgs = await rest(`loyalty_pkg_cards?loyalty_card_id=eq.${card.id}&or=(remaining.gt.0,status.eq.pending)&select=*&order=created_at.asc`).catch(() => []);
+      const live = pkgs.filter(p => p.status === 'pending' || !p.expires_at || Date.parse(p.expires_at) > Date.now());
+      if (live.length || !stampsOn) {
         const P = require('../packages');
-        return { choose: true, who, stamps: card.stamps, needed: settings.needed, packages: live.map(P.cardView), stamp_due: !cooldownLeft(card, settings) && card.stamps < settings.needed };
+        const prices = live.some(p => p.status === 'pending') ? Object.fromEntries((await rest(`loyalty_pkg_plans?client_id=eq.${sid}&select=id,price`).catch(() => [])).map(p => [p.id, p.price])) : {};
+        return { choose: true, who, stamps_on: stampsOn, stamps: card.stamps, needed: settings.needed,
+          packages: live.map(p => ({ ...P.cardView(p), price: prices[p.plan_id] ?? null })), stamp_due: stampsOn && !cooldownLeft(card, settings) && card.stamps < settings.needed };
       }
     }
+    if (!stampsOn) throw new ApiError(409, 'ما عنده باقة', 'NO_PKG');
     if (card.stamps >= settings.needed) return { stamped: false, rewards, who, reason: 'FULL', note: 'بطاقته مكتملة، يستخدم مكافأته أول', stamps: card.stamps, needed: settings.needed };
     const next = cooldownLeft(card, settings);
     if (next) return { stamped: false, who, reason: 'COOLDOWN', note: `انختم قبل شوي، الختم الجاي بعد ${leftText(next)}`, stamps: card.stamps, needed: settings.needed };

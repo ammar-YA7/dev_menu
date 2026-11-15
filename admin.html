@@ -1936,15 +1936,16 @@
           <div class="pro-card p-5 flex flex-wrap items-center gap-5">
             <div id="pk-qr" class="w-36 h-36 shrink-0 bg-white rounded-xl p-2"></div>
             <div class="min-w-0 flex-1 space-y-2">
-              <h3 class="text-base font-bold">رمز بطاقة الاشتراكات</h3>
-              <p class="text-[12.5px] text-ink leading-relaxed">ضعه عند الكاشير أو على الطاولات: يمسحه العميل، فيختار باقته ويسجّل اسمه وجواله.</p>
+              <h3 class="text-base font-bold">رمز التسجيل</h3>
+              <p class="text-[12.5px] text-ink leading-relaxed">ضعه عند الكاشير أو على الطاولات: يمسحه العميل ويسجّل في بطاقته ويختار باقته، ثم يدفع ويعرض الكود للكاشير فيفعّلها. وهو نفس رمز تسجيل بطاقة الأختام، فلكل عميل بطاقة واحدة.</p>
               <p id="pk-link" class="text-xs text-ink truncate" dir="ltr"></p>
               <button type="button" id="pk-copy" class="bg-brand/10 hover:bg-brand/15 text-ink px-3.5 py-2 rounded-xl text-[13px] font-bold border border-brand/25 transition"><i class="ph-bold ph-copy"></i> نسخ الرابط</button>
             </div>
           </div>
 
-          <!-- تصميم بطاقة الاشتراكات: مستقل عن بطاقة الأختام -->
-          <div class="pro-card p-5">
+          <!-- تصميم البطاقة: للمحل اللي عنده الاشتراكات بس. اللي عنده الأختام، البطاقة وحدة وتصميمها من «بطاقة الأختام» -->
+          <p id="pkd-note" class="hidden pro-card p-4 text-[13px] text-ink"><i class="ph-bold ph-info"></i> عملاؤك عندهم بطاقة واحدة فيها الأختام والباقة معاً، وتصميمها من صفحة <a href="#loyalty" class="font-bold underline">بطاقة الأختام</a>.</p>
+          <div id="pkd-card" class="pro-card p-5">
             <div class="flex flex-wrap gap-6">
               <div class="w-full sm:w-72 shrink-0">
                 <div id="pkd-pv" class="rounded-2xl overflow-hidden text-white shadow-lg" style="background:#233d2c">
@@ -1968,7 +1969,7 @@
           <div class="pro-card p-5 space-y-4">
             <div class="flex flex-wrap items-start justify-between gap-3">
               <div><h3 class="text-base font-bold"><i class="ph-bold ph-package text-emerald-600"></i> باقاتك</h3>
-                <p class="text-[12.5px] text-ink mt-1 leading-relaxed max-w-xl">يختار العميل باقته ويسجّل بنفسه من رمز الاشتراكات، ثم يدفع في المحل ويعرض الكود للكاشير فيفعّلها. وعند كل استخدام يمسح الكاشير الكود فينقص الرصيد واحداً، وتتحدث بطاقته في المحفظة فوراً. مثال: 30 وجبة، أو 10 أكواب قهوة.</p></div>
+                <p class="text-[12.5px] text-ink mt-1 leading-relaxed max-w-xl">يختار العميل باقته من بطاقته، ثم يدفع في المحل ويعرض الكود للكاشير فيفعّلها. وعند كل استخدام يمسح الكاشير الكود فينقص الرصيد واحداً، وتتحدث بطاقته في المحفظة فوراً. مثال: 30 وجبة، أو 10 أكواب قهوة.</p></div>
               <button type="button" id="pk-add" class="bg-brand text-cream hover:bg-brand-dark px-3.5 py-2 rounded-xl text-[13px] font-bold transition"><i class="ph-bold ph-plus"></i> إضافة باقة</button>
             </div>
             <div id="pk-plans" class="grid sm:grid-cols-2 gap-3"></div>
