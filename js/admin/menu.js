@@ -309,10 +309,15 @@
     <label class="flex items-center gap-1.5 bg-brand/5 border border-brand/15 rounded-lg px-2 py-1.5 cursor-pointer">
       <input type="checkbox" value="${k}" class="allergen-cb accent-amber-400"> ${l}
     </label>`).join('');
-  const getAllergens = () => [...document.querySelectorAll('.allergen-cb:checked')].map(x => x.value).join(',');
+  // المسببات المعروفة تنحفظ بمفتاحها، واللي يكتبها صاحب المحل (مثل الفول) تنحفظ باسمها
+  const ALLERGEN_KEYS = ALLERGENS.map(([k]) => k);
+  const otherAllergens = () => [...new Set(document.getElementById('allergen-other').value.split(/[,،]/).map(x => x.trim().replace(/\s+/g, ' ').slice(0, 30)).filter(x => x && !ALLERGEN_KEYS.includes(x)))].slice(0, 5);
+  const getAllergens = () => [...document.querySelectorAll('.allergen-cb:checked')].map(x => x.value).concat(otherAllergens()).join(',');
   const setAllergens = (v) => {
-    const set = new Set(String(v || '').split(',').filter(Boolean));
+    const list = String(v || '').split(',').map(x => x.trim()).filter(Boolean);
+    const set = new Set(list);
     document.querySelectorAll('.allergen-cb').forEach(cb => { cb.checked = set.has(cb.value); });
+    document.getElementById('allergen-other').value = list.filter(x => !ALLERGEN_KEYS.includes(x)).join('، ');
   };
 
   // ─── البيانات والترتيب ───
