@@ -63,7 +63,7 @@ async function resolveExtraLinks(storeId, products) {
   const pids = new Set();
   for (const p of products) for (const g of (Array.isArray(p.extras) ? p.extras : [])) for (const o of (g.options || [])) if (Number.isInteger(o.pid)) pids.add(o.pid);
   if (!pids.size) return products;
-  const rows = await rest(`products?client_id=eq.${Number(storeId)}&id=in.(${[...pids].join(',')})&select=id,name,name_en,price,sizes,is_available`).catch(() => []);
+  const rows = await rest(`products?client_id=eq.${Number(storeId)}&id=in.(${[...pids].join(',')})&select=id,name,name_en,price,sizes,is_available,calories`).catch(() => []);
   const byId = new Map(rows.map(r => [r.id, r]));
   for (const p of products) {
     if (!Array.isArray(p.extras)) continue;
@@ -72,7 +72,7 @@ async function resolveExtraLinks(storeId, products) {
       const r = byId.get(o.pid);
       if (!r || r.is_available === false) return [];   // انحذف أو خلص: ما يطلع
       const price = Array.isArray(r.sizes) && r.sizes.length ? Math.min(...r.sizes.map(z => Number(z.price) || 0)) : Number(r.price) || 0;
-      return [{ ...o, name: r.name, ...(r.name_en ? { name_en: r.name_en } : {}), price: round2(price) }];
+      return [{ ...o, name: r.name, ...(r.name_en ? { name_en: r.name_en } : {}), price: round2(price), ...(r.calories != null ? { calories: r.calories } : {}) }];
     }) })).filter(g => g.options.length);
   }
   return products;

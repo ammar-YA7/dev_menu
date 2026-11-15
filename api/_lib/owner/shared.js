@@ -130,6 +130,12 @@ function cleanExtras(list) {
       const en = str(o.name_en, 40, 'اسم الإضافة بالإنجليزي'); if (en) item.name_en = en;
       // مربوط بصنف في المنيو (قسم الإضافات): الاسم والسعر والتوفر منه وقت العرض والطلب
       const pid = int(o.pid); if (Number.isInteger(pid) && pid > 0) item.pid = pid;
+      // السعرات (اختياري): رقم من 0 إلى 5000
+      if (o.calories !== undefined && o.calories !== null && o.calories !== '') {
+        const cal = Number(o.calories);
+        if (!Number.isFinite(cal) || cal < 0 || cal > 5000) throw new ApiError(400, `اكتب عدد سعرات صحيح لـ "${on}"`);
+        item.calories = Math.round(cal);
+      }
       return item;
     });
     const required = g.required === true;

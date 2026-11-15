@@ -717,11 +717,21 @@
   let formExtras = [];
   // الإضافات الاختيارية (أول مجموعة غير إجبارية) تطلع قائمة مباشرة بدون اسم مجموعة. والإجبارية (مثل نوع الخبز) كل وحدة باسمها
   const mainExtras = () => formExtras.find(g => !g.required);
+  // أمثلة الخانات حسب نوع المنشأة: opt = إضافات اختيارية، req = خيارات إجبارية، rq = اسم الاختيار الإجباري
+  const EX_EG = {
+    cafe:       { opt: ['شوت إسبريسو', 'صوص كراميل', 'كريمة'], req: ['حليب كامل', 'حليب لوز', 'حليب شوفان'], rq: 'نوع الحليب', hint: 'مثل الشوت الإضافي والصوصات', reqHint: 'مثل نوع الحليب أو الحجم' },
+    bakery:     { opt: ['صوص شوكولاتة', 'آيس كريم', 'مكسرات'], req: ['شوكولاتة', 'فانيلا', 'فراولة'], rq: 'النكهة', hint: 'مثل الصوصات والآيس كريم', reqHint: 'مثل النكهة أو الحشوة' },
+    restaurant: { opt: ['صوص جبن', 'مخلل', 'جبن إضافي'], req: ['عادي', 'بريوش', 'أسمر'], rq: 'نوع الخبز', hint: 'مثل الصوصات والمخلل', reqHint: 'مثل نوع الخبز أو درجة الطهي' },
+    other:      { opt: ['تغليف هدية', 'إضافة', 'خدمة إضافية'], req: ['الخيار الأول', 'الخيار الثاني', 'الخيار الثالث'], rq: 'نوع الخيار', hint: 'خيارات إضافية يختارها العميل', reqHint: 'خيار يحدده العميل قبل الطلب' }
+  };
+  const exEg = () => { const t = client && client.business_type; return EX_EG[t === 'mixed' ? 'restaurant' : t] || (window.DMSectors && DMSectors.isFood(client) ? EX_EG.restaurant : EX_EG.other); };
   function exOptRows(g, gi) {
+    const eg = exEg(), cal = showCalories();
     return (g.options || []).map((o, oi) => `<div class="flex items-center gap-1.5">
           ${o.pid ? `<span class="flex-1 min-w-0 text-xs font-bold text-ink truncate py-2"><i class="ph-bold ph-link text-emerald-600" title="مربوط بصنف في المنيو"></i> ${esc(exLinkedName(o))}</span>
-          <span class="text-xs font-bold text-ink w-20 text-center" dir="ltr">${esc(money(exLinkedPrice(o)))}</span>` : `<input type="text" maxlength="40" value="${esc(o.name || '')}" oninput="formExtras[${gi}].options[${oi}].name=this.value" placeholder="${g.required ? (['عادي', 'بريوش', 'أسمر'][oi] || 'الخيار') : (['صوص جبن', 'مخلل', 'جبن إضافي'][oi] || 'الإضافة')}" class="input-pro !py-1.5 text-xs flex-1 min-w-0">
-          <input type="number" min="0" step="any" value="${esc(o.price ?? '')}" oninput="formExtras[${gi}].options[${oi}].price=this.value" placeholder="0" dir="ltr" class="input-pro !py-1.5 text-xs w-20" aria-label="السعر">`}
+          <span class="text-xs font-bold text-ink w-20 text-center" dir="ltr">${esc(money(exLinkedPrice(o)))}</span>` : `<input type="text" maxlength="40" value="${esc(o.name || '')}" oninput="formExtras[${gi}].options[${oi}].name=this.value" placeholder="${g.required ? (eg.req[oi] || 'الخيار') : (eg.opt[oi] || 'الإضافة')}" class="input-pro !py-1.5 text-xs flex-1 min-w-0">
+          <input type="number" min="0" step="any" value="${esc(o.price ?? '')}" oninput="formExtras[${gi}].options[${oi}].price=this.value" placeholder="السعر" dir="ltr" class="input-pro !py-1.5 text-xs w-20" aria-label="السعر">${cal ? `
+          <input type="number" min="0" max="5000" step="1" value="${esc(o.calories ?? '')}" oninput="formExtras[${gi}].options[${oi}].calories=this.value" placeholder="سعرات" dir="ltr" class="input-pro !py-1.5 text-xs w-20" aria-label="السعرات الحرارية">` : ''}`}
           <button type="button" onclick="formExtras[${gi}].options.splice(${oi}, 1); renderExtras()" aria-label="حذف" class="shrink-0 w-8 h-8 rounded-lg text-red-600 hover:bg-red-500/10"><i class="ph-bold ph-x"></i></button>
         </div>`).join('') + `<div class="flex flex-wrap gap-x-3"><button type="button" onclick="addExOpt(${gi})" class="text-[11px] font-bold text-brand hover:underline py-1"><i class="ph-bold ph-plus"></i> ${g.required ? 'خيار' : 'إضافة'}</button>
         <button type="button" onclick="pickExFromMenu(${gi})" class="text-[11px] font-bold text-brand hover:underline py-1"><i class="ph-bold ph-list-checks"></i> اختر من المنيو</button></div>`;
@@ -734,12 +744,13 @@
       <div class="bg-white rounded-lg border border-brand/15 p-2 space-y-1.5">
         <div class="flex items-center gap-1.5">
           <span class="shrink-0 text-[10.5px] font-black px-2 py-1 rounded-md ${g.required ? 'bg-amber-100 text-amber-900' : 'bg-brand/10 text-ink'}">${g.required ? 'إجباري' : 'اختياري'}</span>
-          <input type="text" maxlength="40" value="${esc(g.name || '')}" oninput="formExtras[${gi}].name=this.value" placeholder="${g.required ? 'مثل: نوع الخبز' : 'اسم المجموعة'}" aria-label="اسم الاختيار" class="input-pro !py-1.5 text-xs flex-1 min-w-0 font-bold">
+          <input type="text" maxlength="40" value="${esc(g.name || '')}" oninput="formExtras[${gi}].name=this.value" placeholder="${g.required ? `مثل: ${exEg().rq}` : 'اسم المجموعة'}" aria-label="اسم الاختيار" class="input-pro !py-1.5 text-xs flex-1 min-w-0 font-bold">
           <button type="button" onclick="formExtras.splice(${gi}, 1); renderExtras()" aria-label="حذف" class="shrink-0 w-8 h-8 rounded-lg bg-red-500/10 text-red-600 border border-red-500/20"><i class="ph-bold ph-trash"></i></button>
         </div>
         ${g.required ? '<p class="text-[10.5px] text-ink">يختار العميل واحداً منها قبل أن يضيف الطبق.</p>' : ''}
         ${exOptRows(g, gi)}
-      </div>`).join('') + `<button type="button" onclick="addReqGroup()" ${formExtras.length >= 6 ? 'disabled' : ''} class="w-full text-[11px] font-bold bg-white border border-dashed border-brand/40 text-ink rounded-lg py-2 disabled:opacity-40"><i class="ph-bold ph-plus"></i> اختيار إجباري (مثل نوع الخبز أو درجة الطهي)</button>`;
+      </div>`).join('') + `<button type="button" onclick="addReqGroup()" ${formExtras.length >= 6 ? 'disabled' : ''} class="w-full text-[11px] font-bold bg-white border border-dashed border-brand/40 text-ink rounded-lg py-2 disabled:opacity-40"><i class="ph-bold ph-plus"></i> اختيار إجباري (${exEg().reqHint})</button>`;
+    const hint = document.getElementById('extras-hint'); if (hint) hint.textContent = `${exEg().hint}: يختار العميل منها ما يشاء. اكتب الاسم والسعر${showCalories() ? ' والسعرات' : ''}، أو اخترها من المنيو. اترك السعر فارغاً إذا كانت بدون سعر.`;
     const has = formExtras.some(g => (g.options || []).length);
     document.getElementById('extras-copy-btn').classList.toggle('hidden', !(editingProductId && has));
   }
@@ -782,7 +793,8 @@
     const out = [];
     for (const g of formExtras) {
       const name = String(g.name || '').trim() || (!g.required && g === mainExtras() ? 'الإضافات' : '');
-      const options = (g.options || []).map(o => o.pid ? { name: exLinkedName(o), price: exLinkedPrice(o), pid: o.pid } : { name: String(o.name || '').trim(), price: o.price === '' || o.price == null ? 0 : parseFloat(o.price) }).filter(o => o.name);
+      const options = (g.options || []).map(o => o.pid ? { name: exLinkedName(o), price: exLinkedPrice(o), pid: o.pid } : { name: String(o.name || '').trim(), price: o.price === '' || o.price == null ? 0 : parseFloat(o.price), ...(o.calories === '' || o.calories == null ? {} : { calories: parseFloat(o.calories) }) }).filter(o => o.name);
+      const badCal = options.find(o => o.calories !== undefined && (isNaN(o.calories) || o.calories < 0 || o.calories > 5000)); if (badCal) { showToast(`اكتب عدد سعرات صحيح لـ «${badCal.name}»`, true); return null; }
       if (!options.length) { if (g === mainExtras() || !name) continue; showToast(`أضف خيار واحد على الأقل في «${name}»`, true); return null; }
       if (!name) { showToast('اكتب اسم الاختيار الإجباري، مثل: نوع الخبز', true); return null; }
       const bad = options.find(o => isNaN(o.price) || o.price < 0); if (bad) { showToast(`اكتب سعراً صحيحاً لـ «${bad.name}»`, true); return null; }
