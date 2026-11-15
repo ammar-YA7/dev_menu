@@ -586,6 +586,8 @@
     </div>
     <div id="occasion-greeting" class="hidden relative z-[1]"></div>
     <div id="info-bar" class="hidden flex-wrap justify-center gap-2 pt-1"></div>
+    <!-- حسابات المحل في التواصل: فوق تحت الاسم عشان يشوفها العميل أول ما يفتح المنيو -->
+    <div id="social-links-container" class="hidden flex justify-center items-center gap-2.5 pt-1"></div>
   </header>
 
   <!-- قائمة الانتظار -->
@@ -635,8 +637,6 @@
   <!-- ملاحظة السعرات (هيئة الغذاء والدواء) -->
   <p id="calorie-note" class="hidden text-center text-[10px] text-gray-400 leading-relaxed px-4"></p>
 
-  <!-- أزرار التواصل الاجتماعي -->
-  <div id="social-links-container" class="hidden pt-4 pb-2 border-t border-white/10 flex justify-center items-center gap-3"></div>
 
   <!-- الروابط المخصصة -->
   <div id="custom-links" class="hidden space-y-2"></div>
@@ -1468,7 +1468,7 @@
 
   function renderSocialLinks(p) {
     const container = document.getElementById('social-links-container');
-    const base = 'w-10 h-10 rounded-full flex items-center justify-center transition border';
+    const base = 'w-9 h-9 rounded-full flex items-center justify-center transition border text-sm';
     const plain = `${base} bg-white/10 hover:bg-white/20 border-white/20 text-white`;
     const wa = String(p.whatsapp_number || '').replace(/\D/g, '');
     const links = [
