@@ -372,6 +372,7 @@
   .ix-arrow svg { width: 20px; height: 20px; }
   .ix-heropic .ix-pic.frame img, .ix-heropic .ix-pic.frame video { border-radius: clamp(24px, 4vmin, 40px); }
   .ix-float { animation: ixFloat 6s ease-in-out infinite; }
+  .ix-heropic .ix-float:has(img) { cursor: zoom-in; }
   @keyframes ixFloat { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-10px) scale(1.03); } }
   .ix-hname { margin: 0; font-size: clamp(30px, 5.6vmin, 64px); font-weight: 700; line-height: 1.2; color: var(--fg); }
   .ix-hprice { margin: 10px 0 0; font-size: clamp(32px, 6vmin, 64px); line-height: 1.15; font-weight: 700; color: var(--price); }
@@ -2537,12 +2538,12 @@
     closeImgViewer();
   }
   // الصورة بملء الشاشة (تقدر تكبّرها بإصبعين)
-  function openImgViewer() {
-    const src = document.getElementById('modalImg').getAttribute('src');
-    if (!src || !document.getElementById('modalVid').classList.contains('hidden')) return;   // الفيديو ما يفتح بملء الشاشة
+  function openImgViewer(srcIn, titleIn) {
+    const src = srcIn || document.getElementById('modalImg').getAttribute('src');
+    if (!src || (!srcIn && !document.getElementById('modalVid').classList.contains('hidden'))) return;   // الفيديو ما يفتح بملء الشاشة
     const v = document.getElementById('imgViewer');
     v.querySelector('img').src = src;
-    v.querySelector('p').textContent = document.getElementById('modalTitle').textContent;
+    v.querySelector('p').textContent = titleIn != null ? titleIn : document.getElementById('modalTitle').textContent;
     v.classList.remove('hidden'); v.classList.add('flex');
   }
   function closeImgViewer() { const v = document.getElementById('imgViewer'); v.classList.add('hidden'); v.classList.remove('flex'); }
@@ -2971,6 +2972,12 @@
     const ch = e.target.closest('[data-ix-chip]');
     if (ch) { const items = ixHomeItems(); return ixSwitchCat(ch.dataset.ixChip, items.findIndex(x => x.key === ch.dataset.ixChip) > items.findIndex(x => x.key === ixKey) ? 1 : -1); }
     const pr = e.target.closest('[data-ix-prod]'); if (pr) return ixGo('prod', pr.dataset.ixProd, pr.querySelector('.ix-pic'));
+    // صورة الطبق بالكبير: الضغط عليها يفتحها كاملة بملء الشاشة (الصورة الأصلية، مو المفرّغة)
+    const hero = e.target.closest('.ix-heropic .ix-float');
+    if (hero && hero.querySelector('img')) {
+      const p = productById(ixProd); if (!p) return;
+      return openImgViewer(safeUrl(p.image_url) || safeUrl(p.cutout_url), productName(p));
+    }
     const st = e.target.closest('[data-ix-step]'); if (st) return ixStepProd(Number(st.dataset.ixStep));
     const sw = e.target.closest('[data-ix-swap]');
     if (sw) { const list = ixList(); return ixSwap(sw.dataset.ixSwap, list.findIndex(x => String(x.id) === sw.dataset.ixSwap) < list.findIndex(x => x.id === ixProd) ? -1 : 1); }
