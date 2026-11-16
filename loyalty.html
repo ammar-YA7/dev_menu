@@ -27,6 +27,18 @@
   .btn-gold { background: var(--gold); color: #15271b; }
   .btn-ghost { background: color-mix(in srgb, var(--brand) 8%, #fff); color: var(--brand); border: 2px solid color-mix(in srgb, var(--brand) 45%, transparent); }
   /* زر المحفظة: أسود مثل زر آبل الرسمي، يبان على أي لون */
+  /* الباقة داخل البطاقة: سطر أنيق برصيدها وشريط تقدّم، بنفس لون خط البطاقة */
+  .pkg-band { margin-top: 16px; padding: 12px 14px; border-radius: 16px; background: color-mix(in srgb, var(--ink, #fff) 12%, transparent); border: 1px solid color-mix(in srgb, var(--ink, #fff) 18%, transparent); color: var(--ink, #fff); }
+  .pkg-band .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .pkg-band .nm { display: flex; align-items: center; gap: 8px; min-width: 0; font-weight: 700; font-size: 14px; }
+  .pkg-band .nm span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pkg-band .nm i { font-size: 17px; opacity: .85; }
+  .pkg-band .left { font-size: 12px; opacity: .8; white-space: nowrap; }
+  .pkg-band .left b { font-size: 20px; opacity: 1; font-weight: 800; margin-inline-start: 2px; }
+  .pkg-band .bar { margin-top: 9px; height: 6px; border-radius: 99px; background: color-mix(in srgb, var(--ink, #fff) 18%, transparent); overflow: hidden; }
+  .pkg-band .bar span { display: block; height: 100%; border-radius: 99px; background: var(--ink, #fff); transition: width .5s ease; }
+  .pkg-band .sub { margin-top: 7px; font-size: 11.5px; opacity: .72; display: flex; justify-content: space-between; gap: 8px; }
+  .pkg-band.low .bar span { background: #f59e0b; }
   body.no-stamps #c-stamps, body.no-stamps #c-reward, body.no-stamps #stamp-btn, body.no-stamps #c-purchase,
   body.no-stamps #j-card, body.no-stamps #j-purchase, body.no-stamps #c-survey, body.no-stamps .happy-box { display: none !important; }
   .pk-opt { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; text-align: right; border: 1.5px solid rgba(35,61,44,.18); border-radius: 16px; padding: 12px 14px; background: #fff; font-weight: 700; }
@@ -161,6 +173,7 @@
         <p class="text-sm opacity-75 text-left shrink-0" dir="ltr"><b id="c-count" class="text-2xl"></b></p>
       </div>
       <div id="c-stamps" class="stamps"></div>
+      <div id="c-pkg-band" class="pkg-band" hidden></div>
       <div class="lcard-holder">
         <div class="min-w-0"><small>صاحب البطاقة</small><b id="c-holder" class="truncate"></b></div>
         <button type="button" id="c-member" class="text-left shrink-0" aria-label="انسخ رقم عضويتك"><small>رقم العضوية <i class="ph-bold ph-copy"></i></small><b dir="ltr" id="c-member-id"></b></button>
@@ -650,7 +663,7 @@
   let packages = [], plans = [], pkCur = 'SAR', stampsOn = true, subsOn = false, jPick = null;
   const pkEsc = (t) => String(t ?? '').replace(/[<>&"]/g, '');
   const pkMoney = (n) => DM.money ? DM.money(Number(n), pkCur) : String(n);
-  const pkDate = (iso) => new Date(iso).toLocaleDateString('ar-SA-u-nu-latn', { day: 'numeric', month: 'long' });
+  const pkDate = (iso) => new Date(iso).toLocaleDateString('ar-SA-u-ca-gregory-nu-latn', { day: 'numeric', month: 'long' });
   function setSubs(r) {
     if (!r) return;
     if ('stamps_on' in r) stampsOn = r.stamps_on !== false;
@@ -662,8 +675,19 @@
   const planLine = (p) => `${p.uses} مرة${p.days ? ` · صالحة ${p.days} يوم` : ''}`;
   function renderPackages() {
     const box = $('c-pkgs');
-    const mine = packages.filter(p => !p.pending), waiting = packages.filter(p => p.pending);
+    const all = packages.filter(p => !p.pending), waiting = packages.filter(p => p.pending);
     const offer = subsOn ? plans.filter(pl => !waiting.some(w => w.plan_name === pl.name)) : [];
+    // الباقة الحالية تطلع داخل البطاقة نفسها، واللي بعدها (لو أكثر من باقة) تحت
+    const top = all[0] || null, mine = all.slice(1);
+    const band = $('c-pkg-band');
+    band.hidden = !top;
+    if (top) {
+      const pct = Math.max(0, Math.min(100, Math.round(top.remaining / Math.max(1, top.total) * 100)));
+      band.classList.toggle('low', top.remaining <= 2);
+      band.innerHTML = `${stampsOn ? `<div class="row"><p class="nm"><i class="ph-bold ph-package"></i><span>${pkEsc(top.plan_name)}</span></p><p class="left">باقي<b dir="ltr">${top.remaining}</b> / ${top.total}</p></div>` : ''}
+        <div class="bar"><span style="width:${pct}%"></span></div>
+        <p class="sub"><span>${top.remaining <= 0 ? 'خلصت باقتك' : top.remaining <= 2 ? 'قربت تخلص، جدّدها من الكاشير' : 'اعرض الكود للكاشير ويخصم منها'}</span><span>${top.expires_at ? `تنتهي ${pkDate(top.expires_at)}` : 'بدون انتهاء'}</span></p>`;
+    }
     let html = mine.map(p => `<div class="card p-4 flex items-center justify-between gap-3">
       <div class="min-w-0"><p class="font-bold truncate"><i class="ph-bold ph-package"></i> باقة ${pkEsc(p.plan_name)}</p>
         <p class="text-xs opacity-70 mt-0.5">اعرض الكود للكاشير ويخصم منها${p.expires_at ? ` · تنتهي ${pkDate(p.expires_at)}` : ''}</p></div>
@@ -671,7 +695,7 @@
     html += waiting.map(p => `<div class="card p-4 space-y-1" style="border-color:color-mix(in srgb, var(--brand) 40%, transparent)">
       <p class="font-bold"><i class="ph-bold ph-hourglass-medium"></i> باقة ${pkEsc(p.plan_name)}: بانتظار الدفع</p>
       <p class="text-sm opacity-75">ادفع في الكاشير واعرض له الكود تحت، ويفعّلها لك (${p.total} مرة).</p></div>`).join('');
-    if (offer.length && !mine.length) html += `<div class="card p-4 space-y-2.5"><p class="font-bold"><i class="ph-bold ph-package"></i> اشترك في باقة ووفّر</p>
+    if (offer.length && !all.length) html += `<div class="card p-4 space-y-2.5"><p class="font-bold"><i class="ph-bold ph-package"></i> اشترك في باقة ووفّر</p>
       ${offer.map(pl => `<button type="button" class="pk-opt" data-req="${pl.id}"><span>${pkEsc(pl.name)}<small>${planLine(pl)}</small></span>${pl.price != null ? `<b class="shrink-0">${pkMoney(pl.price)}</b>` : ''}</button>`).join('')}
       <p class="text-xs opacity-60">تختارها هنا، وتدفعها في الكاشير ويفعّلها لك.</p></div>`;
     box.innerHTML = html;

@@ -42,7 +42,9 @@ function passBody({ store, settings, card, url, restoreUrl, lat, lng, notice, st
     // المكافأة وحامل البطاقة بس (عدد الأختام فوق، والأختام نفسها في الصورة)
     secondaryFields: [{ label: L(s >= n ? 'مكافأتك جاهزة' : 'المكافأة'), value: (card.lang === 'en' && settings.reward_en) || settings.reward }, ...(card.name ? [{ label: L('صاحب البطاقة'), value: String(card.name).slice(0, 40) }] : [])],
     // رسالة الباقة نفسها هي الإشعار: لو معها رسالة جديدة ما نحط إشعار على الخانة (حقلين لهم إشعار = «تم تغيير البطاقة»)
-    ...(pkg ? { auxiliaryFields: [{ label: L(`باقة ${pkg.plan_name}`).slice(0, 40), value: L(`باقي ${pkg.remaining} من ${pkg.total}`), ...(fresh && String(notice || '').trim() ? {} : { changeMessage: L('رصيد باقتك صار %@') }) }] } : {}),
+    // الباقة في سطر تحت: اسمها، ورصيدها (والانتهاء في ظهر البطاقة)
+    ...(pkg ? { auxiliaryFields: [{ label: L('الباقة'), value: String(pkg.plan_name).slice(0, 40) },
+      { label: L('المتبقي'), value: `${pkg.remaining} / ${pkg.total}`, ...(fresh && String(notice || '').trim() ? {} : { changeMessage: L('رصيد باقتك صار %@') }) }] } : {}),
     backFields: [
       { label: L('رقم العضوية'), value: `#${card.member_no || ''}` },
       { label: L('زياراتك'), value: String(card.visits || 0) },
@@ -57,6 +59,7 @@ function passBody({ store, settings, card, url, restoreUrl, lat, lng, notice, st
     // فبدون رسالة ما نرسل الخانة أصلاً، والبطاقة تحتفظ برسالتها الحالية
     ...(String(notice || '').trim() ? { notification: String(notice).slice(0, 250) } : {})
   };
+  if (pkg && pkg.expires_at && !stampsOff) body.backFields.unshift({ label: L('باقتك تنتهي'), value: new Date(pkg.expires_at).toLocaleDateString('ar-SA-u-ca-gregory-nu-latn', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Riyadh' }) });
   // المحل عنده الاشتراكات بس: البطاقة تعرض الباقة ورصيدها بدل الأختام والمكافأة
   if (stampsOff) {
     body.description = L(`بطاقة ${store.name || ''}`).slice(0, 120);
@@ -66,7 +69,7 @@ function passBody({ store, settings, card, url, restoreUrl, lat, lng, notice, st
     delete body.auxiliaryFields;
     body.backFields = body.backFields.filter(f => ![L('زياراتك'), L('طريقة الختم')].includes(f.label));
     body.backFields.splice(1, 0, { label: L('طريقة الاستخدام'), value: L('كل ما جيتنا اعرض الكود للكاشير، وتنخصم مرة من باقتك.') });
-    if (pkg && pkg.expires_at) body.auxiliaryFields = [{ label: L('تنتهي'), value: new Date(pkg.expires_at).toLocaleDateString('ar-SA-u-nu-latn', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Riyadh' }) }];
+    if (pkg && pkg.expires_at) body.auxiliaryFields = [{ label: L('تنتهي'), value: new Date(pkg.expires_at).toLocaleDateString('ar-SA-u-ca-gregory-nu-latn', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Riyadh' }) }];
   }
   if (full) {
     // لون المحل بدل اللون الجاهز (ما نرسل الاثنين، عشان الجاهز ما يغطي عليه)

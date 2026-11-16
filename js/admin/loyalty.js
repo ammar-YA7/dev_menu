@@ -371,7 +371,7 @@
         <div class="h-2 rounded-full bg-brand/10 overflow-hidden"><div class="h-full rounded-full bg-brick/70" style="width:${Math.round(v / fb.total * 100)}%"></div></div></div>`).join('') +
         ((fb.latest || []).length ? `<div class="pt-3 mt-1 border-t border-brand/10"><p class="text-[12px] font-bold mb-2">آخر الردود</p><div class="space-y-1.5 max-h-72 overflow-y-auto">${fb.latest.map(r => `
           <button type="button" onclick="openLyMember(${Number(r.card_id)})" class="w-full text-right rounded-lg bg-brand/[0.04] hover:bg-brand/[0.08] px-2.5 py-2 block">
-            <span class="flex items-center justify-between gap-2 text-[12px]"><b>${esc(r.name || `عضو #${r.no || ''}`)}</b><span class="text-ink" dir="ltr">${new Date(r.created_at).toLocaleDateString('ar-SA-u-nu-latn', { day: 'numeric', month: 'short' })}</span></span>
+            <span class="flex items-center justify-between gap-2 text-[12px]"><b>${esc(r.name || `عضو #${r.no || ''}`)}</b><span class="text-ink" dir="ltr">${new Date(r.created_at).toLocaleDateString('ar-SA-u-ca-gregory-nu-latn', { day: 'numeric', month: 'short' })}</span></span>
             <span class="block text-[12px] text-brick font-semibold">${RS[r.reason] || r.reason}</span>
             ${r.note ? `<span class="block text-[12px] text-ink">«${esc(r.note)}»</span>` : ''}</button>`).join('')}</div></div>` : '')
         : `<p class="text-xs text-ink">لا توجد ردود بعد. من يعود بعد غياب ${(ly.data.settings.feedback && ly.data.settings.feedback.days) || 30} يوم ويختم من شاشة الختم، يُسأل عن سبب غيابه.</p>`;
@@ -597,7 +597,7 @@
 
   // ─── الباقات المدفوعة مسبقاً (تبويب «الباقات») ───
   const pk = { plans: [], cards: [], q: '' };
-  const pkDate = (iso) => new Date(iso).toLocaleDateString('ar-SA-u-nu-latn', { day: 'numeric', month: 'short', year: 'numeric' });
+  const pkDate = (iso) => new Date(iso).toLocaleDateString('ar-SA-u-ca-gregory-nu-latn', { day: 'numeric', month: 'short', year: 'numeric' });
   // ─── تصميم بطاقة الاشتراكات ───
   const PKD_COLORS = ['#233d2c', '#3f7a4a', '#1b1b1b', '#0f172a', '#7c2d12', '#be185d', '#1e4fa3', '#6b4e3d'];
   pk.design = {}; pk.saved = {}; pk.dirty = false;

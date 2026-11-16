@@ -23,7 +23,7 @@ function parsePkgQr(storeIds, value) {
 
 const pageUrl = (store, c) => { const u = storeLink(store.client_slug, 'package'); return `${u}${u.includes('?') ? '&' : '?'}t=${encodeURIComponent(c.token)}`; };
 const expired = (c) => !!c.expires_at && Date.parse(c.expires_at) <= Date.now();
-const dateText = (iso) => new Date(iso).toLocaleDateString('ar-SA-u-nu-latn', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Riyadh' });
+const dateText = (iso) => new Date(iso).toLocaleDateString('ar-SA-u-ca-gregory-nu-latn', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Riyadh' });
 
 // اللي يشوفه الزبون والكاشير (بدون الرقم السري للبطاقة)
 const cardView = (c) => ({
