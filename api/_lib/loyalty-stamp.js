@@ -26,13 +26,17 @@ async function purchaseStamp(storeId, cardId, settings = null, branchId = null) 
   }
   const count = isHappyNow(settings) ? 2 : 1;
   const r = await rpc('server_loyalty_stamp', { p_card: cardId, p_cooldown_hours: settings.cooldown_hours, p_needed: settings.needed, p_distance: null, p_count: count });
+  let bonus = 0;
   if (r.ok) {
+    // رجع بعد رسائل الاسترجاع: تقف السلسلة، وله ختم الهدية لو وصلته الثالثة
+    // (حتى لو صاحب المحل وقّف الرسائل بعدها: الهدية انوعد فيها)
+    if ((await require('./comeback').comebackReturn(cardId, settings)).bonus) bonus = 1;
     await tagBranch(cardId, branchId);
     await pushWalletCards(storeId, { cardIds: [cardId] }).catch(e => console.error('WALLET_SYNC', e.message));
     // لوحة التاجر المفتوحة تتحدث على طول (أرقام الولاء والرسم)
     poke(topic('owner', storeId), 'loyalty').catch(() => {});
   }
-  return { stamped: !!r.ok, count: r.ok ? count : 0, reason: r.ok ? null : r.reason, next_at: r.next_at || null };
+  return { stamped: !!r.ok, count: r.ok ? count + bonus : 0, bonus: bonus > 0, reason: r.ok ? null : r.reason, next_at: r.next_at || null };
 }
 
 // الزبون مختوم قبل شوي؟ يرجّع وقت الختم الجاي أو null

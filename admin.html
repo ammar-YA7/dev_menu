@@ -1752,6 +1752,22 @@
                 </div>
                 <textarea id="ly-redeem-text" rows="2" maxlength="200" class="input-pro hidden" placeholder="مثلاً: بالعافية عليك! شكراً لوفائك، وبطاقتك الجديدة بدأت"></textarea>
               </div>
+              <div data-lytab="messages" class="space-y-2 pt-3">
+                <h4 class="text-xs font-bold text-ink border-b border-ink/10 pb-1.5">استرجاع العميل الغائب</h4>
+                <label class="flex items-center justify-between gap-3"><span><b class="text-[13px] block"><i class="ph-bold ph-arrow-u-up-left"></i> رسائل تلقائية لمن انقطع عن الزيارة</b><span class="text-[11px] text-ink">تصل ثلاث رسائل على بطاقته في المحفظة: الأولى بعد الغياب، ثم بعد أسبوع، ثم بعد أسبوع آخر. تتوقف فور عودته، وتبدأ من جديد إذا غاب مرة أخرى.</span></span>
+                  <input type="checkbox" id="ly-cb" class="w-5 h-5 accent-[#384f3d]" onchange="document.getElementById('ly-cb-box').classList.toggle('hidden', !this.checked)"></label>
+                <div id="ly-cb-box" class="space-y-2.5 hidden">
+                  <label class="flex items-center justify-between gap-3"><span class="text-[12px] text-ink">تبدأ الرسالة الأولى إذا غاب</span>
+                    <select id="ly-cb-days" class="input-pro !w-auto !min-h-0 !py-1.5" onchange="lyCbLabels()"><option value="14">14 يوماً</option><option value="21">21 يوماً</option><option value="30">30 يوماً</option><option value="45">45 يوماً</option></select></label>
+                  <div class="ly-cb-step"><p id="ly-cb-l1" class="text-[12px] font-bold mb-1"></p><textarea id="ly-cb-1" rows="2" maxlength="150" class="input-pro"></textarea></div>
+                  <div class="ly-cb-step"><p id="ly-cb-l2" class="text-[12px] font-bold mb-1"></p><textarea id="ly-cb-2" rows="2" maxlength="150" class="input-pro"></textarea></div>
+                  <div class="ly-cb-step"><p id="ly-cb-l3" class="text-[12px] font-bold mb-1"></p><textarea id="ly-cb-3" rows="2" maxlength="150" class="input-pro"></textarea></div>
+                  <label class="flex items-center justify-between gap-3"><span class="text-[12px] text-ink">الرسالة الثالثة تمنحه ختماً هدية يُضاف إلى بطاقته عند عودته</span>
+                    <input type="checkbox" id="ly-cb-gift" class="w-4 h-4 accent-[#384f3d]" onchange="lyCbGiftText()"></label>
+                  <p class="text-[11px] text-ink leading-relaxed">يمكنك استخدام: <b dir="ltr">{name}</b> اسم العميل، <b dir="ltr">{store}</b> اسم المحل، <b dir="ltr">{left}</b> الأختام المتبقية، <b dir="ltr">{reward}</b> المكافأة. إذا كانت مكافأته جاهزة، تذكّره الرسالة الأولى بها بدلاً من ذلك.</p>
+                  <p id="ly-cb-stats" class="text-[12px] rounded-lg bg-brand/[0.05] px-3 py-2 hidden"></p>
+                </div>
+              </div>
               <div data-lytab="settings" class="space-y-3 pt-3">
                 <h4 class="text-xs font-bold text-ink border-b border-ink/10 pb-1.5">مميزات إضافية</h4>
                 <label class="flex items-center justify-between gap-3"><span><b class="text-[13px] block"><i class="ph-bold ph-clock"></i> ساعات الهدوء: الختم فيها دبل</b><span class="text-[11px] text-ink">املأ الأوقات التي يكون فيها المحل هادئاً، بدلاً من خصم للجميع</span></span>

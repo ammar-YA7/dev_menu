@@ -13,7 +13,7 @@ const wallet = require('./wallet');
 const { riyadhDayStart } = require('./waitlist');
 
 const GOOGLE_DAILY = 3, READY_RESERVE = 1, DAY = 864e5, RETRY_MS = 2 * 60e3, MAX_ATTEMPTS = 3;
-const PRIORITY = { pager_msg: 5, loyalty_msg: 5, loyalty_ai: 7, winback: 8 };
+const PRIORITY = { pager_msg: 5, loyalty_msg: 5, loyalty_ai: 7, loyalty_comeback: 8, winback: 8 };
 const isLoyalty = (kind) => kind.startsWith('loyalty');
 
 // رسالة المحل: سطر لكل بطاقة. يرجّع كم بطاقة انضافت

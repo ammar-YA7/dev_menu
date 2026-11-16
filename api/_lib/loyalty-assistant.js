@@ -139,7 +139,8 @@ function pickGuests(cards, settings, now = Date.now()) {
     if (c.stamps >= settings.needed && days >= 3 && sinceAi >= 7) { kind = 'ready'; rank = 4; }
     else if (c.stamps === settings.needed - 1 && days >= 4 && sinceAi >= 7) { kind = 'almost'; rank = 3; }
     else if (c.visits === 1 && days >= 5 && days <= 30 && !c.ai_last_at) { kind = 'second'; rank = 2; }
-    else if (days >= Math.max(14, (gap || 0) * 2) && days <= 120 && sinceAi >= 14) { kind = 'miss'; rank = 1; }
+    // رسائل الاسترجاع شغّالة: هي اللي تكلّم الغايب، فالمساعد ما يرسل له اشتياق ثاني
+    else if (!(settings.comeback && settings.comeback.enabled) && days >= Math.max(14, (gap || 0) * 2) && days <= 120 && sinceAi >= 14) { kind = 'miss'; rank = 1; }
     if (kind) out.push({ card: c, kind, rank, days, gap });
   }
   return out.sort((a, b) => b.rank - a.rank || b.card.visits - a.card.visits);

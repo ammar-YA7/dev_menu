@@ -20,13 +20,16 @@ module.exports.pre = async function pre(action, req, b) {
     const spot = here.id === store.id ? null : (await rest(`clients?id=eq.${here.id}&select=loyalty_lat,loyalty_lng`).catch(() => []))[0];
     const extra = (await rest(`clients?id=eq.${store.id}&select=loyalty_enabled,loyalty_settings,loyalty_lat,loyalty_lng,loyalty_ai,loyalty_near_lines,business_type`))[0] || {};
     const day = 864e5, iso = (n) => q(new Date(Date.now() - n * day).toISOString());
-    const [cards, stamps7, redeemed, messages, feedback, gifts] = await Promise.all([
+    const [cards, stamps7, redeemed, messages, feedback, gifts, cbSent, cbBack] = await Promise.all([
       rest(`loyalty_cards?client_id=eq.${store.id}&select=id,member_no,name,phone,stamps,visits,rewards,last_stamp_at,created_at&order=last_stamp_at.desc.nullslast&limit=500`),
       rest(`loyalty_events?client_id=eq.${store.id}&kind=eq.stamp&created_at=gte.${iso(7)}&select=id,card_id,created_at&order=id.desc&limit=5000`),
       rest(`loyalty_events?client_id=eq.${store.id}&kind=eq.redeem&select=id`),
-      rest(`loyalty_messages?client_id=eq.${store.id}&or=${q('(kind.is.null,kind.not.in.(pager,away))')}&select=id,card_id,body,wallet_sent,created_at,source,kind,branch_id&order=id.desc&limit=15`).catch(() => []),
+      rest(`loyalty_messages?client_id=eq.${store.id}&or=${q('(kind.is.null,kind.not.in.(pager,away,comeback))')}&select=id,card_id,body,wallet_sent,created_at,source,kind,branch_id&order=id.desc&limit=15`).catch(() => []),
       rest(`loyalty_feedback?client_id=eq.${store.id}&created_at=gte.${iso(90)}&select=reason,note,created_at,card_id&order=id.desc&limit=500`).catch(() => []),
-      rest(`loyalty_gifts?client_id=eq.${store.id}&select=status,new_member,created_at&limit=5000`).catch(() => [])
+      rest(`loyalty_gifts?client_id=eq.${store.id}&select=status,new_member,created_at&limit=5000`).catch(() => []),
+      // استرجاع اللي غاب: لمين وصلت رسائله، ومين رجع بعدها (آخر 90 يوم)
+      rest(`loyalty_messages?client_id=eq.${store.id}&kind=eq.comeback&created_at=gte.${iso(90)}&select=card_id&limit=10000`).catch(() => []),
+      rest(`loyalty_events?client_id=eq.${store.id}&kind=eq.comeback&created_at=gte.${iso(90)}&select=card_id&limit=10000`).catch(() => [])
     ]);
     // عملاء كل فرع (للي عنده أكثر من فرع)
     let branchStats = null;
@@ -58,6 +61,7 @@ module.exports.pre = async function pre(action, req, b) {
       enabled: extra.loyalty_enabled === true, settings: normalizeLoyalty(extra.loyalty_settings, extra),
       location_set: validPoint(spot ? spot.loyalty_lat : extra.loyalty_lat, spot ? spot.loyalty_lng : extra.loyalty_lng), slug: here.client_slug,
       stats: { members: cards.length, active30: active, away30: cards.filter(c => c.last_stamp_at && Date.parse(c.last_stamp_at) < Date.now() - 30 * day).length, stamps7: stamps7.length, redeemed: redeemed.length, returning7: returning }, week, recent,
+      comeback: { reached: new Set(cbSent.map(m => m.card_id)).size, returned: new Set(cbBack.map(e => e.card_id)).size },
       cards: cards.slice(0, 50), messages, wallet: wallet.configured(), branches: branchStats,
       entitled: PLANS.has(store, 'loyalty'),
       ai: extra.loyalty_ai === true, near_lines: Array.isArray(extra.loyalty_near_lines) ? extra.loyalty_near_lines : [],
@@ -392,7 +396,7 @@ module.exports.post = async function post(action, req, b, env) {
     const extra = (await rest(`clients?id=eq.${sid}&select=loyalty_settings`))[0] || {};
     const settings = normalizeLoyalty(extra.loyalty_settings);
     const r = await rpc('server_loyalty_stamp', { p_card: id, p_cooldown_hours: 0, p_needed: settings.needed, p_distance: null });
-    if (r.ok) await tagBranch(id, await atBranch());
+    if (r.ok) { await require('../comeback').comebackReturn(id, settings); await tagBranch(id, await atBranch()); }
     if (!r.ok && r.reason === 'FULL') throw new ApiError(409, 'بطاقته مكتملة، لازم يستخدم المكافأة أول');
     await pushWalletCards(sid, { cardIds: [id] });
     const fresh = (await rest(`loyalty_cards?id=eq.${id}&select=id,stamps,visits,rewards,last_stamp_at`))[0];

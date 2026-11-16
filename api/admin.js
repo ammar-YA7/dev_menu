@@ -119,7 +119,7 @@ async function run(req, user, action) {
       cards:    `pager_cards?created_at=gte.${q(since)}&select=client_id,created_at&order=created_at`,
       notify:   `pager_messages?created_at=gte.${q(since)}&select=client_id,created_at&order=created_at`,
       waitlist: `waitlist_entries?created_at=gte.${q(since)}&select=client_id,created_at&order=created_at`,
-      stamps:   `loyalty_events?created_at=gte.${q(since)}&select=client_id,created_at&order=created_at`,
+      stamps:   `loyalty_events?kind=eq.stamp&created_at=gte.${q(since)}&select=client_id,created_at&order=created_at`,
       lmsg:     `loyalty_messages?created_at=gte.${q(since)}&select=client_id,created_at&order=created_at`
     };
     const all = await rest('clients?select=id,parent_id');

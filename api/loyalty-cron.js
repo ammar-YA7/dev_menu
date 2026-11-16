@@ -9,10 +9,27 @@ const { rest, handler } = require('./_lib/core');
 const { assertCronKey } = require('./_lib/cron');
 const { runAssistant, pushWalletCards } = require('./_lib/loyalty-assistant');
 const { runWinback } = require('./_lib/winback');
+const { runComeback } = require('./_lib/comeback');
+
+
+// استرجاع اللي غاب (بطاقة الأختام): 3 رسائل لكل غيبة
+async function comebackAll(started, limitMs) {
+  const cbStores = await rest(`clients?loyalty_enabled=is.true&loyalty_settings->comeback->>enabled=eq.true&is_active=is.true&parent_id=is.null&select=id&order=id.asc&limit=300`).catch(() => []);
+  const out = [];
+  for (const s of cbStores) {
+    if (Date.now() - started > limitMs) break;
+    try { out.push({ store: s.id, ...(await runComeback(s.id)) }); }
+    catch (e) { out.push({ store: s.id, error: e.code || e.message }); }
+  }
+  console.log('LOYALTY_COMEBACK', JSON.stringify(out));
+  return out;
+}
 
 module.exports = handler(['GET', 'POST'], async (req) => {
   await assertCronKey(req);
   const started = Date.now();
+  // ?only=comeback: رسائل الاسترجاع بس
+  if (req.query.only === 'comeback') return { comeback: await comebackAll(started, 50e3) };
   // الفروع ولاءها على المحل الرئيسي، فالمساعد يشتغل على الرئيسي بس
   const stores = await rest('clients?loyalty_enabled=is.true&loyalty_ai=is.true&is_active=is.true&parent_id=is.null&select=id&order=id.asc&limit=200');
   // بطاقات المحفظة اللي فشل تحديثها (مثل رصيد خدمة المحفظة الشهري خلص): نعيد إرسالها بعدد أختامها الصحيح
@@ -48,6 +65,7 @@ module.exports = handler(['GET', 'POST'], async (req) => {
       if (await P.refreshSubsNear(id)) subsNear.push(id);
     }
   } catch (e) { console.error('SUBS_NEAR_CRON', e.message); }
+  const comeback = await comebackAll(started, 50e3);
   const wbStores = await rest(`clients?pager_winback->>enabled=eq.true&is_active=is.true&parent_id=is.null&select=*&order=id.asc&limit=200`).catch(() => []);
   const winback = [];
   for (const s of wbStores) {
@@ -56,7 +74,7 @@ module.exports = handler(['GET', 'POST'], async (req) => {
     catch (e) { winback.push({ store: s.id, error: e.code || e.message }); }
   }
   console.log('PAGER_WINBACK', JSON.stringify(winback));
-  return { stores: stores.length, retry, results, winback, subsNear };
+  return { stores: stores.length, retry, results, comeback, winback, subsNear };
 });
 
 module.exports.config = { maxDuration: 60 };

@@ -60,6 +60,19 @@
     document.getElementById('ly-fb-gift').checked = !st.feedback || st.feedback.gift !== false;
     document.getElementById('ly-fb-days').value = String((st.feedback && st.feedback.days) || 30);
     document.getElementById('ly-gifts').checked = !st.gifts || st.gifts.enabled !== false;
+    // استرجاع العميل الغائب
+    const cb = st.comeback || { enabled: false, days: 21, gift: true, steps: ['', '', ''] };
+    document.getElementById('ly-cb').checked = !!cb.enabled;
+    document.getElementById('ly-cb-box').classList.toggle('hidden', !cb.enabled);
+    document.getElementById('ly-cb-days').value = String(cb.days || 21);
+    document.getElementById('ly-cb-gift').checked = cb.gift !== false;
+    [1, 2, 3].forEach(i => { document.getElementById('ly-cb-' + i).value = (cb.steps || [])[i - 1] || ''; });
+    lyCbLabels();
+    const cs = (d && d.comeback) || {}, cbStats = document.getElementById('ly-cb-stats');
+    cbStats.classList.toggle('hidden', !cb.enabled && !cs.reached);
+    cbStats.innerHTML = cs.reached
+      ? `<i class="ph-bold ph-chart-line-up text-brand"></i> آخر 90 يوماً: وصلت الرسائل إلى <b>${cs.reached}</b> عميل، وعاد منهم <b>${cs.returned || 0}</b> (${Math.round((cs.returned || 0) / cs.reached * 100)}%)`
+      : '<i class="ph-bold ph-info"></i> تُرسل يومياً عصراً لمن انطبق عليه الشرط، وتظهر النتيجة هنا بعد أول رسائل.';
     // الولاء وحدة لكل الفروع: الإعدادات والأعضاء مشتركة، والموقع لكل فرع
     document.getElementById('ly-loc-branch').textContent = branches.length > 1 ? ` (${client.name || ''})` : '';
     document.getElementById('ly-shared').classList.toggle('hidden', branches.length < 2);
@@ -945,3 +958,17 @@
     }
   });
   document.getElementById('pk-cards').addEventListener('click', (e) => { const b = e.target.closest('[data-pk-card]'); if (b) manageCard(Number(b.dataset.pkCard)); });
+
+// استرجاع العميل الغائب: عناوين الرسائل حسب الأيام، ونص الثالثة حسب الهدية
+function lyCbLabels() {
+  const d = +document.getElementById('ly-cb-days').value || 21;
+  document.getElementById('ly-cb-l1').textContent = `الرسالة الأولى (بعد ${d} يوماً من آخر زيارة)`;
+  document.getElementById('ly-cb-l2').textContent = `الرسالة الثانية (بعد ${d + 7} يوماً)`;
+  document.getElementById('ly-cb-l3').textContent = `الرسالة الثالثة (بعد ${d + 14} يوماً)`;
+}
+const LY_CB_GIFT = 'رجعتك لها هدية: ختم زيادة أول ما تزورنا في {store} 🎁', LY_CB_NOGIFT = 'آخر تذكير من {store}: بطاقتك وأختامك محفوظة، ننتظرك';
+function lyCbGiftText() {
+  const t = document.getElementById('ly-cb-3'), on = document.getElementById('ly-cb-gift').checked;
+  if (on && t.value.trim() === LY_CB_NOGIFT) t.value = LY_CB_GIFT;
+  if (!on && t.value.trim() === LY_CB_GIFT) t.value = LY_CB_NOGIFT;
+}

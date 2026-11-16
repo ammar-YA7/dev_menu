@@ -33,6 +33,24 @@ function normalizeDesign(raw, def = 'coffee') {
 
 // رسالة الترحيب لأول تسجيل: صاحب المحل يكتبها، أو المساعد الذكي يكتب لكل زبون رسالة مختلفة، أو بدون
 const FEEDBACK_DAYS = [14, 21, 30, 45, 60];
+// استرجاع اللي غاب: متى تبدأ الرسالة الأولى، والثانية والثالثة كل أسبوع بعدها
+const COMEBACK_DAYS = [14, 21, 30, 45];
+const COMEBACK_DEFAULTS = [
+  'وحشتنا يا {name}! مرّ علينا في {store}، باقي لك {left} على {reward}',
+  '{store} مشتاق لك، ختمك الجاي ينتظرك',
+  'رجعتك لها هدية: ختم زيادة أول ما تزورنا في {store} 🎁'
+];
+function normalizeComeback(c) {
+  c = c && typeof c === 'object' ? c : {};
+  const days = Number(c.days);
+  const steps = Array.isArray(c.steps) ? c.steps : [];
+  return {
+    enabled: c.enabled === true,
+    days: COMEBACK_DAYS.includes(days) ? days : 21,
+    gift: c.gift !== false,
+    steps: [0, 1, 2].map(i => String(steps[i] == null ? COMEBACK_DEFAULTS[i] : steps[i]).trim().slice(0, 150) || COMEBACK_DEFAULTS[i])
+  };
+}
 function normalizeWelcome(raw) {
   const w = raw && typeof raw === 'object' ? raw : {};
   return {
@@ -79,6 +97,7 @@ function normalizeLoyalty(raw, store) {
     feedback: { enabled: !(s.feedback && s.feedback.enabled === false), gift: !(s.feedback && s.feedback.gift === false),
       days: FEEDBACK_DAYS.includes(int(s.feedback && s.feedback.days, 30)) ? int(s.feedback && s.feedback.days, 30) : 30 },
     gifts: { enabled: !(s.gifts && s.gifts.enabled === false) },
+    comeback: normalizeComeback(s.comeback),
     // الختم بعد الشراء بس: كود الكاشير أو البيجر (الزبون ما يختم بنفسه)
     stamp_mode: 'purchase',
     pager_stamp: s.pager_stamp !== false,
@@ -102,4 +121,4 @@ const validPoint = (lat, lng) => Number.isFinite(lat) && Number.isFinite(lng) &&
 // رقم البيجر يستاهل ختم؟ لما الكاشير يضغط "استلم" (مو "جاهز"، واللي ما طلب يحذفه الكاشير)
 const pagerStampDue = (t) => !!t && t.status === 'done' && !t.loyalty_stamped;
 
-module.exports = { pagerStampDue, normalizeLoyalty, normalizeDesign, isHappyNow, distanceM, validPoint, COOLDOWNS, STYLES, ICONS, staleAi };
+module.exports = { COMEBACK_DAYS, COMEBACK_DEFAULTS, normalizeComeback, pagerStampDue, normalizeLoyalty, normalizeDesign, isHappyNow, distanceM, validPoint, COOLDOWNS, STYLES, ICONS, staleAi };
