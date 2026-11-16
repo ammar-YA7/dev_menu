@@ -272,6 +272,20 @@
     try {
       const r = await call('loyalty-scan', { qr, kiosk: true, ...extra });
       if (r.ask) { beep(true); openAsk(qr, r); return; }
+      // باقة مدفوعة مسبقاً: انخصمت منها مرة، أو بانتظار الدفع، أو ما عنده باقة
+      if (r.pkg) {
+        const nm = esc(String((r.who && r.who.name) || '').split(/\s+/)[0]), c = r.card || {};
+        const left = c.total ? `<div class="n">باقي لك <b>${c.remaining}</b> من ${c.total}${c.expires_at ? ` · تنتهي ${esc(new Date(c.expires_at).toLocaleDateString('ar-SA-u-ca-gregory-nu-latn', { day: 'numeric', month: 'long' }))}` : ''}</div>` : '';
+        if (r.used) {
+          beep(true);
+          show('ok', `<i class="ph-bold ph-check-circle big"></i><div class="t">انخصمت من باقتك${nm ? ` يا ${nm}` : ''}</div><div class="n">${esc(c.plan_name || '')}</div>${left}${c.remaining === 0 ? '<div class="gift"><i class="ph-bold ph-package"></i> خلصت باقتك، جدّدها من الكاشير</div>' : c.remaining <= 2 ? '<div class="gift"><i class="ph-bold ph-info"></i> قربت تخلص باقتك</div>' : ''}`, 5500);
+        } else {
+          beep(false);
+          const msg = r.reason === 'RECENT' ? ['ph-clock', 'انخصمت قبل شوي', 'ما نخصم مرتين ورا بعض'] : r.reason === 'PENDING' ? ['ph-hourglass-medium', 'باقتك بانتظار الدفع', 'ادفع عند الكاشير ويفعّلها لك'] : ['ph-package', 'ما عندك باقة سارية', 'اشترك في باقة من الكاشير'];
+          show(r.reason === 'RECENT' ? 'wait' : 'err', `<i class="ph-bold ${msg[0]} big"></i><div class="t">${msg[1]}${nm ? ` يا ${nm}` : ''}</div><div class="n">${msg[2]}</div>${r.reason === 'RECENT' ? left : ''}`, 5000);
+        }
+        return;
+      }
       const n = Math.min(r.stamps, r.needed), name = esc(String(r.who.name || '').split(/\s+/)[0]);
       const gift = (r.rewards || []).length ? `<div class="gift"><i class="ph-bold ph-gift"></i> ${esc(r.rewards[0].label)} جاهزة لك، اطلبها من الموظف</div>` : '';
       if (r.stamped) {
@@ -355,7 +369,9 @@
     if (info.logo_url) { $('logo').src = info.logo_url; $('logo').hidden = false; }
     $('cam').hidden = !info.enabled;
     $('wrap').classList.toggle('no-cam', !info.enabled);
-    if (info.enabled) $('cam-sub').textContent = `قرّب كود بطاقتك من الكاميرا وينضاف ختمك. ${info.needed} أختام = ${info.reward}`;
+    if (info.enabled) $('cam-sub').textContent = info.stamps_on === false ? 'قرّب كود بطاقتك من الكاميرا وتنخصم مرة من باقتك.'
+      : info.subs_on ? `قرّب كود بطاقتك من الكاميرا: ينضاف ختمك، ولو عندك باقة تنخصم منها. ${info.needed} أختام = ${info.reward}`
+      : `قرّب كود بطاقتك من الكاميرا وينضاف ختمك. ${info.needed} أختام = ${info.reward}`;
     else $('start-desc').textContent = ((info.services || []).includes('pager') && info.kiosk_call ? 'تعرض الشاشة كل رقم يجهز بخط كبير. ' : '') + 'بعد التشغيل تصير الشاشة ثابتة وتعرض أكواد خدماتك للزبائن: يمسحها الزبون بكاميرا جواله ويفتح المنيو أو ياخذ رقمه.';
     renderCodes();
     // الأرقام الجاهزة (الشريط فوق والرقم الكبير): بس لو صاحب المحل مفعّلها من الإعدادات

@@ -17,14 +17,16 @@ module.exports.pre = async function pre(action, req, b) {
     const { store, here } = await context(req);
     const x = (await rest(`clients?id=eq.${store.id}&select=loyalty_enabled,loyalty_settings`))[0] || {};
     const settings = normalizeLoyalty(x.loyalty_settings);
-    const services = ['menu', 'pager', 'waitlist', 'loyalty'].filter(k => PLANS.has(here, k) && (k !== 'waitlist' || here.waitlist_enabled) && (k !== 'loyalty' || x.loyalty_enabled));
+    // الأختام (مشترك ومشغّلها) أو الاشتراكات: الكاميرا تشتغل، والزبون يمسح بطاقته فيختم أو تنخصم من باقته
+    const stampsOn = PLANS.has(here, 'loyalty') && !!x.loyalty_enabled, subsOn = PLANS.has(here, 'subs');
+    const services = ['menu', 'pager', 'waitlist', 'loyalty'].filter(k => k === 'loyalty' ? stampsOn || subsOn : PLANS.has(here, k) && (k !== 'waitlist' || here.waitlist_enabled));
     // البيجر المجاني خلّص عدده هالشهر: الشاشة تكمل تعرض الجاهزين، بس بدون كود أخذ رقم
     let pager_full = false;
     if (PLANS.pagerLite(here)) {
       const start = new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 7) + '-01T00:00:00+03:00';
       pager_full = (await rest(`pager_tickets?client_id=eq.${here.id}&created_at=gte.${q(start)}&select=id&limit=${PLANS.FREE.pager}`).catch(() => [])).length >= PLANS.FREE.pager;
     }
-    return { pager_full, kiosk_call: here.kiosk_call === true, name: here.name, logo_url: here.logo_url || store.logo_url || '', slug: here.client_slug, business_type: here.business_type, business_label: here.business_label, services, enabled: services.includes('loyalty'), needed: settings.needed, reward: settings.reward, reward_en: settings.reward_en };
+    return { pager_full, kiosk_call: here.kiosk_call === true, name: here.name, logo_url: here.logo_url || store.logo_url || '', slug: here.client_slug, business_type: here.business_type, business_label: here.business_label, services, enabled: services.includes('loyalty'), stamps_on: stampsOn, subs_on: subsOn, needed: settings.needed, reward: settings.reward, reward_en: settings.reward_en };
   }
   // ─── رابط الكاشير للفرع: يطلع (وينشأ أول مرة)، أو يتغيّر والقديم يوقف ───
   if (action === 'desk-link') {

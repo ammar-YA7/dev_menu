@@ -205,7 +205,6 @@ module.exports.post = async function post(action, req, b, env) {
     // البطاقة وحدة: فيها الأختام (لو مشترك ومشغّلها) والاشتراكات (لو مشترك)
     const stampsOn = !!x.loyalty_enabled && PLANS.has(store, 'loyalty'), subsOn = PLANS.has(store, 'subs');
     if (!stampsOn && !subsOn) throw new ApiError(409, 'شغّل بطاقة الولاء أول من لوحة التحكم');
-    if (b.kiosk && !stampsOn) throw new ApiError(409, 'اعرض كودك للكاشير', 'STAMPS_OFF');
     const settings = normalizeLoyalty(x.loyalty_settings);
     let id = null;
     if (b.qr) { id = parseMemberQr(await familyIds(store), b.qr); if (!id) throw new ApiError(400, 'هذا مو كود عضوية من بطاقتنا', 'BAD_QR'); }
@@ -215,6 +214,25 @@ module.exports.post = async function post(action, req, b, env) {
     if (!card) throw new ApiError(404, 'ما لقينا عضو بهذا الرقم', 'NO_MEMBER');
     const who = { id: card.id, no: card.member_no, name: card.name || `عضو #${card.member_no}`, transferred: card.transferred_at ? card.transferred : null };
     const rewards = await readyRewards(sid, card, settings);
+    // شاشة الزبون: عنده باقة سارية؟ تنخصم مرة على طول (مثل الختم). بانتظار الدفع؟ يروح للكاشير
+    if (b.kiosk && subsOn) {
+      const P = require('../packages');
+      const pkgs = await rest(`loyalty_pkg_cards?loyalty_card_id=eq.${card.id}&client_id=eq.${sid}&or=(remaining.gt.0,status.eq.pending)&select=*&order=created_at.asc`).catch(() => []);
+      const live = pkgs.find(p => p.status !== 'pending' && p.remaining > 0 && (!p.expires_at || Date.parse(p.expires_at) > Date.now()));
+      if (live) {
+        // نفس الكود انمسح مرتين ورا بعض: ما نخصم مرة ثانية خلال دقيقتين
+        if (live.last_used_at && Date.now() - Date.parse(live.last_used_at) < 120e3) {
+          return { pkg: true, used: false, reason: 'RECENT', who, card: P.cardView(live) };
+        }
+        const r = await P.useCard(sid, live.id, here.id);
+        const fresh = (await rest(`loyalty_pkg_cards?id=eq.${live.id}&select=*`))[0] || live;
+        poke(topic('owner', sid), 'loyalty').catch(() => {});
+        return { pkg: true, used: !!r.ok, reason: r.reason || null, who, card: P.cardView(fresh) };
+      }
+      const wait = pkgs.find(p => p.status === 'pending');
+      if (!stampsOn) return { pkg: true, used: false, reason: wait ? 'PENDING' : 'NO_PKG', who, card: wait ? P.cardView(wait) : null };
+    }
+    if (b.kiosk && !stampsOn) throw new ApiError(409, 'اعرض كودك للكاشير', 'STAMPS_OFF');
     // عنده باقة سارية: الكاشير يختار «خصم من الباقة» أو «ختم» (شاشة الختم للزبون تختم على طول)
     // عنده باقة (سارية أو بانتظار الدفع): الكاشير يختار «خصم من الباقة» أو «فعّل» أو «ختم»
     if (!b.kiosk && b.mode !== 'stamp' && subsOn) {
