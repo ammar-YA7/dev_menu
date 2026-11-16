@@ -615,7 +615,7 @@
             <span class="dish-leader" aria-hidden="true"></span>
             <button type="button" class="dish-price" onclick="startEdit(${id})" tabindex="-1">${esc(sized || money(p.price))}</button>${(Array.isArray(p.extras) && p.extras.length) ? `<span class="hidden sm:inline text-[10.5px] font-bold text-ink/70 ms-1"><i class="ph-bold ph-list-plus"></i> ${p.extras.length} ${p.extras.length === 1 ? 'مجموعة إضافات' : 'مجموعات إضافات'}</span>` : ''}
           </div>
-          ${loadedCategories.length > 1 ? `<button type="button" class="dish-cat-btn" aria-haspopup="menu" aria-expanded="false" onclick="openCatPicker(event, ${id})" title="نقل الطبق لقسم ثاني"><i class="ph-bold ph-folder-simple"></i><span>${esc(cat ? cat.name : 'بدون قسم')}</span><i class="ph-bold ph-caret-down"></i></button>` : ''}
+          ${loadedCategories.length > 1 ? `<button type="button" class="dish-cat-btn" aria-haspopup="menu" aria-expanded="false" onclick="openCatPicker(event, ${id})" title="نقل الطبق لقسم ثاني"><i class="ph-bold ph-folder-simple"></i><span>${esc(cat ? cat.name.split('|')[0].trim() : 'بدون قسم')}</span><i class="ph-bold ph-caret-down"></i></button>` : ''}
           <button type="button" role="switch" aria-checked="${isAvailable}" aria-label="متوفر: ${esc(p.name)}" class="avail" onclick="toggleField(${id}, 'is_available', ${isAvailable})">
             <span class="avail-track"></span><span class="avail-label">${isAvailable ? 'متوفر' : 'نفدت'}</span>
           </button>
@@ -658,7 +658,7 @@
     m.style.top = `${r.bottom + h + 8 > innerHeight ? Math.max(8, r.top - h - 4) : r.bottom + 4}px`;
     btn.setAttribute('aria-expanded', 'true');
     dishMenuFor = id;
-    m.querySelector('button:not(:disabled)').focus();
+    m.querySelector('button:not(:disabled)').focus({ preventScroll: true });
   }
   document.addEventListener('click', (e) => { if (dishMenuFor !== null && !e.target.closest('#dish-menu')) closeDishMenu(); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && dishMenuFor !== null) closeDishMenu(); });
@@ -684,7 +684,7 @@
     m.style.top = `${r.bottom + h + 8 > innerHeight ? Math.max(8, r.top - h - 4) : r.bottom + 4}px`;
     btn.setAttribute('aria-expanded', 'true');
     dishMenuFor = 'cat' + id;
-    (m.querySelector('button:not(:disabled)') || m).focus();
+    (m.querySelector('button:not(:disabled)') || m).focus({ preventScroll: true });
   }
   async function moveToCategory(id, key) {
     const p = loadedProducts.find(x => Number(x.id) === id);
