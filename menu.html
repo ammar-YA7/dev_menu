@@ -3174,7 +3174,7 @@
         ${slides.length > 1 && slides.length <= 12 ? `<div class="sv-dots" style="--sv-ms:${SV_MS}ms">${slides.map((_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div>` : ''}${cta}`;
     }
     el.classList.add('on'); el.setAttribute('aria-hidden', 'false');
-    requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('show')));
+    void el.offsetWidth; setTimeout(() => { if (ixSaverOn) el.classList.add('show'); }, 30);
     ixSaverOn = true;
     ixEl('ix-bgm') && ixEl('ix-bgm').querySelectorAll('video').forEach(v => { try { v.pause(); } catch {} });
     if (slides.length > 1) {
