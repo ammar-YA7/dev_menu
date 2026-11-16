@@ -10,7 +10,7 @@
 //   POST loyalty-pkg-delete     حذف باقة زبون             (صاحب المحل)
 // =====================================================================
 const crypto = require('crypto');
-const { rest, rpc, ApiError, str, int, waNumber, context, familyIds, poke, topic, PLANS, parseMemberQr, pushWalletCards, ownsMediaUrl } = require('./shared');
+const { rest, rpc, ApiError, str, int, waNumber, context, familyIds, poke, topic, PLANS, parseMemberQr, pushWalletCards, ownsMediaUrl, later } = require('./shared');
 const NEXT = require('./next');
 const P = require('../packages');
 const wallet = require('../wallet');
@@ -62,6 +62,7 @@ module.exports.post = async function post(action, req, b, env) {
       if ((await plansOf(sid)).length >= MAX_PLANS) throw new ApiError(400, `الحد ${MAX_PLANS} باقة`);
       await rest('loyalty_pkg_plans', { method: 'POST', body: { client_id: sid, ...body } });
     }
+    later(P.refreshSubsNear(sid));   // جمل القرب أول مرة (وبعدها كل أسبوع من الجدولة)
     return { plans: await plansOf(sid) };
   }
 

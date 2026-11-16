@@ -27,7 +27,17 @@ async function call(method, path, body) {
 }
 
 // محتوى البطاقة. full = مزايا الباقة المدفوعة (الشعار، الموقع على شاشة القفل)
-function passBody({ store, settings, card, url, restoreUrl, lat, lng, notice, strip, nearText, fresh, pkg, stampsOff, subsDesign }, full = true) {
+// جملة القرب للعميل اللي عنده باقة: من جمل الذكاء (تتغير مع كل زيارة)، وإلا جملة ثابتة
+function pkgNearLine(lines, card, pkg, storeName) {
+  const ai = Array.isArray(lines) ? lines.filter(l => typeof l === 'string' && l.trim()) : [];
+  if (ai.length && card.lang !== 'en') {
+    const turn = Number(card.id || 0) + Number(card.visits || 0) + (Number(pkg.total || 0) - Number(pkg.remaining || 0));
+    return ai[turn % ai.length].replace(/\{left\}/g, String(pkg.remaining));
+  }
+  return tr(card.lang, `قريب من ${storeName}؟ باقي لك ${pkg.remaining} في باقتك، حيّاك 👋`);
+}
+
+function passBody({ store, settings, card, url, restoreUrl, lat, lng, notice, strip, nearText, fresh, pkg, stampsOff, subsDesign, subsNear }, full = true) {
   const n = settings.needed, s = Math.min(card.stamps, n);
   const L = (t) => tr(card.lang, t);   // لغة الزبون (آخر لغة فتح فيها بطاقته)
   const body = {
@@ -86,7 +96,7 @@ function passBody({ store, settings, card, url, restoreUrl, lat, lng, notice, st
       const sStrip = subsDesign.strip || (subsDesign.bg === 'image' && subsDesign.bg_image) || null;
       if (sStrip) body.stripURL = sStrip;
     }
-    if (Number.isFinite(lat) && Number.isFinite(lng)) body.locations = [{ latitude: lat, longitude: lng, relevantText: String(stampsOff ? L(pkg ? `قريب من ${store.name}؟ باقي لك ${pkg.remaining} في باقتك، حيّاك 👋` : `قريب من ${store.name}؟ حيّاك 👋`) : pkg ? L(`قريب منا؟ باقي لك ${pkg.remaining} في باقتك، حيّاك 👋`) : nearText || L(`أنت قريب من ${store.name}، خذ ختمك`)).slice(0, 80) }];
+    if (Number.isFinite(lat) && Number.isFinite(lng)) body.locations = [{ latitude: lat, longitude: lng, relevantText: String(pkg ? pkgNearLine(subsNear, card, pkg, store.name) : stampsOff ? L(`قريب من ${store.name}؟ حيّاك 👋`) : nearText || L(`أنت قريب من ${store.name}، خذ ختمك`)).slice(0, 80) }];
   }
   return body;
 }
@@ -111,13 +121,15 @@ async function stampsInfo(clientId) {
     const s = (await rest(`clients?id=eq.${Number(clientId)}&select=loyalty_enabled,subscription_status,plan_features,parent_id,is_active,trial_ends_at,subscription_end_date,subs_design`))[0];
     if (s) v = { on: !!s.loyalty_enabled && require('./plans').has(s, 'loyalty'), subsDesign: s.subs_design || null };
   } catch {}
+  // جمل القرب للباقات (عمود من ملف 104: لو ما انشغل، نكمل بدونها)
+  try { v.subsNear = ((await rest(`clients?id=eq.${clientId}&select=subs_near_lines`))[0] || {}).subs_near_lines || null; } catch { v.subsNear = null; }
   stampCache.set(clientId, { v, at: Date.now() });
   return v;
 }
 async function extrasFor(card) {
   if (!card || !card.client_id) return { pkg: null, stampsOff: false };
   const [pkg, info] = await Promise.all([memberPkg(card), stampsInfo(card.client_id)]);
-  return { pkg, stampsOff: !info.on, subsDesign: info.subsDesign };
+  return { pkg, stampsOff: !info.on, subsDesign: info.subsDesign, subsNear: info.subsNear };
 }
 
 // بطاقة جديدة. لو الباقة المجانية رفضت المزايا المدفوعة نعيد بدونها

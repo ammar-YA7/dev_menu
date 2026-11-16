@@ -38,6 +38,16 @@ module.exports = handler(['GET', 'POST'], async (req) => {
     catch (e) { results.push({ store: s.id, error: e.code || e.message }); }
   }
   console.log('LOYALTY_AI', JSON.stringify(results));
+  // جمل القرب للباقات: كل أسبوع لكل محل عنده باقات (الذكاء يكتبها، والبطاقة تبدّل بينها مع كل زيارة)
+  const subsNear = [];
+  try {
+    const P = require('./_lib/packages');
+    const ids = [...new Set((await rest('loyalty_pkg_plans?active=is.true&select=client_id&limit=2000').catch(() => [])).map(r => r.client_id))];
+    for (const id of ids) {
+      if (Date.now() - started > 50e3) break;
+      if (await P.refreshSubsNear(id)) subsNear.push(id);
+    }
+  } catch (e) { console.error('SUBS_NEAR_CRON', e.message); }
   const wbStores = await rest(`clients?pager_winback->>enabled=eq.true&is_active=is.true&parent_id=is.null&select=*&order=id.asc&limit=200`).catch(() => []);
   const winback = [];
   for (const s of wbStores) {
@@ -46,7 +56,7 @@ module.exports = handler(['GET', 'POST'], async (req) => {
     catch (e) { winback.push({ store: s.id, error: e.code || e.message }); }
   }
   console.log('PAGER_WINBACK', JSON.stringify(winback));
-  return { stores: stores.length, retry, results, winback };
+  return { stores: stores.length, retry, results, winback, subsNear };
 });
 
 module.exports.config = { maxDuration: 60 };

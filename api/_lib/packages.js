@@ -110,4 +110,18 @@ async function useCard(storeId, cardId, branchId) {
   return r;
 }
 
-module.exports = { designOf, storeFor, pkgQr, isPkgQr, parsePkgQr, pageUrl, cardView, expired, passBody, pushCard, createWallet, useCard };
+// جمل القرب للباقات: يكتبها الذكاء مرة بالأسبوع لكل محل عنده باقات (قبل ملف 104: ما تشتغل وتكمل البطاقة بالجملة الثابتة)
+async function refreshSubsNear(storeId, force = false) {
+  try {
+    const s = (await rest(`clients?id=eq.${Number(storeId)}&select=id,name,business_type,business_label,subs_near_lines,subs_near_at`))[0];
+    if (!s) return false;
+    if (!force && Array.isArray(s.subs_near_lines) && s.subs_near_lines.length && s.subs_near_at && Date.now() - Date.parse(s.subs_near_at) < 7 * 864e5) return false;
+    const lines = await require('./ai').subsNearLines({ storeName: s.name, businessType: require('./sectors').label(s) });
+    if (!lines.length) return false;
+    await rest(`clients?id=eq.${s.id}`, { method: 'PATCH', body: { subs_near_lines: lines, subs_near_at: new Date().toISOString() } });
+    require('./wallet').stampsCacheClear(s.id);
+    return true;
+  } catch (e) { console.error('SUBS_NEAR', e.message); return false; }
+}
+
+module.exports = { refreshSubsNear, designOf, storeFor, pkgQr, isPkgQr, parsePkgQr, pageUrl, cardView, expired, passBody, pushCard, createWallet, useCard };

@@ -110,6 +110,18 @@ async function loyaltyNearLines({ storeName, businessType, reward }) {
   return (out.lines || []).map(l => clean(l, 80)).filter(Boolean).slice(0, 8);
 }
 
+/** جمل القرب للعميل اللي عنده باقة مدفوعة مسبقاً (تتجدد كل أسبوع). {left} = كم باقي له */
+async function subsNearLines({ storeName, businessType }) {
+  const prompt = [
+    `<place>${storeName}${businessType ? ` (${businessType})` : ''}</place>`,
+    'Kind: near, but this guest has a prepaid package at this place (for example 30 meals or 10 coffees), not stamps. Do not mention stamps or rewards.',
+    'Each line tempts them to step in and use their package now. Some lines (not all) mention how many uses they have left with the exact placeholder {left} (a number will replace it, e.g. "باقي لك {left} في باقتك").',
+    'Write 8 different lines in casual Saudi Arabic, each with a different image and mood, max 70 characters including {left}. JSON: {"lines":["..."]}'
+  ].join('\n');
+  const out = await loyaltyCall(prompt, 2000);
+  return (out.lines || []).map(l => clean(l, 80)).filter(l => l && (!l.includes('{') || /\{left\}/.test(l)) && !/[{}]/.test(l.replace(/\{left\}/g, ''))).slice(0, 8);
+}
+
 // =====================================================================
 // مساعد المنيو: يجاوب الزبون عن الأطباق والأسعار والسعرات وأوقات المحل
 // يجاوب من بيانات المحل بس، وأي سؤال برا المحل يعتذر عنه بلطف
@@ -286,4 +298,4 @@ async function translateMenu(texts) {
   return done.flat();
 }
 
-module.exports = { translateMenu, loyaltyMessages, loyaltyNearLines, menuChat, ownerInsights, readMenuImages };
+module.exports = { translateMenu, loyaltyMessages, loyaltyNearLines, subsNearLines, menuChat, ownerInsights, readMenuImages };
