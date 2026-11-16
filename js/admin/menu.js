@@ -601,19 +601,21 @@
       const meta = [
         p.subgroup ? `<span class="text-brand font-bold"><i class="ph-bold ph-folder-simple"></i> ${esc(p.subgroup)}</span>` : '',
         p.coffee && allowsCoffee() ? esc(coffeeSummary(p.coffee) || 'قهوة مختصة') : '',
-        !showCalories() ? '' : p.calories != null ? `${Number(p.calories)} سعرة` : '<span class="text-amber-700">بدون سعرات</span>'
+        !showCalories() ? '' : `<button type="button" class="dish-q dish-q-cal${p.calories == null ? ' is-empty' : ''}" onclick="quickEdit(event, ${id}, 'calories')" aria-label="سعرات ${esc(p.name)}">${p.calories != null ? `${Number(p.calories)} سعرة` : 'بدون سعرات'}</button>`
       ].filter(Boolean).join(' · ');
+      const sized = sizesText(p);
       return `${header}
         <div class="dish-row ${!isAvailable ? 'sold-out' : ''} ${isHidden ? 'is-hidden' : ''} ${editingProductId === id ? 'is-editing' : ''}">
-          <button type="button" class="dish-main" onclick="startEdit(${id})" aria-label="تعديل ${esc(p.name)}">
-            ${img ? `<img src="${esc(img)}" alt="" loading="lazy" class="dish-thumb">` : `<span class="dish-thumb"><i class="ph-bold ph-fork-knife"></i></span>`}
+          <div class="dish-main">
+            <button type="button" class="shrink-0" onclick="startEdit(${id})" aria-label="تعديل ${esc(p.name)}" tabindex="-1">${img ? `<img src="${esc(img)}" alt="" loading="lazy" class="dish-thumb">` : `<span class="dish-thumb"><i class="ph-bold ph-fork-knife"></i></span>`}</button>
             <span class="dish-text">
-              <span class="dish-name block">${esc(p.name)}${isBestseller ? '<span class="dish-tag bg-saffron/15 text-amber-800">مميز</span>' : ''}${isHidden ? '<span class="dish-tag bg-ink/10 text-ink">مخفي</span>' : ''}</span>
+              <button type="button" class="dish-name block" onclick="startEdit(${id})" aria-label="تعديل ${esc(p.name)}">${esc(p.name)}${isBestseller ? '<span class="dish-tag bg-saffron/15 text-amber-800">مميز</span>' : ''}${isHidden ? '<span class="dish-tag bg-ink/10 text-ink">مخفي</span>' : ''}</button>
               ${meta ? `<span class="dish-meta block">${meta}</span>` : ''}
             </span>
             <span class="dish-leader" aria-hidden="true"></span>
-            <span class="dish-price">${sizesText(p) ? esc(sizesText(p)) : esc(money(p.price))}</span>${(Array.isArray(p.extras) && p.extras.length) ? `<span class="hidden sm:inline text-[10.5px] font-bold text-ink/70 ms-1"><i class="ph-bold ph-list-plus"></i> ${p.extras.length} ${p.extras.length === 1 ? 'مجموعة إضافات' : 'مجموعات إضافات'}</span>` : ''}
-          </button>
+            ${sized ? `<button type="button" class="dish-price" onclick="startEdit(${id})" title="الطبق له أحجام: عدّل أسعارها من صفحة الطبق">${esc(sized)}</button>`
+              : `<button type="button" class="dish-price dish-q" onclick="quickEdit(event, ${id}, 'price')" aria-label="سعر ${esc(p.name)}">${esc(money(p.price))}</button>`}${(Array.isArray(p.extras) && p.extras.length) ? `<span class="hidden sm:inline text-[10.5px] font-bold text-ink/70 ms-1"><i class="ph-bold ph-list-plus"></i> ${p.extras.length} ${p.extras.length === 1 ? 'مجموعة إضافات' : 'مجموعات إضافات'}</span>` : ''}
+          </div>
           <button type="button" role="switch" aria-checked="${isAvailable}" aria-label="متوفر: ${esc(p.name)}" class="avail" onclick="toggleField(${id}, 'is_available', ${isAvailable})">
             <span class="avail-track"></span><span class="avail-label">${isAvailable ? 'متوفر' : 'نفدت'}</span>
           </button>
@@ -661,6 +663,39 @@
   document.addEventListener('click', (e) => { if (dishMenuFor !== null && !e.target.closest('#dish-menu')) closeDishMenu(); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && dishMenuFor !== null) closeDishMenu(); });
   window.addEventListener('scroll', () => { if (dishMenuFor !== null) closeDishMenu(); }, { passive: true });
+
+  // تعديل السعر أو السعرات من القائمة مباشرة: اضغط الرقم، اكتب، Enter أو اطلع برا يحفظ، Esc يلغي
+  function quickEdit(e, id, field) {
+    e.stopPropagation();
+    const btn = e.currentTarget;
+    const p = loadedProducts.find(x => Number(x.id) === id); if (!p) return;
+    const cur = field === 'price' ? p.price : p.calories;
+    const box = document.createElement('span');
+    box.className = 'dish-q-edit';
+    box.innerHTML = `<input type="number" inputmode="${field === 'price' ? 'decimal' : 'numeric'}" min="0" step="${field === 'price' ? 'any' : '1'}" dir="ltr" value="${cur ?? ''}" placeholder="${field === 'price' ? '0.00' : 'مثال: 450'}" aria-label="${field === 'price' ? 'السعر' : 'السعرات'}"><span>${field === 'price' ? esc(curSign()) : 'سعرة'}</span>`;
+    btn.replaceWith(box);
+    const input = box.querySelector('input');
+    input.focus(); input.select();
+    let done = false;
+    const finish = async (save) => {
+      if (done) return; done = true;
+      const raw = input.value.trim();
+      const val = raw === '' ? null : Number(raw);
+      if (!save || val === (cur ?? null) || (field === 'price' && val === null)) return filterProducts();
+      input.disabled = true;
+      try {
+        const r = await api('product-quick', { id, field, value: raw });
+        Object.assign(p, r.product || { [field]: val });
+        showToast(field === 'price' ? `صار سعر «${p.name}» ${money(p.price)}` : val === null ? 'انمسحت السعرات' : `انحفظت السعرات: ${val} سعرة`);
+      } catch (err) { showToast(err.message || 'ما قدرنا نحفظ. تأكد من الإنترنت', true); }
+      filterProducts(); renderDashboardSummary();
+    };
+    input.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter') { ev.preventDefault(); finish(true); }
+      else if (ev.key === 'Escape') { ev.preventDefault(); finish(false); }
+    });
+    input.addEventListener('blur', () => finish(true));
+  }
 
   // المفتاح يتغير على طول (بدون انتظار الخادم)، ولو فشل الحفظ يرجع لحالته
   async function toggleField(id, field, current) {

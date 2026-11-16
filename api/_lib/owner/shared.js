@@ -169,7 +169,7 @@ const DESK_KEY_RE = /^[A-Za-z0-9_-]{24,64}$/;
 // (ما عدا موقع الختم: لكل فرع موقعه). here = الفرع اللي جاي منه الطلب
 // عمليات المنيو (الأطباق والأقسام والكوبونات والمناسبات): لمشتركي المنيو بس
 const MENU_ONLY = ['extras-copy', 'category-add', 'category-group', 'category-image', 'category-rename', 'category-delete', 'reorder', 'menu-from-photo', 'products-import',
-  'product-save', 'product-image', 'product-toggle', 'product-delete', 'coupon-save', 'coupon-toggle', 'coupon-delete', 'occasions-save'];
+  'product-save', 'product-image', 'product-toggle', 'product-quick', 'product-delete', 'coupon-save', 'coupon-toggle', 'coupon-delete', 'occasions-save'];
 async function context(req, opts) {
   const ctx = await storeContext(req, opts);
   const action = String(req.query.action || '');

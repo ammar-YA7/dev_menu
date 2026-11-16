@@ -419,6 +419,34 @@ module.exports.post = async function post(action, req, b, env) {
     return { product: rows[0] };
   }
 
+  // تعديل سريع من قائمة الأطباق: السعر (لهذا الفرع) أو السعرات (لكل الفروع المربوطة)
+  if (action === 'product-quick') {
+    const id = int(b.id);
+    const old = (await rest(`products?id=eq.${id}&client_id=eq.${sid}&select=id,link_id,sizes`))[0];
+    if (!old) throw new ApiError(404, 'الطبق غير موجود');
+    let patch;
+    if (b.field === 'price') {
+      if (Array.isArray(old.sizes) && old.sizes.length) throw new ApiError(400, 'الطبق له أحجام، عدّل أسعارها من صفحة الطبق');
+      const price = Number(b.value);
+      if (b.value === '' || b.value == null || !validPrice(price)) throw new ApiError(400, 'اكتب سعراً صحيحاً');
+      patch = { price };
+    } else if (b.field === 'calories') {
+      if (store.show_calories === false) throw new ApiError(400, 'السعرات غير مفعّلة');
+      let calories = null;
+      if (b.value !== null && b.value !== '') {
+        calories = int(b.value);
+        if (!Number.isInteger(calories) || calories < 0 || calories > 10000) throw new ApiError(400, 'عدد السعرات غير صحيح');
+      }
+      patch = { calories };
+    } else throw new ApiError(400, 'حقل غير صحيح');
+    const rows = await rest(`products?id=eq.${id}&client_id=eq.${sid}`, { method: 'PATCH', body: patch, prefer: 'return=representation' });
+    if (b.field === 'calories' && old.link_id) {
+      const others = (await familyOf(store)).map(f => f.id).filter(x => x !== sid);
+      if (others.length) await rest(`products?link_id=eq.${q(old.link_id)}&client_id=in.(${others.join(',')})`, { method: 'PATCH', body: patch });
+    }
+    return { product: rows[0] };
+  }
+
   if (action === 'product-delete') {
     const id = int(b.id);
     const rows = await rest(`products?id=eq.${id}&client_id=eq.${sid}`, { method: 'DELETE', prefer: 'return=representation' });
