@@ -812,7 +812,7 @@
       shape: ['round', 'soft', 'square'].includes(o.shape) ? o.shape : null, tagline: o.tagline || '',
       bg_mode: ['color', 'image', 'video'].includes(o.bg_mode) ? o.bg_mode : 'color', bg_image: o.bg_image || null, bg_video: o.bg_video || null,
       saver: ['dishes', 'video'].includes(o.saver) ? o.saver : 'off', saver_video: o.saver_video || null,
-      saver_after: [30, 60, 120, 300].includes(Number(o.saver_after)) ? Number(o.saver_after) : 60 };
+      saver_after: [5, 15, 30, 60, 120, 300].includes(Number(o.saver_after)) ? Number(o.saver_after) : 60 };
   };
   // المنيو التفاعلي إضافة (ixpro): بدونها نعرض الشكل كمعاينة مقفولة مع طريقة الإضافة
   const ixHas = () => !window.DMPlans || DMPlans.has(client, 'ixpro');
@@ -929,7 +929,7 @@
       ${c.bg_mode !== 'color' ? '<span class="block text-[11px] text-ink/70 leading-relaxed">يظهر هذا اللون بشفافية فوق الصورة أو الفيديو حتى تبقى النصوص واضحة.</span>' : ''}`;
     // شاشة الانتظار: إيقاف، صور الأطباق، أو فيديو (رفع ومعاينة)، والمدة قبل ما تشتغل
     const svModes = [['off', 'إيقاف', 'ph-prohibit'], ['dishes', 'صور الأطباق', 'ph-images'], ['video', 'فيديو', 'ph-film-strip']];
-    const svAfter = [[30, '30 ثانية'], [60, 'دقيقة'], [120, 'دقيقتين'], [300, '5 دقائق']];
+    const svAfter = [[5, '5 ثوانٍ'], [15, '15 ثانية'], [30, '30 ثانية'], [60, 'دقيقة'], [120, 'دقيقتين'], [300, '5 دقائق']];
     const svVid = c.saver_video;
     const saverBody = `
       <div role="radiogroup" class="grid grid-cols-3 gap-1.5">${svModes.map(([v, t, ic]) => `
@@ -947,7 +947,7 @@
       ${c.saver !== 'off' ? `
         <div class="space-y-1.5">
           <span class="block text-[11px] font-bold text-ink">تشتغل بعد</span>
-          <div role="radiogroup" class="grid grid-cols-4 gap-1.5">${svAfter.map(([v, t]) => `
+          <div role="radiogroup" class="grid grid-cols-3 gap-1.5">${svAfter.map(([v, t]) => `
             <button type="button" role="radio" aria-checked="${c.saver_after === v}" onclick="saveIxLook({ saver_after: ${v} })" class="rounded-lg border px-1 py-2 text-[11px] font-bold transition ${c.saver_after === v ? 'border-brand bg-brand text-cream' : 'border-brand/20 bg-white text-ink hover:border-brand/40'}">${t}</button>`).join('')}
           </div>
           <a href="${esc(DM.storeUrl(client.client_slug, 'menu', { mode: 'tablet', idle: 5 }))}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-[11px] font-bold text-brand underline underline-offset-2"><i class="ph-bold ph-play-circle"></i> جرّبها الآن (تشتغل بعد 5 ثوانٍ)</a>

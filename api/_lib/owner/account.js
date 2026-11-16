@@ -404,7 +404,7 @@ module.exports.post = async function post(action, req, b, env) {
         // شاشة الانتظار: بعد مدة بدون لمس تعرض صور الأطباق أو فيديو، وأول لمسة ترجع للمنيو
         saver: ['dishes', 'video'].includes(x.saver) ? x.saver : 'off',
         saver_video: media(x.saver_video),
-        saver_after: [30, 60, 120, 300].includes(Number(x.saver_after)) ? Number(x.saver_after) : 60
+        saver_after: [5, 15, 30, 60, 120, 300].includes(Number(x.saver_after)) ? Number(x.saver_after) : 60
       };
       if (p.menu_ix.saver === 'video' && !p.menu_ix.saver_video) p.menu_ix.saver = 'off';
       if (p.menu_ix.bg_mode !== 'color' && !p.menu_ix[`bg_${p.menu_ix.bg_mode}`]) p.menu_ix.bg_mode = 'color';

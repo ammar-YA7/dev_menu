@@ -3145,7 +3145,7 @@
     let mode = ['dishes', 'video'].includes(t) ? t : ['dishes', 'video'].includes(o.saver) ? o.saver : 'off';
     const video = safeUrl(o.saver_video);
     if (mode === 'video' && !video) mode = 'dishes';
-    const after = [30, 60, 120, 300].includes(Number(o.saver_after)) ? Number(o.saver_after) : 60;
+    const after = [5, 15, 30, 60, 120, 300].includes(Number(o.saver_after)) ? Number(o.saver_after) : 60;
     return { mode, video, after };
   }
   const SV_MS = 6500;
