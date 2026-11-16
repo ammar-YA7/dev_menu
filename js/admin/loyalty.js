@@ -758,7 +758,7 @@
               <div class="flex items-center gap-2 p-3">${logo ? `<img src="${esc(logo)}" alt="" class="w-8 h-8 rounded-lg object-cover bg-white/20">` : ''}<b class="text-sm truncate">${esc(client.name || '')}</b>
                 <span class="mr-auto text-left text-[11px] leading-tight opacity-90">المتبقي<b class="block text-base" dir="ltr" id="pkm-pv-left"></b></span></div>
               <div class="p-3 pt-1 grid grid-cols-2 gap-2 text-[11px]"><span><span class="opacity-75 block">الباقة</span><b id="pkm-pv-name"></b></span><span><span class="opacity-75 block">الصلاحية</span><b id="pkm-pv-exp"></b></span></div>
-              <div class="bg-white m-3 mt-1 rounded-xl p-2 grid place-items-center"><i class="ph ph-qr-code text-5xl text-black/80"></i></div>
+              <div class="bg-white m-3 mt-1 rounded-xl p-2 grid place-items-center"><i class="ph-bold ph-qr-code text-6xl text-black/80"></i></div>
             </div>
             <div class="rounded-xl bg-white/70 p-3 text-[12px] leading-relaxed" style="border:1px solid rgba(56,79,61,.1)">
               <b class="block mb-1">ملخّص الباقة</b><span id="pkm-sum"></span>
