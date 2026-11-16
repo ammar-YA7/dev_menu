@@ -400,8 +400,13 @@ module.exports.post = async function post(action, req, b, env) {
         tagline: String(x.tagline || '').replace(/\s+/g, ' ').trim().slice(0, 40) || null,
         // الخلفية: لون، أو صورة، أو فيديو (ملفات مرفوعة لمتجره بس)
         bg_mode: ['color', 'image', 'video'].includes(x.bg_mode) ? x.bg_mode : 'color',
-        bg_image: media(x.bg_image), bg_video: media(x.bg_video)
+        bg_image: media(x.bg_image), bg_video: media(x.bg_video),
+        // شاشة الانتظار: بعد مدة بدون لمس تعرض صور الأطباق أو فيديو، وأول لمسة ترجع للمنيو
+        saver: ['dishes', 'video'].includes(x.saver) ? x.saver : 'off',
+        saver_video: media(x.saver_video),
+        saver_after: [30, 60, 120, 300].includes(Number(x.saver_after)) ? Number(x.saver_after) : 60
       };
+      if (p.menu_ix.saver === 'video' && !p.menu_ix.saver_video) p.menu_ix.saver = 'off';
       if (p.menu_ix.bg_mode !== 'color' && !p.menu_ix[`bg_${p.menu_ix.bg_mode}`]) p.menu_ix.bg_mode = 'color';
     }
     if (has('google_review_url')) {
@@ -540,8 +545,8 @@ module.exports.post = async function post(action, req, b, env) {
   // ─── رابط رفع ملف (الرفع يتم مباشرة للتخزين برابط موقّع صالح لملف واحد) ───
   if (action === 'upload-url') {
     const kind = b.kind;
-    if (!['logo', 'bg_image', 'bg_video', 'links_bg_image', 'links_bg_video', 'prod', 'prod_video', 'prod_cut', 'cat', 'sticker', 'stamp', 'card_bg', 'ix_bg_image', 'ix_bg_video'].includes(kind)) throw new ApiError(400, 'نوع ملف غير صحيح');
-    const isVideo = kind === 'bg_video' || kind === 'links_bg_video' || kind === 'prod_video' || kind === 'ix_bg_video';
+    if (!['logo', 'bg_image', 'bg_video', 'links_bg_image', 'links_bg_video', 'prod', 'prod_video', 'prod_cut', 'cat', 'sticker', 'stamp', 'card_bg', 'ix_bg_image', 'ix_bg_video', 'ix_saver'].includes(kind)) throw new ApiError(400, 'نوع ملف غير صحيح');
+    const isVideo = kind === 'bg_video' || kind === 'links_bg_video' || kind === 'prod_video' || kind === 'ix_bg_video' || kind === 'ix_saver';
     const ext = (isVideo ? VIDEO_TYPES : IMAGE_TYPES)[b.type];
     if (!ext) throw new ApiError(400, isVideo ? 'الملف لازم يكون فيديو MP4' : 'صيغة الصورة غير مدعومة، استخدم JPG أو PNG أو WebP');
     const size = int(b.size);

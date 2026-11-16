@@ -373,6 +373,32 @@
   .ix-heropic .ix-pic.frame img, .ix-heropic .ix-pic.frame video { border-radius: clamp(24px, 4vmin, 40px); }
   .ix-float { animation: ixFloat 6s ease-in-out infinite; }
   .ix-heropic .ix-float:has(img) { cursor: zoom-in; }
+  /* شاشة الانتظار: صور الأطباق أو فيديو لما ما أحد يلمس الشاشة، وأول لمسة ترجع للمنيو */
+  #ixSaver { position: fixed; inset: 0; z-index: 85; background: #000; display: none; opacity: 0; transition: opacity .7s ease; overflow: hidden; cursor: pointer; -webkit-user-select: none; user-select: none; }
+  #ixSaver.on { display: block; }
+  #ixSaver.show { opacity: 1; }
+  .sv-slide { position: absolute; inset: 0; opacity: 0; transition: opacity 1.4s ease; }
+  .sv-slide.on { opacity: 1; z-index: 1; }
+  .sv-slide .sv-img { position: absolute; inset: 0; background: center / cover no-repeat; transform-origin: var(--ox, 50%) var(--oy, 50%); }
+  .sv-slide.on .sv-img { animation: svZoom 9s ease-out forwards; }
+  @keyframes svZoom { from { transform: scale(1.02); } to { transform: scale(1.12); } }
+  .sv-vid { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .sv-shade { position: absolute; inset: 0; z-index: 2; pointer-events: none; background: linear-gradient(to top, rgba(0,0,0,.78) 0%, rgba(0,0,0,.25) 38%, transparent 55%), linear-gradient(to bottom, rgba(0,0,0,.5), transparent 22%); }
+  .sv-top { position: absolute; z-index: 3; top: calc(28px + env(safe-area-inset-top)); left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 10px; color: #fff; text-align: center; }
+  .sv-top img { width: clamp(64px, 9vmin, 104px); height: clamp(64px, 9vmin, 104px); border-radius: 22%; object-fit: cover; box-shadow: 0 10px 30px -10px rgba(0,0,0,.6); }
+  .sv-top b { font-size: clamp(18px, 2.6vmin, 28px); font-weight: 800; text-shadow: 0 2px 12px rgba(0,0,0,.5); }
+  .sv-cap { position: absolute; z-index: 3; bottom: calc(clamp(110px, 15vmin, 160px) + env(safe-area-inset-bottom)); inset-inline: clamp(24px, 6vw, 80px); color: #fff; opacity: 0; transform: translateY(14px); transition: opacity .8s ease .5s, transform .8s ease .5s; }
+  .sv-slide.on .sv-cap { opacity: 1; transform: none; }
+  .sv-cap b { display: block; font-size: clamp(28px, 5.4vmin, 64px); font-weight: 800; line-height: 1.15; text-shadow: 0 3px 18px rgba(0,0,0,.45); }
+  .sv-cap span { display: inline-block; margin-top: 10px; font-size: clamp(18px, 3vmin, 30px); font-weight: 700; padding: 6px 16px; border-radius: 999px; background: rgba(255,255,255,.16); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+  .sv-cta { position: absolute; z-index: 3; left: 50%; bottom: calc(clamp(32px, 5vmin, 56px) + env(safe-area-inset-bottom)); transform: translateX(-50%); display: inline-flex; align-items: center; gap: 10px; white-space: nowrap; color: #111; background: #fff; font-size: clamp(15px, 2.2vmin, 22px); font-weight: 800; padding: clamp(12px, 1.8vmin, 18px) clamp(22px, 3.4vmin, 36px); border-radius: 999px; box-shadow: 0 14px 40px -12px rgba(0,0,0,.6); animation: svPulse 2.4s ease-in-out infinite; }
+  .sv-cta svg { width: 1.2em; height: 1.2em; }
+  @keyframes svPulse { 0%, 100% { transform: translateX(-50%) scale(1); } 50% { transform: translateX(-50%) scale(1.05); } }
+  .sv-dots { position: absolute; z-index: 3; top: calc(14px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); display: flex; gap: 5px; }
+  .sv-dots i { width: 22px; height: 3px; border-radius: 3px; background: rgba(255,255,255,.3); overflow: hidden; position: relative; }
+  .sv-dots i.on::after { content: ''; position: absolute; inset: 0; background: #fff; transform-origin: right; animation: svBar var(--sv-ms, 6000ms) linear forwards; }
+  @keyframes svBar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  @media (prefers-reduced-motion: reduce) { .sv-slide.on .sv-img, .sv-cta { animation: none; } }
   @keyframes ixFloat { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-10px) scale(1.03); } }
   .ix-hname { margin: 0; font-size: clamp(30px, 5.6vmin, 64px); font-weight: 700; line-height: 1.2; color: var(--fg); }
   .ix-hprice { margin: 10px 0 0; font-size: clamp(32px, 6vmin, 64px); line-height: 1.15; font-weight: 700; color: var(--price); }
@@ -651,6 +677,7 @@
 </div>
 
 <!-- المنيو التفاعلي (لو صاحب المحل اختاره أو الزبون بدّل له): ثلاث شاشات تنرسم من js تحت -->
+<div id="ixSaver" aria-hidden="true"></div>
 <div id="ix">
   <div class="ix-top">
     <button type="button" onclick="toggleLanguage()" class="bg-black/60 text-white px-4 py-2 rounded-full text-xs font-bold border border-white/20 transition flex items-center gap-2 backdrop-blur-md">
@@ -3078,7 +3105,7 @@
   function ixSync() {
     const on = ixMode(), was = document.body.classList.contains('ix-mode');
     document.body.classList.toggle('ix-mode', on);
-    if (!on) { clearTimeout(ixIdleT); ixEl('ix-bgm').querySelectorAll('video').forEach(v => { try { v.pause(); } catch {} }); if (was) { ixScreen = 'home'; ixDepth = 0; ixSig = ''; document.querySelectorAll('#ix .ix-scr').forEach(s => { s.classList.remove('on', 'enter'); s.querySelectorAll('video').forEach(v => { try { v.pause(); } catch {} }); }); } return; }
+    if (!on) { clearTimeout(ixIdleT); ixSaverStop(); ixEl('ix-bgm').querySelectorAll('video').forEach(v => { try { v.pause(); } catch {} }); if (was) { ixScreen = 'home'; ixDepth = 0; ixSig = ''; document.querySelectorAll('#ix .ix-scr').forEach(s => { s.classList.remove('on', 'enter'); s.querySelectorAll('video').forEach(v => { try { v.pause(); } catch {} }); }); } return; }
     ixEl('ix-lang-text').textContent = currentLang === 'ar' ? 'English' : 'عربي';
     const look = ixApplyLook();
     const sig = `${menuVersion}|${currentLang}|${allProducts.length}|${allCategories.length}|${JSON.stringify(look)}`;
@@ -3110,9 +3137,84 @@
     } catch {}
   }
 
+  // ─── شاشة الانتظار (menu_ix.saver): بعد مدة بدون لمس، صور الأطباق تتبدّل بالكبير أو فيديو يختاره صاحب المحل ───
+  // ?saver=dishes|video للتجربة
+  function ixSaverCfg() {
+    const o = (project && project.menu_ix && typeof project.menu_ix === 'object') ? project.menu_ix : {};
+    const t = urlParams.get('saver');
+    let mode = ['dishes', 'video'].includes(t) ? t : ['dishes', 'video'].includes(o.saver) ? o.saver : 'off';
+    const video = safeUrl(o.saver_video);
+    if (mode === 'video' && !video) mode = 'dishes';
+    const after = [30, 60, 120, 300].includes(Number(o.saver_after)) ? Number(o.saver_after) : 60;
+    return { mode, video, after };
+  }
+  const SV_MS = 6500;
+  let ixSaverOn = false, ixSaverT = null, ixSaverWoke = 0;
+  const SV_TOUCH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11V5.5a1.5 1.5 0 0 1 3 0V10m0-1.5a1.5 1.5 0 0 1 3 0V11m0-1a1.5 1.5 0 0 1 3 0v4.5a6 6 0 0 1-6 6h-.6a6 6 0 0 1-4.9-2.5L4.2 15a1.6 1.6 0 0 1 2.5-2L9 15"/></svg>';
+  function ixSaverStart() {
+    const c = ixSaverCfg(), el = ixEl('ixSaver');
+    if (c.mode === 'off' || ixSaverOn || !el) return false;
+    const p = project || {}, logo = safeUrl(p.logo_url);
+    const top = `<div class="sv-top">${logo ? `<img src="${esc(logo)}" alt="">` : ''}${p.name ? `<b>${esc(p.name)}</b>` : ''}</div>`;
+    const cta = `<div class="sv-cta">${SV_TOUCH} ${T('المس الشاشة لتصفح المنيو', 'Touch the screen to browse the menu')}</div>`;
+    let slides = [];
+    if (c.mode === 'video') {
+      el.innerHTML = `<video class="sv-vid" src="${esc(c.video)}" muted loop playsinline autoplay disablepictureinpicture></video><div class="sv-shade"></div>${top}${cta}`;
+    } else {
+      const ps = allProducts.filter(x => x.is_available !== false && x.is_hidden !== true && safeUrl(x.image_url));
+      if (!ps.length) return false;
+      // ترتيب عشوائي: المميزة أول، والباقي مخلوط
+      const mix = (a) => a.map(v => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map(v => v[1]);
+      slides = [...mix(ps.filter(x => x.is_bestseller === true)), ...mix(ps.filter(x => x.is_bestseller !== true))].slice(0, 24);
+      el.innerHTML = `${slides.map((x, i) => `
+        <div class="sv-slide${i ? '' : ' on'}" data-i="${i}">
+          <div class="sv-img" style="--ox:${30 + (i * 37) % 40}%;--oy:${30 + (i * 53) % 40}%;${i < 2 ? `background-image:url('${esc(sized(safeUrl(x.image_url), 1080))}')` : ''}" data-src="${esc(sized(safeUrl(x.image_url), 1080))}"></div>
+          <div class="sv-cap"><b>${esc(productName(x))}</b><span>${ixPrice(x)}</span></div>
+        </div>`).join('')}<div class="sv-shade"></div>${top}
+        ${slides.length > 1 && slides.length <= 12 ? `<div class="sv-dots" style="--sv-ms:${SV_MS}ms">${slides.map((_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div>` : ''}${cta}`;
+    }
+    el.classList.add('on'); el.setAttribute('aria-hidden', 'false');
+    requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('show')));
+    ixSaverOn = true;
+    ixEl('ix-bgm') && ixEl('ix-bgm').querySelectorAll('video').forEach(v => { try { v.pause(); } catch {} });
+    if (slides.length > 1) {
+      let at = 0;
+      const nodes = el.querySelectorAll('.sv-slide'), dots = el.querySelectorAll('.sv-dots i');
+      ixSaverT = setInterval(() => {
+        const nx = (at + 1) % nodes.length;
+        const pre = nodes[(nx + 1) % nodes.length].querySelector('.sv-img');
+        if (pre && !pre.style.backgroundImage) pre.style.backgroundImage = `url('${pre.dataset.src}')`;
+        const img = nodes[nx].querySelector('.sv-img');
+        if (!img.style.backgroundImage) img.style.backgroundImage = `url('${img.dataset.src}')`;
+        // نعيد حركة التقريب من البداية
+        img.style.animation = 'none'; void img.offsetWidth; img.style.animation = '';
+        nodes[at].classList.remove('on'); nodes[nx].classList.add('on');
+        if (dots.length) { dots[at].classList.remove('on'); void dots[nx].offsetWidth; dots[nx].classList.add('on'); }
+        at = nx;
+      }, SV_MS);
+    }
+    return true;
+  }
+  function ixSaverStop() {
+    if (!ixSaverOn) return;
+    ixSaverOn = false; clearInterval(ixSaverT); ixSaverWoke = Date.now();
+    const el = ixEl('ixSaver');
+    el.classList.remove('show'); el.setAttribute('aria-hidden', 'true');
+    el.querySelectorAll('video').forEach(v => { try { v.pause(); } catch {} });
+    setTimeout(() => { if (!ixSaverOn) { el.classList.remove('on'); el.innerHTML = ''; } }, 700);
+    ixEl('ix-bgm') && ixEl('ix-bgm').querySelectorAll('video').forEach(v => { if (!calmMotion) v.play().catch(() => {}); });
+  }
+  // أول لمسة توقف شاشة الانتظار بس (ما تضغط شي تحتها)
+  ['pointerdown', 'touchstart', 'keydown'].forEach(ev => window.addEventListener(ev, (e) => {
+    if (!ixSaverOn) return;
+    e.preventDefault(); e.stopPropagation(); ixSaverStop(); ixIdle();
+  }, { capture: true, passive: false }));
+  window.addEventListener('click', (e) => { if (Date.now() - ixSaverWoke < 700) { e.preventDefault(); e.stopPropagation(); } }, true);
+
   // ─── الخمول: على التابلت لو ما أحد لمس الشاشة 90 ثانية يرجع للترحيب (للزبون اللي بعده) ───
   // ?idle=5 للتجربة (بالثواني). في الجوال ما نرجّعه، الزبون يمكن يقرأ على راحته
-  const IX_IDLE = Math.max(3, Number(urlParams.get('idle')) || 90) * 1000;
+  const IX_IDLE_Q = Number(urlParams.get('idle'));
+  const ixIdleMs = () => Math.max(3, IX_IDLE_Q || (ixSaverCfg().mode !== 'off' ? ixSaverCfg().after : 90)) * 1000;
   const ixIdleOn = () => ixTablet || urlParams.has('idle') || Math.min(innerWidth, innerHeight) >= 600;
   let ixIdleT = null;
   function ixIdle() {
@@ -3122,9 +3224,10 @@
       if (!ixMode()) return;
       // الزبون فاتح السلة أو المساعد: ما نقاطعه
       if (!ixEl('cartModal').classList.contains('pointer-events-none') || ixEl('chatSheet').classList.contains('open')) return ixIdle();
-      closeModal();
+      closeModal(); closeImgViewer();
       if (ixScreen !== 'home') ixHome();
-    }, IX_IDLE);
+      ixSaverStart();
+    }, ixIdleMs());
   }
   ['pointerdown', 'keydown', 'touchstart', 'scroll'].forEach(ev => document.addEventListener(ev, ixIdle, { passive: true, capture: true }));
 

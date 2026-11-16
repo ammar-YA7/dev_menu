@@ -810,7 +810,9 @@
     const o = client.menu_ix && typeof client.menu_ix === 'object' ? client.menu_ix : {};
     return { style: ixTemplates()[o.style] ? o.style : 'grid', bg: o.bg || null, accent: o.accent || null, texture: ixTexture(o.texture),
       shape: ['round', 'soft', 'square'].includes(o.shape) ? o.shape : null, tagline: o.tagline || '',
-      bg_mode: ['color', 'image', 'video'].includes(o.bg_mode) ? o.bg_mode : 'color', bg_image: o.bg_image || null, bg_video: o.bg_video || null };
+      bg_mode: ['color', 'image', 'video'].includes(o.bg_mode) ? o.bg_mode : 'color', bg_image: o.bg_image || null, bg_video: o.bg_video || null,
+      saver: ['dishes', 'video'].includes(o.saver) ? o.saver : 'off', saver_video: o.saver_video || null,
+      saver_after: [30, 60, 120, 300].includes(Number(o.saver_after)) ? Number(o.saver_after) : 60 };
   };
   // المنيو التفاعلي إضافة (ixpro): بدونها نعرض الشكل كمعاينة مقفولة مع طريقة الإضافة
   const ixHas = () => !window.DMPlans || DMPlans.has(client, 'ixpro');
@@ -925,6 +927,31 @@
       ${c.bg_mode === 'image' ? bgFile('image') : c.bg_mode === 'video' ? bgFile('video') : ''}
       ${color('bg', c.bg_mode === 'color' ? 'لون الخلفية' : 'لون فوق الصورة أو الفيديو')}
       ${c.bg_mode !== 'color' ? '<span class="block text-[11px] text-ink/70 leading-relaxed">يظهر هذا اللون بشفافية فوق الصورة أو الفيديو حتى تبقى النصوص واضحة.</span>' : ''}`;
+    // شاشة الانتظار: إيقاف، صور الأطباق، أو فيديو (رفع ومعاينة)، والمدة قبل ما تشتغل
+    const svModes = [['off', 'إيقاف', 'ph-prohibit'], ['dishes', 'صور الأطباق', 'ph-images'], ['video', 'فيديو', 'ph-film-strip']];
+    const svAfter = [[30, '30 ثانية'], [60, 'دقيقة'], [120, 'دقيقتين'], [300, '5 دقائق']];
+    const svVid = c.saver_video;
+    const saverBody = `
+      <div role="radiogroup" class="grid grid-cols-3 gap-1.5">${svModes.map(([v, t, ic]) => `
+        <button type="button" role="radio" aria-checked="${c.saver === v}" onclick="setIxSaver('${v}')" class="rounded-lg border px-2 py-2 text-[11px] font-bold transition inline-flex items-center justify-center gap-1 ${c.saver === v ? 'border-brand bg-brand text-cream' : 'border-brand/20 bg-white text-ink hover:border-brand/40'}"><i class="ph-bold ${ic}"></i> ${t}</button>`).join('')}
+      </div>
+      ${c.saver === 'dishes' ? '<span class="block text-[11px] text-ink/70 leading-relaxed">تعرض الأطباق المتوفرة اللي لها صور، المميزة أولاً، كل صورة 6 ثوانٍ مع اسم الطبق وسعره.</span>' : ''}
+      ${c.saver === 'video' || svVid ? `
+        <div class="flex items-center gap-2 bg-brand/5 rounded-lg border ${c.saver === 'video' ? 'border-brand' : 'border-brand/15'} p-2">
+          ${svVid ? `<video src="${esc(svVid)}" muted loop autoplay playsinline class="w-20 h-12 object-cover rounded-lg border border-brand/15 shrink-0"></video>` : '<span class="w-20 h-12 rounded-lg bg-white border border-dashed border-brand/25 grid place-items-center text-ink/60 shrink-0"><i class="ph-bold ph-film-strip"></i></span>'}
+          <span class="flex-1 min-w-0 text-[11px] text-ink leading-relaxed">فيديو بدون صوت يتكرر (MP4، حتى 30 ميجا). الأفضل أفقي للتابلت.</span>
+          <input type="file" id="ix-saver-file" accept="video/mp4,video/webm,video/quicktime" class="hidden" onchange="uploadIxSaver()">
+          <button type="button" id="upl-ix_saver" onclick="document.getElementById('ix-saver-file').click()" class="shrink-0 bg-brand text-cream font-bold px-2.5 py-1.5 rounded-lg text-[11px]">${svVid ? 'تغيير' : 'رفع'}</button>
+          ${svVid ? `<button type="button" onclick="saveIxLook({ saver: 'off', saver_video: null })" class="shrink-0 bg-red-500/10 text-red-700 border border-red-500/25 hover:bg-red-500/15 font-bold px-2.5 py-1.5 rounded-lg text-[11px]"><i class="ph-bold ph-trash"></i> إزالة</button>` : ''}
+        </div>` : ''}
+      ${c.saver !== 'off' ? `
+        <div class="space-y-1.5">
+          <span class="block text-[11px] font-bold text-ink">تشتغل بعد</span>
+          <div role="radiogroup" class="grid grid-cols-4 gap-1.5">${svAfter.map(([v, t]) => `
+            <button type="button" role="radio" aria-checked="${c.saver_after === v}" onclick="saveIxLook({ saver_after: ${v} })" class="rounded-lg border px-1 py-2 text-[11px] font-bold transition ${c.saver_after === v ? 'border-brand bg-brand text-cream' : 'border-brand/20 bg-white text-ink hover:border-brand/40'}">${t}</button>`).join('')}
+          </div>
+          <a href="${esc(DM.storeUrl(client.client_slug, 'menu', { mode: 'tablet', idle: 5 }))}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-[11px] font-bold text-brand underline underline-offset-2"><i class="ph-bold ph-play-circle"></i> جرّبها الآن (تشتغل بعد 5 ثوانٍ)</a>
+        </div>` : ''}`;
     box.innerHTML = `
       <b class="block text-xs text-ink">شكل المنيو التفاعلي</b>
       ${group(1, `القالب المستخدم الآن: ${T[c.style].name}`, 'لتغييره اختر قالباً آخر، وتتغير الألوان والشكل إلى إعدادات القالب الجديد.', `<div role="radiogroup" class="grid grid-cols-2 gap-2">${keys.map(opt).join('')}</div>`)}
@@ -932,7 +959,8 @@
       ${group(3, 'لون التمييز', 'لون العناوين والأزرار والأسعار.', color('accent', 'لون التمييز'))}
       ${group(4, 'الشكل', '', seg('shape', 'شكل البطاقات', [['round', 'دائري'], ['soft', 'حواف ناعمة'], ['square', 'حواف حادة']])
         + seg('texture', 'الملمس', [['grain', 'حبيبات'], ['paper', 'ورق'], ['none', 'بدون']]))}
-      ${group(5, 'جملة تحت الشعار', 'اختيارية، حتى 40 حرفاً، وتظهر تحت اسم المحل في شاشة الترحيب.', `
+      ${group(5, 'شاشة الانتظار', 'على التابلت: إذا ما لمس أحد الشاشة فترة، تعرض صور أطباقك بالكبير أو فيديو من اختيارك، وأول لمسة ترجع للمنيو.', saverBody)}
+      ${group(6, 'جملة تحت الشعار', 'اختيارية، حتى 40 حرفاً، وتظهر تحت اسم المحل في شاشة الترحيب.', `
         <input id="ix-tagline" type="text" maxlength="40" aria-label="جملة تحت الشعار" value="${(c.tagline || '').replace(/"/g, '&quot;').replace(/</g, '&lt;')}" placeholder="مثال: قهوة مختصة منذ 2015" onchange="saveIxLook({ tagline: this.value })" class="input-pro text-xs">`)}`;
   }
   // ─── منيو التابلت: رابط مستقل يفتح المنيو التفاعلي دائماً (?mode=tablet) ───
@@ -978,6 +1006,25 @@
     input.value = '';
     if (!url) return showToast(`فشل رفع الملف: ${lastUploadError}`, true);
     saveIxLook({ bg_mode: kind, [`bg_${kind}`]: url });
+  }
+  // شاشة الانتظار: الفيديو لو ما انرفع للحين نفتح اختيار الملف وينحفظ بعد الرفع
+  function setIxSaver(mode) {
+    const c = ixCfg();
+    if (mode === 'video' && !c.saver_video) {
+      const o = client.menu_ix || {}; client.menu_ix = { ...o, saver: 'video' }; renderIxLook(); client.menu_ix = o;
+      const f = document.getElementById('ix-saver-file'); if (f) f.click();
+      return;
+    }
+    saveIxLook({ saver: mode });
+  }
+  async function uploadIxSaver() {
+    const input = document.getElementById('ix-saver-file'), file = input && input.files[0];
+    const problem = validateFile(file, 'video');
+    if (problem) return showToast(problem, true);
+    const url = await uploadFile(file, 'ix_saver', 1920);
+    input.value = '';
+    if (!url) return showToast(`فشل رفع الملف: ${lastUploadError}`, true);
+    saveIxLook({ saver: 'video', saver_video: url });
   }
   function removeIxBg(kind) { saveIxLook({ bg_mode: 'color', [`bg_${kind}`]: null }); }
   // تغيير القالب يرجّع الألوان والملمس وشكل البطاقات لافتراضي القالب الجديد
