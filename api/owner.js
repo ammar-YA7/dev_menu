@@ -53,7 +53,7 @@ async function main(req) {
 const MENU_ACTIONS = new Set([
   'update-store', 'occasions-save', 'branch-rename', 'coupon-save', 'coupon-toggle', 'coupon-delete', 'update-slug',
   'category-add', 'category-group', 'category-image', 'category-rename', 'category-delete', 'reorder',
-  'product-save', 'product-toggle', 'product-quick', 'product-delete', 'products-import', 'waitlist-settings', 'extras-copy'
+  'product-save', 'product-toggle', 'product-move', 'product-delete', 'products-import', 'waitlist-settings', 'extras-copy'
 ]);
 
 module.exports = handler(['GET', 'POST'], async (req) => {

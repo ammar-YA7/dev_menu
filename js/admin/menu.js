@@ -601,7 +601,7 @@
       const meta = [
         p.subgroup ? `<span class="text-brand font-bold"><i class="ph-bold ph-folder-simple"></i> ${esc(p.subgroup)}</span>` : '',
         p.coffee && allowsCoffee() ? esc(coffeeSummary(p.coffee) || 'قهوة مختصة') : '',
-        !showCalories() ? '' : `<button type="button" class="dish-q dish-q-cal${p.calories == null ? ' is-empty' : ''}" onclick="quickEdit(event, ${id}, 'calories')" aria-label="سعرات ${esc(p.name)}">${p.calories != null ? `${Number(p.calories)} سعرة` : 'بدون سعرات'}</button>`
+        !showCalories() ? '' : p.calories != null ? `${Number(p.calories)} سعرة` : '<span class="text-amber-700">بدون سعرات</span>'
       ].filter(Boolean).join(' · ');
       const sized = sizesText(p);
       return `${header}
@@ -613,9 +613,9 @@
               ${meta ? `<span class="dish-meta block">${meta}</span>` : ''}
             </span>
             <span class="dish-leader" aria-hidden="true"></span>
-            ${sized ? `<button type="button" class="dish-price" onclick="startEdit(${id})" title="الطبق له أحجام: عدّل أسعارها من صفحة الطبق">${esc(sized)}</button>`
-              : `<button type="button" class="dish-price dish-q" onclick="quickEdit(event, ${id}, 'price')" aria-label="سعر ${esc(p.name)}">${esc(money(p.price))}</button>`}${(Array.isArray(p.extras) && p.extras.length) ? `<span class="hidden sm:inline text-[10.5px] font-bold text-ink/70 ms-1"><i class="ph-bold ph-list-plus"></i> ${p.extras.length} ${p.extras.length === 1 ? 'مجموعة إضافات' : 'مجموعات إضافات'}</span>` : ''}
+            <button type="button" class="dish-price" onclick="startEdit(${id})" tabindex="-1">${esc(sized || money(p.price))}</button>${(Array.isArray(p.extras) && p.extras.length) ? `<span class="hidden sm:inline text-[10.5px] font-bold text-ink/70 ms-1"><i class="ph-bold ph-list-plus"></i> ${p.extras.length} ${p.extras.length === 1 ? 'مجموعة إضافات' : 'مجموعات إضافات'}</span>` : ''}
           </div>
+          ${loadedCategories.length > 1 ? `<button type="button" class="dish-cat-btn" aria-haspopup="menu" aria-expanded="false" onclick="openCatPicker(event, ${id})" title="نقل الطبق لقسم ثاني"><i class="ph-bold ph-folder-simple"></i><span>${esc(cat ? cat.name : 'بدون قسم')}</span><i class="ph-bold ph-caret-down"></i></button>` : ''}
           <button type="button" role="switch" aria-checked="${isAvailable}" aria-label="متوفر: ${esc(p.name)}" class="avail" onclick="toggleField(${id}, 'is_available', ${isAvailable})">
             <span class="avail-track"></span><span class="avail-label">${isAvailable ? 'متوفر' : 'نفدت'}</span>
           </button>
@@ -664,37 +664,40 @@
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && dishMenuFor !== null) closeDishMenu(); });
   window.addEventListener('scroll', () => { if (dishMenuFor !== null) closeDishMenu(); }, { passive: true });
 
-  // تعديل السعر أو السعرات من القائمة مباشرة: اضغط الرقم، اكتب، Enter أو اطلع برا يحفظ، Esc يلغي
-  function quickEdit(e, id, field) {
+  // نقل الطبق لقسم ثاني من القائمة مباشرة: اضغط اسم القسم واختر
+  function openCatPicker(e, id) {
     e.stopPropagation();
-    const btn = e.currentTarget;
+    if (dishMenuFor === 'cat' + id) return closeDishMenu();
+    closeDishMenu();
     const p = loadedProducts.find(x => Number(x.id) === id); if (!p) return;
-    const cur = field === 'price' ? p.price : p.calories;
-    const box = document.createElement('span');
-    box.className = 'dish-q-edit';
-    box.innerHTML = `<input type="number" inputmode="${field === 'price' ? 'decimal' : 'numeric'}" min="0" step="${field === 'price' ? 'any' : '1'}" dir="ltr" value="${cur ?? ''}" placeholder="${field === 'price' ? '0.00' : 'مثال: 450'}" aria-label="${field === 'price' ? 'السعر' : 'السعرات'}"><span>${field === 'price' ? esc(curSign()) : 'سعرة'}</span>`;
-    btn.replaceWith(box);
-    const input = box.querySelector('input');
-    input.focus(); input.select();
-    let done = false;
-    const finish = async (save) => {
-      if (done) return; done = true;
-      const raw = input.value.trim();
-      const val = raw === '' ? null : Number(raw);
-      if (!save || val === (cur ?? null) || (field === 'price' && val === null)) return filterProducts();
-      input.disabled = true;
-      try {
-        const r = await api('product-quick', { id, field, value: raw });
-        Object.assign(p, r.product || { [field]: val });
-        showToast(field === 'price' ? `صار سعر «${p.name}» ${money(p.price)}` : val === null ? 'انمسحت السعرات' : `انحفظت السعرات: ${val} سعرة`);
-      } catch (err) { showToast(err.message || 'ما قدرنا نحفظ. تأكد من الإنترنت', true); }
-      filterProducts(); renderDashboardSummary();
-    };
-    input.addEventListener('keydown', (ev) => {
-      if (ev.key === 'Enter') { ev.preventDefault(); finish(true); }
-      else if (ev.key === 'Escape') { ev.preventDefault(); finish(false); }
-    });
-    input.addEventListener('blur', () => finish(true));
+    const cur = categoryOf(p);
+    const btn = e.currentTarget, r = btn.getBoundingClientRect();
+    const m = document.createElement('div');
+    m.id = 'dish-menu'; m.setAttribute('role', 'menu'); m.className = 'cat-pick';
+    m.innerHTML = `<p class="cat-pick-h">انقل «${esc(p.name)}» إلى:</p>` + loadedCategories.map(c => {
+      const on = cur && c.key === cur.key;
+      return `<button type="button" role="menuitemradio" aria-checked="${on}" ${on ? 'disabled' : ''} onclick="closeDishMenu(); moveToCategory(${id}, '${esc(c.key)}')"><i class="ph-bold ${on ? 'ph-check' : 'ph-folder-simple'}"></i> ${esc(c.name)}</button>`;
+    }).join('');
+    document.body.appendChild(m);
+    const w = m.offsetWidth, h = m.offsetHeight;
+    m.style.left = `${Math.max(8, Math.min(r.left, innerWidth - w - 8))}px`;
+    m.style.top = `${r.bottom + h + 8 > innerHeight ? Math.max(8, r.top - h - 4) : r.bottom + 4}px`;
+    btn.setAttribute('aria-expanded', 'true');
+    dishMenuFor = 'cat' + id;
+    (m.querySelector('button:not(:disabled)') || m).focus();
+  }
+  async function moveToCategory(id, key) {
+    const p = loadedProducts.find(x => Number(x.id) === id);
+    const c = loadedCategories.find(x => x.key === key);
+    if (!p || !c) return;
+    const old = p.category;
+    p.category = c.key; filterProducts();
+    try {
+      const r = await api('product-move', { id, category: c.key });
+      if (r.product) Object.assign(p, r.product);
+      filterProducts();
+      showToast(`انتقل «${p.name}» إلى قسم ${c.name}`);
+    } catch { p.category = old; filterProducts(); showToast('ما قدرنا ننقل الطبق. تأكد من الإنترنت', true); }
   }
 
   // المفتاح يتغير على طول (بدون انتظار الخادم)، ولو فشل الحفظ يرجع لحالته

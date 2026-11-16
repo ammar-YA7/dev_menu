@@ -419,30 +419,25 @@ module.exports.post = async function post(action, req, b, env) {
     return { product: rows[0] };
   }
 
-  // تعديل سريع من قائمة الأطباق: السعر (لهذا الفرع) أو السعرات (لكل الفروع المربوطة)
-  if (action === 'product-quick') {
+  // نقل الطبق لقسم ثاني من قائمة الأطباق (وفي الفروع المربوطة للقسم المقابل)
+  if (action === 'product-move') {
     const id = int(b.id);
-    const old = (await rest(`products?id=eq.${id}&client_id=eq.${sid}&select=id,link_id,sizes`))[0];
+    const category = str(b.category, 80, 'القسم');
+    const old = (await rest(`products?id=eq.${id}&client_id=eq.${sid}&select=id,link_id,category`))[0];
     if (!old) throw new ApiError(404, 'الطبق غير موجود');
-    let patch;
-    if (b.field === 'price') {
-      if (Array.isArray(old.sizes) && old.sizes.length) throw new ApiError(400, 'الطبق له أحجام، عدّل أسعارها من صفحة الطبق');
-      const price = Number(b.value);
-      if (b.value === '' || b.value == null || !validPrice(price)) throw new ApiError(400, 'اكتب سعراً صحيحاً');
-      patch = { price };
-    } else if (b.field === 'calories') {
-      if (store.show_calories === false) throw new ApiError(400, 'السعرات غير مفعّلة');
-      let calories = null;
-      if (b.value !== null && b.value !== '') {
-        calories = int(b.value);
-        if (!Number.isInteger(calories) || calories < 0 || calories > 10000) throw new ApiError(400, 'عدد السعرات غير صحيح');
-      }
-      patch = { calories };
-    } else throw new ApiError(400, 'حقل غير صحيح');
-    const rows = await rest(`products?id=eq.${id}&client_id=eq.${sid}`, { method: 'PATCH', body: patch, prefer: 'return=representation' });
-    if (b.field === 'calories' && old.link_id) {
+    const cats = await rest(`categories?client_id=eq.${sid}&select=key,name,name_en,group_name`);
+    const src = cats.find(c => c.key === category || c.name === category);
+    if (!src) throw new ApiError(400, 'القسم غير موجود');
+    if (old.category === src.key) return { product: old };
+    const sort_order = await nextOrderIn(sid, src.key);
+    const rows = await rest(`products?id=eq.${id}&client_id=eq.${sid}`, { method: 'PATCH', body: { category: src.key, sort_order }, prefer: 'return=representation' });
+    if (old.link_id) {
       const others = (await familyOf(store)).map(f => f.id).filter(x => x !== sid);
-      if (others.length) await rest(`products?link_id=eq.${q(old.link_id)}&client_id=in.(${others.join(',')})`, { method: 'PATCH', body: patch });
+      const linked = others.length ? await rest(`products?link_id=eq.${q(old.link_id)}&client_id=in.(${others.join(',')})&select=id,client_id,category`) : [];
+      for (const t of linked) {
+        const tc = await categoryIn(t.client_id, src);
+        if (t.category !== tc.key) await rest(`products?id=eq.${t.id}`, { method: 'PATCH', body: { category: tc.key, sort_order: await nextOrderIn(t.client_id, tc.key) } });
+      }
     }
     return { product: rows[0] };
   }
