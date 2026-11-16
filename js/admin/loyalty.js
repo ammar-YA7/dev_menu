@@ -681,7 +681,7 @@
     .pkm-grid{display:grid;grid-template-columns:1fr 280px}
     .pkm-form{padding:22px;min-width:0}
     .pkm-side{padding:22px;background:rgba(56,79,61,.06);border-inline-start:1px solid rgba(56,79,61,.1);display:flex;flex-direction:column;gap:12px}
-    @media (max-width:700px){.pkm-grid{grid-template-columns:1fr}.pkm-side{order:-1;border-inline-start:0;border-bottom:1px solid rgba(56,79,61,.1)}}
+    @media (max-width:700px){.pkm-grid{grid-template-columns:1fr}.pkm-side{border-inline-start:0;border-top:1px solid rgba(56,79,61,.1)}}
     .pkm-l{display:block;font-size:12.5px;font-weight:800;margin:16px 0 7px}
     .pkm-l small{font-weight:600;color:rgba(34,54,42,.5)}
     .pkm-in{width:100%;background:#fff;border:1.5px solid rgba(56,79,61,.2);border-radius:12px;padding:11px 13px;font-size:16px;color:#22362a;font-family:inherit}
