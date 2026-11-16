@@ -684,7 +684,7 @@
     if (top) {
       const pct = Math.max(0, Math.min(100, Math.round(top.remaining / Math.max(1, top.total) * 100)));
       band.classList.toggle('low', top.remaining <= 2);
-      band.innerHTML = `${stampsOn ? `<div class="row"><p class="nm"><i class="ph-bold ph-package"></i><span>${pkEsc(top.plan_name)}</span></p><p class="left">باقي<b dir="ltr">${top.remaining}</b> / ${top.total}</p></div>` : ''}
+      band.innerHTML = `${stampsOn ? `<div class="row"><p class="nm"><i class="ph-bold ph-package"></i><span>${pkEsc(top.plan_name)}</span></p><p class="left">باقي <b dir="ltr">${top.remaining}</b> / ${top.total}</p></div>` : ''}
         <div class="bar"><span style="width:${pct}%"></span></div>
         <p class="sub"><span>${top.remaining <= 0 ? 'خلصت باقتك' : top.remaining <= 2 ? 'قربت تخلص، جدّدها من الكاشير' : 'اعرض الكود للكاشير ويخصم منها'}</span><span>${top.expires_at ? `تنتهي ${pkDate(top.expires_at)}` : 'بدون انتهاء'}</span></p>`;
     }
