@@ -96,6 +96,7 @@
     menu:      ['المنيو', 'أضف أطباقك وأقسامك ورتّبها'],
     waitlist:  ['قائمة الانتظار', 'سجّل عملاءك وبلّغهم لما يجي دورهم'],
     loyalty:   ['بطاقة الأختام', 'تصميم البطاقة وإعداداتها وأرقامها'],
+    carddesign: ['تصميم البطاقة', 'لون بطاقة عملائك وشكلها وشعارها، في صفحة البطاقة والمحفظة.'],
     subs:      ['بطاقة الاشتراكات', 'يدفع العميل مقدّماً ويستخدم باقته على دفعات، ويتحدّث رصيده في بطاقته مع كل زيارة.'],
     customers: ['العملاء', 'أعضاء بطاقة الأختام في كل فروعك'],
     messages:  ['الرسائل', 'أرسل عروضك وأخبارك لجوالات عملائك'],
@@ -107,7 +108,7 @@
   };
   // المميزات اللي مو ضمن باقة المشترك: الصفحة تعرض "أضفها لباقتك" بدل محتواها
   // الرسائل: من بطاقة الولاء، أو من بطاقة النداء (إضافة على البيجر)
-  const PAGE_FEATURE = { menu: 'menu', pagerset: 'pager', waitlist: 'waitlist', loyalty: 'loyalty', subs: 'subs', customers: () => DMPlans.has(client, 'loyalty') || DMPlans.has(client, 'subs') ? null : 'loyalty', messages: () => DMPlans.has(client, 'loyalty') || DMPlans.has(client, 'subs') || DMPlans.has(client, 'pager') ? null : 'pager' };
+  const PAGE_FEATURE = { menu: 'menu', pagerset: 'pager', waitlist: 'waitlist', loyalty: 'loyalty', subs: 'subs', carddesign: () => DMPlans.has(client, 'loyalty') || DMPlans.has(client, 'subs') ? null : 'loyalty', customers: () => DMPlans.has(client, 'loyalty') || DMPlans.has(client, 'subs') ? null : 'loyalty', messages: () => DMPlans.has(client, 'loyalty') || DMPlans.has(client, 'subs') || DMPlans.has(client, 'pager') ? null : 'pager' };
   // الخدمات اللي مو ضمن باقته (في التجربة أو الاشتراك) تختفي من اللوحة كلها
   const featureLocked = (key) => !!client && ['active', 'trial'].includes(client.subscription_status) && !DMPlans.has(client, key);
   let lockedKey = null;
@@ -324,6 +325,14 @@
     if (['loyalty', 'customers'].includes(page) || (page === 'messages' && (DMPlans.has(client, 'loyalty') || DMPlans.has(client, 'subs')))) onLoyaltyPage();
     if (page === 'messages') renderNotifyCard();
     if (page === 'subs' && typeof loadPackages === 'function') loadPackages();
+    // تصميم البطاقة: عنده الأختام = تصميم بطاقة الأختام (يشمل الباقة)، الاشتراكات بس = تصميم الاشتراكات
+    if (page === 'carddesign') {
+      const stamps = DMPlans.has(client, 'loyalty');
+      document.getElementById('ly-design-block').classList.toggle('hidden', !stamps);
+      document.getElementById('pkd-card').classList.toggle('hidden', stamps);
+      document.getElementById('cd-both').classList.toggle('hidden', !(stamps && DMPlans.has(client, 'subs')));
+      if (stamps) onLoyaltyPage(); else loadPackages();
+    }
   }
   function toggleMore(on) { const m = document.getElementById('more-sheet'); m.classList.toggle('hidden', !on); m.classList.toggle('flex', on); }
   document.querySelectorAll('[data-nav]').forEach(b => b.addEventListener('click', () => {

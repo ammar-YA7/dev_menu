@@ -17,7 +17,7 @@
   document.querySelectorAll('[data-lyt]').forEach(b => b.addEventListener('click', () => setLyTab(b.dataset.lyt)));
   async function onLoyaltyPage() {
     let saved = ''; try { saved = localStorage.getItem('dm_ly_tab') || ''; } catch {}
-    setLyTab(['overview', 'design', 'settings', 'messages', 'register'].includes(ly.tab || saved) ? (ly.tab || saved) : 'overview');
+    setLyTab(['overview', 'settings', 'messages', 'register'].includes(ly.tab || saved) ? (ly.tab || saved) : 'overview');
     try { [ly.data, ly.members] = await Promise.all([api('loyalty'), api('loyalty-members').then(r => r.members)]); }
     catch (e) { showToast(e.message || 'تعذر تحميل بطاقة الأختام', true); return; }
     renderLoyalty();
@@ -629,8 +629,7 @@
   function renderPkd() {
     // عنده بطاقة الأختام: البطاقة وحدة وتصميمها من «بطاقة الأختام»
     const withStamps = DMPlans.has(client, 'loyalty');
-    document.getElementById('pkd-card').classList.toggle('hidden', withStamps);
-    document.getElementById('pkd-note').classList.toggle('hidden', !withStamps);
+    if (withStamps) return;   // تصميمها من بطاقة الأختام (صفحة «تصميم البطاقة»)
     const d = pk.design, style = d.style || 'gradient';
     const bg = d.bg === 'image' && d.bg_image ? 'image' : 'color';
     const on = 'border-brand bg-brand text-cream', off = 'border-brand/20 bg-white hover:border-brand/40';
