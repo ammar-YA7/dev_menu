@@ -43,7 +43,7 @@ async function stampStrip(settings, card, pkg = null) {
     const n = settings.needed, done = Math.min(card.stamps || 0, n);
     const rows = n <= 6 ? 1 : 2, cols = Math.ceil(n / rows);
     const pad = 40, gap = 30;
-    const band = pkg && pkg.total ? 96 : 0, top = 28;   // مكان شريط الباقة تحت
+    const band = pkg && pkg.total ? 104 : 0, top = 24;   // مكان شريط الباقة تحت
     const areaH = H - band - (band ? top : 0);
     const D = Math.floor(Math.min((W - 2 * pad - (cols - 1) * gap) / cols, (areaH - 2 * (band ? 20 : pad) - (rows - 1) * gap) / rows));
     const gridW = cols * D + (cols - 1) * gap, gridH = rows * D + (rows - 1) * gap;
@@ -74,18 +74,33 @@ async function stampStrip(settings, card, pkg = null) {
       if (last && !on) { if (!d.reward_image) shapes += icon('gift', cx - s / 2, cy - s / 2, s, d.stamp_color, .95); }
       else if (!d.stamp_image) shapes += icon(d.icon, cx - s / 2, cy - s / 2, s, on ? stampInk : bg.ink, on ? 1 : .35);
     }
-    // شريط الباقة: إطار شفاف بلون خط البطاقة، أيقونة الباقة يمين، وشريط تقدّم بنسبة الباقي
+    // شريط الباقة: لوح زجاجي تحت الأختام. يمين: حلقة تقدّم حول أيقونة الباقة، وجنبها خانات بعدد مرات الباقة
+    // (الباقي ممتلئ والمستخدم باهت)، ولو الباقة كبيرة (أكثر من 30) شريط متصل. بدون كتابة: الاسم والرقم في خانات البطاقة
     if (band) {
-      const bx = 60, bw = W - 120, by = H - band - 22, bh = band, ink = bg.ink;
-      const pct = Math.max(0, Math.min(1, pkg.remaining / pkg.total));
-      const low = pkg.remaining <= 2;
-      const isz = 46, ix = bx + bw - 30 - isz, iy = by + (bh - isz) / 2;
-      const barX = bx + 34, barW = ix - 30 - barX, barY = by + bh / 2 - 9, barH = 18;
-      shapes += `<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" rx="28" fill="${ink}" fill-opacity=".12" stroke="${ink}" stroke-opacity=".22" stroke-width="2"/>`
-        + icon('package', ix, iy, isz, ink, .9)
-        + `<rect x="${barX}" y="${barY}" width="${barW}" height="${barH}" rx="9" fill="${ink}" fill-opacity=".2"/>`
-        // يمين لليسار: الممتلئ يبدأ من اليمين
-        + (pct > 0 ? `<rect x="${barX + barW - Math.max(barH, barW * pct)}" y="${barY}" width="${Math.max(barH, barW * pct)}" height="${barH}" rx="9" fill="${low ? '#f59e0b' : ink}"/>` : '');
+      const bx = 52, bw = W - 104, by = H - band - 20, bh = band, ink = bg.ink;
+      const total = pkg.total, left = Math.max(0, Math.min(total, pkg.remaining)), pct = left / total;
+      const low = left <= 2, accent = low ? '#f59e0b' : ink;
+      // اللوح
+      shapes += `<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" rx="${bh / 2}" fill="${ink}" fill-opacity=".1" stroke="${ink}" stroke-opacity=".2" stroke-width="2"/>`
+        + `<rect x="${bx + 3}" y="${by + 3}" width="${bw - 6}" height="${bh / 2 - 3}" rx="${bh / 2 - 3}" fill="#fff" fill-opacity=".05"/>`;
+      // الحلقة والأيقونة (يمين)
+      const R = bh / 2 - 12, cx = bx + bw - bh / 2, cy = by + bh / 2, C = 2 * Math.PI * R;
+      shapes += `<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${ink}" stroke-opacity=".18" stroke-width="7"/>`
+        + (pct > 0 ? `<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${accent}" stroke-width="7" stroke-linecap="round" stroke-dasharray="${(C * pct).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 ${cx} ${cy})"/>` : '')
+        + icon('package', cx - 17, cy - 17, 34, ink, .95);
+      // الخانات (من اليمين لليسار)
+      const tx0 = bx + 38, tx1 = cx - R - 34, tw = tx1 - tx0, th = 22, ty = cy - th / 2;
+      if (total <= 30) {
+        const g = total > 20 ? 6 : total > 10 ? 9 : 12, sw = (tw - g * (total - 1)) / total;
+        for (let i = 0; i < total; i++) {
+          const x = tx1 - (i + 1) * sw - i * g, on = i < left;
+          shapes += `<rect x="${x.toFixed(1)}" y="${ty}" width="${sw.toFixed(1)}" height="${th}" rx="${Math.min(th, sw) / 2}" fill="${on ? accent : ink}" fill-opacity="${on ? 1 : .18}"/>`;
+        }
+      } else {
+        const fw = Math.max(th, tw * pct);
+        shapes += `<rect x="${tx0}" y="${ty}" width="${tw}" height="${th}" rx="${th / 2}" fill="${ink}" fill-opacity=".18"/>`
+          + (pct > 0 ? `<rect x="${(tx1 - fw).toFixed(1)}" y="${ty}" width="${fw.toFixed(1)}" height="${th}" rx="${th / 2}" fill="${accent}"/>` : '');
+      }
     }
     const svg = photo
       ? `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}"><rect width="${W}" height="${H}" fill="#000" fill-opacity=".5"/>${shapes}</svg>`
