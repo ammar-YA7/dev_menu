@@ -398,6 +398,25 @@
   .sv-dots i { width: 22px; height: 3px; border-radius: 3px; background: rgba(255,255,255,.3); overflow: hidden; position: relative; }
   .sv-dots i.on::after { content: ''; position: absolute; inset: 0; background: #fff; transform-origin: right; animation: svBar var(--sv-ms, 6000ms) linear forwards; }
   @keyframes svBar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  .sv-media .sv-contain { background-size: contain; z-index: 1; }
+  .sv-media .sv-blur { filter: blur(28px) brightness(.55); transform: scale(1.15); }
+  .sv-slide.on .sv-media .sv-img, .sv-media.on .sv-img { animation: none; }
+  .sv-cap em { display: inline-block; font-style: normal; font-size: clamp(14px, 2.2vmin, 22px); font-weight: 800; padding: 5px 14px; border-radius: 999px; margin-bottom: 10px; }
+  .sv-deal { background: #e11d48; color: #fff; }
+  .sv-star { background: #fff; color: #111; }
+  .sv-qr { position: absolute; z-index: 4; inset-inline-end: clamp(18px, 3vw, 40px); bottom: calc(clamp(24px, 4vmin, 44px) + env(safe-area-inset-bottom)); width: clamp(130px, 17vmin, 190px); padding: 12px 12px 10px; border-radius: 20px; background: #fff; color: #111; text-align: center; box-shadow: 0 16px 40px -14px rgba(0,0,0,.6); }
+  .sv-qr-code { aspect-ratio: 1; }
+  .sv-qr-code canvas, .sv-qr-code img { width: 100% !important; height: auto !important; display: block; }
+  .sv-qr b { display: block; margin-top: 8px; font-size: clamp(11.5px, 1.6vmin, 15px); font-weight: 800; line-height: 1.35; }
+  .sv-ready { position: absolute; z-index: 4; inset-inline-end: clamp(18px, 3vw, 40px); top: calc(clamp(18px, 3vmin, 32px) + env(safe-area-inset-top)); max-width: min(46vw, 420px); padding: 12px 16px 14px; border-radius: 20px; background: rgba(255,255,255,.96); color: #111; box-shadow: 0 16px 40px -14px rgba(0,0,0,.6); }
+  .sv-ready[hidden] { display: none; }
+  .sv-ready > b { display: flex; align-items: center; gap: 6px; font-size: clamp(13px, 1.8vmin, 17px); font-weight: 800; color: #047857; }
+  .sv-ready > b svg { width: 1.2em; height: 1.2em; }
+  .sv-ready-n { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .sv-ready-n span { min-width: 2.2em; text-align: center; font-size: clamp(26px, 4.4vmin, 46px); font-weight: 900; line-height: 1.1; padding: 4px 12px; border-radius: 12px; background: #ecfdf5; color: #065f46; font-variant-numeric: tabular-nums; }
+  .sv-ready-n span.new { animation: svNew 1s ease-in-out 3; }
+  @keyframes svNew { 50% { background: #10b981; color: #fff; transform: scale(1.08); } }
+  #ixSaver.has-qr .sv-cap { inset-inline-end: calc(clamp(130px, 17vmin, 190px) + clamp(36px, 5vw, 70px)); }
   @media (prefers-reduced-motion: reduce) { .sv-slide.on .sv-img, .sv-cta { animation: none; } }
   @keyframes ixFloat { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-10px) scale(1.03); } }
   .ix-hname { margin: 0; font-size: clamp(30px, 5.6vmin, 64px); font-weight: 700; line-height: 1.2; color: var(--fg); }
@@ -3137,7 +3156,8 @@
     } catch {}
   }
 
-  // ─── شاشة الانتظار (menu_ix.saver): بعد مدة بدون لمس، صور الأطباق تتبدّل بالكبير أو فيديو يختاره صاحب المحل ───
+  // ─── شاشة الانتظار (menu_ix.saver): بعد مدة بدون لمس تعرض عرضاً متتابعاً (الأطباق والعروض وصور وفيديوهات صاحب المحل) أو فيديو واحد ───
+  // ومعها اختيارياً: رمز QR (المنيو أو بطاقة الأختام) وأرقام الطلبات الجاهزة من البيجر. أول لمسة ترجع للمنيو
   // ?saver=dishes|video للتجربة
   function ixSaverCfg() {
     const o = (project && project.menu_ix && typeof project.menu_ix === 'object') ? project.menu_ix : {};
@@ -3146,58 +3166,128 @@
     const video = safeUrl(o.saver_video);
     if (mode === 'video' && !video) mode = 'dishes';
     const after = [5, 15, 30, 60, 120, 300].includes(Number(o.saver_after)) ? Number(o.saver_after) : 60;
-    return { mode, video, after };
+    const media = (Array.isArray(o.saver_media) ? o.saver_media : []).map(m => ({ u: safeUrl(m && m.u), t: m && m.t === 'video' ? 'video' : 'image' })).filter(m => m.u).slice(0, 8);
+    const qr = o.saver_qr === 'loyalty' && project.has_loyalty ? 'loyalty' : o.saver_qr === 'menu' ? 'menu' : 'off';
+    const ready = o.saver_ready === true && !!project.has_pager;
+    return { mode, video, after, media, qr, ready };
   }
-  const SV_MS = 6500;
-  let ixSaverOn = false, ixSaverT = null, ixSaverWoke = 0;
+  const SV_MS = 6500, SV_VID_MAX = 30000;
+  let ixSaverOn = false, ixSaverT = null, ixSaverWoke = 0, ixReadyT = null;
   const SV_TOUCH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11V5.5a1.5 1.5 0 0 1 3 0V10m0-1.5a1.5 1.5 0 0 1 3 0V11m0-1a1.5 1.5 0 0 1 3 0v4.5a6 6 0 0 1-6 6h-.6a6 6 0 0 1-4.9-2.5L4.2 15a1.6 1.6 0 0 1 2.5-2L9 15"/></svg>';
+  const SV_BELL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>';
+  // قائمة العرض: الأطباق اللي عليها خصم أول، والمميزة تتكرر، وصور وفيديوهات صاحب المحل بين كل 3 شرائح
+  function ixSaverSlides(c) {
+    const mix = (arr) => arr.map(v => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map(v => v[1]);
+    const ps = allProducts.filter(x => x.is_available !== false && x.is_hidden !== true && safeUrl(x.image_url));
+    const deal = ps.filter(x => autoDeal(x)), star = ps.filter(x => !autoDeal(x) && x.is_bestseller === true), rest = ps.filter(x => !autoDeal(x) && x.is_bestseller !== true);
+    let dishes = [...mix(deal), ...mix(star), ...mix(rest)].slice(0, 20);
+    // المميزة تطلع مرة ثانية في النص الثاني من العرض
+    const again = mix(star).slice(0, 3).filter(x => dishes.length > 6);
+    dishes = [...dishes.slice(0, Math.ceil(dishes.length / 2)), ...again, ...dishes.slice(Math.ceil(dishes.length / 2))];
+    const out = [];
+    let mi = 0;
+    dishes.forEach((p, i) => {
+      out.push({ kind: 'dish', p });
+      if ((i + 1) % 3 === 0 && c.media.length) out.push({ kind: 'media', m: c.media[mi++ % c.media.length] });
+    });
+    // ما فيه أطباق بصور: صور صاحب المحل بس
+    if (!out.length) c.media.forEach(m => out.push({ kind: 'media', m }));
+    else if (c.media.length && mi < c.media.length) c.media.slice(mi).forEach(m => out.push({ kind: 'media', m }));
+    return out;
+  }
+  function ixSaverSlideHtml(x, i) {
+    if (x.kind === 'media') {
+      const m = x.m;
+      return `<div class="sv-slide sv-media" data-i="${i}">${m.t === 'video'
+        ? `<video class="sv-vid" data-src="${esc(m.u)}" muted playsinline preload="none" disablepictureinpicture></video>`
+        : `<div class="sv-img sv-contain" data-src="${esc(sized(m.u, 1080))}"></div><div class="sv-img sv-blur" data-src="${esc(sized(m.u, 640))}"></div>`}</div>`;
+    }
+    const p = x.p, d = autoDeal(p);
+    return `<div class="sv-slide" data-i="${i}">
+      <div class="sv-img" style="--ox:${30 + (i * 37) % 40}%;--oy:${30 + (i * 53) % 40}%" data-src="${esc(sized(safeUrl(p.image_url), 1080))}"></div>
+      <div class="sv-cap">${d ? `<em class="sv-deal">${T(`خصم ${promoLabel(d)}`, `${promoLabel(d)} off`)}</em>` : p.is_bestseller === true ? `<em class="sv-star">${T('مميز', 'Featured')}</em>` : ''}<b>${esc(productName(p))}</b><span>${ixPrice(p)}</span></div>
+    </div>`;
+  }
+  function svLoad(slide) {
+    slide.querySelectorAll('.sv-img[data-src]').forEach(im => { if (!im.style.backgroundImage) im.style.backgroundImage = `url('${im.dataset.src}')`; });
+    slide.querySelectorAll('video[data-src]').forEach(v => { if (!v.getAttribute('src')) v.src = v.dataset.src; });
+  }
+  // رمز QR: مكتبة الرمز تتحمّل أول مرة بس
+  function svQr(box, url) {
+    const draw = () => { try { box.innerHTML = ''; new QRCode(box, { text: url, width: 220, height: 220, colorDark: '#111111', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M }); } catch {} };
+    if (window.QRCode) return draw();
+    const sc = document.createElement('script'); sc.src = '/js/vendor/qrcode.min.js'; sc.onload = draw; document.head.appendChild(sc);
+  }
+  async function svPollReady() {
+    clearTimeout(ixReadyT);
+    if (!ixSaverOn) return;
+    const box = ixEl('ixSaver').querySelector('.sv-ready'); if (!box) return;
+    try {
+      const r = await DM.get(`/api/public?action=ready&slug=${encodeURIComponent(project.client_slug || clientSlug)}`);
+      const nums = (r.numbers || []).slice(0, 6);
+      const old = box.dataset.nums || '';
+      box.dataset.nums = nums.join(',');
+      box.hidden = !nums.length;
+      const fresh = new Set(nums.filter(n => old && !old.split(',').includes(String(n))).map(String));
+      box.querySelector('.sv-ready-n').innerHTML = nums.map(n => `<span class="${fresh.has(String(n)) ? 'new' : ''}">${esc(n)}</span>`).join('');
+    } catch {}
+    ixReadyT = setTimeout(svPollReady, 8000);
+  }
   function ixSaverStart() {
     const c = ixSaverCfg(), el = ixEl('ixSaver');
     if (c.mode === 'off' || ixSaverOn || !el) return false;
-    const p = project || {}, logo = safeUrl(p.logo_url);
-    const top = `<div class="sv-top">${logo ? `<img src="${esc(logo)}" alt="">` : ''}${p.name ? `<b>${esc(p.name)}</b>` : ''}</div>`;
+    const pr = project || {}, logo = safeUrl(pr.logo_url);
+    const top = `<div class="sv-top">${logo ? `<img src="${esc(logo)}" alt="">` : ''}${pr.name ? `<b>${esc(pr.name)}</b>` : ''}</div>`;
     const cta = `<div class="sv-cta">${SV_TOUCH} ${T('المس الشاشة لتصفح المنيو', 'Touch the screen to browse the menu')}</div>`;
+    const sl = pr.client_slug || clientSlug;
+    const qrUrl = c.qr === 'loyalty' ? DM.storeUrl(sl, 'loyalty') : c.qr === 'menu' ? DM.storeUrl(sl, 'menu', { src: 'screen' }) : '';
+    const qrText = c.qr === 'loyalty' ? T('امسح وانضم لبطاقة الأختام', 'Scan to join our stamp card') : orderingOn() ? T('امسح واطلب من جوالك', 'Scan to order from your phone') : T('امسح وتصفّح المنيو من جوالك', 'Scan to browse on your phone');
+    const qr = qrUrl ? `<div class="sv-qr"><div class="sv-qr-code"></div><b>${qrText}</b></div>` : '';
+    const ready = c.ready ? `<div class="sv-ready" hidden><b>${SV_BELL} ${T('جاهز للاستلام', 'Ready for pickup')}</b><div class="sv-ready-n"></div></div>` : '';
+    const extras = `<div class="sv-shade"></div>${top}${ready}${qr}${cta}`;
     let slides = [];
     if (c.mode === 'video') {
-      el.innerHTML = `<video class="sv-vid" src="${esc(c.video)}" muted loop playsinline autoplay disablepictureinpicture></video><div class="sv-shade"></div>${top}${cta}`;
+      el.innerHTML = `<video class="sv-vid" src="${esc(c.video)}" muted loop playsinline autoplay disablepictureinpicture></video>${extras}`;
     } else {
-      const ps = allProducts.filter(x => x.is_available !== false && x.is_hidden !== true && safeUrl(x.image_url));
-      if (!ps.length) return false;
-      // ترتيب عشوائي: المميزة أول، والباقي مخلوط
-      const mix = (a) => a.map(v => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map(v => v[1]);
-      slides = [...mix(ps.filter(x => x.is_bestseller === true)), ...mix(ps.filter(x => x.is_bestseller !== true))].slice(0, 24);
-      el.innerHTML = `${slides.map((x, i) => `
-        <div class="sv-slide${i ? '' : ' on'}" data-i="${i}">
-          <div class="sv-img" style="--ox:${30 + (i * 37) % 40}%;--oy:${30 + (i * 53) % 40}%;${i < 2 ? `background-image:url('${esc(sized(safeUrl(x.image_url), 1080))}')` : ''}" data-src="${esc(sized(safeUrl(x.image_url), 1080))}"></div>
-          <div class="sv-cap"><b>${esc(productName(x))}</b><span>${ixPrice(x)}</span></div>
-        </div>`).join('')}<div class="sv-shade"></div>${top}
-        ${slides.length > 1 && slides.length <= 12 ? `<div class="sv-dots" style="--sv-ms:${SV_MS}ms">${slides.map((_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div>` : ''}${cta}`;
+      slides = ixSaverSlides(c);
+      if (!slides.length) return false;
+      el.innerHTML = slides.map(ixSaverSlideHtml).join('') + extras;
     }
-    el.classList.add('on'); el.setAttribute('aria-hidden', 'false');
+    el.classList.add('on'); el.classList.toggle('has-qr', !!qrUrl); el.setAttribute('aria-hidden', 'false');
     void el.offsetWidth; setTimeout(() => { if (ixSaverOn) el.classList.add('show'); }, 30);
     ixSaverOn = true;
     ixEl('ix-bgm') && ixEl('ix-bgm').querySelectorAll('video').forEach(v => { try { v.pause(); } catch {} });
-    if (slides.length > 1) {
-      let at = 0;
-      const nodes = el.querySelectorAll('.sv-slide'), dots = el.querySelectorAll('.sv-dots i');
-      ixSaverT = setInterval(() => {
-        const nx = (at + 1) % nodes.length;
-        const pre = nodes[(nx + 1) % nodes.length].querySelector('.sv-img');
-        if (pre && !pre.style.backgroundImage) pre.style.backgroundImage = `url('${pre.dataset.src}')`;
-        const img = nodes[nx].querySelector('.sv-img');
-        if (!img.style.backgroundImage) img.style.backgroundImage = `url('${img.dataset.src}')`;
-        // نعيد حركة التقريب من البداية
-        img.style.animation = 'none'; void img.offsetWidth; img.style.animation = '';
-        nodes[at].classList.remove('on'); nodes[nx].classList.add('on');
-        if (dots.length) { dots[at].classList.remove('on'); void dots[nx].offsetWidth; dots[nx].classList.add('on'); }
-        at = nx;
-      }, SV_MS);
+    if (qrUrl) svQr(el.querySelector('.sv-qr-code'), qrUrl);
+    if (c.ready) svPollReady();
+    if (slides.length) {
+      const nodes = el.querySelectorAll('.sv-slide');
+      let at = -1;
+      const show = (nx) => {
+        if (!ixSaverOn) return;
+        const cur = nodes[at], nxt = nodes[nx];
+        svLoad(nxt); svLoad(nodes[(nx + 1) % nodes.length]);
+        const img = nxt.querySelector('.sv-img'); if (img) { img.style.animation = 'none'; void img.offsetWidth; img.style.animation = ''; }
+        if (cur && cur !== nxt) { cur.classList.remove('on'); const v = cur.querySelector('video'); if (v) try { v.pause(); } catch {} }
+        nxt.classList.add('on'); at = nx;
+        const step = () => show((at + 1) % nodes.length);
+        const v = nxt.querySelector('video');
+        clearTimeout(ixSaverT);
+        if (v && nodes.length > 1) {
+          // الفيديو يكمل لآخره (حد أقصى 30 ثانية) وبعدها الشريحة اللي بعده
+          v.loop = false; try { v.currentTime = 0; } catch {}
+          v.play().catch(() => {});
+          v.onended = () => { clearTimeout(ixSaverT); step(); };
+          ixSaverT = setTimeout(step, SV_VID_MAX);
+        } else if (v) { v.loop = true; v.play().catch(() => {}); }
+        else if (nodes.length > 1) ixSaverT = setTimeout(step, SV_MS);
+      };
+      show(0);
     }
     return true;
   }
   function ixSaverStop() {
     if (!ixSaverOn) return;
-    ixSaverOn = false; clearInterval(ixSaverT); ixSaverWoke = Date.now();
+    ixSaverOn = false; clearTimeout(ixSaverT); clearTimeout(ixReadyT); ixSaverWoke = Date.now();
     const el = ixEl('ixSaver');
     el.classList.remove('show'); el.setAttribute('aria-hidden', 'true');
     el.querySelectorAll('video').forEach(v => { try { v.pause(); } catch {} });

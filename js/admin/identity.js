@@ -812,7 +812,9 @@
       shape: ['round', 'soft', 'square'].includes(o.shape) ? o.shape : null, tagline: o.tagline || '',
       bg_mode: ['color', 'image', 'video'].includes(o.bg_mode) ? o.bg_mode : 'color', bg_image: o.bg_image || null, bg_video: o.bg_video || null,
       saver: ['dishes', 'video'].includes(o.saver) ? o.saver : 'off', saver_video: o.saver_video || null,
-      saver_after: [5, 15, 30, 60, 120, 300].includes(Number(o.saver_after)) ? Number(o.saver_after) : 60 };
+      saver_after: [5, 15, 30, 60, 120, 300].includes(Number(o.saver_after)) ? Number(o.saver_after) : 60,
+      saver_media: Array.isArray(o.saver_media) ? o.saver_media.filter(m => m && m.u).slice(0, 8) : [],
+      saver_qr: ['menu', 'loyalty'].includes(o.saver_qr) ? o.saver_qr : 'off', saver_ready: o.saver_ready === true };
   };
   // المنيو التفاعلي إضافة (ixpro): بدونها نعرض الشكل كمعاينة مقفولة مع طريقة الإضافة
   const ixHas = () => !window.DMPlans || DMPlans.has(client, 'ixpro');
@@ -931,11 +933,25 @@
     const svModes = [['off', 'إيقاف', 'ph-prohibit'], ['dishes', 'صور الأطباق', 'ph-images'], ['video', 'فيديو', 'ph-film-strip']];
     const svAfter = [[5, '5 ثوانٍ'], [15, '15 ثانية'], [30, '30 ثانية'], [60, 'دقيقة'], [120, 'دقيقتين'], [300, '5 دقائق']];
     const svVid = c.saver_video;
+    const svPager = !window.DMPlans || DMPlans.has(client, 'pager'), svLoyalty = !window.DMPlans || DMPlans.has(client, 'loyalty');
     const saverBody = `
       <div role="radiogroup" class="grid grid-cols-3 gap-1.5">${svModes.map(([v, t, ic]) => `
         <button type="button" role="radio" aria-checked="${c.saver === v}" onclick="setIxSaver('${v}')" class="rounded-lg border px-2 py-2 text-[11px] font-bold transition inline-flex items-center justify-center gap-1 ${c.saver === v ? 'border-brand bg-brand text-cream' : 'border-brand/20 bg-white text-ink hover:border-brand/40'}"><i class="ph-bold ${ic}"></i> ${t}</button>`).join('')}
       </div>
-      ${c.saver === 'dishes' ? '<span class="block text-[11px] text-ink/70 leading-relaxed">تعرض الأطباق المتوفرة اللي لها صور، المميزة أولاً، كل صورة 6 ثوانٍ مع اسم الطبق وسعره.</span>' : ''}
+      ${c.saver === 'dishes' ? `
+        <span class="block text-[11px] text-ink/70 leading-relaxed">تعرض الأطباق المتوفرة اللي لها صور، كل صورة 6 ثوانٍ مع اسم الطبق وسعره. الأطباق اللي عليها خصم تطلع أولاً بشارة الخصم، والمميزة تتكرر أكثر.</span>
+        <div class="space-y-1.5">
+          <span class="block text-[11px] font-bold text-ink">صور وفيديوهات من عندك <span class="font-normal text-ink/70">(اختياري، حتى 8)</span></span>
+          <span class="block text-[11px] text-ink/70 leading-relaxed">تطلع بين الأطباق، مثل إعلان طبق جديد أو عرض اليوم. الفيديو يكمل لآخره (حتى 30 ثانية).</span>
+          <div class="flex flex-wrap gap-2">${c.saver_media.map((m, i) => `
+            <span class="relative w-20 h-14 rounded-lg overflow-hidden border border-brand/15 bg-black/5 shrink-0">
+              ${m.t === 'video' ? `<video src="${esc(m.u)}" muted loop autoplay playsinline class="w-full h-full object-cover"></video><i class="ph-fill ph-play-circle absolute bottom-1 right-1 text-white text-sm drop-shadow"></i>` : `<img src="${esc(m.u)}" alt="" class="w-full h-full object-cover">`}
+              <button type="button" onclick="removeIxSaverMedia(${i})" aria-label="إزالة" class="absolute top-1 left-1 w-5 h-5 rounded-full bg-black/70 text-white grid place-items-center text-[10px]"><i class="ph-bold ph-x"></i></button>
+            </span>`).join('')}
+            ${c.saver_media.length < 8 ? `<button type="button" id="upl-ix_saver_media" onclick="document.getElementById('ix-saver-media-file').click()" class="w-20 h-14 rounded-lg border border-dashed border-brand/35 bg-white text-brand text-[11px] font-bold grid place-items-center shrink-0 hover:bg-brand/5"><span><i class="ph-bold ph-plus"></i> إضافة</span></button>` : ''}
+            <input type="file" id="ix-saver-media-file" accept="image/*,video/mp4,video/webm,video/quicktime" class="hidden" onchange="uploadIxSaverMedia()">
+          </div>
+        </div>` : ''}
       ${c.saver === 'video' || svVid ? `
         <div class="flex items-center gap-2 bg-brand/5 rounded-lg border ${c.saver === 'video' ? 'border-brand' : 'border-brand/15'} p-2">
           ${svVid ? `<video src="${esc(svVid)}" muted loop autoplay playsinline class="w-20 h-12 object-cover rounded-lg border border-brand/15 shrink-0"></video>` : '<span class="w-20 h-12 rounded-lg bg-white border border-dashed border-brand/25 grid place-items-center text-ink/60 shrink-0"><i class="ph-bold ph-film-strip"></i></span>'}
@@ -950,6 +966,20 @@
           <div role="radiogroup" class="grid grid-cols-3 gap-1.5">${svAfter.map(([v, t]) => `
             <button type="button" role="radio" aria-checked="${c.saver_after === v}" onclick="saveIxLook({ saver_after: ${v} })" class="rounded-lg border px-1 py-2 text-[11px] font-bold transition ${c.saver_after === v ? 'border-brand bg-brand text-cream' : 'border-brand/20 bg-white text-ink hover:border-brand/40'}">${t}</button>`).join('')}
           </div>
+        </div>
+        <div class="space-y-1.5">
+          <span class="block text-[11px] font-bold text-ink">رمز QR في الزاوية</span>
+          <div role="radiogroup" class="grid grid-cols-3 gap-1.5">${[['off', 'بدون'], ['menu', 'المنيو'], ...(svLoyalty ? [['loyalty', 'بطاقة الأختام']] : [])].map(([v, t]) => `
+            <button type="button" role="radio" aria-checked="${c.saver_qr === v}" onclick="saveIxLook({ saver_qr: '${v}' })" class="rounded-lg border px-1 py-2 text-[11px] font-bold transition ${c.saver_qr === v ? 'border-brand bg-brand text-cream' : 'border-brand/20 bg-white text-ink hover:border-brand/40'}">${t}</button>`).join('')}
+          </div>
+          <span class="block text-[11px] text-ink/70 leading-relaxed">${c.saver_qr === 'loyalty' ? 'الزبون يمسح الرمز وينضم لبطاقة الأختام من جواله.' : c.saver_qr === 'menu' ? 'الزبون يمسح الرمز ويفتح المنيو في جواله، ويطلب منه إذا الطلب من المنيو مفعّل.' : 'رمز صغير في زاوية الشاشة يمسحه الزبون بجواله.'}</span>
+        </div>
+        ${svPager ? `
+        <label class="flex items-center gap-2 bg-brand/5 rounded-lg border ${c.saver_ready ? 'border-brand' : 'border-brand/15'} p-2.5 cursor-pointer">
+          <input type="checkbox" ${c.saver_ready ? 'checked' : ''} onchange="saveIxLook({ saver_ready: this.checked })" class="w-4 h-4 accent-[#384f3d] shrink-0">
+          <span class="flex-1 text-[11px] text-ink leading-relaxed"><b class="block text-[12px]">أرقام الطلبات الجاهزة</b>تظهر في زاوية الشاشة أرقام البيجر الجاهزة للاستلام، والرقم الجديد يومض.</span>
+        </label>` : ''}
+        <div>
           <a href="${esc(DM.storeUrl(client.client_slug, 'menu', { mode: 'tablet', idle: 5 }))}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-[11px] font-bold text-brand underline underline-offset-2"><i class="ph-bold ph-play-circle"></i> جرّبها الآن (تشتغل بعد 5 ثوانٍ)</a>
         </div>` : ''}`;
     box.innerHTML = `
@@ -1026,6 +1056,18 @@
     if (!url) return showToast(`فشل رفع الملف: ${lastUploadError}`, true);
     saveIxLook({ saver: 'video', saver_video: url });
   }
+  async function uploadIxSaverMedia() {
+    const input = document.getElementById('ix-saver-media-file'), file = input && input.files[0];
+    if (!file) return;
+    const kind = file.type.startsWith('video/') ? 'video' : 'image';
+    const problem = validateFile(file, kind);
+    if (problem) { input.value = ''; return showToast(problem, true); }
+    const url = await uploadFile(file, kind === 'video' ? 'ix_saver' : 'ix_saver_img', 1920);
+    input.value = '';
+    if (!url) return showToast(`فشل رفع الملف: ${lastUploadError}`, true);
+    saveIxLook({ saver_media: [...ixCfg().saver_media, { u: url, t: kind }].slice(0, 8) });
+  }
+  function removeIxSaverMedia(i) { const m = ixCfg().saver_media.slice(); m.splice(i, 1); saveIxLook({ saver_media: m }); }
   function removeIxBg(kind) { saveIxLook({ bg_mode: 'color', [`bg_${kind}`]: null }); }
   // تغيير القالب يرجّع الألوان والملمس وشكل البطاقات لافتراضي القالب الجديد
   // «أين يظهر؟»: interactive = التابلت ورمز QR (يصير الرئيسي)، وغيره = التابلت بس (يرجع المنيو العادي بعرضه السابق: قائمة أو صور)

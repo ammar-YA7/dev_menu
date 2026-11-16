@@ -6,6 +6,7 @@
 //   GET  /api/public?action=featured        الأمثلة الحقيقية للصفحة الرئيسية
 //   POST /api/public?action=coupon          فحص كوبون خصم على سلة الطلب وحساب الخصم
 //   POST /api/public?action=coupon-redeem   تسجيل استخدام الكوبون عند إرسال الطلب
+//   GET  /api/public?action=ready&slug=xxx  أرقام الطلبات الجاهزة لشاشة الانتظار في المنيو التفاعلي
 //   POST /api/public?action=track           تسجيل زيارة/مشاهدة (مجهولة)
 //   POST /api/public?action=translate       ترجمة المنيو للإنجليزي مرة وحدة وحفظها
 // =====================================================================
@@ -126,7 +127,9 @@ async function menuPayload(slug) {
   // الإضافات المربوطة بأصناف المنيو تاخذ اسمها وسعرها الحالي منها
   await require('./_lib/order').resolveExtraLinks(store.id, products);
   const order_opts = order_mode ? await require('./_lib/order').orderSettings(store.id) : null;
-  return { store: { ...store, name, menu_chat, ix_on, waitlist_open, has_coupons, occasion, promos, order_mode, order_opts }, categories: categories.sort(bySort), products: products.sort(bySort), feats };
+  // لشاشة الانتظار في المنيو التفاعلي: رمز بطاقة الأختام وأرقام الطلبات الجاهزة (نعم/لا بس)
+  const has_pager = ix_on && !!feats.pager, has_loyalty = ix_on && !!feats.loyalty;
+  return { store: { ...store, name, menu_chat, ix_on, has_pager, has_loyalty, waitlist_open, has_coupons, occasion, promos, order_mode, order_opts }, categories: categories.sort(bySort), products: products.sort(bySort), feats };
 }
 // ردود جاهزة للأسئلة البسيطة. أي شي غيرها يروح للمساعد
 const AR = (t) => /[؀-ۿ]/.test(t);
@@ -341,6 +344,19 @@ module.exports = handler(['GET', 'POST'], async (req, res) => {
     catch (e) { if (e.status === 404 || e.status === 400) v = 'off'; else throw e; }
     res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=5, stale-while-revalidate=10');
     return { v };
+  }
+
+  // أرقام الطلبات الجاهزة لشاشة الانتظار في المنيو التفاعلي (الأرقام بس، نفس اللي على شاشة المحل)
+  // تتخزن 5 ثواني في CDN، فمهما كثرت الشاشات ما ينفذ الخادم إلا مرة كل 5 ثواني لكل محل
+  if (action === 'ready' && req.method === 'GET') {
+    const store = await findStore(req.query.slug);
+    const feats = await storeFeatures(store.id);
+    res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=5, stale-while-revalidate=10');
+    const ix = store.menu_ix && typeof store.menu_ix === 'object' ? store.menu_ix : {};
+    if (!feats.pager || !feats.ixpro || ix.saver_ready !== true) return { numbers: [] };
+    const since = new Date(Date.now() - 18 * 3600e3).toISOString();
+    const rows = await rest(`pager_tickets?client_id=eq.${store.id}&status=eq.ready&created_at=gte.${encodeURIComponent(since)}&select=number,ready_at&order=ready_at.desc.nullslast&limit=8`).catch(() => []);
+    return { numbers: rows.map(r => r.number) };
   }
 
   // صفحة الروابط السريعة: نفس بيانات المتجر بدون الأقسام والأطباق
