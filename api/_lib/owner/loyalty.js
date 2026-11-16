@@ -137,6 +137,7 @@ module.exports.post = async function post(action, req, b, env) {
       if (lines.length) await rest(`clients?id=eq.${sid}`, { method: 'PATCH', body: { loyalty_near_lines: lines, loyalty_near_at: new Date().toISOString() } }).catch(() => {});
     }
     // الشكل أو المكافأة تغيّرت ← نحدّث البطاقات اللي في المحفظة
+    wallet.stampsCacheClear(sid);   // تشغيل/إيقاف الأختام يغيّر شكل البطاقة (أختام أو باقة)، فما ناخذ الحالة القديمة من الذاكرة
     const wallet_updated = await pushWalletCards(sid);
     return { enabled: row.loyalty_enabled === true, settings: normalizeLoyalty(row.loyalty_settings), wallet_updated };
   }
