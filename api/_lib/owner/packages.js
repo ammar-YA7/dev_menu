@@ -129,7 +129,7 @@ module.exports.post = async function post(action, req, b, env) {
     }))[0];
     poke(topic('owner', sid), 'loyalty').catch(() => {});
     // عضو عنده بطاقة في المحفظة: الباقة تطلع فيها على طول، وما يحتاج بطاقة ثانية
-    if (member.wallet_serial) await pushWalletCards(sid, { cardIds: [member.id], notice: `انضافت لك باقة ${card.plan_name}: ${card.total} مرة` }).catch(() => 0);
+    if (member.wallet_serial) await pushWalletCards(sid, { cardIds: [member.id], notice: card.status === 'pending' ? `تم تسجيل باقة «${card.plan_name}»، وتتفعّل بعد الدفع عند الكاشير` : `🎉 انضافت لك باقة «${card.plan_name}»: ${card.total} مرة. اعرض الكود للكاشير مع كل زيارة` }).catch(() => 0);
     // رابط بطاقة العميل (فيها الباقة): يفتحه ويضيفها للمحفظة
     const base = require('../core').storeLink(store.client_slug, 'loyalty');
     const url = `${base}${base.includes('?') ? '&' : '?'}t=${encodeURIComponent(member.token)}`;
@@ -160,7 +160,7 @@ module.exports.post = async function post(action, req, b, env) {
       status: 'active', remaining: card.total, branch_id: here.id, created_at: new Date().toISOString(),
       expires_at: plan && plan.days ? new Date(Date.now() + plan.days * 864e5).toISOString() : null } });
     const fresh = rows[0] || card;
-    P.pushCard(sid, card.id, `تفعّلت باقتك ${card.plan_name}: ${card.total} مرة`).catch(() => {});
+    P.pushCard(sid, card.id, `🎉 تفعّلت باقتك «${card.plan_name}»: ${card.total} مرة${fresh.expires_at ? `، صالحة حتى ${new Date(fresh.expires_at).toLocaleDateString('ar-SA-u-ca-gregory-nu-latn', { day: 'numeric', month: 'long', timeZone: 'Asia/Riyadh' })}` : ''}. اعرض الكود للكاشير مع كل زيارة`).catch(() => {});
     poke(topic('owner', sid), 'loyalty').catch(() => {});
     return { card: P.cardView(fresh) };
   }

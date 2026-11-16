@@ -45,9 +45,10 @@ function passBody(store, settings, c, notice) {
     organizationName: String(store.name || 'DEV MENU').slice(0, 64),
     description: L(`باقة ${c.plan_name}: ${store.name || ''}`).slice(0, 120),
     colorPreset: 'green',
+    // إشعار واحد بس لكل تحديث: الرسالة لو فيه، وإلا تغيّر الرصيد
     headerFields: c.status === 'pending'
-      ? [{ label: L('الحالة'), value: L('بانتظار التفعيل'), changeMessage: L('%@') }]
-      : [{ label: L('المتبقي'), value: `${c.remaining} / ${c.total}`, changeMessage: L('باقي لك %@') }],
+      ? [{ label: L('الحالة'), value: L('بانتظار التفعيل') }]
+      : [{ label: L('المتبقي'), value: `${c.remaining} / ${c.total}`, ...(String(notice || '').trim() ? {} : { changeMessage: L('رصيد باقتك: %@') }) }],
     secondaryFields: [{ label: L('الباقة'), value: String(c.plan_name).slice(0, 40) }, { label: L('الاسم'), value: String(c.name).slice(0, 40) }],
     auxiliaryFields: c.expires_at ? [{ label: L('تنتهي'), value: dateText(c.expires_at) }] : [],
     backFields: [
@@ -71,11 +72,12 @@ async function storeFor(storeId) {
 }
 
 // إشعار حسب الرصيد بعد الاستخدام
+// رسالة كل خصم: وش انخصم، وكم باقي، وتنبيه لما تقرب تخلص
 function useNotice(c) {
   const L = (t) => tr(c.lang, t);
-  if (c.remaining <= 0) return L(`خلصت باقة ${c.plan_name}. تقدر تجددها من المحل`);
-  if (c.remaining <= 2) return L(`باقي لك ${c.remaining} في باقة ${c.plan_name}، قربت تخلص`);
-  return '';
+  if (c.remaining <= 0) return L(`استخدمت آخر مرة في باقة «${c.plan_name}». شكراً لك، وتقدر تجدد باقتك من المحل`);
+  if (c.remaining <= 2) return L(`✅ انخصمت مرة من باقة «${c.plan_name}». باقي لك ${c.remaining} من ${c.total}، قربت تخلص`);
+  return L(`✅ انخصمت مرة من باقة «${c.plan_name}». المتبقي ${c.remaining} من ${c.total}`);
 }
 
 async function pushCard(storeId, cardId, notice = '') {

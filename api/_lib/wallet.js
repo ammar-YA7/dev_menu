@@ -41,7 +41,8 @@ function passBody({ store, settings, card, url, restoreUrl, lat, lng, notice, st
     headerFields: [{ label: L('الأختام'), value: `${s} / ${n}`, ...(fresh && String(notice || '').trim() ? {} : { changeMessage: L('✅ انضاف ختمك، صار عندك %@') }) }],
     // المكافأة وحامل البطاقة بس (عدد الأختام فوق، والأختام نفسها في الصورة)
     secondaryFields: [{ label: L(s >= n ? 'مكافأتك جاهزة' : 'المكافأة'), value: (card.lang === 'en' && settings.reward_en) || settings.reward }, ...(card.name ? [{ label: L('صاحب البطاقة'), value: String(card.name).slice(0, 40) }] : [])],
-    ...(pkg ? { auxiliaryFields: [{ label: L(`باقة ${pkg.plan_name}`).slice(0, 40), value: L(`باقي ${pkg.remaining} من ${pkg.total}`), changeMessage: L('باقتك: %@') }] } : {}),
+    // رسالة الباقة نفسها هي الإشعار: لو معها رسالة جديدة ما نحط إشعار على الخانة (حقلين لهم إشعار = «تم تغيير البطاقة»)
+    ...(pkg ? { auxiliaryFields: [{ label: L(`باقة ${pkg.plan_name}`).slice(0, 40), value: L(`باقي ${pkg.remaining} من ${pkg.total}`), ...(fresh && String(notice || '').trim() ? {} : { changeMessage: L('رصيد باقتك: %@') }) }] } : {}),
     backFields: [
       { label: L('رقم العضوية'), value: `#${card.member_no || ''}` },
       { label: L('زياراتك'), value: String(card.visits || 0) },
@@ -59,7 +60,8 @@ function passBody({ store, settings, card, url, restoreUrl, lat, lng, notice, st
   // المحل عنده الاشتراكات بس: البطاقة تعرض الباقة ورصيدها بدل الأختام والمكافأة
   if (stampsOff) {
     body.description = L(`بطاقة ${store.name || ''}`).slice(0, 120);
-    body.headerFields = pkg ? [{ label: L('المتبقي'), value: `${pkg.remaining} / ${pkg.total}`, changeMessage: L('باقي لك %@') }] : [{ label: L('الباقة'), value: L('لا توجد') }];
+    const quiet = fresh && String(notice || '').trim();
+    body.headerFields = pkg ? [{ label: L('المتبقي'), value: `${pkg.remaining} / ${pkg.total}`, ...(quiet ? {} : { changeMessage: L('رصيد باقتك: %@') }) }] : [{ label: L('الباقة'), value: L('لا توجد') }];
     body.secondaryFields = [...(pkg ? [{ label: L('الباقة'), value: String(pkg.plan_name).slice(0, 40) }] : []), ...(card.name ? [{ label: L('الاسم'), value: String(card.name).slice(0, 40) }] : [])];
     delete body.auxiliaryFields;
     body.backFields = body.backFields.filter(f => ![L('زياراتك'), L('طريقة الختم')].includes(f.label));
