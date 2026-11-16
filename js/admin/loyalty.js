@@ -672,22 +672,158 @@
         </div></div>`;
     }).join('') : `<p class="text-sm text-ink py-3">${pk.cards.length ? 'لا توجد نتائج.' : 'لم تُبع أي باقة بعد. بعد ما يدفع العميل، سجّل له الباقة من هنا أو من شاشة الكاشير.'}</p>`;
   }
-  async function editPackagePlan(id) {
+  // نافذة الباقة: قوالب جاهزة، عداد للمرات، صلاحية بضغطة، وسعر المرة يُحسب تلقائياً، مع معاينة حيّة للبطاقة
+  const PKM_CSS = `
+    .pkm-back{position:fixed;inset:0;z-index:100;background:rgba(34,54,42,.45);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;transition:opacity .18s}
+    .pkm-back.on{opacity:1}
+    .pkm-box{width:100%;max-width:760px;max-height:calc(100vh - 32px);overflow-y:auto;background:#faf6f1;border:1px solid rgba(56,79,61,.16);border-radius:22px;box-shadow:0 30px 60px -20px rgba(34,54,42,.45);color:#22362a;transform:translateY(10px) scale(.98);transition:transform .18s}
+    .pkm-back.on .pkm-box{transform:none}
+    .pkm-grid{display:grid;grid-template-columns:1fr 280px}
+    .pkm-form{padding:22px;min-width:0}
+    .pkm-side{padding:22px;background:rgba(56,79,61,.06);border-inline-start:1px solid rgba(56,79,61,.1);display:flex;flex-direction:column;gap:12px}
+    @media (max-width:700px){.pkm-grid{grid-template-columns:1fr}.pkm-side{order:-1;border-inline-start:0;border-bottom:1px solid rgba(56,79,61,.1)}}
+    .pkm-l{display:block;font-size:12.5px;font-weight:800;margin:16px 0 7px}
+    .pkm-l small{font-weight:600;color:rgba(34,54,42,.5)}
+    .pkm-in{width:100%;background:#fff;border:1.5px solid rgba(56,79,61,.2);border-radius:12px;padding:11px 13px;font-size:16px;color:#22362a;font-family:inherit}
+    .pkm-in:focus{outline:none;border-color:#384f3d;box-shadow:0 0 0 3px rgba(56,79,61,.12)}
+    .pkm-in.bad{border-color:#dc2626}
+    .pkm-chips{display:flex;flex-wrap:wrap;gap:6px}
+    .pkm-chip{font-size:12px;font-weight:800;padding:7px 12px;border-radius:999px;background:#fff;border:1.5px solid rgba(56,79,61,.15);color:#22362a;font-family:inherit;cursor:pointer;transition:all .12s}
+    .pkm-chip:hover{border-color:rgba(56,79,61,.4)}
+    .pkm-chip.on{background:#384f3d;border-color:#384f3d;color:#faf6f1}
+    .pkm-step{display:flex;align-items:center;gap:8px}
+    .pkm-step button{width:44px;height:44px;border-radius:12px;border:1.5px solid rgba(56,79,61,.2);background:#fff;font-size:18px;font-weight:900;color:#22362a;cursor:pointer;flex-shrink:0}
+    .pkm-step button:hover{border-color:#384f3d}
+    .pkm-step .pkm-in{text-align:center;font-weight:900;font-size:18px}
+    .pkm-pre{position:relative}
+    .pkm-pre span{position:absolute;inset-inline-end:13px;top:50%;transform:translateY(-50%);font-size:13px;font-weight:800;color:rgba(34,54,42,.5)}
+    .pkm-hint{font-size:11.5px;color:rgba(34,54,42,.58);margin-top:6px;line-height:1.6}
+    .pkm-per{margin-top:8px;font-size:12.5px;font-weight:800;color:#2f6b45;background:rgba(47,107,69,.08);border-radius:10px;padding:8px 11px;display:none}
+    .pkm-card{border-radius:18px;overflow:hidden;color:#fff;box-shadow:0 14px 30px -14px rgba(0,0,0,.45)}
+    .pkm-foot{display:flex;gap:8px;margin-top:22px}
+    .pkm-foot button{flex:1;padding:12px;border-radius:14px;font-size:14px;font-weight:900;font-family:inherit;cursor:pointer}
+    .pkm-err{font-size:12px;color:#b91c1c;font-weight:700;margin-top:10px;min-height:1px}
+  `;
+  function editPackagePlan(id) {
+    if (!document.getElementById('pkm-css')) { const st = document.createElement('style'); st.id = 'pkm-css'; st.textContent = PKM_CSS; document.head.appendChild(st); }
     const p = pk.plans.find(x => x.id === id) || {};
-    const r = await DMDialog.form({
-      title: id ? 'تعديل الباقة' : 'باقة جديدة', icon: 'ph-package', confirmText: 'حفظ',
-      subtitle: 'التعديل يسري على الباقات الجديدة، وباقات العملاء الحالية تبقى كما هي.',
-      fields: [
-        { name: 'name', label: 'اسم الباقة', value: p.name || '', maxlength: 40, required: true, placeholder: DMSectors.isFood(client) ? 'مثال: 30 وجبة غداء' : 'مثال: 5 غسلات' },
-        { name: 'uses', label: 'عدد مرات الاستخدام', value: p.uses ? String(p.uses) : '', maxlength: 4, required: true, dir: 'ltr', placeholder: '30' },
-        { name: 'days', label: 'صلاحية الباقة بالأيام', value: p.days ? String(p.days) : '', maxlength: 4, dir: 'ltr', placeholder: '60', hint: 'اتركه فارغاً إذا كانت الباقة بدون تاريخ انتهاء.' },
-        { name: 'price', label: 'سعر الباقة', value: p.price != null ? String(p.price) : '', maxlength: 8, dir: 'ltr', placeholder: '450', hint: 'للعرض فقط في شاشة الكاشير، والدفع يتم في المحل.' }
-      ]
+    const food = DMSectors.isFood(client);
+    const cur = client.currency || 'SAR';
+    const sign = DM.currencySign ? DM.currencySign(cur) : 'ر.س';
+    const money = (n) => DM.money ? DM.money(n, cur) : `${n} ${sign}`;
+    const fmt = (n) => (Math.round(n * 100) / 100).toString();
+    const TPL = food
+      ? [['10 وجبات غداء', 10], ['30 وجبة غداء', 30], ['10 أكواب قهوة', 10], ['20 كوب قهوة', 20]]
+      : [['5 زيارات', 5], ['10 زيارات', 10], ['5 غسلات', 5], ['10 جلسات', 10]];
+    const DAYS = [['', 'بدون انتهاء'], ['30', 'شهر'], ['60', 'شهرين'], ['90', '3 أشهر'], ['c', 'مدة أخرى']];
+    const st = { name: p.name || '', uses: p.uses ? Number(p.uses) : 10, days: p.days ? String(p.days) : '', price: p.price != null ? String(p.price) : '' };
+    const presetDay = DAYS.some(d => d[0] === st.days && d[0] !== 'c');
+    const d = pk.design || {}, lyD = (ly.data && ly.data.settings && ly.data.settings.design) || {};
+    const color = DMPlans.has(client, 'loyalty') ? (lyD.color || '#233d2c') : (d.color || lyD.color || '#233d2c');
+    const logo = (DMPlans.has(client, 'loyalty') ? lyD.logo : (d.logo || lyD.logo)) || client.logo_url || '';
+    const back = document.createElement('div');
+    back.className = 'pkm-back';
+    back.innerHTML = `
+      <div class="pkm-box" role="dialog" aria-modal="true" aria-labelledby="pkm-t">
+        <div class="pkm-grid">
+          <div class="pkm-form">
+            <div class="flex items-start gap-3">
+              <span class="w-10 h-10 rounded-xl grid place-items-center shrink-0" style="background:rgba(56,79,61,.1);color:#384f3d"><i class="ph-bold ph-package"></i></span>
+              <div><h3 id="pkm-t" class="text-[16px] font-black">${id ? 'تعديل الباقة' : 'باقة جديدة'}</h3>
+              <p class="text-[12px] mt-0.5" style="color:rgba(34,54,42,.62)">${id ? 'التعديل يسري على الباقات الجديدة، وباقات العملاء الحالية تبقى كما هي.' : 'حدّد ما يحصل عليه العميل، وكم مرة، وبكم.'}</p></div>
+            </div>
+            ${id ? '' : `<label class="pkm-l">ابدأ من قالب <small>(اختياري)</small></label>
+            <div class="pkm-chips" data-tpl>${TPL.map((t, i) => `<button type="button" class="pkm-chip" data-i="${i}">${t[0]}</button>`).join('')}</div>`}
+            <label class="pkm-l" for="pkm-name">اسم الباقة</label>
+            <input id="pkm-name" class="pkm-in" maxlength="40" placeholder="${food ? 'مثال: 30 وجبة غداء' : 'مثال: 10 زيارات'}">
+            <label class="pkm-l" for="pkm-uses">عدد مرات الاستخدام</label>
+            <div class="pkm-step"><button type="button" data-step="1" aria-label="زيادة">+</button><input id="pkm-uses" class="pkm-in" inputmode="numeric" maxlength="4" dir="ltr"><button type="button" data-step="-1" aria-label="إنقاص">−</button></div>
+            <label class="pkm-l">مدة الصلاحية</label>
+            <div class="pkm-chips" data-days>${DAYS.map(x => `<button type="button" class="pkm-chip" data-v="${x[0]}">${x[1]}</button>`).join('')}</div>
+            <div id="pkm-days-box" class="mt-2 hidden"><div class="pkm-pre"><input id="pkm-days" class="pkm-in" inputmode="numeric" maxlength="4" dir="ltr" placeholder="45"><span>يوماً</span></div></div>
+            <p class="pkm-hint">تبدأ المدة من يوم تفعيل الباقة عند الكاشير.</p>
+            <label class="pkm-l" for="pkm-price">سعر الباقة <small>(اختياري)</small></label>
+            <div class="pkm-pre"><input id="pkm-price" class="pkm-in" inputmode="decimal" maxlength="8" dir="ltr" placeholder="0"><span>${esc(sign)}</span></div>
+            <p id="pkm-per" class="pkm-per"></p>
+            <p class="pkm-hint">يظهر للعميل عند اختيار الباقة وللكاشير عند التفعيل، والدفع يتم في المحل.</p>
+            <p id="pkm-err" class="pkm-err"></p>
+            <div class="pkm-foot">
+              <button type="button" data-save style="background:#384f3d;color:#faf6f1;border:0">${id ? 'حفظ التعديل' : 'إضافة الباقة'}</button>
+              <button type="button" data-cancel style="background:#fff;color:#22362a;border:1.5px solid rgba(56,79,61,.2)">إلغاء</button>
+            </div>
+          </div>
+          <div class="pkm-side">
+            <p class="text-[12px] font-extrabold" style="color:rgba(34,54,42,.62)">هكذا تظهر في محفظة العميل</p>
+            <div class="pkm-card" style="background:${esc(color)}">
+              <div class="flex items-center gap-2 p-3">${logo ? `<img src="${esc(logo)}" alt="" class="w-8 h-8 rounded-lg object-cover bg-white/20">` : ''}<b class="text-sm truncate">${esc(client.name || '')}</b>
+                <span class="mr-auto text-left text-[11px] leading-tight opacity-90">المتبقي<b class="block text-base" dir="ltr" id="pkm-pv-left"></b></span></div>
+              <div class="p-3 pt-1 grid grid-cols-2 gap-2 text-[11px]"><span><span class="opacity-75 block">الباقة</span><b id="pkm-pv-name"></b></span><span><span class="opacity-75 block">الصلاحية</span><b id="pkm-pv-exp"></b></span></div>
+              <div class="bg-white m-3 mt-1 rounded-xl p-2 grid place-items-center"><i class="ph ph-qr-code text-5xl text-black/80"></i></div>
+            </div>
+            <div class="rounded-xl bg-white/70 p-3 text-[12px] leading-relaxed" style="border:1px solid rgba(56,79,61,.1)">
+              <b class="block mb-1">ملخّص الباقة</b><span id="pkm-sum"></span>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    document.body.appendChild(back);
+    requestAnimationFrame(() => back.classList.add('on'));
+    const $ = (s) => back.querySelector(s);
+    const num = (v) => String(v || '').replace(/[٠-٩]/g, x => '٠١٢٣٤٥٦٧٨٩'.indexOf(x)).replace(/[^\d.]/g, '');
+    $('#pkm-name').value = st.name; $('#pkm-uses').value = st.uses; $('#pkm-price').value = st.price;
+    let dayMode = presetDay ? st.days : 'c';
+    if (dayMode === 'c') $('#pkm-days').value = st.days;
+    function render() {
+      st.name = $('#pkm-name').value.trim();
+      st.uses = Math.max(0, parseInt(num($('#pkm-uses').value), 10) || 0);
+      st.days = dayMode === 'c' ? num($('#pkm-days').value).replace(/\..*/, '') : dayMode;
+      st.price = num($('#pkm-price').value);
+      back.querySelectorAll('[data-days] .pkm-chip').forEach(b => b.classList.toggle('on', b.dataset.v === dayMode));
+      $('#pkm-days-box').classList.toggle('hidden', dayMode !== 'c');
+      back.querySelectorAll('[data-tpl] .pkm-chip').forEach(b => { const t = TPL[b.dataset.i]; b.classList.toggle('on', t[0] === st.name && t[1] === st.uses); });
+      const price = parseFloat(st.price);
+      const per = $('#pkm-per');
+      if (price > 0 && st.uses > 0) { per.style.display = 'block'; per.innerHTML = `سعر المرة الواحدة على العميل: ${money(fmt(price / st.uses))}`; } else per.style.display = 'none';
+      const exp = st.days ? `${st.days} يوماً` : 'بدون انتهاء';
+      $('#pkm-pv-left').textContent = `${st.uses} / ${st.uses}`;
+      $('#pkm-pv-name').textContent = st.name || '—';
+      $('#pkm-pv-exp').textContent = exp;
+      $('#pkm-sum').innerHTML = st.uses
+        ? `يدفع العميل ${price > 0 ? `<b>${money(fmt(price))}</b>` : 'في المحل'}، ويستخدم الباقة <b>${st.uses} مرة</b>${st.days ? ` خلال <b>${st.days} يوماً</b> من التفعيل` : ' بدون تاريخ انتهاء'}. مع كل زيارة يمسح الكاشير بطاقته فينقص رصيده واحداً.`
+        : 'حدّد عدد مرات الاستخدام.';
+    }
+    render();
+    setTimeout(() => $('#pkm-name').focus(), 60);
+    let done;
+    const result = new Promise(r => { done = r; });
+    const close = (v) => { back.classList.remove('on'); setTimeout(() => back.remove(), 180); document.removeEventListener('keydown', onKey); done(v); };
+    const onKey = (e) => { if (e.key === 'Escape') close(null); };
+    document.addEventListener('keydown', onKey);
+    back.addEventListener('input', render);
+    back.addEventListener('click', async (e) => {
+      if (e.target === back || e.target.closest('[data-cancel]')) return close(null);
+      const tpl = e.target.closest('[data-tpl] .pkm-chip');
+      if (tpl) { const t = TPL[tpl.dataset.i]; $('#pkm-name').value = t[0]; $('#pkm-uses').value = t[1]; return render(); }
+      const step = e.target.closest('[data-step]');
+      if (step) { $('#pkm-uses').value = Math.min(9999, Math.max(1, (parseInt(num($('#pkm-uses').value), 10) || 0) + Number(step.dataset.step))); return render(); }
+      const day = e.target.closest('[data-days] .pkm-chip');
+      if (day) { dayMode = day.dataset.v; render(); if (dayMode === 'c') $('#pkm-days').focus(); return; }
+      if (e.target.closest('[data-save]')) {
+        render();
+        const err = $('#pkm-err');
+        $('#pkm-name').classList.toggle('bad', !st.name); $('#pkm-uses').classList.toggle('bad', !st.uses);
+        if (!st.name) { err.textContent = 'اكتب اسم الباقة.'; return $('#pkm-name').focus(); }
+        if (!st.uses) { err.textContent = 'حدّد عدد مرات الاستخدام.'; return $('#pkm-uses').focus(); }
+        if (dayMode === 'c' && !st.days) { err.textContent = 'اكتب عدد أيام الصلاحية، أو اختر «بدون انتهاء».'; return $('#pkm-days').focus(); }
+        err.textContent = '';
+        const btn = e.target.closest('[data-save]'); btn.disabled = true; btn.style.opacity = '.6';
+        try {
+          pk.plans = (await api('loyalty-pkg-plan', { id: id || null, name: st.name, uses: String(st.uses), days: st.days, price: st.price })).plans;
+          renderPackages(); showToast(id ? 'تم حفظ التعديل' : 'تمت إضافة الباقة'); close(true);
+        } catch (ex) { err.textContent = ex.message || 'تعذر حفظ الباقة'; btn.disabled = false; btn.style.opacity = ''; }
+      }
     });
-    if (!r) return;
-    const num = (v) => String(v || '').replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).trim();
-    try { pk.plans = (await api('loyalty-pkg-plan', { id: id || null, name: r.name, uses: num(r.uses), days: num(r.days), price: num(r.price) })).plans; renderPackages(); showToast('تم حفظ الباقة'); }
-    catch (e) { showToast(e.message || 'تعذر حفظ الباقة', true); }
+    return result;
   }
   async function sellPackage() {
     if (!pk.plans.length) return;
