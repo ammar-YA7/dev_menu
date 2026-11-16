@@ -206,6 +206,9 @@
   .svc-chip { flex-direction: column; gap: 2px; padding: 12px 8px; }
   .svc-chip small { font-size: 11px; font-weight: 600; opacity: .8; }
   .svc-chip .svc-tick { display: none; }
+  .ly-pick { border: 1.5px solid #dcd6c8; border-radius: 16px; background: #fff; padding: 12px; }
+  .ly-pick-h { font-size: 13px; font-weight: 800; color: var(--ink); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+  .ly-pick-h small { font-weight: 600; color: var(--muted); }
   .peer:checked + .svc-chip .svc-tick { display: inline; }
   #reg-svc-wrap.need .type-chip { border-color: #c70a24; }
   .sector { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 4px; border-radius: 14px; border: 1.5px solid #dcd6c8; background: #faf8f3; font-size: 12px; font-weight: 700; color: var(--muted); }
@@ -516,6 +519,12 @@
         <div id="reg-svc-wrap">
           <span class="lbl">الخدمات التي تحتاجها</span>
           <div id="reg-svc" class="grid grid-cols-2 gap-2"></div>
+          <!-- بطاقة الولاء: يختار نوعها (أختام، اشتراكات، أو الاثنين ببطاقة وحدة) -->
+          <div class="ly-pick mt-2">
+            <p class="ly-pick-h"><i class="ph-bold ph-cards"></i> بطاقة الولاء <small>(اختياري)</small></p>
+            <div id="reg-ly" class="grid grid-cols-2 sm:grid-cols-4 gap-2" role="radiogroup" aria-label="نوع بطاقة الولاء"></div>
+            <p id="reg-ly-note" class="text-[12px] text-[color:var(--muted)] font-semibold mt-2 leading-relaxed"></p>
+          </div>
           <p id="reg-svc-note" class="text-[12px] text-[color:var(--muted)] font-semibold mt-2 leading-relaxed"></p>
         </div>
         <div>
@@ -750,14 +759,29 @@
   // الأسعار صارت في صفحة لحالها (pricing.html)، والاختيار يوصل هنا من التخزين المحلي.
   // هنا نعرض بس الباقة المختارة في صندوق «باقتك» فوق نموذج التسجيل
   // الخدمات الأساسية تنختار هنا مباشرة، والإضافات (التفاعلي، المساعد، الرسائل) من صفحة الأسعار
-  const REG_SVC = ['menu', 'pager', 'loyalty', 'subs', 'waitlist'];
+  const REG_SVC = ['menu', 'pager', 'waitlist'];
+  // بطاقة الولاء: بدون، أختام، اشتراكات، أو الاثنين (بطاقة وحدة للعميل، وخصم الباقتين)
+  const REG_LY = [['none', [], 'بدون', 'ph-minus-circle', 'بدون بطاقة ولاء الآن، وتقدر تضيفها لاحقاً من «اشتراكك».'],
+    ['stamps', ['loyalty'], 'الأختام', 'ph-seal-check', 'العميل يجمع ختم مع كل زيارة، وبعد عدد الأختام ياخذ مكافأته.'],
+    ['subs', ['subs'], 'الاشتراكات', 'ph-package', 'باقات مدفوعة مسبقاً مثل 30 وجبة، والعميل يخصم منها مع كل زيارة.'],
+    ['both', ['loyalty', 'subs'], 'الاثنين', 'ph-stack', 'بطاقة وحدة للعميل فيها الأختام والباقة معاً، بخصم على الخدمتين.']];
+  const lyKind = () => { const f = choice.features; return f.includes('loyalty') && f.includes('subs') ? 'both' : f.includes('loyalty') ? 'stamps' : f.includes('subs') ? 'subs' : 'none'; };
+  function renderLyPick() {
+    const P = DMPlans, p = choice.period, cur = lyKind();
+    $('reg-ly').innerHTML = REG_LY.map(([k, keys, label, ic]) => {
+      const pr = keys.length ? P.price(keys, p).total : 0;
+      return `<label><input type="radio" name="reg-ly" value="${k}" class="peer sr-only" ${cur === k ? 'checked' : ''}><span class="type-chip svc-chip"><span><i class="ph-bold ${ic}"></i> ${label} <i class="ph-bold ph-check svc-tick"></i></span><small dir="ltr">${keys.length ? `${money(pr)} ${p === 'month' ? '/ شهر' : '/ سنة'}` : '—'}</small></span></label>`;
+    }).join('');
+    $('reg-ly-note').textContent = REG_LY.find(x => x[0] === cur)[4];
+  }
   function renderSvcPicker() {
     const P = DMPlans, p = choice.period;
     $('reg-svc-wrap').classList.toggle('hidden', choice.free);
     $('chosen').classList.toggle('hidden', !choice.free);
     if (choice.free) return;
+    renderLyPick();
     $('reg-svc').innerHTML = REG_SVC.map(k => `<label><input type="checkbox" value="${k}" class="peer sr-only" ${choice.features.includes(k) ? 'checked' : ''}><span class="type-chip svc-chip"><span><i class="ph-bold ${P.FEATURES[k].icon}"></i> ${P.FEATURES[k].name} <i class="ph-bold ph-check svc-tick"></i></span><small dir="ltr">${money(P.FEATURES[k][p])} ${p === 'month' ? '/ شهر' : '/ سنة'}</small></span></label>`).join('');
-    const pr = P.price(choice.features, p), extra = pr.features.filter(k => !REG_SVC.includes(k));
+    const pr = P.price(choice.features, p), extra = pr.features.filter(k => !REG_SVC.includes(k) && k !== 'loyalty' && k !== 'subs');
     $('reg-svc-note').innerHTML = pr.features.length
       ? `${P.TRIAL_DAYS} يوماً مجاناً${extra.length ? `، ومعها: ${extra.map(k => P.FEATURES[k].name).join(' + ')}` : ''}. بعدها <b dir="ltr">${money(pr.total)}</b> ${per()}. <a href="/pricing.html" class="underline underline-offset-4">الإضافات وتفاصيل الأسعار</a>`
       : `اختر خدمة واحدة على الأقل. التجربة ${P.TRIAL_DAYS} يوماً مجاناً دون بطاقة بنكية.`;
@@ -782,6 +806,15 @@
   $('reg-svc').addEventListener('change', (e) => {
     if (!e.target.matches('input[type=checkbox]')) return;
     choice.features = DMPlans.toggle(choice.features, e.target.value);
+    $('reg-svc-wrap').classList.remove('need');
+    saveChoice(); renderPricing();
+  });
+  $('reg-ly').addEventListener('change', (e) => {
+    if (!e.target.matches('input[type=radio]')) return;
+    const keys = REG_LY.find(x => x[0] === e.target.value)[1];
+    let f = choice.features.filter(k => k !== 'loyalty' && k !== 'subs');
+    keys.forEach(k => { f = DMPlans.toggle(f, k); });
+    choice.features = f;
     $('reg-svc-wrap').classList.remove('need');
     saveChoice(); renderPricing();
   });
