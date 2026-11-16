@@ -31,7 +31,7 @@ async function loadStore(slug) {
   if (!here) throw new ApiError(404, 'بطاقة الولاء غير متاحة حالياً', 'NOT_AVAILABLE');
   const home = await loyaltyHome(here.id);
   const [main, spot] = await Promise.all([
-    rest(`clients?id=eq.${home}&select=id,name,client_slug,logo_url,loyalty_enabled,loyalty_settings,loyalty_lat,loyalty_lng,loyalty_near_lines,business_type,business_label`).then(r => r[0] || {}),
+    rest(`clients?id=eq.${home}&select=id,name,client_slug,logo_url,loyalty_enabled,loyalty_settings,loyalty_lat,loyalty_lng,loyalty_near_lines,business_type,business_label,subs_design`).then(r => r[0] || {}),
     home === here.id ? null : rest(`clients?id=eq.${here.id}&select=loyalty_lat,loyalty_lng`).then(r => r[0] || {})
   ]);
   // البطاقة وحدة للعميل: فيها الأختام (لو المحل مشترك فيها ومشغّلها) والاشتراكات (لو مشترك فيها)
@@ -39,7 +39,7 @@ async function loadStore(slug) {
   const stamps = !!main.loyalty_enabled && hasStamps;
   if (!stamps && !subs) throw new ApiError(404, 'بطاقة الولاء غير متاحة حالياً', 'NOT_AVAILABLE');
   const own = spot && validPoint(spot.loyalty_lat, spot.loyalty_lng);
-  return { stamps, subs, store: { id: main.id, name: main.name, client_slug: main.client_slug, logo_url: main.logo_url, business_type: main.business_type, business_label: main.business_label }, branch: here,
+  return { stamps, subs, subsDesign: main.subs_design || null, store: { id: main.id, name: main.name, client_slug: main.client_slug, logo_url: main.logo_url, business_type: main.business_type, business_label: main.business_label }, branch: here,
            settings: normalizeLoyalty(main.loyalty_settings, main), lat: own ? spot.loyalty_lat : main.loyalty_lat, lng: own ? spot.loyalty_lng : main.loyalty_lng, nearLines: main.loyalty_near_lines,
            homeLat: main.loyalty_lat, homeLng: main.loyalty_lng };
 }
@@ -117,9 +117,20 @@ const syncWallet = async (ctx, card) => {
   const err = await wallet.updatePass(card.wallet_serial, await walletCtx(ctx, card));
   await rest(`loyalty_cards?id=eq.${card.id}`, { method: 'PATCH', body: { wallet_error: err } }).catch(() => {});
 };
+// المحل اللي عنده الاشتراكات بس: وجه البطاقة من تصميم بطاقة الاشتراكات
+const cardDesign = (ctx) => {
+  const d = ctx.settings.design, sd = ctx.subsDesign;
+  if (ctx.stamps || !sd) return d;
+  const out = { ...d };
+  for (const k of ['style', 'color', 'color2', 'text_color', 'logo', 'bg', 'bg_image']) if (sd[k]) out[k] = sd[k];
+  if (!sd.color2) out.color2 = null;
+  if (!sd.text_color) out.text_color = null;
+  if (sd.bg !== 'image') { out.bg = 'color'; }
+  return out;
+};
 const publicInfo = (ctx) => ({
   store: { name: ctx.store.name, logo_url: ctx.store.logo_url },
-  settings: { needed: ctx.settings.needed, reward: ctx.settings.reward, reward_en: ctx.settings.reward_en, cooldown_hours: ctx.settings.cooldown_hours, design: ctx.settings.design,
+  settings: { needed: ctx.settings.needed, reward: ctx.settings.reward, reward_en: ctx.settings.reward_en, cooldown_hours: ctx.settings.cooldown_hours, design: cardDesign(ctx),
               happy: ctx.settings.happy, gifts: ctx.settings.gifts.enabled, stamp_mode: ctx.settings.stamp_mode, pager_stamp: ctx.settings.pager_stamp },
   happy_now: ctx.stamps && isHappyNow(ctx.settings),
   stamps_on: !!ctx.stamps, subs_on: !!ctx.subs,

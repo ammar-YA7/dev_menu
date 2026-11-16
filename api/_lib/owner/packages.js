@@ -68,13 +68,20 @@ module.exports.post = async function post(action, req, b, env) {
   // تصميم بطاقة الاشتراكات: اللون والشعار وصورة الغلاف، ويتحدث في بطاقات العملاء اللي في المحفظة
   if (action === 'loyalty-pkg-design') {
     ownerOnly();
-    const d = b.design || {}, out = {};
-    if (d.color) { if (!/^#[0-9a-f]{6}$/i.test(String(d.color))) throw new ApiError(400, 'اللون غير صحيح'); out.color = String(d.color).toLowerCase(); }
-    for (const k of ['logo', 'strip']) {
+    // نفس خيارات بطاقة الأختام: الخلفية (لون أو صورة)، الشكل، الألوان، الشعار، وصورة الغلاف في المحفظة
+    const d = b.design || {}, out = {}, HEX = /^#[0-9a-f]{6}$/i;
+    for (const k of ['color', 'color2', 'text_color']) {
+      if (!d[k]) continue;
+      if (!HEX.test(String(d[k]))) throw new ApiError(400, 'اللون غير صحيح');
+      out[k] = String(d[k]).toLowerCase();
+    }
+    if (['gradient', 'glass', 'solid', 'paper', 'dark'].includes(d.style)) out.style = d.style;
+    for (const k of ['logo', 'strip', 'bg_image']) {
       if (!d[k]) continue;
       if (!ownsMediaUrl(String(d[k]), sid)) throw new ApiError(400, 'الصورة غير تابعة لمتجرك');
       out[k] = String(d[k]);
     }
+    out.bg = d.bg === 'image' && out.bg_image ? 'image' : 'color';
     await rest(`clients?id=eq.${sid}`, { method: 'PATCH', body: { subs_design: out } });
     // بطاقات العملاء (بطاقة وحدة لكل عميل) تتحدث بالشكل الجديد
     require('../wallet').stampsCacheClear(sid);

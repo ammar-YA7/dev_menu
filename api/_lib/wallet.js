@@ -78,7 +78,8 @@ function passBody({ store, settings, card, url, restoreUrl, lat, lng, notice, st
     if (stampsOff && subsDesign) {
       if (subsDesign.color) { body.color = subsDesign.color; delete body.colorPreset; }
       if (subsDesign.logo) body.logoURL = subsDesign.logo;
-      if (subsDesign.strip) body.stripURL = subsDesign.strip;
+      const sStrip = subsDesign.strip || (subsDesign.bg === 'image' && subsDesign.bg_image) || null;
+      if (sStrip) body.stripURL = sStrip;
     }
     if (Number.isFinite(lat) && Number.isFinite(lng)) body.locations = [{ latitude: lat, longitude: lng, relevantText: String(nearText || L(`أنت قريب من ${store.name}، خذ ختمك`)).slice(0, 80) }];
   }

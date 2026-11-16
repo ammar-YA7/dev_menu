@@ -1956,24 +1956,84 @@
 
           <!-- تصميم البطاقة: للمحل اللي عنده الاشتراكات بس. اللي عنده الأختام، البطاقة وحدة وتصميمها من «بطاقة الأختام» -->
           <p id="pkd-note" class="hidden pro-card p-4 text-[13px] text-ink"><i class="ph-bold ph-info"></i> عملاؤك عندهم بطاقة واحدة فيها الأختام والباقة معاً، وتصميمها من صفحة <a href="#loyalty" class="font-bold underline">بطاقة الأختام</a>.</p>
-          <div id="pkd-card" class="pro-card p-5">
-            <div class="flex flex-wrap gap-6">
-              <div class="w-full sm:w-72 shrink-0">
-                <div id="pkd-pv" class="rounded-2xl overflow-hidden text-white shadow-lg" style="background:#233d2c">
-                  <div class="flex items-center gap-2 p-3"><img id="pkd-pv-logo" alt="" class="w-8 h-8 rounded-lg object-cover bg-white/20 hidden"><b id="pkd-pv-name" class="text-sm truncate"></b><span class="mr-auto text-left text-[11px] leading-tight opacity-90">المتبقي<b class="block text-base">29 / 30</b></span></div>
-                  <div id="pkd-pv-strip" class="h-20 bg-white/10 bg-cover bg-center"></div>
-                  <div class="p-3 grid grid-cols-2 gap-2 text-[11px]"><span><span class="opacity-75 block">الباقة</span><b>30 وجبة</b></span><span><span class="opacity-75 block">الاسم</span><b>محمد</b></span></div>
+          <div id="pkd-card" class="grid lg:grid-cols-[1fr_minmax(280px,340px)] gap-5 items-start">
+            <div class="space-y-5 order-2 lg:order-1">
+              <div class="pro-card p-5 md:p-6 space-y-4">
+                <div><h3 class="text-sm font-bold flex items-center gap-2"><i class="ph-bold ph-palette"></i> الخلفية والألوان</h3><p class="text-[12px] text-ink mt-1">تصميم بطاقة الاشتراكات في صفحة العميل وفي محفظة جواله.</p></div>
+                <div class="space-y-2">
+                  <p class="text-xs font-semibold text-ink">خلفية البطاقة</p>
+                  <div id="pkd-bg" class="grid grid-cols-2 gap-2"></div>
+                  <input type="file" id="pkd-bg-file" accept="image/png,image/jpeg,image/webp" class="hidden" onchange="uploadPkdImage(this, 'bg_image')">
+                  <div id="pkd-bg-up" class="flex flex-wrap items-center gap-2 pt-1 hidden">
+                    <label for="pkd-bg-file" class="cursor-pointer bg-brand/5 hover:bg-brand/10 border border-brand/20 text-ink px-3.5 py-2 rounded-xl text-[13px] font-bold transition"><i class="ph-bold ph-upload-simple"></i> غيّر الصورة</label>
+                    <span class="text-[11px] text-ink">تغطي البطاقة كلها، وفي المحفظة تظهر صورة غلاف.</span>
+                  </div>
                 </div>
-                <p class="text-[11px] text-ink text-center mt-2">معاينة تقريبية لبطاقة المحفظة</p>
+                <div class="space-y-2" id="pkd-style-box">
+                  <p class="text-xs font-semibold text-ink">الشكل</p>
+                  <div id="pkd-styles" class="grid grid-cols-3 sm:grid-cols-5 gap-2"></div>
+                </div>
+                <div class="grid sm:grid-cols-2 gap-4">
+                  <div class="space-y-2"><p class="text-xs font-semibold text-ink">لون البطاقة</p><div id="pkd-colors" class="flex flex-wrap items-center gap-2"></div></div>
+                  <div class="space-y-2"><p class="text-xs font-semibold text-ink">لون الخط</p><div id="pkd-text-colors" class="flex flex-wrap items-center gap-2"></div></div>
+                  <div class="space-y-2" id="pkd-color2-box"><p class="text-xs font-semibold text-ink">اللون الثاني للتدرج</p><div id="pkd-colors2" class="flex flex-wrap items-center gap-2"></div></div>
+                </div>
               </div>
-              <div class="flex-1 min-w-0 space-y-4">
-                <div><h3 class="text-base font-bold"><i class="ph-bold ph-palette text-emerald-600"></i> تصميم بطاقة الاشتراكات</h3><p class="text-[12.5px] text-ink mt-1">يظهر في بطاقة العميل بالمحفظة وصفحة باقته، ومستقل عن تصميم بطاقة الأختام.</p></div>
-                <div><p class="text-sm font-bold mb-2">لون البطاقة</p><div id="pkd-colors" class="flex flex-wrap gap-2"></div></div>
-                <div class="grid sm:grid-cols-2 gap-3">
-                  <div><p class="text-sm font-bold mb-2">الشعار</p><div class="flex items-center gap-2"><label class="bg-brand/10 hover:bg-brand/15 text-ink px-3.5 py-2 rounded-xl text-[13px] font-bold border border-brand/25 cursor-pointer"><i class="ph-bold ph-upload-simple"></i> رفع<input type="file" accept="image/*" class="hidden" onchange="uploadPkdImage(this, 'logo')"></label><button type="button" id="pkd-logo-clear" onclick="setPkd({ logo: null })" class="hidden text-xs text-rose-600 font-bold">إزالة</button></div></div>
-                  <div><p class="text-sm font-bold mb-2">صورة الغلاف</p><div class="flex items-center gap-2"><label class="bg-brand/10 hover:bg-brand/15 text-ink px-3.5 py-2 rounded-xl text-[13px] font-bold border border-brand/25 cursor-pointer"><i class="ph-bold ph-image"></i> رفع<input type="file" accept="image/*" class="hidden" onchange="uploadPkdImage(this, 'strip')"></label><button type="button" id="pkd-strip-clear" onclick="setPkd({ strip: null })" class="hidden text-xs text-rose-600 font-bold">إزالة</button></div><p class="text-[11px] text-ink mt-1">صورة عرضية، مثل صورة أطباقك أو واجهة المحل.</p></div>
+              <div class="pro-card p-5 md:p-6 space-y-4">
+                <div><h3 class="text-sm font-bold flex items-center gap-2"><i class="ph-bold ph-image"></i> الشعار وصورة الغلاف</h3><p class="text-[12px] text-ink mt-1">اختياري. لو ما رفعت شعاراً نستخدم شعار المنيو.</p></div>
+                <div class="grid sm:grid-cols-2 gap-4">
+                  <div class="space-y-2">
+                    <p class="text-xs font-semibold text-ink">شعار البطاقة</p>
+                    <div class="flex flex-wrap items-center gap-2">
+                      <img id="pkd-logo-pv" alt="" class="w-11 h-11 rounded-xl object-cover border border-brand/15 hidden">
+                      <label class="cursor-pointer bg-brand/5 hover:bg-brand/10 border border-brand/20 text-ink px-3.5 py-2 rounded-xl text-[13px] font-bold transition"><i class="ph-bold ph-upload-simple"></i> ارفع شعار
+                        <input type="file" accept="image/png,image/jpeg,image/webp" class="hidden" onchange="uploadPkdImage(this, 'logo')"></label>
+                      <button type="button" id="pkd-logo-clear" onclick="setPkd({ logo: null })" class="hidden text-[13px] font-bold text-brick px-2 py-2"><i class="ph-bold ph-trash"></i> شيله</button>
+                    </div>
+                    <p class="text-[11px] text-ink">يظهر على البطاقة وفي المحفظة. يُفضّل أن يكون مربعاً.</p>
+                  </div>
+                  <div class="space-y-2">
+                    <p class="text-xs font-semibold text-ink">صورة الغلاف في المحفظة</p>
+                    <div class="flex flex-wrap items-center gap-2">
+                      <img id="pkd-strip-pv" alt="" class="w-20 h-11 rounded-xl object-cover border border-brand/15 hidden">
+                      <label class="cursor-pointer bg-brand/5 hover:bg-brand/10 border border-brand/20 text-ink px-3.5 py-2 rounded-xl text-[13px] font-bold transition"><i class="ph-bold ph-image"></i> ارفع صورة
+                        <input type="file" accept="image/png,image/jpeg,image/webp" class="hidden" onchange="uploadPkdImage(this, 'strip')"></label>
+                      <button type="button" id="pkd-strip-clear" onclick="setPkd({ strip: null })" class="hidden text-[13px] font-bold text-brick px-2 py-2"><i class="ph-bold ph-trash"></i> شيلها</button>
+                    </div>
+                    <p class="text-[11px] text-ink">صورة عرضية مثل أطباقك أو واجهة المحل، تظهر وسط بطاقة المحفظة.</p>
+                  </div>
                 </div>
-                <button type="button" id="pkd-save" class="bg-brand text-cream hover:bg-brand-dark px-4 py-2.5 rounded-xl text-[13px] font-bold transition disabled:opacity-50" disabled>حفظ التصميم</button>
+              </div>
+            </div>
+            <div class="order-1 lg:order-2 lg:sticky lg:top-24 space-y-3">
+              <div class="ly-views" role="tablist" aria-label="أين يراها العميل">
+                <button type="button" role="tab" data-pkv="page" aria-selected="true">صفحة البطاقة</button>
+                <button type="button" role="tab" data-pkv="wallet" aria-selected="false">المحفظة</button>
+              </div>
+              <div class="pro-card p-4 space-y-3">
+                <div data-pkv-pane="page">
+                  <div class="lcard" id="pkd-lcard">
+                    <div class="flex items-start justify-between gap-3">
+                      <div><p class="text-[12px] opacity-75">باقتك</p><p class="text-[16px] font-bold mt-0.5 leading-snug">30 وجبة غداء</p></div>
+                      <p class="opacity-75 shrink-0" dir="ltr"><b class="text-xl">29/30</b></p>
+                    </div>
+                    <div class="h-16"></div>
+                    <div class="lcard-holder"><div><small>صاحب البطاقة</small><b>اسم العميل</b></div><div class="text-left"><small>رقم العضوية</small><b dir="ltr">#482913</b></div></div>
+                  </div>
+                </div>
+                <div data-pkv-pane="wallet" class="hidden">
+                  <div id="pkd-pv" class="rounded-2xl overflow-hidden shadow-lg" style="background:#233d2c">
+                    <div class="flex items-center gap-2 p-3"><img id="pkd-pv-logo" alt="" class="w-8 h-8 rounded-lg object-cover bg-white/20 hidden"><b id="pkd-pv-name" class="text-sm truncate"></b><span class="mr-auto text-left text-[11px] leading-tight opacity-90">المتبقي<b class="block text-base" dir="ltr">29 / 30</b></span></div>
+                    <div id="pkd-pv-strip" class="h-24 bg-cover bg-center"></div>
+                    <div class="p-3 grid grid-cols-2 gap-2 text-[11px]"><span><span class="opacity-75 block">الباقة</span><b>30 وجبة غداء</b></span><span><span class="opacity-75 block">الاسم</span><b>اسم العميل</b></span></div>
+                    <div class="bg-white mx-3 mb-3 rounded-xl p-2 grid place-items-center"><i class="ph-bold ph-qr-code text-5xl text-black/80"></i></div>
+                  </div>
+                  <p class="text-[11px] text-ink text-center mt-2">المحفظة تأخذ لون البطاقة والشعار وصورة الغلاف، ولون الخط يختاره الجوال تلقائياً.</p>
+                </div>
+                <div class="flex gap-2">
+                  <button type="button" id="pkd-save" class="flex-1 bg-brand text-cream hover:bg-brand-dark px-4 py-2.5 rounded-xl text-[13px] font-bold transition disabled:opacity-50" disabled>محفوظ</button>
+                  <button type="button" id="pkd-undo" class="hidden bg-white border border-brand/20 text-ink px-4 py-2.5 rounded-xl text-[13px] font-bold">تراجع</button>
+                </div>
               </div>
             </div>
           </div>

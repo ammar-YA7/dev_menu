@@ -595,44 +595,81 @@
   const pkDate = (iso) => new Date(iso).toLocaleDateString('ar-SA-u-nu-latn', { day: 'numeric', month: 'short', year: 'numeric' });
   // ─── تصميم بطاقة الاشتراكات ───
   const PKD_COLORS = ['#233d2c', '#3f7a4a', '#1b1b1b', '#0f172a', '#7c2d12', '#be185d', '#1e4fa3', '#6b4e3d'];
-  pk.design = {}; pk.dirty = false;
-  function setPkd(patch) { pk.design = { ...pk.design, ...patch }; pk.dirty = true; renderPkd(); }
+  pk.design = {}; pk.saved = {}; pk.dirty = false;
+  const pkdSame = () => { const k = [...new Set([...Object.keys(pk.design), ...Object.keys(pk.saved)])]; return k.every(x => (pk.design[x] ?? null) === (pk.saved[x] ?? null)); };
+  function setPkd(patch) { pk.design = { ...pk.design, ...patch }; Object.keys(pk.design).forEach(k => pk.design[k] == null && delete pk.design[k]); pk.dirty = !pkdSame(); renderPkd(); }
+  // وهو يسحب في منتقي اللون: نحدّث المعاينة بس (إعادة رسم الأزرار تقفل المنتقي)
+  function pickPkdColor(key, value) { pk.design = { ...pk.design, [key]: value }; pk.dirty = true; renderPkdPreview(); }
+  function pickPkdBg(k) {
+    if (k === 'color' || pk.design.bg_image) return setPkd({ bg: k });
+    document.getElementById('pkd-bg-file').click();
+  }
+  document.querySelectorAll('[data-pkv]').forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll('[data-pkv]').forEach(x => x.setAttribute('aria-selected', String(x === b)));
+    document.querySelectorAll('[data-pkv-pane]').forEach(el => el.classList.toggle('hidden', el.dataset.pkvPane !== b.dataset.pkv));
+  }));
+  function renderPkdPreview() {
+    const d = pk.design, color = d.color || '#233d2c', logo = d.logo || client.logo_url || '';
+    DMLoyaltyCard.apply(document.getElementById('pkd-lcard'), { style: d.style || 'gradient', color, color2: d.color2 || null, text_color: d.text_color || null, bg: d.bg, bg_image: d.bg_image, logo: d.logo || null });
+    const pv = document.getElementById('pkd-pv');
+    pv.style.background = color; pv.style.color = DMLoyaltyCard.inkFor(color);
+    document.getElementById('pkd-pv-name').textContent = client.name || '';
+    const lg = document.getElementById('pkd-pv-logo'); lg.classList.toggle('hidden', !logo); if (logo) lg.src = logo;
+    const strip = d.strip || (d.bg === 'image' && d.bg_image) || '';
+    const st = document.getElementById('pkd-pv-strip'); st.style.backgroundImage = strip ? `url("${strip}")` : ''; st.classList.toggle('hidden', !strip);
+    const btn = document.getElementById('pkd-save');
+    btn.disabled = !pk.dirty; btn.textContent = pk.dirty ? 'حفظ التصميم' : 'محفوظ';
+    document.getElementById('pkd-undo').classList.toggle('hidden', !pk.dirty);
+  }
   function renderPkd() {
     // عنده بطاقة الأختام: البطاقة وحدة وتصميمها من «بطاقة الأختام»
     const withStamps = DMPlans.has(client, 'loyalty');
     document.getElementById('pkd-card').classList.toggle('hidden', withStamps);
     document.getElementById('pkd-note').classList.toggle('hidden', !withStamps);
-    const d = pk.design, color = d.color || (ly.data && ly.data.settings && ly.data.settings.design && ly.data.settings.design.color) || '#233d2c';
-    const logo = d.logo || (ly.data && ly.data.settings && ly.data.settings.design && ly.data.settings.design.logo) || client.logo_url;
-    document.getElementById('pkd-pv').style.background = color;
-    document.getElementById('pkd-pv-name').textContent = client.name || '';
-    const lg = document.getElementById('pkd-pv-logo'); lg.classList.toggle('hidden', !logo); if (logo) lg.src = logo;
-    const st = document.getElementById('pkd-pv-strip'); st.style.backgroundImage = d.strip ? `url("${d.strip}")` : ''; st.classList.toggle('hidden', !d.strip);
-    document.getElementById('pkd-colors').innerHTML = PKD_COLORS.map(c => `<button type="button" aria-label="${c}" onclick="setPkd({ color: '${c}' })" class="w-8 h-8 rounded-full border ${d.color === c ? 'ring-2 ring-offset-2 ring-brand' : 'border-black/10'}" style="background:${c}"></button>`).join('')
-      + `<label class="relative w-8 h-8 rounded-full border border-dashed border-ink/30 grid place-items-center cursor-pointer text-ink" title="لون آخر"><i class="ph-bold ph-paint-brush"></i><input type="color" value="${d.color || '#233d2c'}" class="absolute inset-0 opacity-0 cursor-pointer" onchange="setPkd({ color: this.value })"></label>`;
-    document.getElementById('pkd-logo-clear').classList.toggle('hidden', !d.logo);
-    document.getElementById('pkd-strip-clear').classList.toggle('hidden', !d.strip);
-    document.getElementById('pkd-save').disabled = !pk.dirty;
+    const d = pk.design, style = d.style || 'gradient';
+    const bg = d.bg === 'image' && d.bg_image ? 'image' : 'color';
+    const on = 'border-brand bg-brand text-cream', off = 'border-brand/20 bg-white hover:border-brand/40';
+    document.getElementById('pkd-bg').innerHTML = [['color', 'لون', 'ph-palette'], ['image', 'صورة', 'ph-image']].map(([k, label, ic]) => `
+      <button type="button" onclick="pickPkdBg('${k}')" class="rounded-xl border px-3 py-2.5 text-[13px] font-bold transition ${bg === k ? on : off}"><i class="ph-bold ${ic}"></i> ${label}</button>`).join('');
+    document.getElementById('pkd-bg-up').classList.toggle('hidden', bg !== 'image');
+    document.getElementById('pkd-style-box').classList.toggle('hidden', bg !== 'color');
+    document.getElementById('pkd-styles').innerHTML = LY_STYLES.map(([k, label]) => `
+      <button type="button" onclick="setPkd({ style: '${k}' })" class="rounded-xl border px-3 py-2.5 text-[13px] font-bold transition ${style === k ? on : off}">${label}</button>`).join('');
+    const swatches = (list, key, cur) => list.map(c => `
+      <button type="button" aria-label="${c}" onclick="setPkd({ ${key}: '${c}' })" class="w-8 h-8 rounded-full border ${cur === c ? 'ring-2 ring-offset-2 ring-brand' : 'border-black/10'}" style="background:${c}"></button>`).join('') + `
+      <label class="relative w-8 h-8 rounded-full border border-dashed border-ink/30 grid place-items-center cursor-pointer text-ink" title="لون آخر"><i class="ph-bold ph-paint-brush"></i>
+        <input type="color" value="${cur || '#ffffff'}" class="absolute inset-0 opacity-0 cursor-pointer" oninput="pickPkdColor('${key}', this.value)" onchange="setPkd({ ${key}: this.value })"></label>`;
+    const none = (key, cur, label) => `<button type="button" onclick="setPkd({ ${key}: null })" class="h-8 px-3 rounded-full border text-[12px] font-bold ${!cur ? on : 'border-brand/20 bg-white'}">${label}</button>`;
+    document.getElementById('pkd-colors').innerHTML = swatches(PKD_COLORS, 'color', d.color || '#233d2c');
+    document.getElementById('pkd-color2-box').classList.toggle('hidden', bg !== 'color' || !['gradient', 'glass'].includes(style));
+    document.getElementById('pkd-colors2').innerHTML = none('color2', d.color2, 'بدون') + swatches(['#4a6650', '#7fb685', '#0f172a', '#be185d', '#0ea5e9', '#f97316'], 'color2', d.color2 || '');
+    document.getElementById('pkd-text-colors').innerHTML = none('text_color', d.text_color, 'تلقائي') + swatches(['#ffffff', '#1b1b1b', '#f5f2eb'], 'text_color', d.text_color || '');
+    const pic = (id, clear, url) => { const el = document.getElementById(id); el.classList.toggle('hidden', !url); if (url) el.src = url; document.getElementById(clear).classList.toggle('hidden', !url); };
+    pic('pkd-logo-pv', 'pkd-logo-clear', d.logo);
+    pic('pkd-strip-pv', 'pkd-strip-clear', d.strip);
+    renderPkdPreview();
   }
   async function uploadPkdImage(input, key) {
     const file = input.files && input.files[0]; input.value = '';
     if (!file) return;
-    const url = await uploadFile(file, key === 'strip' ? 'card_bg' : 'stamp', key === 'strip' ? 1125 : 500);
+    const wide = key !== 'logo';
+    const url = await uploadFile(file, wide ? 'card_bg' : 'stamp', key === 'bg_image' ? 1280 : wide ? 1125 : 500);
     if (!url) return showToast(lastUploadError || 'ما انرفعت الصورة. جرّب صورة أصغر أو تأكد من الإنترنت', true);
-    setPkd({ [key]: url });
+    setPkd(key === 'bg_image' ? { bg: 'image', bg_image: url } : { [key]: url });
     showToast('انرفعت الصورة، شوف المعاينة واضغط «حفظ التصميم»');
   }
+  document.getElementById('pkd-undo').addEventListener('click', () => { pk.design = { ...pk.saved }; pk.dirty = false; renderPkd(); });
   document.getElementById('pkd-save').addEventListener('click', async () => {
     const btn = document.getElementById('pkd-save'); btn.disabled = true;
     try {
       const r = await api('loyalty-pkg-design', { design: pk.design });
-      pk.design = r.design || {}; pk.dirty = false;
+      pk.design = { ...(r.design || {}) }; pk.saved = { ...pk.design }; pk.dirty = false;
       showToast(r.wallet_updated ? `تم حفظ التصميم، وتحدّثت ${r.wallet_updated} بطاقة في المحفظة` : 'تم حفظ تصميم بطاقة الاشتراكات');
     } catch (e) { showToast(e.message || 'لم يُحفظ التصميم', true); }
     renderPkd();
   });
   async function loadPackages() {
-    try { const r = await api('loyalty-pkg'); pk.plans = r.plans || []; pk.cards = r.cards || []; if (!pk.dirty) pk.design = r.design || {}; }
+    try { const r = await api('loyalty-pkg'); pk.plans = r.plans || []; pk.cards = r.cards || []; if (!pk.dirty) { pk.design = { ...(r.design || {}) }; pk.saved = { ...pk.design }; } }
     catch (e) { showToast(e.message || 'تعذر تحميل الباقات', true); return; }
     renderPackages();
   }
