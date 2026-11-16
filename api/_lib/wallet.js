@@ -86,7 +86,7 @@ function passBody({ store, settings, card, url, restoreUrl, lat, lng, notice, st
       const sStrip = subsDesign.strip || (subsDesign.bg === 'image' && subsDesign.bg_image) || null;
       if (sStrip) body.stripURL = sStrip;
     }
-    if (Number.isFinite(lat) && Number.isFinite(lng)) body.locations = [{ latitude: lat, longitude: lng, relevantText: String(stampsOff ? L(`قريب من ${store.name}؟ باقتك معك، حيّاك 👋`) : nearText || L(`أنت قريب من ${store.name}، خذ ختمك`)).slice(0, 80) }];
+    if (Number.isFinite(lat) && Number.isFinite(lng)) body.locations = [{ latitude: lat, longitude: lng, relevantText: String(stampsOff ? L(pkg ? `قريب من ${store.name}؟ باقي لك ${pkg.remaining} في باقتك، حيّاك 👋` : `قريب من ${store.name}؟ حيّاك 👋`) : pkg ? L(`قريب منا؟ باقي لك ${pkg.remaining} في باقتك، حيّاك 👋`) : nearText || L(`أنت قريب من ${store.name}، خذ ختمك`)).slice(0, 80) }];
   }
   return body;
 }

@@ -74,8 +74,8 @@ async function stampStrip(settings, card, pkg = null) {
       if (last && !on) { if (!d.reward_image) shapes += icon('gift', cx - s / 2, cy - s / 2, s, d.stamp_color, .95); }
       else if (!d.stamp_image) shapes += icon(d.icon, cx - s / 2, cy - s / 2, s, on ? stampInk : bg.ink, on ? 1 : .35);
     }
-    // شريط الباقة: لوح زجاجي تحت الأختام. يمين: حلقة تقدّم حول أيقونة الباقة، وجنبها خانات بعدد مرات الباقة
-    // (الباقي ممتلئ والمستخدم باهت)، ولو الباقة كبيرة (أكثر من 30) شريط متصل. بدون كتابة: الاسم والرقم في خانات البطاقة
+    // شريط الباقة: لوح زجاجي تحت الأختام. يمين: حلقة تقدّم حول أيقونة الباقة، وجنبها شريط متصل بنسبة الباقي
+    // (بدون كتابة: الاسم والرقم في خانات البطاقة)
     if (band) {
       const bx = 52, bw = W - 104, by = H - band - 20, bh = band, ink = bg.ink;
       const total = pkg.total, left = Math.max(0, Math.min(total, pkg.remaining)), pct = left / total;
@@ -90,13 +90,7 @@ async function stampStrip(settings, card, pkg = null) {
         + icon('package', cx - 17, cy - 17, 34, ink, .95);
       // الخانات (من اليمين لليسار)
       const tx0 = bx + 38, tx1 = cx - R - 34, tw = tx1 - tx0, th = 22, ty = cy - th / 2;
-      if (total <= 30) {
-        const g = total > 20 ? 6 : total > 10 ? 9 : 12, sw = (tw - g * (total - 1)) / total;
-        for (let i = 0; i < total; i++) {
-          const x = tx1 - (i + 1) * sw - i * g, on = i < left;
-          shapes += `<rect x="${x.toFixed(1)}" y="${ty}" width="${sw.toFixed(1)}" height="${th}" rx="${Math.min(th, sw) / 2}" fill="${on ? accent : ink}" fill-opacity="${on ? 1 : .18}"/>`;
-        }
-      } else {
+      {
         const fw = Math.max(th, tw * pct);
         shapes += `<rect x="${tx0}" y="${ty}" width="${tw}" height="${th}" rx="${th / 2}" fill="${ink}" fill-opacity=".18"/>`
           + (pct > 0 ? `<rect x="${(tx1 - fw).toFixed(1)}" y="${ty}" width="${fw.toFixed(1)}" height="${th}" rx="${th / 2}" fill="${accent}"/>` : '');
