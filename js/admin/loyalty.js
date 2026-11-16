@@ -121,6 +121,7 @@
     document.getElementById('pv-store').textContent = name;
     pic('pv-logo', client.logo_url || '');
     DMLoyaltyCard.apply(document.getElementById('ly-preview'), d);
+    document.getElementById('ly-pv-pkg').classList.toggle('hidden', !DMPlans.has(client, 'subs'));
     document.getElementById('ly-pv-needed').textContent = `${s}/${n}`;
     document.getElementById('ly-pv-reward').textContent = s >= n ? 'كمّلت الأختام!' : `باقي ${n - s} على ${st.reward}`;
     const pv = document.getElementById('ly-pv-stamps');

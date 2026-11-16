@@ -12,7 +12,7 @@
 <title>بطاقة الولاء | DEV MENU</title>
 <link rel="stylesheet" href="/css/fonts.css">
 <link rel="stylesheet" href="/css/icons.css">
-<link rel="stylesheet" href="/css/loyalty-card.css">
+<link rel="stylesheet" href="/css/loyalty-card.css?v=2">
 <script src="js/api.js"></script>
 <script src="/js/loyalty-card.js"></script>
 <script src="/js/vendor/qrcode.min.js"></script>
@@ -27,18 +27,6 @@
   .btn-gold { background: var(--gold); color: #15271b; }
   .btn-ghost { background: color-mix(in srgb, var(--brand) 8%, #fff); color: var(--brand); border: 2px solid color-mix(in srgb, var(--brand) 45%, transparent); }
   /* زر المحفظة: أسود مثل زر آبل الرسمي، يبان على أي لون */
-  /* الباقة داخل البطاقة: سطر أنيق برصيدها وشريط تقدّم، بنفس لون خط البطاقة */
-  .pkg-band { margin-top: 16px; padding: 12px 14px; border-radius: 16px; background: color-mix(in srgb, var(--ink, #fff) 12%, transparent); border: 1px solid color-mix(in srgb, var(--ink, #fff) 18%, transparent); color: var(--ink, #fff); }
-  .pkg-band .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-  .pkg-band .nm { display: flex; align-items: center; gap: 8px; min-width: 0; font-weight: 700; font-size: 14px; }
-  .pkg-band .nm span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .pkg-band .nm i { font-size: 17px; opacity: .85; }
-  .pkg-band .left { font-size: 12px; opacity: .8; white-space: nowrap; }
-  .pkg-band .left b { font-size: 20px; opacity: 1; font-weight: 800; margin-inline-start: 2px; }
-  .pkg-band .bar { margin-top: 9px; height: 6px; border-radius: 99px; background: color-mix(in srgb, var(--ink, #fff) 18%, transparent); overflow: hidden; }
-  .pkg-band .bar span { display: block; height: 100%; border-radius: 99px; background: var(--ink, #fff); transition: width .5s ease; }
-  .pkg-band .sub { margin-top: 7px; font-size: 11.5px; opacity: .72; display: flex; justify-content: space-between; gap: 8px; }
-  .pkg-band.low .bar span { background: #f59e0b; }
   body.no-stamps #c-stamps, body.no-stamps #c-reward, body.no-stamps #stamp-btn, body.no-stamps #c-purchase,
   body.no-stamps #j-card, body.no-stamps #j-purchase, body.no-stamps #c-survey, body.no-stamps .happy-box { display: none !important; }
   .pk-opt { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; text-align: right; border: 1.5px solid rgba(35,61,44,.18); border-radius: 16px; padding: 12px 14px; background: #fff; font-weight: 700; }
