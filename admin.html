@@ -217,12 +217,14 @@
   .dish-name:hover { text-decoration: underline; text-decoration-color: var(--line-2); text-underline-offset: 4px; }
   .dish-name { max-width: 100%; text-align: start; }
   /* زر القسم: ينقل الطبق لقسم ثاني بدون فتح الطبق */
-  .dish-cat-btn { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; max-width: 160px; height: 32px; padding: 0 8px 0 10px; border: 1px solid var(--line-2); border-radius: 9px; font-size: 12px; font-weight: 600; color: var(--ink); background: #fff; box-shadow: 0 1px 0 rgba(0,0,0,.03); transition: border-color .15s, background-color .15s, box-shadow .15s; }
+  .dish-sub { display: flex; align-items: center; gap: 8px; margin-top: 4px; min-width: 0; }
+  .dish-sub .dish-meta { margin-top: 0; min-width: 0; }
+  .dish-cat-btn { display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; max-width: 150px; height: 26px; padding: 0 7px 0 9px; border: 1px solid var(--line-2); border-radius: 7px; font-size: 11.5px; font-weight: 600; color: var(--ink); background: #fff; transition: border-color .15s, background-color .15s, box-shadow .15s; }
   .dish-cat-btn span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .dish-cat-btn i { color: var(--ok); font-size: 13px; }
-  .dish-cat-btn .ph-caret-up-down { color: var(--ink-3); font-size: 12px; margin-inline-start: auto; }
+  .dish-cat-btn i { color: var(--ok); font-size: 12px; }
+  .dish-cat-btn .ph-caret-up-down { color: var(--ink-3); font-size: 11px; }
   .dish-cat-btn:hover, .dish-cat-btn[aria-expanded="true"] { border-color: var(--ok); background: rgba(10, 122, 82, .05); box-shadow: 0 0 0 3px rgba(10, 122, 82, .1); }
-  @media (max-width: 640px) { .dish-cat-btn { max-width: 96px; height: 30px; padding: 0 7px; gap: 4px; font-size: 11.5px; } .dish-cat-btn .ph-caret-up-down { display: none; } }
+  @media (max-width: 640px) { .dish-cat-btn { max-width: 120px; } }
   .dish-row.just-moved { animation: dishMoved 1.8s ease-out; border-radius: 10px; }
   @keyframes dishMoved { 0%, 35% { background: rgba(10, 122, 82, .12); box-shadow: 0 0 0 2px rgba(10, 122, 82, .35); } 100% { background: transparent; box-shadow: none; } }
   /* نافذة اختيار القسم */

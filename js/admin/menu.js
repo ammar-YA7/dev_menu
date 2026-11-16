@@ -610,12 +610,11 @@
             <button type="button" class="shrink-0" onclick="startEdit(${id})" aria-label="تعديل ${esc(p.name)}" tabindex="-1">${img ? `<img src="${esc(img)}" alt="" loading="lazy" class="dish-thumb">` : `<span class="dish-thumb"><i class="ph-bold ph-fork-knife"></i></span>`}</button>
             <span class="dish-text">
               <button type="button" class="dish-name block" onclick="startEdit(${id})" aria-label="تعديل ${esc(p.name)}">${esc(p.name)}${isBestseller ? '<span class="dish-tag bg-saffron/15 text-amber-800">مميز</span>' : ''}${isHidden ? '<span class="dish-tag bg-ink/10 text-ink">مخفي</span>' : ''}</button>
-              ${meta ? `<span class="dish-meta block">${meta}</span>` : ''}
+              <span class="dish-sub">${loadedCategories.length > 1 ? `<button type="button" class="dish-cat-btn" aria-haspopup="menu" aria-expanded="false" onclick="openCatPicker(event, ${id})" aria-label="القسم: ${esc(cat ? cat.name : 'بدون قسم')}. اضغط لنقل الطبق" title="نقل الطبق لقسم ثاني"><i class="ph-bold ph-folder-simple"></i><span>${esc(cat ? catParts(cat.name).ar : 'بدون قسم')}</span><i class="ph-bold ph-caret-up-down"></i></button>` : ''}${meta ? `<span class="dish-meta">${meta}</span>` : ''}</span>
             </span>
             <span class="dish-leader" aria-hidden="true"></span>
             <button type="button" class="dish-price" onclick="startEdit(${id})" tabindex="-1">${esc(sized || money(p.price))}</button>${(Array.isArray(p.extras) && p.extras.length) ? `<span class="hidden sm:inline text-[10.5px] font-bold text-ink/70 ms-1"><i class="ph-bold ph-list-plus"></i> ${p.extras.length} ${p.extras.length === 1 ? 'مجموعة إضافات' : 'مجموعات إضافات'}</span>` : ''}
           </div>
-          ${loadedCategories.length > 1 ? `<button type="button" class="dish-cat-btn" aria-haspopup="menu" aria-expanded="false" onclick="openCatPicker(event, ${id})" aria-label="القسم: ${esc(cat ? cat.name : 'بدون قسم')}. اضغط لنقل الطبق" title="نقل الطبق لقسم ثاني"><i class="ph-bold ph-folder-simple"></i><span>${esc(cat ? catParts(cat.name).ar : 'بدون قسم')}</span><i class="ph-bold ph-caret-up-down"></i></button>` : ''}
           <button type="button" role="switch" aria-checked="${isAvailable}" aria-label="متوفر: ${esc(p.name)}" class="avail" onclick="toggleField(${id}, 'is_available', ${isAvailable})">
             <span class="avail-track"></span><span class="avail-label">${isAvailable ? 'متوفر' : 'نفدت'}</span>
           </button>
