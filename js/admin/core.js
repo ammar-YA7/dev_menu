@@ -42,12 +42,25 @@
 
   function showToast(msg, isError = false) {
     if (isError && lastApiError) { msg = lastApiError; lastApiError = ''; }
+    document.getElementById('toast-act')?.remove();
     const toast = document.getElementById('toast');
     document.getElementById('toast-msg').textContent = msg;
     document.getElementById('toast-icon').className = isError ? 'ph-bold ph-x-circle text-red-500' : 'ph-bold ph-check-circle text-green-600';
     toast.className = `fixed bottom-20 lg:bottom-5 left-5 z-[70] px-5 py-3 rounded-2xl shadow-2xl border text-xs font-bold flex items-center gap-2 transition-all ${isError ? 'bg-cream border-red-500 text-ink' : 'bg-brand border-brand text-cream'} show`;
     clearTimeout(showToast.t);
     showToast.t = setTimeout(() => { toast.classList.remove('show'); }, 3200);
+  }
+
+  // زر داخل الرسالة (مثل «تراجع»)، والرسالة تبقى وقت أطول
+  function showToastAction(label, fn) {
+    const toast = document.getElementById('toast');
+    const b = document.createElement('button');
+    b.id = 'toast-act'; b.type = 'button'; b.textContent = label;
+    b.className = 'ms-2 px-2.5 py-1 rounded-lg bg-white/15 hover:bg-white/25 text-cream font-bold underline-offset-2';
+    b.onclick = () => { b.remove(); toast.classList.remove('show'); fn(); };
+    toast.appendChild(b);
+    clearTimeout(showToast.t);
+    showToast.t = setTimeout(() => { toast.classList.remove('show'); b.remove(); }, 6000);
   }
 
   function switchTab(tab) {

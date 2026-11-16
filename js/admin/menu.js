@@ -605,7 +605,7 @@
       ].filter(Boolean).join(' · ');
       const sized = sizesText(p);
       return `${header}
-        <div class="dish-row ${!isAvailable ? 'sold-out' : ''} ${isHidden ? 'is-hidden' : ''} ${editingProductId === id ? 'is-editing' : ''}">
+        <div data-id="${id}" class="dish-row ${!isAvailable ? 'sold-out' : ''} ${isHidden ? 'is-hidden' : ''} ${editingProductId === id ? 'is-editing' : ''}">
           <div class="dish-main">
             <button type="button" class="shrink-0" onclick="startEdit(${id})" aria-label="تعديل ${esc(p.name)}" tabindex="-1">${img ? `<img src="${esc(img)}" alt="" loading="lazy" class="dish-thumb">` : `<span class="dish-thumb"><i class="ph-bold ph-fork-knife"></i></span>`}</button>
             <span class="dish-text">
@@ -615,7 +615,7 @@
             <span class="dish-leader" aria-hidden="true"></span>
             <button type="button" class="dish-price" onclick="startEdit(${id})" tabindex="-1">${esc(sized || money(p.price))}</button>${(Array.isArray(p.extras) && p.extras.length) ? `<span class="hidden sm:inline text-[10.5px] font-bold text-ink/70 ms-1"><i class="ph-bold ph-list-plus"></i> ${p.extras.length} ${p.extras.length === 1 ? 'مجموعة إضافات' : 'مجموعات إضافات'}</span>` : ''}
           </div>
-          ${loadedCategories.length > 1 ? `<button type="button" class="dish-cat-btn" aria-haspopup="menu" aria-expanded="false" onclick="openCatPicker(event, ${id})" title="نقل الطبق لقسم ثاني"><i class="ph-bold ph-folder-simple"></i><span>${esc(cat ? cat.name.split('|')[0].trim() : 'بدون قسم')}</span><i class="ph-bold ph-caret-down"></i></button>` : ''}
+          ${loadedCategories.length > 1 ? `<button type="button" class="dish-cat-btn" aria-haspopup="menu" aria-expanded="false" onclick="openCatPicker(event, ${id})" aria-label="القسم: ${esc(cat ? cat.name : 'بدون قسم')}. اضغط لنقل الطبق" title="نقل الطبق لقسم ثاني"><i class="ph-bold ph-folder-simple"></i><span>${esc(cat ? catParts(cat.name).ar : 'بدون قسم')}</span><i class="ph-bold ph-caret-up-down"></i></button>` : ''}
           <button type="button" role="switch" aria-checked="${isAvailable}" aria-label="متوفر: ${esc(p.name)}" class="avail" onclick="toggleField(${id}, 'is_available', ${isAvailable})">
             <span class="avail-track"></span><span class="avail-label">${isAvailable ? 'متوفر' : 'نفدت'}</span>
           </button>
@@ -664,40 +664,85 @@
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && dishMenuFor !== null) closeDishMenu(); });
   window.addEventListener('scroll', () => { if (dishMenuFor !== null) closeDishMenu(); }, { passive: true });
 
-  // نقل الطبق لقسم ثاني من القائمة مباشرة: اضغط اسم القسم واختر
+  // نقل الطبق لقسم ثاني من القائمة مباشرة: اضغط زر القسم واختر (نافذة صغيرة على الكمبيوتر، ولوح من تحت على الجوال)
+  const catParts = (name) => { const [ar, ...rest] = String(name || '').split('|'); return { ar: ar.trim(), en: rest.join('|').trim() }; };
+  function closeCatPicker() {
+    const m = document.getElementById('cat-pick'); if (!m) return;
+    m.remove(); document.getElementById('cat-pick-bg')?.remove();
+    document.querySelectorAll('.dish-cat-btn[aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+    catPickFor = null;
+  }
+  let catPickFor = null;
   function openCatPicker(e, id) {
     e.stopPropagation();
-    if (dishMenuFor === 'cat' + id) return closeDishMenu();
-    closeDishMenu();
+    if (catPickFor === id) return closeCatPicker();
+    closeCatPicker(); closeDishMenu();
     const p = loadedProducts.find(x => Number(x.id) === id); if (!p) return;
     const cur = categoryOf(p);
-    const btn = e.currentTarget, r = btn.getBoundingClientRect();
+    const btn = e.currentTarget;
+    const sheet = innerWidth < 640;
+    const groups = [...new Set(loadedCategories.map(c => c.group_name || ''))];
+    const useGroups = groups.length > 1;
+    const row = (c) => {
+      const on = cur && c.key === cur.key, n = catParts(c.name), u = catThumb(c), cnt = productsInCategory(c).length;
+      return `<button type="button" role="menuitemradio" aria-checked="${on}" class="cp-item${on ? ' is-on' : ''}" data-q="${esc((c.name || '').toLowerCase())}" ${on ? 'aria-disabled="true"' : `onclick="moveToCategory(${id}, '${esc(c.key)}')"`}>
+        <span class="cp-thumb">${u ? `<img src="${esc(u)}" alt="" loading="lazy">` : '<i class="ph-bold ph-folder-simple"></i>'}</span>
+        <span class="cp-name"><b>${esc(n.ar)}</b>${n.en ? `<small dir="ltr">${esc(n.en)}</small>` : ''}</span>
+        ${on ? '<span class="cp-cur"><i class="ph-bold ph-check"></i> الحالي</span>' : `<span class="cp-cnt tnum">${cnt} ${cnt === 1 ? 'طبق' : 'أطباق'}</span>`}
+      </button>`;
+    };
+    const list = useGroups
+      ? groups.map(g => { const cs = loadedCategories.filter(c => (c.group_name || '') === g); return `<div class="cp-group"><p class="cp-glabel">${esc(g || 'أقسام بدون قائمة')}</p>${cs.map(row).join('')}</div>`; }).join('')
+      : loadedCategories.map(row).join('');
     const m = document.createElement('div');
-    m.id = 'dish-menu'; m.setAttribute('role', 'menu'); m.className = 'cat-pick';
-    m.innerHTML = `<p class="cat-pick-h">انقل «${esc(p.name)}» إلى:</p>` + loadedCategories.map(c => {
-      const on = cur && c.key === cur.key;
-      return `<button type="button" role="menuitemradio" aria-checked="${on}" ${on ? 'disabled' : ''} onclick="closeDishMenu(); moveToCategory(${id}, '${esc(c.key)}')"><i class="ph-bold ${on ? 'ph-check' : 'ph-folder-simple'}"></i> ${esc(c.name)}</button>`;
-    }).join('');
+    m.id = 'cat-pick'; m.className = sheet ? 'is-sheet' : ''; m.setAttribute('role', 'dialog'); m.setAttribute('aria-label', 'نقل الطبق لقسم');
+    m.innerHTML = `
+      <div class="cp-head">
+        <span class="cp-dish">${safeUrl(p.image_url) ? `<img src="${esc(safeUrl(p.image_url))}" alt="">` : '<i class="ph-bold ph-fork-knife"></i>'}</span>
+        <span class="min-w-0 flex-1"><b>نقل الطبق إلى قسم</b><small>${esc(catParts(p.name).ar)}</small></span>
+        <button type="button" class="cp-x" onclick="closeCatPicker()" aria-label="إغلاق"><i class="ph-bold ph-x"></i></button>
+      </div>
+      ${loadedCategories.length > 6 ? '<label class="cp-search"><i class="ph-bold ph-magnifying-glass"></i><input type="search" placeholder="ابحث عن قسم" oninput="filterCatPicker(this.value)"></label>' : ''}
+      <div class="cp-list" role="menu">${list}<p class="cp-empty hidden">ما فيه قسم بهذا الاسم</p></div>`;
+    if (sheet) { const bg = document.createElement('div'); bg.id = 'cat-pick-bg'; bg.onclick = closeCatPicker; document.body.appendChild(bg); }
     document.body.appendChild(m);
-    const w = m.offsetWidth, h = m.offsetHeight;
-    m.style.left = `${Math.max(8, Math.min(r.left, innerWidth - w - 8))}px`;
-    m.style.top = `${r.bottom + h + 8 > innerHeight ? Math.max(8, r.top - h - 4) : r.bottom + 4}px`;
+    if (!sheet) {
+      const r = btn.getBoundingClientRect(), w = m.offsetWidth, h = m.offsetHeight;
+      m.style.left = `${Math.max(8, Math.min(r.left, innerWidth - w - 8))}px`;
+      m.style.top = `${r.bottom + h + 8 > innerHeight ? Math.max(8, r.top - h - 6) : r.bottom + 6}px`;
+    }
     btn.setAttribute('aria-expanded', 'true');
-    dishMenuFor = 'cat' + id;
-    (m.querySelector('button:not(:disabled)') || m).focus({ preventScroll: true });
+    catPickFor = id;
+    const first = m.querySelector('.cp-search input') || m.querySelector('.cp-item:not(.is-on)');
+    if (first && !sheet) first.focus({ preventScroll: true });
   }
-  async function moveToCategory(id, key) {
+  function filterCatPicker(v) {
+    const q = v.trim().toLowerCase(), m = document.getElementById('cat-pick'); if (!m) return;
+    let any = false;
+    m.querySelectorAll('.cp-item').forEach(b => { const hit = !q || b.dataset.q.includes(q); b.hidden = !hit; any = any || hit; });
+    m.querySelectorAll('.cp-group').forEach(g => { g.hidden = ![...g.querySelectorAll('.cp-item')].some(b => !b.hidden); });
+    m.querySelector('.cp-empty').classList.toggle('hidden', any);
+  }
+  document.addEventListener('click', (e) => { if (catPickFor !== null && !e.target.closest('#cat-pick')) closeCatPicker(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && catPickFor !== null) closeCatPicker(); });
+  window.addEventListener('scroll', () => { if (catPickFor !== null && !document.getElementById('cat-pick')?.classList.contains('is-sheet')) closeCatPicker(); }, { passive: true });
+
+  async function moveToCategory(id, key, undo = false) {
+    closeCatPicker();
     const p = loadedProducts.find(x => Number(x.id) === id);
     const c = loadedCategories.find(x => x.key === key);
     if (!p || !c) return;
-    const old = p.category;
-    p.category = c.key; filterProducts();
+    const from = categoryOf(p), oldCat = p.category, oldOrder = p.sort_order;
+    p.category = c.key; p.sort_order = 1e9; filterProducts();
     try {
       const r = await api('product-move', { id, category: c.key });
       if (r.product) Object.assign(p, r.product);
-      filterProducts();
-      showToast(`انتقل «${p.name}» إلى قسم ${c.name}`);
-    } catch { p.category = old; filterProducts(); showToast('ما قدرنا ننقل الطبق. تأكد من الإنترنت', true); }
+    } catch { p.category = oldCat; p.sort_order = oldOrder; filterProducts(); return showToast('ما قدرنا ننقل الطبق. تأكد من الإنترنت', true); }
+    filterProducts();
+    const row = document.querySelector(`.dish-row[data-id="${id}"]`);
+    if (row) { row.scrollIntoView({ block: 'center', behavior: 'smooth' }); row.classList.add('just-moved'); setTimeout(() => row.classList.remove('just-moved'), 1800); }
+    showToast(undo ? `رجع «${catParts(p.name).ar}» لقسم ${catParts(c.name).ar}` : `انتقل «${catParts(p.name).ar}» إلى ${catParts(c.name).ar}`);
+    if (!undo && from) showToastAction('تراجع', () => moveToCategory(id, from.key, true));
   }
 
   // المفتاح يتغير على طول (بدون انتظار الخادم)، ولو فشل الحفظ يرجع لحالته

@@ -217,15 +217,45 @@
   .dish-name:hover { text-decoration: underline; text-decoration-color: var(--line-2); text-underline-offset: 4px; }
   .dish-name { max-width: 100%; text-align: start; }
   /* زر القسم: ينقل الطبق لقسم ثاني بدون فتح الطبق */
-  .dish-cat-btn { display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; max-width: 150px; height: 30px; padding: 0 9px; border: 1px solid var(--line-2); border-radius: 8px; font-size: 12px; font-weight: 600; color: var(--ink-2); background: #fff; transition: border-color .15s, background-color .15s; }
+  .dish-cat-btn { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; max-width: 160px; height: 32px; padding: 0 8px 0 10px; border: 1px solid var(--line-2); border-radius: 9px; font-size: 12px; font-weight: 600; color: var(--ink); background: #fff; box-shadow: 0 1px 0 rgba(0,0,0,.03); transition: border-color .15s, background-color .15s, box-shadow .15s; }
   .dish-cat-btn span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .dish-cat-btn i { color: var(--ink-3); font-size: 12px; }
-  .dish-cat-btn:hover, .dish-cat-btn[aria-expanded="true"] { border-color: var(--ok); background: rgba(10, 122, 82, .05); }
-  @media (max-width: 640px) { .dish-cat-btn { max-width: 34px; padding: 0; justify-content: center; } .dish-cat-btn span, .dish-cat-btn .ph-caret-down { display: none; } }
-  #dish-menu.cat-pick { max-height: 60vh; overflow-y: auto; max-width: 260px; }
-  .cat-pick-h { font-size: 11.5px; color: var(--ink-3); padding: 6px 10px 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  #dish-menu button[aria-checked="true"] { opacity: 1; color: var(--ok); font-weight: 700; }
-  #dish-menu button[aria-checked="true"] i { color: var(--ok); }
+  .dish-cat-btn i { color: var(--ok); font-size: 13px; }
+  .dish-cat-btn .ph-caret-up-down { color: var(--ink-3); font-size: 12px; margin-inline-start: auto; }
+  .dish-cat-btn:hover, .dish-cat-btn[aria-expanded="true"] { border-color: var(--ok); background: rgba(10, 122, 82, .05); box-shadow: 0 0 0 3px rgba(10, 122, 82, .1); }
+  @media (max-width: 640px) { .dish-cat-btn { max-width: 96px; height: 30px; padding: 0 7px; gap: 4px; font-size: 11.5px; } .dish-cat-btn .ph-caret-up-down { display: none; } }
+  .dish-row.just-moved { animation: dishMoved 1.8s ease-out; border-radius: 10px; }
+  @keyframes dishMoved { 0%, 35% { background: rgba(10, 122, 82, .12); box-shadow: 0 0 0 2px rgba(10, 122, 82, .35); } 100% { background: transparent; box-shadow: none; } }
+  /* نافذة اختيار القسم */
+  #cat-pick { position: fixed; z-index: 60; width: 300px; max-height: min(440px, 70vh); display: flex; flex-direction: column; background: #fff; border: 1px solid var(--line-2); border-radius: 14px; box-shadow: 0 18px 40px -14px rgba(20, 40, 28, .35); overflow: hidden; animation: cpIn .14s ease-out; }
+  #cat-pick.is-sheet { left: 0; right: 0; bottom: 0; top: auto; width: auto; max-height: 78vh; border-radius: 18px 18px 0 0; border-bottom: 0; padding-bottom: env(safe-area-inset-bottom); animation: cpUp .2s ease-out; }
+  #cat-pick.is-sheet::before { content: ''; display: block; width: 38px; height: 4px; border-radius: 4px; background: var(--line-2); margin: 8px auto 0; }
+  #cat-pick-bg { position: fixed; inset: 0; z-index: 59; background: rgba(15, 25, 20, .35); }
+  @keyframes cpIn { from { opacity: 0; transform: translateY(-4px); } }
+  @keyframes cpUp { from { transform: translateY(100%); } }
+  .cp-head { display: flex; align-items: center; gap: 10px; padding: 12px 12px 10px; border-bottom: 1px solid var(--line); }
+  .cp-head b { display: block; font-size: 13.5px; color: var(--ink); }
+  .cp-head small { display: block; font-size: 12px; color: var(--ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cp-dish { width: 36px; height: 36px; border-radius: 9px; flex-shrink: 0; overflow: hidden; display: grid; place-items: center; background: rgba(56, 79, 61, .08); color: var(--ink-3); }
+  .cp-dish img { width: 100%; height: 100%; object-fit: cover; }
+  .cp-x { width: 32px; height: 32px; border-radius: 8px; color: var(--ink-3); flex-shrink: 0; }
+  .cp-x:hover { background: rgba(0, 0, 0, .05); color: var(--ink); }
+  .cp-search { display: flex; align-items: center; gap: 8px; margin: 10px 12px 2px; padding: 0 10px; height: 36px; border: 1px solid var(--line-2); border-radius: 9px; color: var(--ink-3); }
+  .cp-search:focus-within { border-color: var(--ok); box-shadow: 0 0 0 3px rgba(10, 122, 82, .1); }
+  .cp-search input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; font-size: 13px; color: var(--ink); }
+  .cp-list { overflow-y: auto; padding: 6px; overscroll-behavior: contain; }
+  .cp-glabel { font-size: 11px; font-weight: 700; color: var(--ink-3); padding: 8px 8px 4px; }
+  .cp-item { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 48px; padding: 6px 8px; border-radius: 10px; text-align: start; }
+  .cp-item:not(.is-on):hover, .cp-item:not(.is-on):focus-visible { background: rgba(10, 122, 82, .07); outline: none; }
+  .cp-item.is-on { background: rgba(10, 122, 82, .06); cursor: default; }
+  .cp-thumb { width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0; overflow: hidden; display: grid; place-items: center; background: rgba(56, 79, 61, .07); color: var(--ink-3); font-size: 14px; }
+  .cp-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .cp-name { flex: 1; min-width: 0; }
+  .cp-name b { display: block; font-size: 13px; font-weight: 600; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cp-name small { display: block; font-size: 11px; color: var(--ink-3); text-align: end; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cp-cnt { font-size: 11.5px; color: var(--ink-3); flex-shrink: 0; }
+  .cp-cur { font-size: 11.5px; font-weight: 700; color: var(--ok); flex-shrink: 0; display: inline-flex; align-items: center; gap: 3px; }
+  .cp-empty { font-size: 12.5px; color: var(--ink-3); text-align: center; padding: 16px; }
+  #cat-pick .is-sheet .cp-item { min-height: 52px; }
   .dish-thumb { width: 44px; height: 44px; border-radius: 10px; object-fit: cover; flex-shrink: 0; background: rgba(56, 79, 61, .08); border: 1px solid var(--line); display: grid; place-items: center; color: var(--ink-3); font-size: 13px; }
   .dish-text { min-width: 0; flex: 0 1 auto; }
   .dish-name { font-size: 14px; font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
