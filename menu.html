@@ -3186,9 +3186,11 @@
     dishes = [...dishes.slice(0, Math.ceil(dishes.length / 2)), ...again, ...dishes.slice(Math.ceil(dishes.length / 2))];
     const out = [];
     let mi = 0;
+    // كل ملف يطلع مرتين بالكثير في الدورة، وبين كل ملفين 3 أطباق على الأقل
+    const gap = c.media.length ? Math.max(3, Math.ceil(dishes.length / (c.media.length * 2))) : 0;
     dishes.forEach((p, i) => {
       out.push({ kind: 'dish', p });
-      if ((i + 1) % 3 === 0 && c.media.length) out.push({ kind: 'media', m: c.media[mi++ % c.media.length] });
+      if (gap && (i + 1) % gap === 0 && mi < c.media.length * 2) out.push({ kind: 'media', m: c.media[mi++ % c.media.length] });
     });
     // ما فيه أطباق بصور: صور صاحب المحل بس
     if (!out.length) c.media.forEach(m => out.push({ kind: 'media', m }));
