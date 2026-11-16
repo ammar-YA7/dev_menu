@@ -20,13 +20,13 @@
   (() => { let t = ''; try { t = localStorage.getItem('dm_mg_tab') || ''; } catch {} setMgTab(t); })();
   // ─── رابط الكاشير (لكل فرع رابطه) ───
   function renderDeskCard() {
-    const on = !!client && (DMPlans.has(client, 'pager') || DMPlans.has(client, 'loyalty'));
+    const on = !!client && (DMPlans.has(client, 'pager') || DMPlans.has(client, 'loyalty') || DMPlans.has(client, 'subs'));
     document.getElementById('desk-card').classList.toggle('hidden', !on);
     document.getElementById('desk-branch').textContent = branches.length > 1 ? ` (${client.name || ''})` : '';
     document.getElementById('desk-link-box').classList.add('hidden');
     document.getElementById('desk-show').classList.remove('hidden');
     // شاشة الزبون: تعرض أكواد الخدمات (المنيو والبيجر والانتظار والولاء)
-    const kon = !!client && ['menu', 'pager', 'waitlist', 'loyalty'].some(k => DMPlans.has(client, k));
+    const kon = !!client && ['menu', 'pager', 'waitlist', 'loyalty', 'subs'].some(k => DMPlans.has(client, k));
     document.getElementById('kiosk-card').classList.toggle('hidden', !kon);
     document.getElementById('kiosk-branch').textContent = branches.length > 1 ? ` (${client.name || ''})` : '';
     document.getElementById('kiosk-link-box').classList.add('hidden');
@@ -65,7 +65,7 @@
   // تطلع للمحل اللي عنده البيجر بدون ولاء (اللي عنده ولاء يرسل من صفحة الولاء)
   let ntQuota = null;
   async function renderNotifyCard() {
-    const on = !!client && DMPlans.has(client, 'pager') && !DMPlans.has(client, 'loyalty');
+    const on = !!client && DMPlans.has(client, 'pager') && !DMPlans.has(client, 'loyalty') && !DMPlans.has(client, 'subs');
     document.getElementById('nt-card').classList.toggle('hidden', !on);
     if (!on) return;
     const paid = DMPlans.has(client, 'notify'), f = DMPlans.FEATURES.notify;

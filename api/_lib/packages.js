@@ -48,7 +48,7 @@ function passBody(store, settings, c, notice) {
     // إشعار واحد بس لكل تحديث: الرسالة لو فيه، وإلا تغيّر الرصيد
     headerFields: c.status === 'pending'
       ? [{ label: L('الحالة'), value: L('بانتظار التفعيل') }]
-      : [{ label: L('المتبقي'), value: `${c.remaining} / ${c.total}`, ...(String(notice || '').trim() ? {} : { changeMessage: L('رصيد باقتك: %@') }) }],
+      : [{ label: L('المتبقي'), value: `${c.remaining} / ${c.total}`, ...(String(notice || '').trim() ? {} : { changeMessage: L('رصيد باقتك صار %@') }) }],
     secondaryFields: [{ label: L('الباقة'), value: String(c.plan_name).slice(0, 40) }, { label: L('الاسم'), value: String(c.name).slice(0, 40) }],
     auxiliaryFields: c.expires_at ? [{ label: L('تنتهي'), value: dateText(c.expires_at) }] : [],
     backFields: [
@@ -75,9 +75,9 @@ async function storeFor(storeId) {
 // رسالة كل خصم: وش انخصم، وكم باقي، وتنبيه لما تقرب تخلص
 function useNotice(c) {
   const L = (t) => tr(c.lang, t);
-  if (c.remaining <= 0) return L(`استخدمت آخر مرة في باقة «${c.plan_name}». شكراً لك، وتقدر تجدد باقتك من المحل`);
-  if (c.remaining <= 2) return L(`✅ انخصمت مرة من باقة «${c.plan_name}». باقي لك ${c.remaining} من ${c.total}، قربت تخلص`);
-  return L(`✅ انخصمت مرة من باقة «${c.plan_name}». المتبقي ${c.remaining} من ${c.total}`);
+  if (c.remaining <= 0) return L(`خلصت باقتك «${c.plan_name}» 🙏 حيّاك تجددها من الكاشير متى ما بغيت`);
+  if (c.remaining <= 2) return L(`✅ بالعافية! باقي لك ${c.remaining} بس من باقتك، جدّدها قبل ما تخلص 😉`);
+  return L(`✅ بالعافية! انخصمت مرة، وباقي لك ${c.remaining} من ${c.total}`);
 }
 
 async function pushCard(storeId, cardId, notice = '') {

@@ -42,7 +42,7 @@ function passBody({ store, settings, card, url, restoreUrl, lat, lng, notice, st
     // المكافأة وحامل البطاقة بس (عدد الأختام فوق، والأختام نفسها في الصورة)
     secondaryFields: [{ label: L(s >= n ? 'مكافأتك جاهزة' : 'المكافأة'), value: (card.lang === 'en' && settings.reward_en) || settings.reward }, ...(card.name ? [{ label: L('صاحب البطاقة'), value: String(card.name).slice(0, 40) }] : [])],
     // رسالة الباقة نفسها هي الإشعار: لو معها رسالة جديدة ما نحط إشعار على الخانة (حقلين لهم إشعار = «تم تغيير البطاقة»)
-    ...(pkg ? { auxiliaryFields: [{ label: L(`باقة ${pkg.plan_name}`).slice(0, 40), value: L(`باقي ${pkg.remaining} من ${pkg.total}`), ...(fresh && String(notice || '').trim() ? {} : { changeMessage: L('رصيد باقتك: %@') }) }] } : {}),
+    ...(pkg ? { auxiliaryFields: [{ label: L(`باقة ${pkg.plan_name}`).slice(0, 40), value: L(`باقي ${pkg.remaining} من ${pkg.total}`), ...(fresh && String(notice || '').trim() ? {} : { changeMessage: L('رصيد باقتك صار %@') }) }] } : {}),
     backFields: [
       { label: L('رقم العضوية'), value: `#${card.member_no || ''}` },
       { label: L('زياراتك'), value: String(card.visits || 0) },
@@ -61,11 +61,11 @@ function passBody({ store, settings, card, url, restoreUrl, lat, lng, notice, st
   if (stampsOff) {
     body.description = L(`بطاقة ${store.name || ''}`).slice(0, 120);
     const quiet = fresh && String(notice || '').trim();
-    body.headerFields = pkg ? [{ label: L('المتبقي'), value: `${pkg.remaining} / ${pkg.total}`, ...(quiet ? {} : { changeMessage: L('رصيد باقتك: %@') }) }] : [{ label: L('الباقة'), value: L('لا توجد') }];
+    body.headerFields = pkg ? [{ label: L('المتبقي'), value: `${pkg.remaining} / ${pkg.total}`, ...(quiet ? {} : { changeMessage: L('رصيد باقتك صار %@') }) }] : [{ label: L('الباقة'), value: L('لا توجد') }];
     body.secondaryFields = [...(pkg ? [{ label: L('الباقة'), value: String(pkg.plan_name).slice(0, 40) }] : []), ...(card.name ? [{ label: L('الاسم'), value: String(card.name).slice(0, 40) }] : [])];
     delete body.auxiliaryFields;
     body.backFields = body.backFields.filter(f => ![L('زياراتك'), L('طريقة الختم')].includes(f.label));
-    body.backFields.splice(1, 0, { label: L('طريقة الاستخدام'), value: L('اعرض الكود للكاشير كل ما تستخدم باقتك، وينقص الرصيد واحد.') });
+    body.backFields.splice(1, 0, { label: L('طريقة الاستخدام'), value: L('كل ما جيتنا اعرض الكود للكاشير، وتنخصم مرة من باقتك.') });
     if (pkg && pkg.expires_at) body.auxiliaryFields = [{ label: L('تنتهي'), value: new Date(pkg.expires_at).toLocaleDateString('ar-SA-u-nu-latn', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Riyadh' }) }];
   }
   if (full) {
@@ -83,7 +83,7 @@ function passBody({ store, settings, card, url, restoreUrl, lat, lng, notice, st
       const sStrip = subsDesign.strip || (subsDesign.bg === 'image' && subsDesign.bg_image) || null;
       if (sStrip) body.stripURL = sStrip;
     }
-    if (Number.isFinite(lat) && Number.isFinite(lng)) body.locations = [{ latitude: lat, longitude: lng, relevantText: String(nearText || L(`أنت قريب من ${store.name}، خذ ختمك`)).slice(0, 80) }];
+    if (Number.isFinite(lat) && Number.isFinite(lng)) body.locations = [{ latitude: lat, longitude: lng, relevantText: String(stampsOff ? L(`قريب من ${store.name}؟ باقتك معك، حيّاك 👋`) : nearText || L(`أنت قريب من ${store.name}، خذ ختمك`)).slice(0, 80) }];
   }
   return body;
 }

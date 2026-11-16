@@ -33,7 +33,9 @@ async function main(req) {
   if (String(action || '').startsWith('loyalty-pkg') && !PLANS.has(store, 'subs')) throw new ApiError(403, 'الاشتراكات مو ضمن باقتك أو انتهى اشتراكك', 'ADDON_OFF');
   // مسح بطاقة العميل: للأختام أو الاشتراكات (البطاقة وحدة)
   if (action === 'loyalty-scan' && !PLANS.has(store, 'loyalty') && !PLANS.has(store, 'subs')) throw new ApiError(403, 'بطاقة الولاء متوقفة: مو ضمن باقتك أو انتهى اشتراكك', 'ADDON_OFF');
-  if (['loyalty-stamp-code', 'loyalty-transfer', 'loyalty-give-stamp', 'loyalty-member-delete', 'loyalty-import', 'loyalty-redeem', 'loyalty-message', 'loyalty-message-push', 'loyalty-ai', 'loyalty-ai-run', 'loyalty-ai-preview'].includes(action) && !PLANS.has(store, 'loyalty')) throw new ApiError(403, 'بطاقة الولاء متوقفة: مو ضمن باقتك أو انتهى اشتراكك. جدّد من "اشتراكك" في لوحة التحكم', 'ADDON_OFF');
+  if (['loyalty-stamp-code', 'loyalty-transfer', 'loyalty-give-stamp', 'loyalty-import', 'loyalty-redeem', 'loyalty-ai', 'loyalty-ai-run', 'loyalty-ai-preview'].includes(action) && !PLANS.has(store, 'loyalty')) throw new ApiError(403, 'بطاقة الولاء متوقفة: مو ضمن باقتك أو انتهى اشتراكك. جدّد من "اشتراكك" في لوحة التحكم', 'ADDON_OFF');
+  // البطاقة نفسها (أختام أو اشتراكات): الرسائل الجماعية وحذف العضو
+  if (['loyalty-message', 'loyalty-message-push', 'loyalty-member-delete'].includes(action) && !PLANS.has(store, 'loyalty') && !PLANS.has(store, 'subs')) throw new ApiError(403, 'بطاقة الولاء متوقفة: مو ضمن باقتك أو انتهى اشتراكك. جدّد من "اشتراكك" في لوحة التحكم', 'ADDON_OFF');
   // خدمة مو ضمن باقة المشترك (في التجربة أو الاشتراك): نفس قفل اللوحة (featureLocked في admin.html)،
   // عشان محل البيجر بس ما يعدّل المنيو أو إعدادات الولاء من خارج اللوحة
   const notInPlan = (key) => ['active', 'trial'].includes(store.subscription_status) && !PLANS.has(store, key);

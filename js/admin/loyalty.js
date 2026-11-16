@@ -668,7 +668,29 @@
     } catch (e) { showToast(e.message || 'لم يُحفظ التصميم', true); }
     renderPkd();
   });
+  // موقع المحل لمحل الاشتراكات بس (نفس موقع البطاقة: شاشة القفل لما يقرب)
+  async function renderSubsLocation() {
+    const show = !DMPlans.has(client, 'loyalty');
+    document.getElementById('pk-loc-card').classList.toggle('hidden', !show);
+    if (!show) return;
+    if (!ly.data) { try { ly.data = await api('loyalty'); } catch { return; } }
+    document.getElementById('pk-loc-status').innerHTML = ly.data.location_set
+      ? '<span class="text-emerald-700 font-semibold"><i class="ph-bold ph-check-circle"></i> موقع المحل محدد، وتطلع البطاقة على شاشة قفل العميل لما يقرب.</span>'
+      : 'اختياري: إذا حددته، تظهر بطاقة العميل على شاشة قفل جواله لما يقرب من المحل.';
+  }
+  async function setSubsLocation() {
+    const btn = document.getElementById('pk-loc-btn'), html = btn.innerHTML;
+    btn.disabled = true; btn.innerHTML = '<i class="ph-bold ph-spinner-gap ph-spin"></i> نحدد الموقع...';
+    try {
+      const r = await api('loyalty-location', await bestPosition());
+      if (ly.data) ly.data.location_set = true;
+      showToast(`تم حفظ موقع المحل (الدقة ${r.accuracy} متر)`);
+      renderSubsLocation();
+    } catch (e) { showToast(e.message || 'تعذر تحديد الموقع', true); }
+    btn.disabled = false; btn.innerHTML = html;
+  }
   async function loadPackages() {
+    renderSubsLocation();
     try { const r = await api('loyalty-pkg'); pk.plans = r.plans || []; pk.cards = r.cards || []; if (!pk.dirty) { pk.design = { ...(r.design || {}) }; pk.saved = { ...pk.design }; } }
     catch (e) { showToast(e.message || 'تعذر تحميل الباقات', true); return; }
     renderPackages();
