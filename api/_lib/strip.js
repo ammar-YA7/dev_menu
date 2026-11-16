@@ -36,15 +36,18 @@ async function circleImage(buf, size, opacity, gray) {
 }
 
 // يرجّع صورة PNG بصيغة data URI، أو null لو صار خطأ (البطاقة تكمل بدونها)
-async function stampStrip(settings, card) {
+// pkg (اختياري): باقة سارية للعضو ← شريط تحت الأختام بأيقونة الباقة ونسبة الباقي (بدون كتابة: الاسم والرقم في خانات البطاقة)
+async function stampStrip(settings, card, pkg = null) {
   try {
     const d = settings.design || {};
     const n = settings.needed, done = Math.min(card.stamps || 0, n);
     const rows = n <= 6 ? 1 : 2, cols = Math.ceil(n / rows);
     const pad = 40, gap = 30;
-    const D = Math.floor(Math.min((W - 2 * pad - (cols - 1) * gap) / cols, (H - 2 * pad - (rows - 1) * gap) / rows));
+    const band = pkg && pkg.total ? 96 : 0, top = 28;   // مكان شريط الباقة تحت
+    const areaH = H - band - (band ? top : 0);
+    const D = Math.floor(Math.min((W - 2 * pad - (cols - 1) * gap) / cols, (areaH - 2 * (band ? 20 : pad) - (rows - 1) * gap) / rows));
     const gridW = cols * D + (cols - 1) * gap, gridH = rows * D + (rows - 1) * gap;
-    const x0 = (W - gridW) / 2, y0 = (H - gridH) / 2;
+    const x0 = (W - gridW) / 2, y0 = band ? top + (areaH - gridH) / 2 : (H - gridH) / 2;
     // صورة خلفية المحل (أو أول لقطة من الفيديو): تنحط ورا الأختام بطبقة غامقة عشان تبان
     let photo = null;
     if (d.bg !== 'color' && d.bg_image) {
@@ -70,6 +73,19 @@ async function stampStrip(settings, card) {
       const s = D * .46;
       if (last && !on) { if (!d.reward_image) shapes += icon('gift', cx - s / 2, cy - s / 2, s, d.stamp_color, .95); }
       else if (!d.stamp_image) shapes += icon(d.icon, cx - s / 2, cy - s / 2, s, on ? stampInk : bg.ink, on ? 1 : .35);
+    }
+    // شريط الباقة: إطار شفاف بلون خط البطاقة، أيقونة الباقة يمين، وشريط تقدّم بنسبة الباقي
+    if (band) {
+      const bx = 60, bw = W - 120, by = H - band - 22, bh = band, ink = bg.ink;
+      const pct = Math.max(0, Math.min(1, pkg.remaining / pkg.total));
+      const low = pkg.remaining <= 2;
+      const isz = 46, ix = bx + bw - 30 - isz, iy = by + (bh - isz) / 2;
+      const barX = bx + 34, barW = ix - 30 - barX, barY = by + bh / 2 - 9, barH = 18;
+      shapes += `<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" rx="28" fill="${ink}" fill-opacity=".12" stroke="${ink}" stroke-opacity=".22" stroke-width="2"/>`
+        + icon('package', ix, iy, isz, ink, .9)
+        + `<rect x="${barX}" y="${barY}" width="${barW}" height="${barH}" rx="9" fill="${ink}" fill-opacity=".2"/>`
+        // يمين لليسار: الممتلئ يبدأ من اليمين
+        + (pct > 0 ? `<rect x="${barX + barW - Math.max(barH, barW * pct)}" y="${barY}" width="${Math.max(barH, barW * pct)}" height="${barH}" rx="9" fill="${low ? '#f59e0b' : ink}"/>` : '');
     }
     const svg = photo
       ? `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}"><rect width="${W}" height="${H}" fill="#000" fill-opacity=".5"/>${shapes}</svg>`

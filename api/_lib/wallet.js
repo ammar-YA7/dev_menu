@@ -125,7 +125,7 @@ async function createPass(ctx) {
   if (!configured()) throw new ApiError(503, 'إضافة البطاقة للمحفظة مو متاحة حالياً', 'WALLET_OFF');
   if (!String(ctx.notice || '').trim()) ctx = { ...ctx, notice: firstNotice(ctx.store, ctx.card && ctx.card.lang) };
   ctx = { ...ctx, ...(await extrasFor(ctx.card)) };
-  ctx.strip = ctx.stampsOff ? null : await stampStrip(ctx.settings, ctx.card);
+  ctx.strip = ctx.stampsOff ? null : await stampStrip(ctx.settings, ctx.card, ctx.pkg);
   try { return await call('POST', '', passBody(ctx, true)); }
   catch (e) {
     if (e.status >= 400 && e.status < 500 && e.status !== 401 && e.status !== 429) {
@@ -141,7 +141,7 @@ async function createPass(ctx) {
 async function updatePass(serial, ctx) {
   if (!configured() || !serial) return 'not configured';
   ctx = { ...ctx, ...(await extrasFor(ctx.card)) };
-  ctx.strip = ctx.stampsOff ? null : await stampStrip(ctx.settings, ctx.card);
+  ctx.strip = ctx.stampsOff ? null : await stampStrip(ctx.settings, ctx.card, ctx.pkg);
   try {
     const lb = passBody(ctx, true);
     const r = await call('PUT', `/${encodeURIComponent(serial)}`, lb);
