@@ -232,6 +232,11 @@
   // ─── رسائل الأعضاء ───
   const lyCardLabel = (c) => `${c.name || `عضو #${c.member_no}`}${c.name ? ` #${c.member_no}` : ''}${c.phone ? ` (${c.phone})` : ''}`;
   function renderLyMessages() {
+    // محل الاشتراكات بس: مثال يناسب الباقات، وما عنده رسائل تلقائية (الترحيب والمساعد للأختام)
+    const subsOnly = !DMPlans.has(client, 'loyalty');
+    document.getElementById('ly-msg-body').placeholder = subsOnly ? 'مثلاً: جدّد باقتك هالأسبوع وعليك مرتين زيادة هدية منا' : 'مثلاً: اليوم الختم دبل! زورونا قبل الساعة 6';
+    const autoTab = document.querySelector('[data-mgt="auto"]');
+    if (autoTab && subsOnly && !DMPlans.has(client, 'pager')) { autoTab.classList.add('hidden'); if (typeof setMgTab === 'function') setMgTab('send'); }
     const d = ly.data, sel = document.getElementById('ly-msg-to'), keep = sel.value;
     // أكثر من فرع: زبائن فرع واحد (سجّلوا فيه أو انختم لهم فيه)
     const lyBr = (d.branches || []).filter(x => x.id != null);
