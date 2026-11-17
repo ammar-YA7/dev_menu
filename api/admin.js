@@ -249,7 +249,7 @@ async function run(req, user, action) {
     } else if (kind === 'waitlist') {
       const w = await rest(`waitlist_entries?client_id=eq.${id}&select=ticket,name,phone,email,party_size,seating,status,created_at,notified_at,closed_at&order=created_at.desc&limit=20000`);
       const ST = { waiting: 'ينتظر', notified: 'تم تنبيهه', seated: 'جلس', cancelled: 'ألغى', no_show: 'ما حضر' };
-      const SEAT = { indoor: 'داخلي', outdoor: 'خارجي', any: 'أي مكان' };
+      const SEAT = { indoor: 'داخلي', outdoor: 'خارجي', any: 'بدون تفضيل' };
       rows = [['الرقم', 'الاسم', 'الجوال', 'البريد', 'عدد الأشخاص', 'الجلسة', 'الحالة', 'وقت التسجيل', 'وقت التنبيه', 'وقت الإغلاق'],
         ...w.map(r => [r.ticket, r.name, r.phone, r.email, r.party_size, SEAT[r.seating] || r.seating, ST[r.status] || r.status, at(r.created_at), at(r.notified_at), at(r.closed_at)])];
     } else throw new ApiError(400, 'نوع البيانات غير معروف');
