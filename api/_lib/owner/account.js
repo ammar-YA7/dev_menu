@@ -407,6 +407,9 @@ module.exports.post = async function post(action, req, b, env) {
         saver_after: [5, 15, 30, 60, 120, 300].includes(Number(x.saver_after)) ? Number(x.saver_after) : 60,
         // صور وفيديوهات صاحب المحل بين الأطباق (حتى 8)، ورمز QR، وأرقام الطلبات الجاهزة
         saver_media: (Array.isArray(x.saver_media) ? x.saver_media : []).slice(0, 8).map(m => ({ u: media(m && m.u), t: m && m.t === 'video' ? 'video' : 'image' })).filter(m => m.u),
+        // الأطباق اللي تطلع في العرض: كلها (الافتراضي) أو اللي يختارها صاحب المحل (حتى 40، بترتيب اختياره)
+        saver_pick: x.saver_pick === true,
+        saver_items: [...new Set((Array.isArray(x.saver_items) ? x.saver_items : []).map(Number).filter(n => Number.isSafeInteger(n) && n > 0))].slice(0, 40),
         saver_qr: ['menu', 'loyalty'].includes(x.saver_qr) ? x.saver_qr : 'off',
         saver_ready: x.saver_ready === true
       };
