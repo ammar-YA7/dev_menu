@@ -219,6 +219,43 @@ async function run(req, user, action) {
     return { client: rows[0] };
   };
 
+  // ─── بيانات المحل: صاحب المحل يطلبها، والمدير العام ينزّلها من صفحة المشتركين (وتنسجّل في السجل) ───
+  //   kind: members (أعضاء بطاقة الأختام)، packages (باقات الاشتراكات)، menu (المنيو)، waitlist (قائمة الانتظار)
+  if (action === 'export') {
+    const c = (await rest(`clients?id=eq.${id}&select=id,name,client_slug`))[0];
+    if (!c) throw new ApiError(404, 'المتجر غير موجود');
+    const at = (v) => v ? new Date(v).toLocaleString('en-GB', { timeZone: 'Asia/Riyadh', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }) : '';
+    const yes = (v) => v ? 'نعم' : 'لا';
+    const kind = String(b.kind || '');
+    let rows;
+    if (kind === 'members') {
+      const cards = await rest(`loyalty_cards?client_id=eq.${id}&select=member_no,name,phone,gender,stamps,visits,rewards,last_stamp_at,created_at,wallet_serial&order=member_no.asc&limit=20000`);
+      rows = [['رقم العضوية', 'الاسم', 'الجوال', 'الجنس', 'الأختام', 'الزيارات', 'المكافآت', 'آخر زيارة', 'تاريخ التسجيل', 'في المحفظة'],
+        ...cards.map(r => [r.member_no, r.name, r.phone, r.gender === 'f' ? 'أنثى' : r.gender === 'm' ? 'ذكر' : '', r.stamps, r.visits, r.rewards, at(r.last_stamp_at), at(r.created_at), yes(r.wallet_serial)])];
+    } else if (kind === 'packages') {
+      const pk = await rest(`loyalty_pkg_cards?client_id=eq.${id}&select=name,phone,plan_name,total,remaining,status,expires_at,last_used_at,created_at&order=created_at.desc&limit=20000`);
+      rows = [['الاسم', 'الجوال', 'الباقة', 'الإجمالي', 'المتبقي', 'الحالة', 'تنتهي', 'آخر استخدام', 'تاريخ البداية'],
+        ...pk.map(r => [r.name, r.phone, r.plan_name, r.total, r.remaining, r.status === 'pending' ? 'بانتظار الدفع' : 'سارية', at(r.expires_at), at(r.last_used_at), at(r.created_at)])];
+    } else if (kind === 'menu') {
+      const [cats, prods] = await Promise.all([
+        rest(`categories?client_id=eq.${id}&select=key,name,name_en,sort_order&order=sort_order.asc`),
+        rest(`products?client_id=eq.${id}&select=name,name_en,category,price,calories,description,description_en,is_available,is_hidden,image_url,sort_order&order=sort_order.asc&limit=5000`)
+      ]);
+      const catName = new Map(cats.map(x => [x.key, x.name]));
+      const order = new Map(cats.map((x, i) => [x.key, i]));
+      prods.sort((a, z) => (order.get(a.category) ?? 999) - (order.get(z.category) ?? 999));
+      rows = [['القسم', 'الطبق', 'الاسم بالإنجليزي', 'السعر', 'السعرات', 'الوصف', 'الوصف بالإنجليزي', 'متوفر', 'مخفي', 'رابط الصورة'],
+        ...prods.map(r => [catName.get(r.category) || '', r.name, r.name_en, r.price, r.calories, r.description, r.description_en, yes(r.is_available !== false), yes(r.is_hidden), r.image_url])];
+    } else if (kind === 'waitlist') {
+      const w = await rest(`waitlist_entries?client_id=eq.${id}&select=ticket,name,phone,email,party_size,seating,status,created_at,notified_at,closed_at&order=created_at.desc&limit=20000`);
+      const ST = { waiting: 'ينتظر', notified: 'تم تنبيهه', seated: 'جلس', cancelled: 'ألغى', no_show: 'ما حضر' };
+      const SEAT = { indoor: 'داخلي', outdoor: 'خارجي', any: 'أي مكان' };
+      rows = [['الرقم', 'الاسم', 'الجوال', 'البريد', 'عدد الأشخاص', 'الجلسة', 'الحالة', 'وقت التسجيل', 'وقت التنبيه', 'وقت الإغلاق'],
+        ...w.map(r => [r.ticket, r.name, r.phone, r.email, r.party_size, SEAT[r.seating] || r.seating, ST[r.status] || r.status, at(r.created_at), at(r.notified_at), at(r.closed_at)])];
+    } else throw new ApiError(400, 'نوع البيانات غير معروف');
+    return { client: { id: c.id, name: c.name }, kind, count: rows.length - 1, filename: `${c.client_slug}-${kind}-${new Date().toISOString().slice(0, 10)}.csv`, rows };
+  }
+
   if (action === 'activate') {
     if (!['month', 'year'].includes(b.period)) throw new ApiError(400, 'مدة غير صحيحة');
     const target = (await rest(`clients?id=eq.${id}&select=id,parent_id`))[0];

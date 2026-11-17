@@ -939,6 +939,7 @@
         <button onclick="transferStore(${id})"><i class="ph-bold ph-key" style="color:#7c3aed"></i> تسليم المتجر لصاحبه</button>` : ''}
         ${remind && !c.parent_id ? `<a href="${esc(remind)}" target="_blank" rel="noopener"><i class="ph-bold ph-whatsapp-logo" style="color:#16a34a"></i> رسالة تذكير بالتجديد</a>` : ''}
         ${!c.parent_id ? `<button onclick="addBranch(${id})"><i class="ph-bold ph-git-branch" style="color:#047857"></i> إضافة فرع · ربط ${c.subscription_plan === 'month' ? `${money(PLAN_PRICE.branchMonth)}/شهر` : `${money(PLAN_PRICE.branch)}/سنة`} + مميزاته</button>` : `<button onclick="openFeatures(${id})"><i class="ph-bold ph-sliders-horizontal"></i> مميزات الفرع</button>`}
+        <button onclick="exportStore(${id})"><i class="ph-bold ph-download-simple" style="color:#047857"></i> بيانات المحل</button>
         <button onclick="renameStore(${id})"><i class="ph-bold ph-pencil-simple"></i> تعديل الاسم</button>
         ${!c.parent_id ? `<button onclick="openTypeDlg(${id})"><i class="ph-bold ph-storefront"></i> نوع النشاط: ${esc(DMSectors.label(c))}</button>` : ''}
         <button onclick="openNotify(${id})"><i class="ph-bold ph-bell"></i> إرسال إشعار</button>
@@ -973,6 +974,35 @@
   // لو الحساب الحالي مو مدير عام (تغيّر الدخول من تبويب ثاني) نعيد التحميل حتى تظهر الحالة الصحيحة
   const forbidden = (e) => { if (e && e.code === 'FORBIDDEN') { showToast('الحساب الحالي ليس مدير عام، سجّل دخول بحساب المدير', true); setTimeout(() => location.reload(), 1800); } return e; };
   const post = (action, body) => DM.post(A(action), body, true).then(() => null, forbidden);
+
+  // ─── بيانات المحل: صاحب المحل يطلب بياناته، والمدير العام ينزّلها ملف CSV يفتح في Excel (وتنسجّل في السجل) ───
+  async function exportStore(id) {
+    openMenu = null; renderStores();
+    const c = find(id); if (!c) return;
+    const f = c.plan_features || [];
+    const opts = [
+      { value: 'members', label: 'أعضاء بطاقة الأختام', desc: 'الاسم والجوال والأختام والزيارات', icon: 'ph-users-three' },
+      { value: 'packages', label: 'باقات الاشتراكات', desc: 'الباقة والمتبقي وتاريخ الانتهاء', icon: 'ph-package' },
+      { value: 'menu', label: 'المنيو', desc: 'الأقسام والأطباق والأسعار والصور', icon: 'ph-fork-knife' },
+      { value: 'waitlist', label: 'قائمة الانتظار', desc: 'كل التسجيلات وحالتها', icon: 'ph-hourglass-medium' }
+    ];
+    const r = await DMDialog.form({
+      title: 'بيانات المحل', subtitle: c.name, icon: 'ph-download-simple', confirmText: 'تنزيل',
+      note: 'ينزل ملف يفتح في Excel، وينسجّل التنزيل في سجل العمليات.',
+      fields: [{ name: 'kind', label: 'وش تبي تنزّل؟', type: 'choice', value: f.includes('loyalty') ? 'members' : f.includes('subs') ? 'packages' : 'menu', options: opts }]
+    });
+    if (!r) return;
+    let res;
+    try { res = await DM.post(A('export'), { id, kind: r.kind }); }
+    catch (e) { return showToast(e.message || 'تعذر تنزيل البيانات', true); }
+    if (!res.count) return showToast('ما فيه بيانات من هالنوع لهالمحل');
+    const cell = (v) => { const t = v == null ? '' : String(v); return /[",\n\r]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t; };
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob(['\ufeff' + res.rows.map(row => row.map(cell).join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8' }));
+    a.download = res.filename; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    showToast(`تم تنزيل ${res.count} ${r.kind === 'menu' ? 'طبق' : 'سجل'}`);
+  }
 
   async function renameStore(id) {
     openMenu = null; renderStores();
@@ -1512,7 +1542,7 @@
     rename: 'تغيير الاسم', transfer: 'تسليم المتجر لصاحبه', notify: 'إشعار لمحل', 'notify-all': 'إشعار للمشتركين', featured: 'أمثلة الرئيسية', 'pager-card': 'بطاقة النداء',
     'wa-save': 'ربط واتساب', 'wa-test': 'تجربة واتساب', 'wa-delete': 'فصل واتساب', 'business-type': 'نوع النشاط', 'waitlist-addon': 'قائمة الانتظار',
     features: 'تعديل المميزات', 'branch-create': 'إضافة فرع', delete: 'حذف (أرشفة)', restore: 'استرجاع', purge: 'مسح نهائي', 'owner-delete': 'صاحب المحل حذف حسابه', 'owner-restore': 'صاحب المحل استرجع حسابه',
-    'support-update': 'تحديث طلب', 'prospect-create': 'منيو لعميل محتمل', 'card-maintenance': 'صيانة بطاقة النداء'
+    export: 'تنزيل بيانات المحل', 'support-update': 'تحديث طلب', 'prospect-create': 'منيو لعميل محتمل', 'card-maintenance': 'صيانة بطاقة النداء'
   };
   const AUDIT_TONE = { delete: 'text-red-700', purge: 'text-red-700', 'owner-delete': 'text-red-700', restore: 'text-emerald-700', 'owner-restore': 'text-emerald-700', activate: 'text-emerald-700' };
   let auditRows = null, auditStore = null;
