@@ -10,7 +10,7 @@
     { id: 'people', label: 'العملاء', icon: 'ph-users', pages: ['customers', 'loyalty', 'subs', 'carddesign', 'messages'] },
     { id: 'settings', label: 'الإعدادات', icon: 'ph-gear-six', pages: ['settings', 'branches', 'devices', 'account'] }
   ];
-  const SEG_LABELS = { pagerset: 'البيجر', waitlist: 'قائمة الانتظار', customers: 'العملاء', loyalty: 'الأختام', subs: 'الاشتراكات', carddesign: 'تصميم البطاقة', messages: 'الرسائل', settings: 'الهوية', branches: 'الفروع', devices: 'الأجهزة', account: 'الاشتراك' };
+  const SEG_LABELS = { pagerset: 'البيجر', waitlist: 'قائمة الانتظار', customers: 'العملاء', loyalty: 'الأختام', subs: 'الاشتراكات', carddesign: 'التصميم', messages: 'الرسائل', settings: 'الهوية', branches: 'الفروع', devices: 'الأجهزة', account: 'الاشتراك' };
   // اختصارات كل قسم: تنسخ نفس الأزرار القديمة (بصلاحياتها) بشكل كبسولة
   const NAV_ACTIONS = {
     home: [['[data-page="dashboard"] [onclick="goAddDish()"]', 'ph-plus', 'أضف طبق']],
