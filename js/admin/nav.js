@@ -144,3 +144,79 @@
   if (typeof goAddDish === 'function') { const f = goAddDish; goAddDish = function () { f.apply(this, arguments); dishSheet(true); }; }
   if (typeof startEdit === 'function') { const f = startEdit; startEdit = function () { f.apply(this, arguments); dishSheet(true); }; }
   if (typeof cancelEdit === 'function') { const f = cancelEdit; cancelEdit = function () { f.apply(this, arguments); dishSheet(false); }; }
+
+  // ─── الإعدادات في الجوال: قائمة صفوف زي «الإعدادات» في الآيفون، والضغط يفتح تفاصيل الصف مع زر رجوع ───
+  //   كل [data-sttab] في صفحة المنشأة = صف. الصفوف مقسومة حسب التبويب (بيانات المنشأة، التواصل والتوصيل، صفحة الروابط)
+  const ST_TABS = [['info', 'بيانات المنشأة'], ['contact', 'التواصل والتوصيل'], ['links', 'صفحة الروابط']];
+  const stMQ = matchMedia('(max-width: 1023px)');
+  let stOpen = null;   // رقم الصف المفتوح، أو null = القائمة
+  const stUnits = () => [...document.querySelectorAll('[data-page="settings"] [data-sttab]')];
+  const stVisible = (el) => el.style.display !== 'none' && !el.classList.contains('hidden') && !(el.closest('[style*="display: none"]'));
+  function stInfo(el) {
+    const h = el.querySelector('h3, h4');
+    const icon = h && h.querySelector('i') ? [...h.querySelector('i').classList].find(c => c.startsWith('ph-') && c !== 'ph-bold') : 'ph-gear-six';
+    const title = h ? h.textContent.replace(/\s+/g, ' ').trim() : '';
+    const p = el.querySelector('#slug-hint') || [...el.querySelectorAll('p, span.block')].find(x => x.textContent.trim().length > 12 && !x.closest('label'));
+    const sub = p ? p.textContent.replace(/\s+/g, ' ').trim() : '';
+    return { icon, title, sub: sub.length > 70 ? sub.slice(0, 68) + '…' : sub };
+  }
+  function renderStList() {
+    const sec = document.querySelector('[data-page="settings"]');
+    if (!sec) return;
+    let list = document.getElementById('ap-st-list');
+    if (!list) { list = document.createElement('div'); list.id = 'ap-st-list'; sec.prepend(list); }
+    let back = document.getElementById('ap-st-back');
+    if (!back) {
+      back = document.createElement('button'); back.type = 'button'; back.id = 'ap-st-back';
+      back.innerHTML = '<i class="ph-bold ph-caret-left ap-flip"></i> <span>هوية المنشأة</span>';
+      back.addEventListener('click', () => history.state && history.state.apSt != null ? history.back() : stShow(null));
+      sec.prepend(back);
+    }
+    const units = stUnits();
+    units.forEach((u, i) => { u.dataset.apUnit = i; });
+    const tabOn = (t) => { const b = document.querySelector(`[data-stt="${t}"]`); return !b || b.style.display !== 'none'; };
+    list.innerHTML = ST_TABS.filter(([t]) => tabOn(t)).map(([t, label]) => {
+      const rows = units.filter(u => u.dataset.sttab === t && stVisible(u)).map(u => ({ u, ...stInfo(u) })).filter(r => r.title);
+      if (!rows.length) return '';
+      return `<p class="ap-st-head">${label}</p><div class="ap-st-group">${rows.map(r => `
+        <button type="button" class="ap-st-row" data-st-open="${r.u.dataset.apUnit}">
+          <span class="ap-st-ic"><i class="ph-bold ${r.icon}"></i></span>
+          <span class="ap-st-txt"><b>${esc(r.title)}</b>${r.sub ? `<small>${esc(r.sub)}</small>` : ''}</span>
+          <i class="ph-bold ph-caret-left ap-st-chev"></i>
+        </button>`).join('')}</div>`;
+    }).join('');
+  }
+  function stShow(i, push) {
+    const sec = document.querySelector('[data-page="settings"]');
+    if (!sec) return;
+    stOpen = i;
+    sec.classList.toggle('ap-st-mode', stMQ.matches);
+    sec.classList.toggle('ap-st-detail', stMQ.matches && i != null);
+    stUnits().forEach(u => u.classList.toggle('ap-st-cur', String(u.dataset.apUnit) === String(i)));
+    if (i != null) {
+      const u = stUnits().find(x => String(x.dataset.apUnit) === String(i));
+      if (u && typeof setStTab === 'function') setStTab(u.dataset.sttab);
+      if (push) history.pushState({ apSt: i }, '', location.href);
+      window.scrollTo({ top: 0 });
+    } else renderStList();
+  }
+  document.addEventListener('click', (e) => {
+    const r = e.target.closest('[data-st-open]');
+    if (r) stShow(r.dataset.stOpen, true);
+  });
+  addEventListener('popstate', () => { if (stOpen != null && location.hash === '#settings') stShow(null); });
+  stMQ.addEventListener('change', () => stShow(stMQ.matches ? stOpen : null));
+  // كل مرة تنفتح صفحة المنشأة: ترجع للقائمة (إلا لو فيه طلب يفتح بطاقة معيّنة)
+  if (typeof showPage === 'function') {
+    const f = showPage;
+    showPage = function (page) { f.apply(this, arguments); if (page === 'settings') { renderStList(); stShow(null); } };
+  }
+  // goStoreCard (من الرئيسية وخطوات التجهيز): يفتح تفاصيل البطاقة اللي فيها العنصر
+  if (typeof goStoreCard === 'function') {
+    const f = goStoreCard;
+    goStoreCard = function (id) {
+      f.apply(this, arguments);
+      const el = document.getElementById(id), u = el && el.closest('[data-sttab]');
+      if (u && stMQ.matches) { renderStList(); stShow(u.dataset.apUnit, true); setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150); }
+    };
+  }
