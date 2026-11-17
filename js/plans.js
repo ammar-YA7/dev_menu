@@ -46,6 +46,14 @@
   const BUNDLE_RATE = { month: [0, 0, .10, .15], year: [0, 0, .10, .12] };
   const bundleRate = (f, p) => { const n = f.filter(k => CORE.includes(k)).length; const r = BUNDLE_RATE[p]; return r[Math.min(n, r.length - 1)]; };
   const BUNDLES = [];
+  // أقرب رقم ينتهي بـ 9: لو الأقل منه قريب (7 أو أقل) ناخذه، وإلا اللي فوقه. وما ننزل تحت 80% من السعر الكامل
+  //   full: السعر الكامل (الشهري، أو 12 شهر للسنوي) عشان الخصم الكلي مع الشهر المجاني ما يتعدى 20%
+  function prettyPrice(n, full) {
+    const down = Math.floor((n + 1) / 10) * 10 - 1, up = down + 10;
+    let r = n - down <= 7 ? down : up;
+    if (r < Math.ceil(full * 0.8)) r = up;
+    return r;
+  }
   // المشتركين القدامى (قبل نظام المميزات) كانت باقتهم المنيو + البيجر + الانتظار
   const LEGACY = ['menu', 'pager', 'waitlist'];
 
@@ -89,7 +97,12 @@
     // الخصم على الخدمات بس (بدون الفروع)
     const rate = bundleRate(f, p), base = f.reduce((a, k) => a + FEATURES[k][p], 0);
     const cores = f.filter(k => CORE.includes(k)).length;
-    const discounts = rate ? [{ label: `خصم ${cores === 2 ? 'خدمتين' : `${cores} خدمات`} (${Math.round(rate * 100)}%)`, amount: Math.round(base * rate), rate }] : [];
+    // المجموع بعد الخصم يتقرّب لرقم ينتهي بـ 9 (99، 199، 869) زي الأسعار المدروسة، والخصم الكلي ما يتعدى 20%
+    let discounts = [];
+    if (rate) {
+      const net = prettyPrice(base - Math.round(base * rate), p === 'year' ? base * 12 / 11 : base);
+      discounts = [{ label: 'خصم الجمع بين الخدمات', amount: base - net, rate: cores >= 3 ? BUNDLE_RATE[p][3] : BUNDLE_RATE[p][2] }];
+    }
     const discount = discounts.reduce((a, d) => a + d.amount, 0);
     return { features: f, period: p, lines, discounts, subtotal, discount, total: Math.max(0, subtotal - discount) };
   }

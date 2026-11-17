@@ -369,5 +369,6 @@
   "البيجر متوقف مؤقتاً، تفضّل عند الكاشير وبيبلغك أول ما يجهز طلبك.": "The pager is paused for now. Please wait at the counter and the staff will let you know when your order is ready.",
   "أنواع سيارات مقترحة": "Suggested car models",
   "خصم خدمتين ({n}%)": "Two-service discount ({n}%)",
-  "خصم {a} خدمات ({n}%)": "{a}-service discount ({n}%)"
+  "خصم {a} خدمات ({n}%)": "{a}-service discount ({n}%)",
+  "خصم الجمع بين الخدمات": "Bundle discount"
 }
