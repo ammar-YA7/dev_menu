@@ -3311,10 +3311,10 @@
   window.addEventListener('click', (e) => { if (Date.now() - ixSaverWoke < 700) { e.preventDefault(); e.stopPropagation(); } }, true);
 
   // ─── الخمول: على التابلت لو ما أحد لمس الشاشة 90 ثانية يرجع للترحيب (للزبون اللي بعده) ───
-  // ?idle=5 للتجربة (بالثواني). في الجوال ما نرجّعه، الزبون يمكن يقرأ على راحته
+  // ?idle=5 للتجربة (بالثواني). يشتغل في كل الأجهزة (آيباد وجوال) لما يكون المنيو تفاعلي
   const IX_IDLE_Q = Number(urlParams.get('idle'));
   const ixIdleMs = () => Math.max(3, IX_IDLE_Q || (ixSaverCfg().mode !== 'off' ? ixSaverCfg().after : 90)) * 1000;
-  const ixIdleOn = () => ixTablet || urlParams.has('idle') || Math.min(innerWidth, innerHeight) >= 600;
+  const ixIdleOn = () => true;
   let ixIdleT = null;
   function ixIdle() {
     clearTimeout(ixIdleT);
