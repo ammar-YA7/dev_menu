@@ -245,3 +245,58 @@ main span.bg-amber-400 { background: #fff !important; color: var(--ap-green) !im
 /* خطوات إعداد البيجر (قبل أخذ الرقم، أثناء الانتظار، بعد الاستلام) بشكل التبويبات */
 [data-page="pagerset"] [role="tablist"] { background: var(--ap-fill) !important; border-radius: 11px !important; padding: 2px !important; border: 0 !important; }
 [data-page="pagerset"] [role="tablist"] [aria-selected="true"] { background: #fff !important; box-shadow: 0 1px 3px rgba(29, 42, 33, .12) !important; border-radius: 9px !important; }
+
+/* =====================================================================
+   المقاسات: الجوال على مقاسات أبل (نص 15، ملاحظات 13، عناوين 17-18، أزرار 44 على الأقل)
+   والآيباد بينهم، والكمبيوتر يبقى أصغر بدرجة (الشاشة قريبة والماوس دقيق)
+   ===================================================================== */
+@media (max-width: 1023px) {
+  :is(main, .dmd-box, [role="dialog"], #ap-sheet) :is(.text-\[9\.5px\], .text-\[10px\], .text-\[10\.5px\]) { font-size: 12px !important; }
+  :is(main, .dmd-box, [role="dialog"]) :is(.text-\[11px\], .text-\[11\.5px\]) { font-size: 13px !important; line-height: 1.5 !important; }
+  :is(main, .dmd-box, [role="dialog"]) :is(.text-xs, .text-\[12px\], .text-\[12\.5px\], .text-\[13px\], .text-\[13\.5px\]) { font-size: 15px !important; line-height: 1.5 !important; }
+  :is(main, .dmd-box, [role="dialog"]) :is(.text-sm, .text-\[14px\]) { font-size: 16px !important; }
+  :is(main, .dmd-box, [role="dialog"]) :is(.text-base, .text-\[15px\], .text-\[16px\]) { font-size: 17px !important; }
+  main .pro-card h3, main .pro-card h4, [data-page="dashboard"] .pro-card h3 { font-size: 18px !important; line-height: 1.3 !important; }
+  main label, #add-product-form label.block, #add-product-form .f-label { font-size: 15px !important; }
+  .f-sec { font-size: 13px !important; }
+  .kpi small { font-size: 13px !important; }
+  .ly-chip, .lyt-badge { font-size: 12px !important; }
+  /* الحقول: 17 (وما يكبّر الآيفون الصفحة لما تضغطها) وارتفاع 48 */
+  main :is(input[type="text"], input[type="tel"], input[type="email"], input[type="number"], input[type="url"], input[type="search"], input:not([type]), select), .input-pro { font-size: 17px !important; min-height: 48px; }
+  main textarea { font-size: 17px !important; }
+  /* الأزرار اللي فيها كلام: 44 على الأقل (مساحة الإصبع)، والأيقونات الصغيرة تبقى مثل ما هي */
+  main :is(button, a)[class*="py-"]:not([class*="w-5"]):not([class*="w-6"]):not([class*="w-7"]):not([class*="w-8"]):not([class*="h-5"]):not([class*="h-6"]):not([class*="h-7"]) { min-height: 44px; }
+  main :is(button, a)[class*="py-"]:not(.w-full):not([class*="w-5"]):not([class*="w-6"]):not([class*="w-7"]):not([class*="w-8"]) { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+  main :is(button, a).w-full[class*="py-"] { display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .ap-chip { min-height: 40px; font-size: 15px; }
+  .ap-seg button { min-height: 36px; }
+  .tab-btn, .ly-tabs button { min-height: 40px; font-size: 15px !important; }
+  /* القائمة والصفوف */
+  .dish-name { font-size: 16px !important; }
+  .dish-meta, .dish-sub { font-size: 13px !important; }
+  .dish-price { font-size: 16px !important; }
+  .dish-cat h4 { font-size: 14px !important; }
+}
+/* الآيباد: بين الجوال والكمبيوتر */
+@media (min-width: 641px) and (max-width: 1023px) {
+  :is(main, .dmd-box, [role="dialog"]) :is(.text-xs, .text-\[12px\], .text-\[12\.5px\], .text-\[13px\], .text-\[13\.5px\]) { font-size: 15px !important; }
+}
+/* الكمبيوتر: درجة أكبر من القديم بس أصغر من الجوال */
+@media (min-width: 1024px) {
+  main :is(.text-\[10px\], .text-\[10\.5px\]) { font-size: 11px !important; }
+  main :is(.text-\[11px\], .text-\[11\.5px\]) { font-size: 12px !important; }
+  main :is(.text-xs, .text-\[12px\], .text-\[12\.5px\]) { font-size: 13.5px !important; }
+  main :is(.text-\[13px\], .text-\[13\.5px\]) { font-size: 14px !important; }
+  main .pro-card h3 { font-size: 16px !important; }
+}
+@media (max-width: 1023px) {
+  /* الأوصاف والملاحظات تحت الحقول (كانت 11): 14 */
+  :is(main, .dmd-box, [role="dialog"]) :is(.text-\[11px\], .text-\[11\.5px\]) { font-size: 14px !important; }
+  /* خطوات التجهيز، وخطوات البيجر، وأزرار المعاينة في تصميم البطاقة */
+  .su-sub, .su-hint { font-size: 14px !important; line-height: 1.5 !important; }
+  .su-go { font-size: 15px !important; min-height: 40px; }
+  .su-hide { font-size: 14px !important; }
+  [data-page="pagerset"] [role="tablist"] button, .ly-views button { font-size: 14px !important; min-height: 40px; }
+  .ap-st-txt small { font-size: 14px; }
+  .ap-st-head { font-size: 14px; }
+}
