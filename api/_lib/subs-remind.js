@@ -23,12 +23,13 @@ const DEFAULTS = {
 
 function normalize(r) {
   const src = r && typeof r === 'object' ? r : {};
-  const out = {};
+  // ai: المساعد يكتب لكل عميل رسالة باسمه، custom: صاحب المحل يكتب نص واحد لكل تذكير (فاضي = النص الجاهز)
+  const out = { mode: src.mode === 'custom' ? 'custom' : 'ai' };
   for (const k of KINDS) {
     const s = src[k] && typeof src[k] === 'object' ? src[k] : {};
     const days = Number(s.days);
     const text = String(s.text || '').trim().slice(0, 180);
-    out[k] = { on: !!s.on, days: OPTIONS[k].includes(days) ? days : DEFAULTS[k].days, text: text || DEFAULTS[k].text };
+    out[k] = { on: !!s.on, days: OPTIONS[k].includes(days) ? days : DEFAULTS[k].days, text: text === DEFAULTS[k].text ? '' : text };
   }
   return out;
 }
@@ -77,7 +78,7 @@ function dueCards(cards, cfg, now = Date.now()) {
 
 async function runSubsRemind(storeId, { limitMs = 20e3 } = {}) {
   const started = Date.now();
-  const store = (await rest(`clients?id=eq.${storeId}&select=id,name,parent_id,is_active,subs_remind`))[0];
+  const store = (await rest(`clients?id=eq.${storeId}&select=id,name,business_type,business_label,parent_id,is_active,subs_remind`))[0];
   if (!store || store.parent_id || !store.is_active) return { skipped: 'off' };
   const cfg = normalize(store.subs_remind);
   if (!KINDS.some(k => cfg[k].on) || !wallet.configured()) return { skipped: 'off' };
@@ -95,14 +96,24 @@ async function runSubsRemind(storeId, { limitMs = 20e3 } = {}) {
   const due = dueCards(cards, cfg, now).filter(d => reachable.includes(d.card)).slice(0, BATCH);
   const P = require('./packages');
   const sent = { away: 0, expiry: 0, renew: 0 };
+  // المساعد يكتبها: رسالة مختلفة لكل عميل (ولو تعطّل الذكاء نرجع للنص الجاهز)
+  const ai = cfg.mode === 'ai' && due.length ? await require('./ai').remindMessages({
+    storeName: store.name, businessType: require('./sectors').label(store),
+    guests: due.map(({ card, kind }) => ({ ref: String(card.id), kind: `subs_${kind}`, name: /^عضو\s/.test(card.name || '') ? '' : card.name, plan: card.plan_name,
+      uses_left: kind === 'renew' ? null : times(card.remaining), expires: kind === 'expiry' && card.expires_at ? dateText(card.expires_at) : null,
+      days_since: kind === 'away' ? Math.round((now - Math.max(Date.parse(card.created_at), card.last_used_at ? Date.parse(card.last_used_at) : 0)) / DAY) : null }))
+  }).catch(e => { console.error('SUBS_REMIND_AI', e.message); return {}; }) : {};
+  const texts = {};
   for (const { card, kind } of due) {
     if (Date.now() - started > limitMs) break;
     // نعلّمها قبل الإرسال: لو انقطع الشغل بالنص ما تتكرر الرسالة بكرة
     await rest(`loyalty_pkg_cards?id=eq.${card.id}`, { method: 'PATCH', body: { [`remind_${kind}_at`]: new Date().toISOString() } });
-    await P.pushCard(storeId, card.id, fill(cfg[kind].text, card, store)).catch(e => console.error('SUBS_REMIND_PUSH', e.message));
+    const body = ai[String(card.id)] || fill(cfg[kind].text || DEFAULTS[kind].text, card, store);
+    if (!texts[kind]) texts[kind] = body;   // عيّنة لكل نوع في سجل الجدولة
+    await P.pushCard(storeId, card.id, body).catch(e => console.error('SUBS_REMIND_PUSH', e.message));
     sent[kind]++;
   }
-  return { sent, due: due.length };
+  return { sent, due: due.length, ai: Object.keys(ai).length, sample: texts };
 }
 
 // أرقام آخر 90 يوم للوحة: كم وصلته، وكم رجع (استخدم بعد التذكير)، وكم جدّد

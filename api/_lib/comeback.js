@@ -51,7 +51,7 @@ function dueCards(cards, cb, now = Date.now()) {
 }
 
 async function runComeback(storeId) {
-  const store = (await rest(`clients?id=eq.${storeId}&select=id,name,loyalty_enabled,loyalty_settings,parent_id`))[0];
+  const store = (await rest(`clients?id=eq.${storeId}&select=id,name,business_type,business_label,loyalty_enabled,loyalty_settings,parent_id`))[0];
   if (!store || !store.loyalty_enabled || store.parent_id) return { skipped: 'off' };
   const settings = normalizeLoyalty(store.loyalty_settings, store);
   const cb = settings.comeback;
@@ -62,11 +62,18 @@ async function runComeback(storeId) {
   const due = dueCards(cards, cb, now).slice(0, BATCH);
   if (!due.length) return { sent: 0 };
   const bodies = {}, rows = [];
+  // المساعد يكتبها: رسالة مختلفة لكل عميل باسمه (ولو تعطّل الذكاء نرجع للنص الجاهز)
+  const ready = (card, step) => step === 1 && card.stamps >= settings.needed;
+  const ai = cb.mode === 'ai' ? await require('./ai').remindMessages({
+    storeName: store.name, businessType: require('./sectors').label(store), reward: settings.reward, needed: settings.needed,
+    guests: due.map(({ card, step }) => ({ ref: String(card.id), kind: ready(card, step) ? 'comeback_ready' : `comeback_${step}`, name: card.name, lang: card.lang,
+      left: Math.max(0, settings.needed - Math.min(Number(card.stamps || 0), settings.needed)), days_since: Math.round((now - Date.parse(card.last_stamp_at)) / DAY), gift: step === 3 && cb.gift }))
+  }).catch(e => { console.error('COMEBACK_AI', e.message); return {}; }) : {};
   for (const { card, step } of due) {
     let text = stepText(cb, step);
     // مكافأته جاهزة وما أخذها: الرسالة الأولى تذكّره فيها بدل "باقي لك"
-    if (step === 1 && card.stamps >= settings.needed) text = `مكافأتك (${settings.reward}) جاهزة في {store}، تعال خذها`;
-    const body = fill(text, { card, store, settings });
+    if (ready(card, step)) text = `مكافأتك (${settings.reward}) جاهزة في {store}، تعال خذها`;
+    const body = ai[String(card.id)] || fill(text, { card, store, settings });
     bodies[card.id] = body;
     rows.push({ client_id: storeId, card_id: card.id, body, source: 'owner', kind: 'comeback' });
   }

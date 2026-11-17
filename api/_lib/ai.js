@@ -99,6 +99,45 @@ async function loyaltyMessages({ storeName, businessType, reward, needed, guests
   return map;
 }
 
+/**
+ * رسائل التذكير التلقائية (استرجاع الغائب في بطاقة الأختام، وتذكيرات بطاقة الاشتراكات): رسالة مختلفة لكل عميل
+ * guests: [{ ref, kind, name, lang, left, days_since, gift, plan, uses_left, expires }]
+ * @returns {Promise<Record<string,string>>} ref → نص الرسالة
+ */
+const REMIND_KINDS = `Kinds for this batch:
+- comeback_1: the guest has not visited for days_since days. A warm "we miss you" that mentions how many stamps they still need for the reward.
+- comeback_2: a week after comeback_1 and they still have not come. A different angle, light and short, no guilt.
+- comeback_3: the last reminder. If gift="yes", tell them a free bonus stamp is waiting for them on their next visit. If not, tell them their card and stamps are kept safe for them.
+- comeback_ready: their reward is ready and unused, and they have been away. A cheerful nudge to come claim it.
+- subs_away: they have a prepaid package (plan) with uses_left uses still unused, and have not used it for days_since days. Remind them their package is waiting, with the exact number left.
+- subs_expiry: their prepaid package ends on the date in expires and still has uses_left uses. Urge them kindly to use it before it ends, mentioning the date.
+- subs_renew: their prepaid package is finished. Thank them and invite them to renew it at the cashier.
+Prepaid packages are not stamps: never mention stamps or rewards in subs_* messages.
+Max 150 characters. Use the first name naturally when given. Never write placeholders or brackets.`;
+async function remindMessages({ storeName, businessType, reward, needed, guests }) {
+  if (!guests.length) return {};
+  if (guests.length > 25) {
+    const parts = [];
+    for (let i = 0; i < guests.length; i += 25) parts.push(guests.slice(i, i + 25));
+    const maps = await Promise.all(parts.map(g => remindMessages({ storeName, businessType, reward, needed, guests: g }).catch(() => ({}))));
+    return Object.assign({}, ...maps);
+  }
+  const attr = (k, v) => v == null || v === '' ? '' : ` ${k}="${String(v).replace(/["<>]/g, '').slice(0, 40)}"`;
+  const prompt = [
+    `<place>${storeName}${businessType ? ` (${businessType})` : ''}</place>`,
+    reward ? `<reward>${reward} بعد ${needed} أختام</reward>` : '',
+    REMIND_KINDS,
+    '<guests>',
+    ...guests.map(g => `<guest${attr('ref', g.ref)}${attr('kind', g.kind)}${attr('first_name', String(g.name || '').trim().split(/\s+/)[0])}${g.lang === 'en' ? ' lang="en"' : ''}${attr('stamps_left', g.left)}${attr('days_since', g.days_since)}${attr('gift', g.gift ? 'yes' : '')}${attr('plan', g.plan)}${attr('uses_left', g.uses_left)}${attr('expires', g.expires)}></guest>`),
+    '</guests>',
+    'Write one message per guest. JSON: {"messages":[{"ref":"...","text":"..."}]}'
+  ].join('\n');
+  const out = await loyaltyCall(prompt);
+  const map = {};
+  for (const m of (out.messages || [])) if (m && m.ref && m.text && !/[{}\[\]]/.test(m.text)) map[String(m.ref)] = clean(m.text, 170);
+  return map;
+}
+
 /** جمل "أنت قريب" لشاشة القفل (تتجدد كل أسبوع) */
 async function loyaltyNearLines({ storeName, businessType, reward }) {
   const prompt = [
@@ -298,4 +337,4 @@ async function translateMenu(texts) {
   return done.flat();
 }
 
-module.exports = { translateMenu, loyaltyMessages, loyaltyNearLines, subsNearLines, menuChat, ownerInsights, readMenuImages };
+module.exports = { translateMenu, loyaltyMessages, remindMessages, loyaltyNearLines, subsNearLines, menuChat, ownerInsights, readMenuImages };

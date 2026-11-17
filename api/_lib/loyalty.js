@@ -46,6 +46,8 @@ function normalizeComeback(c) {
   const steps = Array.isArray(c.steps) ? c.steps : [];
   return {
     enabled: c.enabled === true,
+    // ai: المساعد يكتب لكل عميل رسالة باسمه، custom: صاحب المحل يكتب نص واحد للكل
+    mode: c.mode === 'custom' ? 'custom' : 'ai',
     days: COMEBACK_DAYS.includes(days) ? days : 21,
     gift: c.gift !== false,
     steps: [0, 1, 2].map(i => String(steps[i] == null ? COMEBACK_DEFAULTS[i] : steps[i]).trim().slice(0, 180) || COMEBACK_DEFAULTS[i])

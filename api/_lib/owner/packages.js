@@ -96,7 +96,7 @@ module.exports.post = async function post(action, req, b, env) {
   if (action === 'loyalty-pkg-remind') {
     ownerOnly();
     const R = require('../subs-remind');
-    const src = b.remind || {}, out = {};
+    const src = b.remind || {}, out = { mode: src.mode === 'custom' ? 'custom' : 'ai' };
     for (const k of R.KINDS) {
       const s = src[k] || {};
       const text = String(s.text || '').trim();
