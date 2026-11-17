@@ -27,7 +27,7 @@ function normalize(r) {
   for (const k of KINDS) {
     const s = src[k] && typeof src[k] === 'object' ? src[k] : {};
     const days = Number(s.days);
-    const text = String(s.text || '').trim().slice(0, 160);
+    const text = String(s.text || '').trim().slice(0, 180);
     out[k] = { on: !!s.on, days: OPTIONS[k].includes(days) ? days : DEFAULTS[k].days, text: text || DEFAULTS[k].text };
   }
   return out;

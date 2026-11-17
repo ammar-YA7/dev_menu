@@ -66,7 +66,7 @@
     document.getElementById('ly-cb-box').classList.toggle('hidden', !cb.enabled);
     document.getElementById('ly-cb-days').value = String(cb.days || 21);
     document.getElementById('ly-cb-gift').checked = cb.gift !== false;
-    [1, 2, 3].forEach(i => { document.getElementById('ly-cb-' + i).value = (cb.steps || [])[i - 1] || ''; });
+    [1, 2, 3].forEach(i => { const t = document.getElementById('ly-cb-' + i); t.value = msgHuman((cb.steps || [])[i - 1] || ''); msgField(t, 'stamps'); });
     lyCbLabels();
     const cs = (d && d.comeback) || {}, cbStats = document.getElementById('ly-cb-stats');
     cbStats.classList.toggle('hidden', !cb.enabled && !cs.reached);
@@ -713,6 +713,7 @@
     catch (e) { showToast(e.message || 'تعذر تحميل الباقات', true); return; }
     renderPackages(); renderPkRemind();
   }
+  window.pkPlanName = () => (pk.plans[0] && pk.plans[0].name) || '';
   // ─── التذكيرات التلقائية لبطاقة الاشتراكات ───
   const PR = {
     away: { icon: 'ph-arrow-u-up-left', title: 'العميل الغائب ولديه رصيد', desc: 'تذكّره بالرصيد المتبقي في باقته، مرة واحدة في كل غياب.', when: 'إذا لم يستخدم باقته منذ', opts: [[7, '7 أيام'], [14, '14 يوماً'], [21, '21 يوماً'], [30, '30 يوماً']] },
@@ -730,10 +731,11 @@
         <div data-pr-box="${k}" class="space-y-2 ${r[k].on ? '' : 'hidden'}">
           <div class="flex flex-wrap items-center gap-2 text-xs"><span class="text-ink">${d.when}</span>
             <select data-pr-days="${k}" class="input-pro !w-auto !py-1.5 text-xs">${d.opts.map(([v, t]) => `<option value="${v}" ${Number(r[k].days) === v ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
-          <textarea data-pr-text="${k}" rows="2" maxlength="160" class="input-pro text-sm resize-none">${esc(r[k].text)}</textarea>
+          <textarea data-pr-text="${k}" rows="2" class="input-pro text-sm resize-none">${esc(msgHuman(r[k].text, 'subs'))}</textarea>
         </div>
       </div>`).join('');
     document.querySelectorAll('[data-pr-on]').forEach(el => el.addEventListener('change', () => document.querySelector(`[data-pr-box="${el.dataset.prOn}"]`).classList.toggle('hidden', !el.checked)));
+    document.querySelectorAll('[data-pr-text]').forEach(t => msgField(t, 'subs'));
     const st = r.stats, line = [];
     if (st) {
       if (st.away.sent) line.push(`تذكير الغياب وصل ${st.away.sent} عميل، وعاد منهم ${st.away.back}`);
@@ -747,7 +749,7 @@
   document.getElementById('pr-save').addEventListener('click', async () => {
     const btn = document.getElementById('pr-save'); btn.disabled = true;
     const remind = {};
-    for (const k of Object.keys(PR)) remind[k] = { on: document.querySelector(`[data-pr-on="${k}"]`).checked, days: Number(document.querySelector(`[data-pr-days="${k}"]`).value), text: document.querySelector(`[data-pr-text="${k}"]`).value.trim() };
+    for (const k of Object.keys(PR)) remind[k] = { on: document.querySelector(`[data-pr-on="${k}"]`).checked, days: Number(document.querySelector(`[data-pr-days="${k}"]`).value), text: msgRaw(document.querySelector(`[data-pr-text="${k}"]`).value) };
     try {
       const r = await api('loyalty-pkg-remind', { remind });
       pk.remind = { ...r.remind, stats: pk.remind && pk.remind.stats };
@@ -1012,6 +1014,55 @@ function lyCbLabels() {
 const LY_CB_GIFT = 'رجعتك لها هدية: ختم زيادة أول ما تزورنا في {store} 🎁', LY_CB_NOGIFT = 'آخر تذكير من {store}: بطاقتك وأختامك محفوظة، ننتظرك';
 function lyCbGiftText() {
   const t = document.getElementById('ly-cb-3'), on = document.getElementById('ly-cb-gift').checked;
-  if (on && t.value.trim() === LY_CB_NOGIFT) t.value = LY_CB_GIFT;
-  if (!on && t.value.trim() === LY_CB_GIFT) t.value = LY_CB_NOGIFT;
+  const v = msgRaw(t.value.trim());
+  if (on && v === LY_CB_NOGIFT) t.value = msgHuman(LY_CB_GIFT);
+  if (!on && v === LY_CB_GIFT) t.value = msgHuman(LY_CB_NOGIFT);
+  t.dispatchEvent(new Event('input'));
+}
+
+// ─── نصوص الرسائل التلقائية ───
+// صاحب المحل يشوف كلمات مفهومة بين قوسين بدل {name}، ويضيفها بضغطة زر، ويشوف تحت كل رسالة كيف بتوصل لعميله
+const MSG_TOKENS = {
+  stamps: [['name', 'اسم العميل'], ['store', 'اسم المحل'], ['left', 'الأختام الباقية'], ['reward', 'المكافأة']],
+  subs: [['name', 'اسم العميل'], ['plan', 'اسم الباقة'], ['left', 'الرصيد الباقي'], ['date', 'تاريخ الانتهاء'], ['store', 'اسم المحل']]
+};
+const MSG_ALL = [...MSG_TOKENS.stamps, ...MSG_TOKENS.subs];
+function msgHuman(t, kind) {
+  const list = MSG_TOKENS[kind] || MSG_ALL;
+  return String(t || '').replace(/\{(\w+)\}/g, (m, k) => { const x = list.find(p => p[0] === k) || MSG_ALL.find(p => p[0] === k); return x ? `[${x[1]}]` : m; });
+}
+function msgRaw(t) { let s = String(t || ''); MSG_ALL.forEach(([k, v]) => { s = s.split(`[${v}]`).join(`{${k}}`); }); return s.trim(); }
+function msgSample(kind) {
+  const d = new Date(Date.now() + 5 * 864e5).toLocaleDateString('ar-SA-u-ca-gregory-nu-latn', { day: 'numeric', month: 'long' });
+  const reward = (typeof ly !== 'undefined' && ly.data && ly.data.settings && ly.data.settings.reward) || 'مشروب مجاني';
+  const plan = (typeof pkPlanName === 'function' && pkPlanName()) || '10 أكواب قهوة';
+  return { name: 'محمد', store: client.name || 'محلك', left: kind === 'subs' ? '6 مرات' : 'ختمين', reward, plan, date: d };
+}
+function msgPreview(text, kind) {
+  const v = msgSample(kind);
+  return msgRaw(text).replace(/\{(\w+)\}/g, (m, k) => v[k] != null ? v[k] : m).replace(/\s{2,}/g, ' ').trim();
+}
+function msgField(ta, kind) {
+  if (!ta) return;
+  if (!ta.dataset.msgWired) {
+    ta.dataset.msgWired = '1';
+    ta.maxLength = 220;
+    const box = document.createElement('div');
+    box.className = 'space-y-2 mt-2';
+    box.innerHTML = `<div class="flex flex-wrap items-center gap-1.5"><span class="text-[11px] text-ink">أضف للرسالة:</span>${MSG_TOKENS[kind].map(([k, v]) => `<button type="button" data-tok="${v}" class="text-[11px] font-bold px-2.5 py-1 rounded-full bg-brand/10 hover:bg-brand/15 border border-brand/25 text-ink transition"><i class="ph-bold ph-plus text-[10px]"></i> ${v}</button>`).join('')}</div>
+      <div class="rounded-xl bg-[#1c1c1e] px-3 py-2.5"><p class="text-[10.5px] font-bold text-white/55 mb-1">هكذا تصل لعميلك</p><p data-msg-pv class="text-[12.5px] text-white leading-relaxed break-words"></p></div>`;
+    ta.insertAdjacentElement('afterend', box);
+    const pv = box.querySelector('[data-msg-pv]');
+    const draw = () => { pv.textContent = msgPreview(ta.value, kind) || 'اكتب رسالتك فوق'; };
+    ta.addEventListener('input', draw);
+    box.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-tok]'); if (!b) return;
+      const tok = `[${b.dataset.tok}]`, s = ta.selectionStart ?? ta.value.length, en = ta.selectionEnd ?? s;
+      const before = ta.value.slice(0, s), pad = before && !/\s$/.test(before) ? ' ' : '';
+      ta.focus(); ta.setRangeText(pad + tok + ' ', s, en, 'end');
+      draw();
+    });
+    ta._msgDraw = draw;
+  }
+  ta._msgDraw();
 }

@@ -48,7 +48,7 @@ function normalizeComeback(c) {
     enabled: c.enabled === true,
     days: COMEBACK_DAYS.includes(days) ? days : 21,
     gift: c.gift !== false,
-    steps: [0, 1, 2].map(i => String(steps[i] == null ? COMEBACK_DEFAULTS[i] : steps[i]).trim().slice(0, 150) || COMEBACK_DEFAULTS[i])
+    steps: [0, 1, 2].map(i => String(steps[i] == null ? COMEBACK_DEFAULTS[i] : steps[i]).trim().slice(0, 180) || COMEBACK_DEFAULTS[i])
   };
 }
 function normalizeWelcome(raw) {

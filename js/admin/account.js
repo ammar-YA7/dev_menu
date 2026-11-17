@@ -640,7 +640,7 @@
         feedback: { enabled: document.getElementById('ly-fb').checked, gift: document.getElementById('ly-fb-gift').checked, days: +document.getElementById('ly-fb-days').value || 30 },
         gifts: { enabled: document.getElementById('ly-gifts').checked },
         comeback: { enabled: document.getElementById('ly-cb').checked, days: +document.getElementById('ly-cb-days').value || 21, gift: document.getElementById('ly-cb-gift').checked,
-          steps: [1, 2, 3].map(i => document.getElementById('ly-cb-' + i).value.trim()) },
+          steps: [1, 2, 3].map(i => msgRaw(document.getElementById('ly-cb-' + i).value)) },
         pager_stamp: document.getElementById('ly-pager-stamp').checked
       } });
       ly.data.settings = r.settings; renderLoyalty(); showToast('تم حفظ إعدادات البطاقة'); setupMark('loyalty');

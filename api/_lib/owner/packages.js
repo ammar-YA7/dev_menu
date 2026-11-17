@@ -100,8 +100,8 @@ module.exports.post = async function post(action, req, b, env) {
     for (const k of R.KINDS) {
       const s = src[k] || {};
       const text = String(s.text || '').trim();
-      if (s.on && text.length > 160) throw new ApiError(400, 'الرسالة طويلة، الحد 160 حرف');
-      out[k] = { on: !!s.on, days: R.OPTIONS[k].includes(Number(s.days)) ? Number(s.days) : R.DEFAULTS[k].days, text: text && text !== R.DEFAULTS[k].text ? text.slice(0, 160) : '' };
+      if (s.on && text.length > 180) throw new ApiError(400, 'الرسالة طويلة، الحد 180 حرف');
+      out[k] = { on: !!s.on, days: R.OPTIONS[k].includes(Number(s.days)) ? Number(s.days) : R.DEFAULTS[k].days, text: text && text !== R.DEFAULTS[k].text ? text.slice(0, 180) : '' };
     }
     await rest(`clients?id=eq.${sid}`, { method: 'PATCH', body: { subs_remind: out } });
     return { remind: R.normalize(out) };
