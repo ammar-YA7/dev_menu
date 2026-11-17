@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script src="/js/i18n.js?v=9" data-dict="admin" data-toggle="none"></script>
 <link rel="stylesheet" href="/css/base.css">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="icon" type="image/png" sizes="192x192" href="/images/icon-192.png">
 <link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
@@ -455,6 +455,7 @@
 </style>
 <!-- تجربة: شكل shadcn فوق التصميم الحالي. للرجوع احذف هالسطر -->
 <link rel="stylesheet" href="/css/skin-shadcn.css">
+<link rel="stylesheet" href="/css/skin-apple.css">
 <style>
   /* القالب المستخدم الآن في المنيو التفاعلي: إطار واضح يتغلب على السكن */
   /* ابدأ هنا: إطار داكن واضح فوق إطار السكن */
@@ -538,7 +539,14 @@
       </div>
     </div>
 
-    <nav class="p-3 pt-4 space-y-1 flex-1 overflow-y-auto">
+    <nav id="nav-groups" aria-label="الأقسام">
+      <button type="button" data-group="home" class="nav-item"><i class="ph-bold ph-house"></i> الرئيسية</button>
+      <button type="button" data-group="menu" class="nav-item"><i class="ph-bold ph-fork-knife"></i> المنيو</button>
+      <button type="button" data-group="pager" class="nav-item"><i class="ph-bold ph-bell-ringing"></i> البيجر</button>
+      <button type="button" data-group="people" class="nav-item"><i class="ph-bold ph-users"></i> العملاء</button>
+      <button type="button" data-group="settings" class="nav-item"><i class="ph-bold ph-gear-six"></i> الإعدادات</button>
+    </nav>
+    <nav id="nav-legacy" class="p-3 pt-4 space-y-1 flex-1 overflow-y-auto">
       <button data-nav="dashboard" class="nav-item"><i class="ph-bold ph-gauge"></i> الرئيسية</button>
       <button data-nav="customers" data-needs="loyalty|subs" class="nav-item"><i class="ph-bold ph-users-three"></i> العملاء <span id="lyt-count" class="mr-auto text-[11px] px-2 py-0.5 rounded-full"></span></button>
       <button data-nav="messages" data-needs="pager|loyalty" data-free-hide class="nav-item"><i class="ph-bold ph-paper-plane-tilt"></i> الرسائل</button>
@@ -550,6 +558,7 @@
       <p class="px-3 pt-3 pb-0.5 text-[11px] text-ink font-semibold">بطاقة الولاء</p>
       <button data-nav="loyalty" class="nav-item"><i class="ph-bold ph-seal-check"></i> بطاقة الأختام</button>
       <button data-nav="subs" class="nav-item"><i class="ph-bold ph-package"></i> بطاقة الاشتراكات</button>
+      <button data-nav="cardhub" data-needs="loyalty|subs" class="nav-item">البطاقة</button>
       <button data-nav="carddesign" data-needs="loyalty|subs" class="nav-item"><i class="ph-bold ph-palette"></i> تصميم البطاقة</button>
       <a href="cashier.html" data-needs="loyalty|subs" onclick="this.href='cashier.html'+location.search" class="nav-item"><i class="ph-bold ph-cash-register"></i> شاشة الكاشير</a>
       <p class="px-3 pt-4 pb-1 text-[11px] text-ink font-semibold">منشأتك</p>
@@ -620,6 +629,7 @@
       <p class="text-[10.5px] text-ink text-center px-4 py-2.5 border-t border-brand/10">الإشعارات المقروءة تنحذف تلقائياً بعد يوم</p>
     </div>
     <main class="flex-1 w-full max-w-[1600px] mx-auto px-4 md:px-8 py-6 pb-28 lg:pb-10">
+      <div id="seg-bar"></div>
 
       <!-- ═════════════════ صفحة الرئيسية ═════════════════ -->
       <section data-page="locked" class="hidden">
@@ -2181,6 +2191,9 @@
       </section>
 
       <!-- ═════════════════ الرسائل: رسائل بطاقة النداء أو بطاقة الولاء ═════════════════ -->
+      <!-- البطاقة: كل إعدادات بطاقة العملاء ورسائلها في قائمة وحدة (js/admin/nav.js) -->
+      <section data-page="cardhub" class="hidden space-y-5"><div id="cardhub"></div></section>
+
       <section data-page="messages" class="hidden space-y-5">
         <!-- تبويبات الرسائل: اللي ترسلها بنفسك، واللي تروح تلقائياً -->
         <div class="ly-tabs max-w-xl" role="tablist" aria-label="أقسام الرسائل">
@@ -2790,12 +2803,11 @@
 
   <!-- ═════════ شريط التنقل السفلي (جوال) ═════════ -->
   <nav class="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-cream/95 backdrop-blur-xl border-t border-brand/15 flex" style="padding-bottom: env(safe-area-inset-bottom)">
-    <button data-nav="dashboard" class="bnav"><i class="ph-bold ph-gauge"></i><span>الرئيسية</span></button>
-    <button data-nav="menu" class="bnav"><i class="ph-bold ph-fork-knife"></i><span>المنيو</span></button>
-    <a href="pager-desk.html" data-feature="pager" onclick="return openPagerDesk(this)" class="bnav"><i class="ph-bold ph-bell"></i><span id="bnav-desk-label">البيجر</span></a>
-    <button data-nav="loyalty" class="bnav"><i class="ph-bold ph-seal-check"></i><span>الولاء</span></button>
-    <button data-nav="messages" data-needs="pager|loyalty" data-free-hide class="bnav"><i class="ph-bold ph-paper-plane-tilt"></i><span>الرسائل</span></button>
-    <button type="button" onclick="toggleMore(true)" class="bnav relative"><i class="ph-bold ph-dots-three-outline"></i><span>المزيد</span><span id="bnav-waitlist" class="hidden absolute top-1.5 left-1/2 ml-2 min-w-[18px] h-[18px] px-1 rounded-full bg-amber-400 text-black text-[11px] font-black leading-[18px]">0</span></button>
+    <button type="button" data-group="home" class="bnav"><i class="ph-bold ph-house"></i><span>الرئيسية</span></button>
+    <button type="button" data-group="menu" class="bnav"><i class="ph-bold ph-fork-knife"></i><span>المنيو</span></button>
+    <button type="button" data-group="pager" class="bnav relative"><i class="ph-bold ph-bell-ringing"></i><span>البيجر</span><span id="bnav-waitlist" class="ap-badge hidden">0</span></button>
+    <button type="button" data-group="people" class="bnav"><i class="ph-bold ph-users"></i><span>العملاء</span></button>
+    <button type="button" data-group="settings" class="bnav"><i class="ph-bold ph-gear-six"></i><span>الإعدادات</span></button>
   </nav>
   <!-- المزيد (جوال): باقي الصفحات -->
   <div id="more-sheet" class="lg:hidden fixed inset-0 z-40 hidden items-end bg-ink/40 backdrop-blur-sm" onclick="if (event.target === this) toggleMore(false)">
@@ -2892,6 +2904,8 @@
 <script src="/js/admin/start.js"></script>
 <script src="/js/admin/install.js"></script>
 <script src="/js/admin/heard.js"></script>
+<script src="/js/admin/nav.js"></script>
+<script src="/js/admin/cardeditor.js"></script>
 
 </body>
 </html>

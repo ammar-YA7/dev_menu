@@ -105,23 +105,24 @@
 
   // ─── التنقل بين الصفحات ───
   const PAGES = {
-    dashboard: ['الرئيسية', 'نظرة عامة على منشأتك وخدماتك'],
-    menu:      ['المنيو', 'أضف أطباقك وأقسامك ورتّبها'],
-    waitlist:  ['قائمة الانتظار', 'سجّل عملاءك وبلّغهم لما يجي دورهم'],
-    loyalty:   ['بطاقة الأختام', 'تصميم البطاقة وإعداداتها وأرقامها'],
-    carddesign: ['تصميم البطاقة', 'لون بطاقة عملائك وشكلها وشعارها، في صفحة البطاقة والمحفظة.'],
-    subs:      ['بطاقة الاشتراكات', 'يدفع العميل مقدّماً ويستخدم باقته على دفعات، ويتحدّث رصيده في بطاقته مع كل زيارة.'],
-    customers: ['العملاء', 'أعضاء بطاقة الأختام في كل فروعك'],
-    messages:  ['الرسائل', 'أرسل عروضك وأخبارك لجوالات عملائك'],
-    branches:  ['الفروع', 'فروعك ومميزات كل فرع'],
-    devices:   ['الأجهزة', 'روابط شاشات المحل: الكاشير وشاشة الزبون والجهاز اللوحي'],
-    account:   ['الاشتراك', 'باقتك وتجديدها وطلباتك للإدارة'],
-    pagerset:  ['البيجر', 'إعدادات البيجر وصفحة الانتظار عند العميل'],
-    settings:  ['هوية المنشأة', 'الرابط والاسم والشعار والمظهر ومعلومات التواصل']
+    dashboard: ['الرئيسية', ''],
+    menu:      ['المنيو', ''],
+    waitlist:  ['قائمة الانتظار', ''],
+    loyalty:   ['بطاقة الأختام', ''],
+    carddesign: ['تصميم البطاقة', ''],
+    subs:      ['بطاقة الاشتراكات', ''],
+    customers: ['العملاء', ''],
+    cardhub:   ['البطاقة', ''],
+    messages:  ['الرسائل', ''],
+    branches:  ['الفروع', ''],
+    devices:   ['الأجهزة', ''],
+    account:   ['الاشتراك', ''],
+    pagerset:  ['البيجر', ''],
+    settings:  ['الإعدادات', '']
   };
   // المميزات اللي مو ضمن باقة المشترك: الصفحة تعرض "أضفها لباقتك" بدل محتواها
   // الرسائل: من بطاقة الولاء، أو من بطاقة النداء (إضافة على البيجر)
-  const PAGE_FEATURE = { menu: 'menu', pagerset: 'pager', waitlist: 'waitlist', loyalty: 'loyalty', subs: 'subs', carddesign: () => DMPlans.has(client, 'loyalty') || DMPlans.has(client, 'subs') ? null : 'loyalty', customers: () => DMPlans.has(client, 'loyalty') || DMPlans.has(client, 'subs') ? null : 'loyalty', messages: () => DMPlans.has(client, 'loyalty') || DMPlans.has(client, 'subs') || DMPlans.has(client, 'pager') ? null : 'pager' };
+  const PAGE_FEATURE = { menu: 'menu', pagerset: 'pager', waitlist: 'waitlist', loyalty: 'loyalty', subs: 'subs', carddesign: () => DMPlans.has(client, 'loyalty') || DMPlans.has(client, 'subs') ? null : 'loyalty', customers: () => DMPlans.has(client, 'loyalty') || DMPlans.has(client, 'subs') ? null : 'loyalty', cardhub: () => DMPlans.has(client, 'loyalty') || DMPlans.has(client, 'subs') ? null : 'loyalty', messages: () => DMPlans.has(client, 'loyalty') || DMPlans.has(client, 'subs') || DMPlans.has(client, 'pager') ? null : 'pager' };
   // الخدمات اللي مو ضمن باقته (في التجربة أو الاشتراك) تختفي من اللوحة كلها
   const featureLocked = (key) => !!client && ['active', 'trial'].includes(client.subscription_status) && !DMPlans.has(client, key);
   let lockedKey = null;
@@ -303,6 +304,7 @@
     document.querySelectorAll('[data-needs]').forEach(el => { el.style.display = el.dataset.needs.split('|').every(featureLocked) ? 'none' : ''; });
     document.querySelectorAll('[data-hide-always]').forEach(el => { el.style.display = 'none'; });
     applyFreeHide();
+    if (typeof renderNavGroups === 'function') renderNavGroups(location.hash.slice(1) || 'dashboard');
   }
   // البيجر المجاني: نخفي اللي ما يخصه (data-free-hide)، ونطلع عدّاد الأرقام في الرئيسية
   function applyFreeHide() {
@@ -326,12 +328,14 @@
       document.getElementById('page-title').textContent = DMPlans.FEATURES[key].name;
       document.getElementById('page-subtitle').textContent = 'أضفها لباقتك وتشتغل على طول';
       if (location.hash !== '#' + page) history.replaceState(null, '', location.pathname + location.search + '#' + page);
+      if (typeof renderNavGroups === 'function') renderNavGroups(page);
       return window.scrollTo({ top: 0 });
     }
     document.querySelectorAll('[data-nav]').forEach(b => b.classList.toggle('nav-active', b.dataset.nav === page));
     document.getElementById('page-title').textContent = PAGES[page][0];
     document.getElementById('page-subtitle').textContent = PAGES[page][1];
     if (location.hash !== '#' + page) history.replaceState(null, '', location.pathname + location.search + '#' + page);
+    if (typeof renderNavGroups === 'function') renderNavGroups(page);
     window.scrollTo({ top: 0 });
     if (typeof onWaitlistPage === 'function') onWaitlistPage(page === 'waitlist');
     // صفحات الولاء والعملاء والرسائل تاخذ بياناتها من بطاقة الولاء

@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#f2f4f2">
+<title>DEV MENU | معاينة شكل البطاقة</title>
+<link rel="icon" href="/favicon.ico?v=2">
+<link rel="stylesheet" href="/css/fonts.css">
+<link rel="stylesheet" href="/css/icons.css">
+<style>
+/* =====================================================================
+   معاينة محرّر شكل البطاقة: البطاقة ثابتة فوق، وتحتها شي واحد في كل مرة
+   (الألوان، الختم، الشعار). صفحة تجربة ببيانات وهمية، ما تحفظ شي
+   ===================================================================== */
+:root {
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Arabic", "IBM Plex Sans Arabic", system-ui, sans-serif;
+  --bg: #f2f4f2; --card: #fff; --ink: #1d2a21; --muted: #6e7a71; --sep: rgba(29, 42, 33, .09);
+  --green: #233d2c; --green-2: #3f7a4a; --pale: #eaf3ec; --fill: #e6e9e6; --ease: cubic-bezier(.2, .8, .2, 1);
+  /* ألوان بطاقة المحل (تتغيّر من المحرّر) */
+  --c-bg: #233d2c; --c-stamp: #f3e9d2; --c-text: #ffffff;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+[hidden] { display: none !important; }
+html { overflow-x: hidden; }
+body { font-family: var(--font); background: var(--bg); color: var(--ink); font-size: 16px; line-height: 1.45; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+.app { max-width: 560px; margin: 0 auto; padding: 0 16px calc(110px + env(safe-area-inset-bottom)); }
+.top { display: flex; align-items: center; justify-content: space-between; padding: 12px 0 4px; }
+.back { display: inline-flex; align-items: center; gap: 4px; color: var(--green-2); font-size: 17px; min-height: 40px; }
+.back i { display: inline-block; transform: scaleX(-1); }
+h1 { font-size: 30px; font-weight: 700; margin-bottom: 6px; }
+
+/* المعاينة الثابتة */
+.stage { position: sticky; top: 0; z-index: 10; margin: 0 -16px; padding: 10px 16px 14px; background: rgba(242, 244, 242, .92); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); }
+.views { display: flex; justify-content: center; gap: 6px; margin-bottom: 12px; }
+.views button { min-height: 32px; padding: 0 14px; border-radius: 980px; font-size: 14px; font-weight: 500; color: var(--muted); background: transparent; }
+.views button[aria-pressed="true"] { background: var(--card); color: var(--ink); box-shadow: 0 1px 3px rgba(29, 42, 33, .12); }
+.preview { display: flex; justify-content: center; transform-origin: top center; transition: transform .25s var(--ease); }
+.stage.small .preview { transform: scale(.78); margin-bottom: -46px; }
+
+/* بطاقة الويب */
+.lc { width: 330px; border-radius: 22px; background: var(--c-bg); color: var(--c-text); padding: 18px; box-shadow: 0 18px 36px -20px rgba(0, 0, 0, .55); transition: background .3s, color .3s; }
+.lc-top { display: flex; align-items: center; gap: 10px; }
+.logo { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 17px; background: var(--c-stamp); color: var(--c-bg); overflow: hidden; flex: none; }
+.logo img { width: 100%; height: 100%; object-fit: cover; }
+.lc-top b { font-size: 16px; }
+.lc-top small { display: block; font-size: 12px; opacity: .75; }
+.stamps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 18px 0 14px; }
+.st { aspect-ratio: 1; border-radius: 50%; border: 1.5px dashed color-mix(in srgb, var(--c-text) 40%, transparent); display: grid; place-items: center; font-size: 22px; transition: background .3s, color .3s; }
+.st.on { background: var(--c-stamp); color: var(--c-bg); border: 0; }
+.st.gift { border-style: solid; border-color: color-mix(in srgb, var(--c-text) 55%, transparent); }
+.st img { width: 70%; height: 70%; object-fit: contain; }
+.lc-foot { display: flex; justify-content: space-between; font-size: 13px; opacity: .85; }
+.lc-foot b { font-size: 15px; opacity: 1; }
+
+/* المحفظة */
+.pass { width: 320px; border-radius: 14px; overflow: hidden; background: var(--c-bg); color: var(--c-text); box-shadow: 0 18px 36px -20px rgba(0, 0, 0, .55); }
+.pass-h { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; }
+.pass-h .l { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 15px; }
+.pass-h .l .logo { width: 28px; height: 28px; font-size: 13px; }
+.pass-h small { display: block; font-size: 10px; opacity: .7; text-align: left; }
+.pass-h b { font-size: 18px; }
+.pass-strip { background: color-mix(in srgb, var(--c-bg) 80%, #000); padding: 14px 12px; display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; }
+.pass-strip .st { font-size: 14px; }
+.pass-f { display: flex; justify-content: space-between; padding: 12px 14px 16px; font-size: 13px; }
+.pass-f small { display: block; font-size: 10px; opacity: .7; }
+
+/* الإشعار */
+.lock { width: 330px; border-radius: 26px; padding: 26px 14px 18px; background: linear-gradient(160deg, #3a4b5c, #1c2530); color: #fff; text-align: center; }
+.lock time { display: block; font-size: 54px; font-weight: 300; line-height: 1; margin-bottom: 18px; }
+.notif { display: flex; gap: 10px; align-items: center; text-align: start; background: rgba(255, 255, 255, .22); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); border-radius: 18px; padding: 11px 12px; font-size: 13px; line-height: 1.4; }
+.notif .logo { width: 34px; height: 34px; border-radius: 9px; }
+.notif b { display: block; font-size: 13.5px; }
+
+/* التبويبات والمحتوى */
+.seg { display: flex; background: var(--fill); border-radius: 11px; padding: 2px; margin: 16px 0 6px; }
+.seg button { flex: 1; min-height: 38px; border-radius: 9px; font-size: 15px; font-weight: 500; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.seg button[aria-selected="true"] { background: #fff; font-weight: 600; box-shadow: 0 1px 3px rgba(29, 42, 33, .12), 0 1px 1px rgba(29, 42, 33, .04); }
+.panel { display: none; }
+.panel.on { display: block; animation: fade .25s var(--ease); }
+@keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.head { font-size: 14px; color: var(--muted); margin: 20px 4px 8px; }
+.group { background: var(--card); border-radius: 14px; overflow: hidden; }
+.row { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px; padding: 10px 14px; text-align: start; position: relative; font-size: 16.5px; }
+.row + .row::before { content: ""; position: absolute; top: 0; inset-inline: 14px 0; border-top: 1px solid var(--sep); }
+.row span { flex: 1; }
+.dot { width: 30px; height: 30px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .12); flex: none; }
+.chev { color: #b9c0ba; font-size: 15px; }
+.warn { display: flex; gap: 8px; align-items: center; margin: 10px 4px 0; font-size: 14px; color: #a8521a; }
+
+/* الأشكال الجاهزة */
+.themes { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.theme { display: grid; gap: 6px; justify-items: center; font-size: 12.5px; color: var(--muted); min-width: 0; text-align: center; line-height: 1.25; }
+.theme .mini { width: 100%; aspect-ratio: 1.45; border-radius: 12px; padding: 7px; display: grid; grid-template-columns: repeat(4, 1fr); align-content: end; gap: 3px; box-shadow: 0 0 0 2px transparent; transition: box-shadow .2s; }
+.theme .mini i { aspect-ratio: 1; border-radius: 50%; }
+.theme[aria-pressed="true"] .mini { box-shadow: 0 0 0 2.5px var(--bg), 0 0 0 4.5px var(--green-2); }
+.theme[aria-pressed="true"] { color: var(--ink); font-weight: 600; }
+
+/* الختم */
+.icons { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.icon-tile { aspect-ratio: 1; border-radius: 16px; background: var(--card); display: grid; place-items: center; font-size: 30px; color: var(--ink); box-shadow: 0 0 0 2px transparent; transition: box-shadow .2s; }
+.icon-tile[aria-pressed="true"] { box-shadow: 0 0 0 2.5px var(--green-2); color: var(--green-2); }
+.icon-tile.up { font-size: 13px; gap: 2px; align-content: center; color: var(--green-2); }
+.icon-tile.up i { font-size: 24px; }
+.range { display: flex; align-items: center; gap: 12px; padding: 12px 14px; }
+.range input { flex: 1; accent-color: var(--green-2); }
+.range b { min-width: 34px; text-align: center; font-size: 15px; }
+
+/* الشعار */
+.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.tile { background: var(--card); border-radius: 18px; padding: 14px; text-align: center; }
+.tile .pic { width: 92px; height: 92px; border-radius: 50%; margin: 4px auto 10px; display: grid; place-items: center; font-size: 40px; font-weight: 700; overflow: hidden; }
+.tile .pic.sq { border-radius: 18px; }
+.tile .pic img { width: 100%; height: 100%; object-fit: cover; }
+.tile b { display: block; font-size: 15.5px; }
+.tile .acts { display: flex; justify-content: center; gap: 14px; margin-top: 8px; font-size: 15px; color: var(--green-2); }
+.tile .acts .del { color: #c0392b; }
+.note { font-size: 13.5px; color: var(--muted); margin: 10px 4px 0; line-height: 1.5; }
+
+/* شريط الحفظ */
+.savebar { position: fixed; inset-inline: 0; bottom: 0; z-index: 30; padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); background: rgba(250, 251, 250, .9); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); border-top: 1px solid var(--sep); transform: translateY(110%); transition: transform .35s var(--ease); }
+.savebar.on { transform: none; }
+.savebar div { max-width: 560px; margin: 0 auto; display: flex; gap: 10px; }
+.savebar button { min-height: 50px; border-radius: 14px; font-size: 17px; font-weight: 600; }
+.savebar .save { flex: 1; background: var(--green); color: #fff; }
+.savebar .undo { padding: 0 18px; background: var(--fill); color: var(--ink); }
+
+/* اختيار اللون */
+.sheet { position: fixed; inset: 0; z-index: 50; background: rgba(10, 18, 13, .38); display: flex; align-items: flex-end; justify-content: center; opacity: 0; pointer-events: none; transition: opacity .25s var(--ease); }
+.sheet.on { opacity: 1; pointer-events: auto; }
+.sheet-card { width: 100%; max-width: 560px; background: var(--bg); border-radius: 22px 22px 0 0; padding: 8px 16px calc(22px + env(safe-area-inset-bottom)); transform: translateY(100%); transition: transform .35s var(--ease); }
+.sheet.on .sheet-card { transform: none; }
+.grab { width: 38px; height: 5px; border-radius: 3px; background: #d0d5d1; margin: 0 auto 10px; }
+.sheet h2 { font-size: 19px; font-weight: 700; margin-bottom: 14px; }
+.swatches { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
+.sw { aspect-ratio: 1; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .12); position: relative; }
+.sw[aria-pressed="true"]::after { content: ""; position: absolute; inset: -5px; border-radius: 50%; border: 2.5px solid var(--green-2); }
+.custom { display: flex; align-items: center; gap: 12px; margin-top: 16px; background: var(--card); border-radius: 14px; padding: 10px 14px; font-size: 16px; }
+.custom input { width: 44px; height: 32px; border: 0; background: none; padding: 0; }
+.flag { position: fixed; bottom: calc(86px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); z-index: 40; pointer-events: none; background: rgba(29, 42, 33, .8); color: #fff; font-size: 12px; padding: 4px 10px; border-radius: 980px; }
+@media (prefers-reduced-motion: reduce) { .preview, .panel.on, .savebar, .sheet, .sheet-card { transition: none; animation: none; } }
+:focus-visible { outline: 3px solid #7fb685; outline-offset: 2px; }
+</style>
+</head>
+<body>
+<p class="flag">معاينة</p>
+<div class="app">
+  <div class="top"><button class="back" type="button"><i class="ph-bold ph-caret-left"></i> البطاقة</button></div>
+  <h1>الشكل</h1>
+
+  <div class="stage" id="stage">
+    <div class="views" role="tablist">
+      <button type="button" aria-pressed="true" data-view="card">البطاقة</button>
+      <button type="button" aria-pressed="false" data-view="pass">المحفظة</button>
+      <button type="button" aria-pressed="false" data-view="lock">الإشعار</button>
+    </div>
+    <div class="preview" id="pv"></div>
+  </div>
+
+  <div class="seg" role="tablist">
+    <button type="button" role="tab" aria-selected="true" data-tab="colors"><i class="ph-bold ph-palette"></i> الألوان</button>
+    <button type="button" role="tab" aria-selected="false" data-tab="stamp"><i class="ph-bold ph-seal-check"></i> الختم</button>
+    <button type="button" role="tab" aria-selected="false" data-tab="logo"><i class="ph-bold ph-image"></i> الشعار</button>
+  </div>
+
+  <section class="panel on" id="p-colors">
+    <p class="head">أشكال جاهزة</p>
+    <div class="themes" id="themes"></div>
+    <p class="head">تخصيص</p>
+    <div class="group">
+      <button class="row" type="button" data-pick="bg"><span>لون البطاقة</span><i class="dot" data-dot="bg"></i><i class="ph-bold ph-caret-left chev"></i></button>
+      <button class="row" type="button" data-pick="stamp"><span>لون الختم</span><i class="dot" data-dot="stamp"></i><i class="ph-bold ph-caret-left chev"></i></button>
+      <button class="row" type="button" data-pick="text"><span>لون الكتابة</span><i class="dot" data-dot="text"></i><i class="ph-bold ph-caret-left chev"></i></button>
+    </div>
+    <p class="warn" id="warn" hidden><i class="ph-bold ph-warning"></i> الكتابة ما تنقرا على هالخلفية، جرّب لون أفتح.</p>
+  </section>
+
+  <section class="panel" id="p-stamp">
+    <p class="head">شكل الختم</p>
+    <div class="icons" id="icons"></div>
+    <p class="head">جرّب عدد الأختام</p>
+    <div class="group"><label class="range"><input type="range" min="0" max="8" value="5" id="count" aria-label="عدد الأختام"><b id="count-v">5/8</b></label></div>
+  </section>
+
+  <section class="panel" id="p-logo">
+    <div class="tiles" style="margin-top:16px">
+      <div class="tile"><div class="pic" id="t-logo"></div><b>الشعار</b><div class="acts"><button type="button" data-logo="change">تغيير</button><button type="button" class="del" data-logo="clear">إزالة</button></div></div>
+      <div class="tile"><div class="pic sq" id="t-reward"></div><b>صورة المكافأة</b><div class="acts"><button type="button" data-reward="change">تغيير</button><button type="button" class="del" data-reward="clear">إزالة</button></div></div>
+    </div>
+    <p class="note">الشعار يطلع في البطاقة والمحفظة والإشعار. صورة المكافأة تطلع مكان آخر ختم.</p>
+  </section>
+</div>
+
+<div class="savebar" id="savebar"><div><button class="undo" type="button" id="undo">تراجع</button><button class="save" type="button" id="save">حفظ</button></div></div>
+
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="اختيار اللون"><div class="sheet-card">
+  <div class="grab"></div>
+  <h2 id="sheet-title">لون البطاقة</h2>
+  <div class="swatches" id="swatches"></div>
+  <label class="custom"><span style="flex:1">لون آخر</span><input type="color" id="custom-color" aria-label="لون آخر"></label>
+</div></div>
+
+<script>
+(() => {
+  const $ = (s) => document.querySelector(s);
+  const STORE = 'قهوة المساء', NEED = 8;
+  const THEMES = [
+    ['أخضر كلاسيك', '#233d2c', '#f3e9d2', '#ffffff'],
+    ['أسود فاخر', '#111413', '#d9b56a', '#ffffff'],
+    ['بيج دافئ', '#efe4d2', '#6b4a2f', '#3a2a1c'],
+    ['قهوة', '#4a2f22', '#e8cfa8', '#fbf3e8'],
+    ['أبيض نظيف', '#ffffff', '#233d2c', '#1d2a21'],
+    ['كحلي', '#1b2a44', '#9fc0ff', '#ffffff'],
+    ['وردي', '#f6dfe3', '#b23a5a', '#4a1d2a'],
+    ['من شعارك', '#7a2e1f', '#f4c27a', '#fff7ee']
+  ];
+  const SWATCHES = ['#233d2c', '#3f7a4a', '#111413', '#4a2f22', '#7a2e1f', '#1b2a44', '#2f5d8a', '#6b4a2f', '#b23a5a', '#d9b56a', '#f4c27a', '#f3e9d2', '#efe4d2', '#f6dfe3', '#eaf3ec', '#ffffff', '#1d2a21', '#9fc0ff'];
+  const ICONS = ['coffee', 'star', 'heart', 'cookie', 'ice-cream', 'pizza', 'hamburger', 'cake', 'bread', 'flower', 'crown', 'gift'];
+  const saved = { bg: '#233d2c', stamp: '#f3e9d2', text: '#ffffff', icon: 'coffee', logo: true, reward: true };
+  let st = { ...saved }, view = 'card', count = 5, picking = null;
+
+  // التباين بين لونين (WCAG): أقل من 3 = الكتابة ما تنقرا
+  const lum = (h) => { const n = parseInt(h.slice(1), 16), c = [n >> 16, (n >> 8) & 255, n & 255].map(v => { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); }); return .2126 * c[0] + .7152 * c[1] + .0722 * c[2]; };
+  const contrast = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((m, n) => n - m); return (x + .05) / (y + .05); };
+
+  const logoHtml = () => st.logo ? STORE[0] : '<i class="ph-bold ph-storefront"></i>';
+  const stampIcon = () => `<i class="ph-bold ph-${st.icon}"></i>`;
+  const stampsHtml = (n, small) => Array.from({ length: NEED }, (_, i) => {
+    const last = i === NEED - 1;
+    if (last && i >= n) return `<span class="st gift">${st.reward ? '<i class="ph-bold ph-gift"></i>' : ''}</span>`;
+    return `<span class="st ${i < n ? 'on' : ''}">${i < n ? stampIcon() : ''}</span>`;
+  }).join('');
+  function render() {
+    const r = document.documentElement.style;
+    r.setProperty('--c-bg', st.bg); r.setProperty('--c-stamp', st.stamp); r.setProperty('--c-text', st.text);
+    const left = Math.max(0, NEED - count);
+    $('#pv').innerHTML = view === 'card' ? `
+      <div class="lc"><div class="lc-top"><span class="logo">${logoHtml()}</span><div><b>${STORE}</b><small>بطاقة الولاء</small></div></div>
+        <div class="stamps">${stampsHtml(count)}</div>
+        <div class="lc-foot"><span>سارة</span><b>${left ? `باقي ${left}` : 'المكافأة جاهزة'}</b></div></div>`
+      : view === 'pass' ? `
+      <div class="pass"><div class="pass-h"><span class="l"><span class="logo">${logoHtml()}</span>${STORE}</span><span><small>الأختام</small><b>${count}/${NEED}</b></span></div>
+        <div class="pass-strip">${stampsHtml(count)}</div>
+        <div class="pass-f"><span><small>صاحب البطاقة</small>سارة</span><span><small>المكافأة</small>قهوة مجانية</span></div></div>`
+      : `<div class="lock"><time>9:41</time><div class="notif"><span class="logo">${logoHtml()}</span><span><b>${STORE}</b>سارة، باقي لك ${left || 1} ${left === 1 ? 'ختم' : 'أختام'} على القهوة المجانية.</span></div></div>`;
+    document.querySelectorAll('[data-dot]').forEach(d => { d.style.background = st[d.dataset.dot]; });
+    $('#themes').innerHTML = THEMES.map(([n, bg, s, t], i) => `<button class="theme" type="button" data-theme="${i}" aria-pressed="${st.bg === bg && st.stamp === s && st.text === t}"><span class="mini" style="background:${bg}">${('<i style="background:' + s + '"></i>').repeat(3)}<i style="border:1px dashed ${t};opacity:.5"></i></span>${n}</button>`).join('');
+    $('#icons').innerHTML = ICONS.map(k => `<button class="icon-tile" type="button" aria-pressed="${st.icon === k}" data-icon="${k}" aria-label="${k}"><i class="ph-bold ph-${k}"></i></button>`).join('') + '<button class="icon-tile up" type="button"><i class="ph-bold ph-upload-simple"></i>صورتك</button>';
+    $('#t-logo').innerHTML = logoHtml(); $('#t-logo').style.background = st.stamp; $('#t-logo').style.color = st.bg;
+    $('#t-reward').innerHTML = st.reward ? '<i class="ph-bold ph-gift"></i>' : '<i class="ph-bold ph-image" style="opacity:.35"></i>'; $('#t-reward').style.background = st.reward ? st.stamp : 'var(--fill)'; $('#t-reward').style.color = st.bg;
+    $('#count-v').textContent = `${count}/${NEED}`;
+    $('#warn').hidden = contrast(st.bg, st.text) >= 3;
+    $('#savebar').classList.toggle('on', JSON.stringify(st) !== JSON.stringify(saved));
+  }
+  const NAMES = { bg: 'لون البطاقة', stamp: 'لون الختم', text: 'لون الكتابة' };
+  function openPicker(k) {
+    picking = k; $('#sheet-title').textContent = NAMES[k];
+    $('#swatches').innerHTML = SWATCHES.map(c => `<button class="sw" type="button" style="background:${c}" data-c="${c}" aria-pressed="${st[k] === c}" aria-label="${c}"></button>`).join('');
+    $('#custom-color').value = st[k];
+    $('#sheet').classList.add('on');
+  }
+  const closePicker = () => $('#sheet').classList.remove('on');
+
+  document.addEventListener('click', (e) => {
+    const t = e.target;
+    const v = t.closest('[data-view]'); if (v) { view = v.dataset.view; document.querySelectorAll('[data-view]').forEach(b => b.setAttribute('aria-pressed', b === v)); return render(); }
+    const tab = t.closest('[data-tab]'); if (tab) { document.querySelectorAll('[data-tab]').forEach(b => b.setAttribute('aria-selected', b === tab)); document.querySelectorAll('.panel').forEach(p => p.classList.toggle('on', p.id === 'p-' + tab.dataset.tab)); return; }
+    const th = t.closest('[data-theme]'); if (th) { const [, bg, s, tx] = THEMES[th.dataset.theme]; Object.assign(st, { bg, stamp: s, text: tx }); return render(); }
+    const pk = t.closest('[data-pick]'); if (pk) return openPicker(pk.dataset.pick);
+    const sw = t.closest('[data-c]'); if (sw) { st[picking] = sw.dataset.c; render(); return closePicker(); }
+    if (t.id === 'sheet') return closePicker();
+    const ic = t.closest('[data-icon]'); if (ic) { st.icon = ic.dataset.icon; return render(); }
+    const lg = t.closest('[data-logo]'); if (lg) { st.logo = lg.dataset.logo === 'change'; return render(); }
+    const rw = t.closest('[data-reward]'); if (rw) { st.reward = rw.dataset.reward === 'change'; return render(); }
+    if (t.closest('#undo')) { st = { ...saved }; return render(); }
+    if (t.closest('#save')) { Object.assign(saved, st); render(); }
+  });
+  $('#custom-color').addEventListener('input', (e) => { st[picking] = e.target.value; render(); });
+  $('#count').addEventListener('input', (e) => { count = Number(e.target.value); render(); });
+  addEventListener('keydown', (e) => { if (e.key === 'Escape') closePicker(); });
+  // المعاينة تصغر شوي لما ينزل، وما تختفي
+  addEventListener('scroll', () => $('#stage').classList.toggle('small', scrollY > 140), { passive: true });
+  render();
+})();
+</script>
+</body>
+</html>

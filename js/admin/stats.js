@@ -111,7 +111,7 @@
       body.innerHTML = `
         <div class="text-center py-8 space-y-3">
           <div class="w-12 h-12 mx-auto rounded-2xl bg-brand/5 border border-brand/15 flex items-center justify-center text-ink"><i class="ph-bold ph-chart-line-up"></i></div>
-          <p class="text-sm font-bold text-ink">ما فيه زيارات خلال آخر ${data.days} يوم</p>
+          <p class="text-sm font-bold text-ink">ما فيه زيارات خلال آخر ${data.days || statsDays} يوم</p>
           <p class="text-[11px] text-ink max-w-sm mx-auto">اطبع بطاقة الـ QR وحطها في محلك، أو شارك رابط المنيو في حساباتك. الإحصائيات تبدأ تظهر هنا مع أول زيارة.</p>
           <button onclick="downloadQrCard()" class="bg-amber-400 hover:bg-amber-300 text-black px-4 py-2 rounded-xl text-[11px] font-black"><i class="ph-bold ph-printer"></i> تحميل بطاقة QR</button>
         </div>`;
