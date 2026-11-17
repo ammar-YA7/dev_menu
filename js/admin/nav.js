@@ -220,3 +220,23 @@
       if (u && stMQ.matches) { renderStList(); stShow(u.dataset.apUnit, true); setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150); }
     };
   }
+
+  // ─── حفظ تلقائي للحقول البسيطة: أول ما يخلص الكتابة ويطلع من الخانة ينحفظ (مع نفس التحقق والرسائل) ───
+  //   معلومات المنشأة (ساعات العمل، الموقع، رابط التقييم) وحسابات التواصل والواتساب. الحساسة (رابط المتجر والاسم...) تبقى بزر
+  const AUTO_SAVE = [
+    { fields: ['info-hours', 'info-location', 'info-review'], save: () => updateRestaurantInfo(), btn: 'button[onclick="updateRestaurantInfo()"]' },
+    { fields: ['social-web', 'social-tiktok', 'social-insta', 'social-snap', 'social-whatsapp', 'social-whatsapp-cc'], save: () => updateSocialLinks(), btn: 'button[onclick="updateSocialLinks()"]' }
+  ];
+  AUTO_SAVE.forEach(g => {
+    let t = null;
+    const run = () => { clearTimeout(t); t = setTimeout(() => g.save(), 150); };
+    g.fields.forEach(id => { const el = document.getElementById(id); if (el) el.addEventListener('change', run); });
+    // زر الحفظ يختفي، ومكانه سطر صغير يوضح إنها تنحفظ لحالها
+    const btn = document.querySelector(g.btn);
+    if (btn) {
+      btn.classList.add('ap-autosaved');
+      const note = document.createElement('p'); note.className = 'ap-autosave-note';
+      note.innerHTML = '<i class="ph-bold ph-check-circle"></i> تنحفظ التغييرات تلقائياً';
+      btn.after(note);
+    }
+  });

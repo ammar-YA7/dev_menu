@@ -162,3 +162,7 @@ main input[type="file"]::file-selector-button { border: 0; border-radius: 980px;
 }
 @media (prefers-reduced-motion: reduce) { [data-page="settings"].ap-st-detail .ap-st-cur { animation: none; } }
 .ap-flip { display: inline-block; transform: scaleX(-1); }
+/* الحفظ التلقائي: زر الحفظ يختفي ومكانه سطر صغير */
+.ap-autosaved { display: none !important; }
+.ap-autosave-note { font-size: 12px; color: var(--ap-muted); display: flex; align-items: center; gap: 5px; margin: 0; }
+.ap-autosave-note i { color: var(--ap-green-2); }
