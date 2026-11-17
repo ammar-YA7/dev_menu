@@ -549,6 +549,8 @@
     const name = client.name || 'المنشأة';
     setStoreName(name);
     document.getElementById('admin-mode-badge').classList.toggle('hidden', !isSuperAdmin);
+    // الاستيراد والتصدير (data-sa-only): للمدير العام بس، وصاحب المحل يطلبها من فريقنا
+    document.body.classList.toggle('dm-sa', isSuperAdmin);
     renderBranchSwitch();
     renderBranchesCard(); renderDeskCard(); renderNotifyCard(); loadNotifs();
     renderAlsoBranches();

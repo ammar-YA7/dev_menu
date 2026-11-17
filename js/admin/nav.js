@@ -118,8 +118,8 @@
         ['ph-link-simple', 'نسخ رابط المنيو', () => copyMenuLink()],
         ['ph-printer', 'بطاقة QR للطباعة', () => downloadQrCard()],
         ['ph-camera', 'المنيو من صورة', () => document.getElementById('mp-file').click(), 'صوّر منيوك الورقي ويضيف الأطباق لحاله'],
-        ['ph-microsoft-excel-logo', 'استيراد من Excel', () => document.getElementById('pi-file').click()],
-        ['ph-download-simple', 'نموذج ملف Excel', () => downloadProductTemplate()]
+        ...(isSuperAdmin ? [['ph-microsoft-excel-logo', 'استيراد من Excel', () => document.getElementById('pi-file').click()],
+          ['ph-download-simple', 'نموذج ملف Excel', () => downloadProductTemplate()]] : [])
       ]);
     }
     const act = e.target.closest('[data-act]');

@@ -348,6 +348,8 @@ module.exports.post = async function post(action, req, b, env) {
   // ─── استيراد أعضاء من نظام ولاء سابق (ملف Excel أو CSV): الاسم والجوال والأختام ───
   // ينحفظون كبطاقات جاهزة، ولما يمسح الزبون كود التسجيل ويكتب نفس جواله تطلع له بطاقته بأختامه
   if (action === 'loyalty-import') {
+    // الاستيراد يسويه فريقنا (المدير العام من لوحة المتجر)، صاحب المحل يتواصل معنا
+    if (!env.admin) throw new ApiError(403, 'استيراد البيانات يتم عن طريق فريق DEV MENU، تواصل معنا ونجهّزها لك');
     const x = (await rest(`clients?id=eq.${sid}&select=loyalty_settings`))[0] || {};
     const settings = normalizeLoyalty(x.loyalty_settings);
     const rows = Array.isArray(b.rows) ? b.rows.slice(0, 1000) : [];
