@@ -814,6 +814,7 @@
       saver: ['dishes', 'video'].includes(o.saver) ? o.saver : 'off', saver_video: o.saver_video || null,
       saver_after: [5, 15, 30, 60, 120, 300].includes(Number(o.saver_after)) ? Number(o.saver_after) : 60,
       saver_media: Array.isArray(o.saver_media) ? o.saver_media.filter(m => m && m.u).slice(0, 8) : [],
+      saver_pick: o.saver_pick === true, saver_items: Array.isArray(o.saver_items) ? o.saver_items.map(Number).filter(Boolean).slice(0, 40) : [],
       saver_qr: ['menu', 'loyalty'].includes(o.saver_qr) ? o.saver_qr : 'off', saver_ready: o.saver_ready === true };
   };
   // المنيو التفاعلي إضافة (ixpro): بدونها نعرض الشكل كمعاينة مقفولة مع طريقة الإضافة
@@ -939,7 +940,13 @@
         <button type="button" role="radio" aria-checked="${c.saver === v}" onclick="setIxSaver('${v}')" class="rounded-lg border px-2 py-2 text-[11px] font-bold transition inline-flex items-center justify-center gap-1 ${c.saver === v ? 'border-brand bg-brand text-cream' : 'border-brand/20 bg-white text-ink hover:border-brand/40'}"><i class="ph-bold ${ic}"></i> ${t}</button>`).join('')}
       </div>
       ${c.saver === 'dishes' ? `
-        <span class="block text-[11px] text-ink/70 leading-relaxed">تعرض الأطباق المتوفرة اللي لها صور، كل صورة 6 ثوانٍ مع اسم الطبق وسعره. الأطباق اللي عليها خصم تطلع أولاً بشارة الخصم، والمميزة تتكرر أكثر.</span>
+        <div class="space-y-1.5">
+          <span class="block text-[11px] font-bold text-ink">الأطباق اللي تطلع</span>
+          <div role="radiogroup" class="grid grid-cols-2 gap-1.5">${[[false, 'كل الأطباق', 'ph-images'], [true, 'أختارها بنفسي', 'ph-hand-pointing']].map(([v, t, ic]) => `
+            <button type="button" role="radio" aria-checked="${c.saver_pick === v}" onclick="saveIxLook({ saver_pick: ${v} })" class="rounded-lg border px-2 py-2 text-[11px] font-bold transition inline-flex items-center justify-center gap-1 ${c.saver_pick === v ? 'border-brand bg-brand text-cream' : 'border-brand/20 bg-white text-ink hover:border-brand/40'}"><i class="ph-bold ${ic}"></i> ${t}</button>`).join('')}
+          </div>
+          ${c.saver_pick ? svPicker(c) : '<span class="block text-[11px] text-ink/70 leading-relaxed">تعرض الأطباق المتوفرة اللي لها صور، كل صورة 6 ثوانٍ مع اسم الطبق وسعره. الأطباق اللي عليها خصم تطلع أولاً بشارة الخصم، والمميزة تتكرر أكثر.</span>'}
+        </div>
         <div class="space-y-1.5">
           <span class="block text-[11px] font-bold text-ink">صور وفيديوهات من عندك <span class="font-normal text-ink/70">(اختياري، حتى 8)</span></span>
           <span class="block text-[11px] text-ink/70 leading-relaxed">تطلع بين الأطباق، مثل إعلان طبق جديد أو عرض اليوم. الفيديو يكمل لآخره (حتى 30 ثانية).</span>
@@ -1012,6 +1019,39 @@
     const c = ixCfg(), col = ixColors(c);
     const bg = document.getElementById('ix-bg'), ac = document.getElementById('ix-accent'), art = document.getElementById(`ix-art-${c.style}`);
     if (art) art.innerHTML = ixArt(c.style, { ...col, bg: bg ? bg.value : col.bg, accent: ac ? ac.value : col.accent });
+  }
+  // شاشة الانتظار: صاحب المحل يختار الأطباق اللي تطلع (اللي لها صور بس)، والرقم على الصورة = ترتيبها في العرض
+  const SV_MAX = 40;
+  function svPicker(c) {
+    const withImg = loadedProducts.filter(p => p.image_url);
+    if (!withImg.length) return '<span class="block text-[11px] text-ink/70 leading-relaxed">أضف صور لأطباقك من صفحة المنيو، وبعدها تقدر تختار منها هنا.</span>';
+    const order = new Map(c.saver_items.map((id, i) => [id, i + 1]));
+    const off = (p) => p.is_available === false || p.is_hidden === true;
+    return `
+      <span class="block text-[11px] text-ink/70 leading-relaxed">اضغط على الطبق عشان تضيفه أو تشيله. تطلع بالترتيب اللي تختاره، كل صورة 6 ثوانٍ.</span>
+      <span class="block text-[11px] font-bold ${c.saver_items.length ? 'text-brand' : 'text-ink/70'}">${c.saver_items.length ? `اخترت ${c.saver_items.length} من ${withImg.length}` : 'ما اخترت شي، فتطلع كل الأطباق'}</span>
+      <div class="grid grid-cols-4 sm:grid-cols-5 gap-2 max-h-72 overflow-y-auto p-0.5">${withImg.map(p => { const n = order.get(Number(p.id)); return `
+        <button type="button" onclick="toggleSaverItem(${Number(p.id)})" aria-pressed="${!!n}" title="${esc(p.name)}" class="relative text-start rounded-xl overflow-hidden border-2 transition ${n ? 'border-brand' : 'border-transparent'} ${off(p) ? 'opacity-50' : ''}">
+          <img src="${esc(p.image_url)}" alt="" loading="lazy" class="w-full aspect-square object-cover bg-black/5">
+          ${n ? `<span class="absolute top-1 start-1 min-w-[20px] h-5 px-1 rounded-full bg-brand text-cream text-[11px] font-bold grid place-items-center">${n}</span>` : ''}
+          <span class="block px-1 py-1 text-[10.5px] font-semibold text-ink truncate">${esc(p.name)}</span>
+        </button>`; }).join('')}
+      </div>
+      ${withImg.some(off) ? '<span class="block text-[11px] text-ink/70">الأطباق الباهتة غير متوفرة أو مخفية، وما تطلع في العرض لين ترجع.</span>' : ''}`;
+  }
+  let svSaveT = null;
+  function toggleSaverItem(id) {
+    const c = ixCfg();
+    let items = c.saver_items.filter(x => x !== id);
+    if (items.length === c.saver_items.length) {
+      if (items.length >= SV_MAX) return showToast(`تقدر تختار ${SV_MAX} طبق بالكثير`, true);
+      items = [...items, id];
+    }
+    client.menu_ix = { ...(client.menu_ix || {}), saver_pick: true, saver_items: items };
+    renderIxLook();
+    // نحفظ بعد ما يوقف اختيار (عشان ما يطلع حفظ مع كل ضغطة)
+    clearTimeout(svSaveT);
+    svSaveT = setTimeout(() => saveIxLook({}), 900);
   }
   async function saveIxLook(patch) {
     if (await updateClient({ menu_ix: { ...ixCfg(), ...patch } })) { renderIxLook(); showToast('تم حفظ شكل المنيو التفاعلي'); }

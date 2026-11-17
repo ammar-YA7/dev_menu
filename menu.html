@@ -3169,7 +3169,8 @@
     const media = (Array.isArray(o.saver_media) ? o.saver_media : []).map(m => ({ u: safeUrl(m && m.u), t: m && m.t === 'video' ? 'video' : 'image' })).filter(m => m.u).slice(0, 8);
     const qr = o.saver_qr === 'loyalty' && project.has_loyalty ? 'loyalty' : o.saver_qr === 'menu' ? 'menu' : 'off';
     const ready = o.saver_ready === true && !!project.has_pager;
-    return { mode, video, after, media, qr, ready };
+    const items = o.saver_pick === true && Array.isArray(o.saver_items) ? o.saver_items.map(String) : [];
+    return { mode, video, after, media, qr, ready, items };
   }
   const SV_MS = 6500, SV_VID_MAX = 30000;
   let ixSaverOn = false, ixSaverT = null, ixSaverWoke = 0, ixReadyT = null;
@@ -3184,6 +3185,12 @@
     // المميزة تطلع مرة ثانية في النص الثاني من العرض
     const again = mix(star).slice(0, 3).filter(x => dishes.length > 6);
     dishes = [...dishes.slice(0, Math.ceil(dishes.length / 2)), ...again, ...dishes.slice(Math.ceil(dishes.length / 2))];
+    // صاحب المحل اختار أطباق بنفسه: تطلع هي بس وبترتيبه (اللي انحذف أو صار بدون صورة أو غير متوفر ما يطلع)
+    if (c.items.length) {
+      const byId = new Map(ps.map(x => [String(x.id), x]));
+      const picked = c.items.map(id => byId.get(id)).filter(Boolean);
+      if (picked.length) dishes = picked;
+    }
     const out = [];
     let mi = 0;
     // كل ملف يطلع مرتين بالكثير في الدورة، وبين كل ملفين 3 أطباق على الأقل
