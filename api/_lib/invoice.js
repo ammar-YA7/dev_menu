@@ -42,11 +42,12 @@ function branchInvoiceLines(parent, features, branchName, now = Date.now()) {
   return { lines, pr };
 }
 
-// paid = فاتورة مدفوعة (تفعيل/تجديد)، due = مستحقة الدفع (فرع في نص الاشتراك)
+// paid = فاتورة مدفوعة (تفعيل/تجديد)، due = مستحقة الدفع، quote = عرض سعر (validUntil = العرض صالح حتى)
 function invoiceEmail({ store, lines, status = 'paid', validUntil, note = '', number }) {
   const total = lines.reduce((n, l) => n + Number(l.amount), 0);
-  const paid = status === 'paid';
-  const badge = paid ? ['مدفوعة', '#15803d', 'rgba(21,128,61,.1)'] : ['مستحقة الدفع', '#b45309', 'rgba(180,83,9,.1)'];
+  const paid = status === 'paid', quote = status === 'quote';
+  const badge = paid ? ['مدفوعة', '#15803d', 'rgba(21,128,61,.1)'] : quote ? ['عرض سعر', '#384f3d', 'rgba(56,79,61,.1)'] : ['مستحقة الدفع', '#b45309', 'rgba(180,83,9,.1)'];
+  const docName = quote ? 'عرض سعر' : 'فاتورة اشتراك', totalLabel = paid ? 'المجموع المدفوع' : quote ? 'المجموع' : 'المبلغ المستحق';
   const today = riyadhDate(Date.now());
   const rows = lines.map(l => `
       <tr>
@@ -59,15 +60,15 @@ function invoiceEmail({ store, lines, status = 'paid', validUntil, note = '', nu
     <tr><td style="background:#384f3d;padding:22px 26px;color:#faf6f1">
       <table role="presentation" width="100%"><tr>
         <td><div style="font-size:22px;font-weight:bold;letter-spacing:1px" dir="ltr">DEV MENU</div><div style="font-size:11px;opacity:.75">منصة المنيو الرقمي</div></td>
-        <td style="text-align:left"><div style="font-size:16px;font-weight:bold">فاتورة اشتراك</div><div style="font-size:11px;opacity:.75" dir="ltr">${esc(number)}</div></td>
+        <td style="text-align:left"><div style="font-size:16px;font-weight:bold">${docName}</div><div style="font-size:11px;opacity:.75" dir="ltr">${esc(number)}</div></td>
       </tr></table>
     </td></tr>
     <tr><td style="padding:22px 26px 6px">
       <table role="presentation" width="100%" style="font-size:12px;line-height:1.9">
         <tr><td style="color:#7a847c">العميل</td><td style="font-weight:bold">${esc(store.name)}</td></tr>
         ${store.email ? `<tr><td style="color:#7a847c">البريد</td><td dir="ltr" style="text-align:right">${esc(store.email)}</td></tr>` : ''}
-        <tr><td style="color:#7a847c">تاريخ الفاتورة</td><td>${esc(today)}</td></tr>
-        ${validUntil ? `<tr><td style="color:#7a847c">الاشتراك ساري حتى</td><td style="font-weight:bold">${esc(riyadhDate(validUntil))}</td></tr>` : ''}
+        <tr><td style="color:#7a847c">${quote ? 'تاريخ العرض' : 'تاريخ الفاتورة'}</td><td>${esc(today)}</td></tr>
+        ${validUntil ? `<tr><td style="color:#7a847c">${quote ? 'العرض صالح حتى' : 'الاشتراك ساري حتى'}</td><td style="font-weight:bold">${esc(riyadhDate(validUntil))}</td></tr>` : ''}
         <tr><td style="color:#7a847c">الحالة</td><td><span style="display:inline-block;font-size:11px;font-weight:bold;color:${badge[1]};background:${badge[2]};padding:2px 10px;border-radius:999px">${badge[0]}</span></td></tr>
       </table>
     </td></tr>
@@ -75,7 +76,7 @@ function invoiceEmail({ store, lines, status = 'paid', validUntil, note = '', nu
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
         <tr><td style="font-size:11px;color:#7a847c;padding-bottom:6px;border-bottom:2px solid #384f3d">البند</td><td style="font-size:11px;color:#7a847c;padding-bottom:6px;border-bottom:2px solid #384f3d;text-align:left">المبلغ</td></tr>
         ${rows}
-        <tr><td style="padding:14px 0 0;font-size:15px;font-weight:bold">${paid ? 'المجموع المدفوع' : 'المبلغ المستحق'}</td>
+        <tr><td style="padding:14px 0 0;font-size:15px;font-weight:bold">${totalLabel}</td>
             <td style="padding:14px 0 0;font-size:18px;font-weight:bold;color:#384f3d;text-align:left;white-space:nowrap" dir="ltr">${esc(sar(total))}</td></tr>
       </table>
     </td></tr>
@@ -86,12 +87,12 @@ function invoiceEmail({ store, lines, status = 'paid', validUntil, note = '', nu
     </td></tr>
   </table>
 </div>`;
-  const subject = `${paid ? 'فاتورة اشتراك' : 'فاتورة مستحقة'} DEV MENU — ${store.name} — ${sar(total)}`;
+  const subject = `${paid ? 'فاتورة اشتراك' : quote ? 'عرض سعر' : 'فاتورة مستحقة'} DEV MENU — ${store.name} — ${sar(total)}`;
   const text = [
-    `فاتورة اشتراك DEV MENU (${number})`, `العميل: ${store.name}`, `التاريخ: ${today}`,
+    `${docName} DEV MENU (${number})`, `العميل: ${store.name}`, `التاريخ: ${today}`,
     ...lines.map(l => `- ${l.label}${l.detail ? ` (${l.detail})` : ''}: ${sar(l.amount)}`),
-    `${paid ? 'المجموع المدفوع' : 'المبلغ المستحق'}: ${sar(total)}`,
-    ...(validUntil ? [`الاشتراك ساري حتى: ${riyadhDate(validUntil)}`] : []),
+    `${totalLabel}: ${sar(total)}`,
+    ...(validUntil ? [`${quote ? 'العرض صالح حتى' : 'الاشتراك ساري حتى'}: ${riyadhDate(validUntil)}`] : []),
     ...(note ? [note] : []), `للتواصل: https://wa.me/${SUPPORT_WA}`
   ].join('\n');
   return { subject, html, text, total };

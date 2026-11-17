@@ -77,6 +77,19 @@ module.exports = handler(['GET', 'POST'], async (req) => {
   return result;
 });
 
+// الخصم الخاص في عرض السعر: نسبة من المجموع بعد خصم الجمع، والخصم الكلي (الجمع + الشهر المجاني + الخاص) ما يتعدى 20%
+//   (على المميزات بس، الفروع ما عليها خصم)
+function specialDiscount(features, period, pr, pct) {
+  const p = Math.max(0, Math.min(20, pct)) / 100;
+  if (!p) return 0;
+  const f = PLANS.clean(features), base = f.reduce((a, k) => a + PLANS.FEATURES[k][period === 'month' ? 'month' : 'year'], 0);
+  const full = period === 'month' ? base : base * 12 / 11;
+  const already = base - (pr.discount ? base - pr.discount : base) ;   // خصم الجمع
+  const netNow = base - already;
+  const floor = Math.ceil(full * 0.8);
+  return Math.max(0, Math.min(Math.round(netNow * p), netNow - floor));
+}
+
 async function run(req, user, action) {
 
   if (action === 'check') return { ok: true, email: user.email };
@@ -309,15 +322,21 @@ async function run(req, user, action) {
     try { branches = await rest(`clients?parent_id=eq.${id}&select=name,client_slug,branch_features&order=id.asc`); } catch {}
     const span = b.period === 'year' ? 'سنة' : 'شهر';
     const pr = PLANS.price(features, b.period, branches);
+    // عرض سعر: صالح 14 يوم، ومعه خصم خاص اختياري (نسبة)، والخصم الكلي مع خصم الجمع والشهر المجاني ما يتعدى 20%
+    const quote = b.kind === 'quote';
+    const extra = quote ? specialDiscount(features, b.period, pr, Number(b.extra_pct) || 0) : 0;
+    const total = pr.total - extra;
     const invoice = await sendInvoice(main, {
-      status: 'due',
-      note: 'للدفع تواصل معنا عبر واتساب، ويتفعّل اشتراكك في نفس اليوم.',
+      status: quote ? 'quote' : 'due',
+      ...(quote ? { validUntil: new Date(Date.now() + 14 * 864e5).toISOString() } : {}),
+      note: String(b.note || '').trim().slice(0, 300) || (quote ? 'لقبول العرض تواصل معنا عبر واتساب، ويتفعّل اشتراكك في نفس اليوم.' : 'للدفع تواصل معنا عبر واتساب، ويتفعّل اشتراكك في نفس اليوم.'),
       lines: [
         ...pr.lines.map(l => ({ label: l.label, detail: `${l.key === 'branch' ? (l.detail || l.branches.map(br => br.name || br.client_slug).join('، ')) : main.name} لمدة ${span}`, amount: l.amount })),
-        ...pr.discounts.map(d => ({ label: d.label, detail: '', amount: -d.amount }))
+        ...pr.discounts.map(d => ({ label: d.label, detail: '', amount: -d.amount })),
+        ...(extra ? [{ label: 'خصم خاص', detail: 'ضمن هذا العرض', amount: -extra }] : [])
       ]
     });
-    return { ok: true, invoice, total: pr.total };
+    return { ok: true, invoice, total, extra };
   }
   // إيقاف/تشغيل المتجر الرئيسي يشمل فروعه، والفرع يقدر ينوقف لحاله
   if (action === 'set-active') {
