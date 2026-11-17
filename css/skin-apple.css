@@ -328,10 +328,11 @@ body.ap-hub [data-page="loyalty"] .ly-tabs[aria-label="أقسام الولاء"]
 /* =====================================================================
    محرّر شكل البطاقة (js/admin/cardeditor.js): الكروت القديمة تنخفي (تبقى ملفاتها شغّالة للرفع)
    ===================================================================== */
-body.ap-cd #ly-design-block > div:first-child { position: relative; }
-body.ap-cd #ly-design-block > div:first-child > .pro-card { position: absolute !important; top: 0; inset-inline-start: 0; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+body.ap-cd :is(#ly-design-block, #pkd-card) > div:first-child { position: relative; }
+body.ap-cd :is(#ly-design-block, #pkd-card) > div:first-child > .pro-card { position: absolute !important; top: 0; inset-inline-start: 0; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 body.ap-cd main { overflow-x: clip; }
 body.ap-cd #ly-changes { display: none !important; }
+body.ap-cd #pkd-save, body.ap-cd #pkd-undo { display: none !important; }
 #cd-editor { display: grid; gap: 0; }
 .cd-seg { display: flex; background: var(--ap-fill); border-radius: 11px; padding: 2px; }
 .cd-seg button { flex: 1; min-height: 40px; border-radius: 9px; border: 0; background: none; font-size: 15px; font-weight: 500; display: inline-flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; color: var(--ap-ink); }
@@ -393,7 +394,7 @@ body.ap-cd #ly-changes { display: none !important; }
 @media (min-width: 1024px) { #cd-savebar { inset-inline-start: 16rem; } }
 /* الجوال: المعاينة ثابتة فوق وأصغر، والتعديل تحتها */
 @media (max-width: 1023px) {
-  body.ap-cd #ly-design-block > div:last-child { position: sticky; top: 52px; z-index: 5; background: var(--ap-bg); margin: 0 -16px; padding: 4px 16px 6px; }
+  body.ap-cd :is(#ly-design-block, #pkd-card) > div:last-child { position: sticky; top: 52px; z-index: 5; background: var(--ap-bg); margin: 0 -16px; padding: 4px 16px 6px; }
   body.ap-cd #ly-design-block .ly-views { margin-bottom: 4px; }
   body.ap-cd #ly-phone { zoom: .52; margin-inline: auto; }
   body.ap-cd #ly-design-block > div:last-child > label.pro-card { display: none; }
