@@ -1,0 +1,82 @@
+# =====================================================================
+# DEV MENU — نسخة احتياطية ليلية لقاعدة الإنتاج وصور المنيو (Cloudflare R2: devmenu-backups)
+#   db/      نسخة قاعدة البيانات (public + auth + storage) مشفّرة بـ age، ونحتفظ بآخر 30 يوم
+#            فك التشفير يحتاج المفتاح الخاص (عند صاحب المشروع فقط، مو في GitHub)
+#   images/  صور المنيو (عامة أصلاً)، تنضاف الجديدة بس كل ليلة
+# الاسترجاع: README في supabase/BACKUP.md
+# =====================================================================
+name: Nightly backup
+
+on:
+  schedule:
+    - cron: '0 0 * * *'   # 3 الفجر بتوقيت الرياض
+  workflow_dispatch:
+
+concurrency: backup
+
+env:
+  AGE_RECIPIENT: age1fe67dzlqw0rapxvjs5fl87qe4ldncjghmqetvmqd6q9yy4fhzsxsmxexqr
+  BUCKET: devmenu-backups
+  STORAGE_PUBLIC: https://czdoamcgxgkicrbufpcn.supabase.co/storage/v1/object/public
+  KEEP_DAYS: 30
+  AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+  AWS_DEFAULT_REGION: auto
+  AWS_EC2_METADATA_DISABLED: 'true'
+
+jobs:
+  backup:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Tools (pg_dump 17, age)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-common age >/dev/null
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y >/dev/null
+          sudo apt-get install -y -qq postgresql-client-17 >/dev/null
+          /usr/lib/postgresql/17/bin/pg_dump --version
+
+      - name: Database → encrypted dump
+        env:
+          PROD_DB_URL: ${{ secrets.PROD_DB_URL }}
+        run: |
+          set -euo pipefail
+          day=$(date -u +%F)
+          /usr/lib/postgresql/17/bin/pg_dump "$PROD_DB_URL" -Fc --no-owner --no-privileges -n public -n auth -n storage -f db.dump
+          tables=$(/usr/lib/postgresql/17/bin/pg_restore -l db.dump | grep -c "TABLE DATA")
+          size=$(stat -c %s db.dump)
+          echo "tables=$tables size=$size"
+          [ "$tables" -gt 40 ] && [ "$size" -gt 100000 ] || { echo "Dump looks incomplete"; exit 1; }
+          age -r "$AGE_RECIPIENT" -o db.dump.age db.dump
+          rm -f db.dump
+          aws s3 cp db.dump.age "s3://$BUCKET/db/$day.dump.age" --endpoint-url "${{ secrets.R2_ENDPOINT }}" --only-show-errors
+          echo "Uploaded db/$day.dump.age"
+
+      - name: Remove dumps older than ${{ env.KEEP_DAYS }} days
+        run: |
+          set -euo pipefail
+          cutoff=$(date -u -d "-$KEEP_DAYS days" +%F)
+          aws s3 ls "s3://$BUCKET/db/" --endpoint-url "${{ secrets.R2_ENDPOINT }}" | awk '{print $4}' | while read -r f; do
+            d=${f%%.dump.age}
+            if [[ "$d" < "$cutoff" ]]; then aws s3 rm "s3://$BUCKET/db/$f" --endpoint-url "${{ secrets.R2_ENDPOINT }}" --only-show-errors; echo "removed $f"; fi
+          done
+
+      - name: Menu images (new ones only)
+        env:
+          PROD_DB_URL: ${{ secrets.PROD_DB_URL }}
+        run: |
+          set -euo pipefail
+          /usr/lib/postgresql/17/bin/psql "$PROD_DB_URL" -Atc "select bucket_id || '/' || name from storage.objects where name not like '%/.emptyFolderPlaceholder' order by 1" > all.txt
+          aws s3 ls "s3://$BUCKET/images/" --recursive --endpoint-url "${{ secrets.R2_ENDPOINT }}" | awk '{ $1=$2=$3=""; sub(/^ +/, ""); print }' | sed 's#^images/##' | sort > have.txt
+          sort all.txt | comm -23 - have.txt > missing.txt
+          echo "images: $(wc -l < all.txt) total, $(wc -l < missing.txt) new"
+          mkdir -p img
+          fail=0
+          while IFS= read -r p; do
+            mkdir -p "img/$(dirname "$p")"
+            url="$STORAGE_PUBLIC/$(python3 -c 'import sys,urllib.parse;print(urllib.parse.quote(sys.argv[1]))' "$p")"
+            curl -sfL --retry 2 -o "img/$p" "$url" || { echo "skip $p"; fail=$((fail+1)); rm -f "img/$p"; }
+          done < missing.txt
+          [ -n "$(ls -A img)" ] && aws s3 cp img "s3://$BUCKET/images/" --recursive --endpoint-url "${{ secrets.R2_ENDPOINT }}" --only-show-errors
+          echo "failed downloads: $fail"
