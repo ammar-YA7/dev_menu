@@ -430,6 +430,16 @@
   .ix-sizes b { margin-inline-start: 8px; color: var(--price); }
   .ix-tags span { padding: 5px 12px; border-radius: 8px; background: var(--chip); font-size: 13px; font-weight: 600; color: var(--fg2); }
   .ix-tags .deal { background: var(--accent); color: var(--accent-fg); }
+  /* تفاصيل البن (المقاهي): الأصل والمعالجة والتحميص والإيحاءات */
+  .ix-coffee { margin-top: 18px; display: grid; gap: 12px; }
+  .ix-cf-specs { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(140px, 100%), 1fr)); gap: 8px; }
+  .ix-cf-specs div { padding: 8px 12px; border-radius: 12px; background: var(--chip); border: 1px solid var(--line); min-width: 0; }
+  .ix-cf-specs small { display: block; font-size: 12px; color: var(--fg2); }
+  .ix-cf-specs b { display: block; font-size: clamp(14px, 2vmin, 17px); font-weight: 700; color: var(--fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ix-cf-row > small { display: block; font-size: 12px; color: var(--fg2); margin-bottom: 6px; }
+  .ix-cf-row div { display: flex; flex-wrap: wrap; gap: 6px; }
+  .ix-cf-row span { padding: 5px 12px; border-radius: 980px; background: var(--chip); border: 1px solid var(--line); font-size: 13.5px; font-weight: 600; color: var(--fg); }
+  .ix-hero.nopic .ix-cf-row div { justify-content: center; }
   .ix-add { margin-top: 18px; min-height: 60px; }
   /* «يناسبه معه» */
   .ix-pair { margin-top: 30px; }
@@ -2809,6 +2819,24 @@
   const ixRtl = () => document.documentElement.dir !== 'ltr';
   const ixSx = (step) => step ? (step > 0 ? 1 : -1) * (ixRtl() ? -1 : 1) : 0;
   // fly = الصورة جاية طايرة من البطاقة، فما نحرّكها هنا. step = بدّل للصنف اللي بعده/قبله
+  // تفاصيل البن في شاشة الطبق (نفس بيانات نافذة المنيو العادي)
+  function ixCoffee(c) {
+    if (!c || !coffeeOn()) return '';
+    const specs = [
+      [T('الأصل', 'Origin'), tr(c.origin)], [T('المنطقة', 'Region'), tr(c.region)], [T('المعالجة', 'Process'), processText(c)],
+      [T('السلالة', 'Variety'), c.variety], [T('الارتفاع', 'Altitude'), c.altitude ? `${c.altitude} ${T('م', 'm')}` : ''],
+      [T('التحميص', 'Roast'), label(COFFEE_ROAST, c.roast)]
+    ].filter(x => x[1]);
+    const notes = (c.notes || []).map(tr).filter(Boolean);
+    const methods = (c.methods || []).map(m => label(COFFEE_METHODS, m)).filter(Boolean);
+    if (!specs.length && !notes.length && !methods.length) return '';
+    const row = (title, items) => items.length ? `<div class="ix-cf-row"><small>${title}</small><div>${items.map(x => `<span>${esc(x)}</span>`).join('')}</div></div>` : '';
+    return `<div class="ix-coffee ix-pop" style="--i:5">
+      ${specs.length ? `<div class="ix-cf-specs">${specs.map(([k, v]) => `<div><small>${k}</small><b>${esc(v)}</b></div>`).join('')}</div>` : ''}
+      ${row(T('الإيحاءات', 'Tasting notes'), notes)}
+      ${row(T('متوفرة على', 'Available as'), methods)}
+    </div>`;
+  }
   function ixRenderProd(p, { fly = false, step = 0 } = {}) {
     const off = p.is_available === false, canOrder = !off && orderingOn();
     const img = ixImg(p), vid = safeUrl(p.video_url), desc = productDesc(p), zs = sizesOf(p), deal = autoDeal(p);
@@ -2838,6 +2866,7 @@
           ${zs.length > 1 ? `<div class="ix-sizes ix-pop" style="--i:3">${zs.map(z => `<span>${esc(sizeName(z))}<b>${priceHtml(Number(z.price), discounted(p, Number(z.price)))}</b></span>`).join('')}</div>` : ''}
           ${tags ? `<div class="ix-tags ix-pop" style="--i:3">${tags}</div>` : ''}
           ${desc ? `<p class="ix-hdesc ix-pop" style="--i:4">${esc(desc)}</p>` : ''}
+          ${ixCoffee(p.coffee)}
           ${off ? `<p class="ix-hdesc ix-pop" style="--i:4;font-weight:700">${T('غير متوفر حالياً', 'Currently unavailable')}</p>` : ''}
           ${img || vid ? '' : pager}
           ${pair.length ? `
