@@ -65,12 +65,17 @@
     if (page === 'dashboard') {
       const name = (typeof client !== 'undefined' && client && client.name) || '';
       document.getElementById('page-title').textContent = name ? `أهلاً، ${name}` : 'الرئيسية';
-      document.getElementById('page-subtitle').textContent = homeTab() === 'links' ? 'روابط خدماتك وباركود المنيو' : 'شغل اليوم وأرقام خدماتك';
+      document.getElementById('page-subtitle').textContent = '';
       markHomeLinks();
       const sec = document.querySelector('[data-page="dashboard"]');
       if (sec) sec.dataset.homeTab = homeTab();
       const segHome = homeHasLinks() ? `<div class="ap-seg" role="tablist">${[['today', 'اليوم'], ['links', 'روابطك وباركودك']].map(([k, t]) => `<button type="button" role="tab" aria-selected="${homeTab() === k}" data-home="${k}">${t}</button>`).join('')}</div>` : '';
       bar.innerHTML = segHome + navActionsHtml(g);
+      return;
+    }
+    // الجوال: الإعدادات قائمة وحدة، فالفروع والأجهزة والاشتراك صفحات تفاصيل بزر رجوع
+    if (g.id === 'settings' && stMQ.matches) {
+      bar.innerHTML = page === 'settings' ? '' : `<div class="ap-actions"><button type="button" class="ap-chip" data-seg="settings"><i class="ph-bold ph-caret-left ap-flip"></i> الإعدادات</button></div>`;
       return;
     }
     // صفحة تفاصيل (الأختام، الاشتراكات، التصميم، الرسائل): التبويب المختار هو اللي جيت منه، ومعه زر رجوع
@@ -124,6 +129,8 @@
     const fn = e.target.closest('[data-fn]');
     if (fn) {
       if (fn.dataset.fn === 'add-dish') return goAddDish();
+      if (fn.dataset.fn === 'account-info') return openAccount();
+      if (fn.dataset.fn === 'logout') return logout();
       if (fn.dataset.fn === 'menu-more') return apSheet('المنيو', [
         ['ph-eye', 'معاينة المنيو', () => { const a = document.getElementById('sidebar-preview'); if (a) a.click(); }],
         ['ph-link-simple', 'نسخ رابط المنيو', () => copyMenuLink()],
@@ -193,7 +200,7 @@
     let back = document.getElementById('ap-st-back');
     if (!back) {
       back = document.createElement('button'); back.type = 'button'; back.id = 'ap-st-back';
-      back.innerHTML = '<i class="ph-bold ph-caret-left ap-flip"></i> <span>هوية المنشأة</span>';
+      back.innerHTML = '<i class="ph-bold ph-caret-left ap-flip"></i> <span>الإعدادات</span>';
       back.addEventListener('click', () => history.state && history.state.apSt != null ? history.back() : stShow(null));
       sec.prepend(back);
     }
@@ -206,10 +213,17 @@
       return `<p class="ap-st-head">${label}</p><div class="ap-st-group">${rows.map(r => `
         <button type="button" class="ap-st-row" data-st-open="${r.u.dataset.apUnit}">
           <span class="ap-st-ic"><i class="ph-bold ${r.icon}"></i></span>
-          <span class="ap-st-txt"><b>${esc(r.title)}</b>${r.sub ? `<small>${esc(r.sub)}</small>` : ''}</span>
+          <span class="ap-st-txt"><b>${esc(r.title)}</b></span>
           <i class="ph-bold ph-caret-left ap-st-chev"></i>
         </button>`).join('')}</div>`;
-    }).join('');
+    }).join('') + stAccountRows();
+  }
+  function stAccountRows() {
+    const rows = [['branches', 'ph-git-branch', 'الفروع'], ['devices', 'ph-devices', 'الأجهزة'], ['account', 'ph-identification-card', 'الاشتراك']].filter(([p]) => navPageOn(p));
+    return `<p class="ap-st-head">الحساب</p><div class="ap-st-group">${rows.map(([p, ic, t]) => `
+      <button type="button" class="ap-st-row" data-seg="${p}"><span class="ap-st-ic"><i class="ph-bold ${ic}"></i></span><span class="ap-st-txt"><b>${t}</b></span><i class="ph-bold ph-caret-left ap-st-chev"></i></button>`).join('')}
+      <button type="button" class="ap-st-row" data-fn="account-info"><span class="ap-st-ic"><i class="ph-bold ph-user-circle"></i></span><span class="ap-st-txt"><b>معلومات الحساب</b></span><i class="ph-bold ph-caret-left ap-st-chev"></i></button>
+      <button type="button" class="ap-st-row ap-st-danger" data-fn="logout"><span class="ap-st-txt"><b>تسجيل الخروج</b></span></button></div>`;
   }
   function stShow(i, push) {
     const sec = document.querySelector('[data-page="settings"]');

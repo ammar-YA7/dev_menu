@@ -317,3 +317,10 @@ main span.bg-amber-400 { background: #fff !important; color: var(--ap-green) !im
 #cardhub .ap-st-chev { color: #b9c0ba; font-size: 15px; flex: none; }
 /* التبويبات القديمة داخل الأختام والرسائل: القائمة صارت هي اللي تختار */
 body.ap-hub [data-page="loyalty"] .ly-tabs[aria-label="أقسام الولاء"], body.ap-hub [data-page="messages"] .ly-tabs[aria-label="أقسام الرسائل"] { display: none !important; }
+/* العنوان بدون سطر وصف تحته (اختصار الكلام) */
+#page-subtitle:empty { display: none; }
+/* قائمة الإعدادات: تسجيل الخروج بالأحمر في النص */
+.ap-st-danger { justify-content: center; }
+.ap-st-danger b { color: #c0392b !important; font-weight: 500; }
+@media (max-width: 1023px) { [data-page="settings"].ap-st-mode:not(.ap-st-detail) > .ly-tabs { display: none !important; } }
+.ap-st-danger .ap-st-txt { text-align: center; }
