@@ -170,13 +170,17 @@
     if (!features.length) return showToast('اختر ميزة وحدة على الأقل', true);
     planSending = true; renderSubscriptionStatus();
     try {
-      const r = await api('plan-request', { plan, features });
+      const r = await api('plan-request', { plan, features, expected_total: planTotal(plan, features) });
       planChoice = r.requested_plan;
       if (!client.parent_id) { client.requested_plan = r.requested_plan; client.requested_features = r.requested_features; }
       // في التجربة الخدمات تتفعّل على طول
       if (client.subscription_status === 'trial') { client.plan_features = r.requested_features; client.waitlist_enabled = r.requested_features.includes('waitlist'); applyFeatureLocks(); }
       showToast(`وصلنا طلبك، بنتواصل معك للدفع والتفعيل`);
-    } catch (e) { showToast(e.message || 'تعذّر إرسال الطلب، حاول مرة أخرى', true); }
+    } catch (e) {
+      showToast(e.message || 'تعذّر إرسال الطلب، حاول مرة أخرى', true);
+      // ملف الأسعار في جهازه قديم: نجيب الجديد ونحدّث الصفحة عشان يشوف السعر الصحيح قبل ما يأكد
+      if (e.code === 'PRICE_CHANGED') { try { await fetch('/js/plans.js', { cache: 'reload' }); } catch {} setTimeout(() => location.reload(), 2500); }
+    }
     planSending = false; renderSubscriptionStatus();
   }
   function goToPlans() {

@@ -49,7 +49,8 @@ self.addEventListener('activate', (e) => e.waitUntil(caches.keys().then(keys => 
 // نطاق المحل (hataba-sa.devmenu.digital) يفتح المنيو من «/»
 const storeHost = (h) => /\.devmenu\.digital$/.test(h) && !/^(www|app)\./.test(h);
 const isMenuPage = (u) => u.pathname === '/menu.html' || u.pathname === '/menu' || (u.pathname === '/' && storeHost(u.hostname));
-const isAsset = (u) => /^\/(js|css|fonts|images)\//.test(u.pathname);
+// ملف الأسعار ما ينحفظ: لازم يكون أحدث نسخة دايم (عشان السعر اللي يشوفه العميل = السعر في الفاتورة)
+const isAsset = (u) => /^\/(js|css|fonts|images)\//.test(u.pathname) && u.pathname !== '/js/plans.js';
 const isStorageImg = (u) => /\.supabase\.co$/.test(u.hostname) && u.pathname.includes('/storage/v1/') && !/\.(mp4|webm|mov)$/i.test(u.pathname);
 
 async function networkFirst(req, cacheName, key, wait = 4000) {

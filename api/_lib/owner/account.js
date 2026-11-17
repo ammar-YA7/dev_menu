@@ -301,6 +301,14 @@ module.exports.post = async function post(action, req, b, env) {
     const features = PLANS.clean(b.features && b.features.length ? b.features : PLANS.LEGACY);
     if (!features.length) throw new ApiError(400, 'اختر ميزة وحدة على الأقل');
     const mainId = store.parent_id || sid;   // اشتراك الفروع تابع للمتجر الرئيسي
+    // السعر: نفس حسبة لوحة صاحب المحل ولوحة المشتركين والفاتورة (المميزات + الفروع - الخصم)
+    const reqBranches = await rest(`clients?parent_id=eq.${mainId}&deleted_at=is.null&select=name,client_slug,branch_features&order=id.asc`).catch(() => []);
+    const priced = PLANS.price(features, plan, reqBranches);
+    // العميل يرسل السعر اللي شافه: لو يختلف (ملف أسعار قديم في جواله) ما نحفظ الطلب، ونطلب منه يحدّث
+    if (b.expected_total != null && Number(b.expected_total) !== priced.total) {
+      console.error('PLAN_PRICE_MISMATCH', mainId, plan, b.expected_total, priced.total);
+      throw new ApiError(409, `السعر الصحيح ${priced.total} ر.س. حدّث الصفحة وأكّد طلبك`, 'PRICE_CHANGED');
+    }
     // في التجربة: الخدمات الجديدة تشتغل على طول (والمشترك يتعدل بعد الدفع من لوحة المشتركين)
     const cur = (await rest(`clients?id=eq.${mainId}&select=subscription_status,plan_features`))[0] || {};
     // بطاقة الولاء: لو انضافت للباقة تشتغل على طول (صاحب المحل يقدر يطفيها بعدين)
@@ -320,10 +328,10 @@ module.exports.post = async function post(action, req, b, env) {
       await sendMail({
         to, fromName: 'DEV MENU',
         subject: `طلب اشتراك: ${main.name} (الباقة ${label})`,
-        text: `${main.name} (${main.client_slug}) اختار الباقة ${label}: ${features.map(k => PLANS.FEATURES[k].name).join('، ')} = ${PLANS.price(features, plan).total} ر.س.\nجوال: ${main.phone || '-'}\nبريد: ${main.email || '-'}\nفعّلها من لوحة المشتركين: ${SITE}/super-admin.html`
+        text: `${main.name} (${main.client_slug}) اختار الباقة ${label}: ${features.map(k => PLANS.FEATURES[k].name).join('، ')}${reqBranches.length ? ` + ${reqBranches.length} فرع` : ''} = ${priced.total} ر.س.\nجوال: ${main.phone || '-'}\nبريد: ${main.email || '-'}\nفعّلها من لوحة المشتركين: ${SITE}/super-admin.html`
       }).catch(e => console.error('PLAN_MAIL', e.message));
     }
-    return { requested_plan: plan, requested_features: features, plan_requested_at: main.plan_requested_at };
+    return { requested_plan: plan, requested_features: features, plan_requested_at: main.plan_requested_at, total: priced.total };
   }
 
   if (action === 'owner-push') {

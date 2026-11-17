@@ -36,17 +36,16 @@
   const BRANCH = { month: 19, year: 209 };
   // الأسعار مبنية على السوق السعودي (2026-10): أرخص من المنافسين بـ 25% إلى 40% وفيها مميزات أكثر
   //   المنيو 39/429 (هلا أوردر 50/600)، البيجر 49/539 (بيجري 599 و699 بالهوية)، الولاء 69/759 (نقطتي 89/849)
-  // خصومات الباقات (السنوي = 11 شهر): المنيو + البيجر = 73/803، ومعها الانتظار = 92/1012، المنيو + الولاء = 98/1078، الأختام + الاشتراكات = 99/1089
+  // خصم الجمع بين الخدمات (قاعدة وحدة بدل خصومات متراكمة، 2026-11-17):
+  //   الخدمات الأساسية: المنيو، البيجر، الانتظار، الأختام، الاشتراكات (الإضافات ما تنحسب في العدد لكن يشملها الخصم)
+  //   الشهري: خدمتين 10%، ثلاث أو أكثر 15%
+  //   السنوي (11 شهر = شهر مجاني): خدمتين 10%، ثلاث أو أكثر 12%، عشان الخصم الكلي مع الشهر المجاني ما يتعدى 20%
+  //   الفروع ما يدخلها الخصم (لها سعرها)
   // رسائل لزبائنك 19/209 إضافة على البيجر (البيجر + الرسائل = 68، والولاء 69)
-  // (أي إضافة لازم ما تخلي السعر أرخص من باقة أصغر منها)
-  const BUNDLES = [
-    { keys: ['menu', 'pager'], name: 'خصم المنيو مع البيجر', month: 15, year: 165 },
-    { keys: ['menu', 'pager', 'waitlist'], name: 'خصم الباقة الكاملة', month: 10, year: 110 },
-    { keys: ['menu', 'loyalty'], name: 'خصم الولاء مع المنيو', month: 10, year: 110 },
-    // بطاقة الأختام + بطاقة الاشتراكات: 99 بالشهر بدل 118، و1089 بالسنة بدل 1298
-    // السنوي = 11 شهر (خصم شهر واحد بس)
-    { keys: ['loyalty', 'subs'], name: 'خصم الأختام مع الاشتراكات', month: 19, year: 209 }
-  ];
+  const CORE = ['menu', 'pager', 'waitlist', 'loyalty', 'subs'];
+  const BUNDLE_RATE = { month: [0, 0, .10, .15], year: [0, 0, .10, .12] };
+  const bundleRate = (f, p) => { const n = f.filter(k => CORE.includes(k)).length; const r = BUNDLE_RATE[p]; return r[Math.min(n, r.length - 1)]; };
+  const BUNDLES = [];
   // المشتركين القدامى (قبل نظام المميزات) كانت باقتهم المنيو + البيجر + الانتظار
   const LEGACY = ['menu', 'pager', 'waitlist'];
 
@@ -86,8 +85,11 @@
     const old = list.filter(b => !Array.isArray(b.branch_features)), own = list.filter(b => Array.isArray(b.branch_features));
     if (old.length) lines.push({ key: 'branch', label: `${old.length} ${old.length === 1 ? 'فرع إضافي' : old.length === 2 ? 'فرعين إضافيين' : 'فروع إضافية'}`, amount: BRANCH[p] * old.length, branches: old });
     own.forEach(b => lines.push({ key: 'branch', label: `فرع ${b.name || ''}`.trim(), detail: clean(ownBranch(b.branch_features)).map(k => FEATURES[k].name).join(' + '), amount: branchPrice(b.branch_features, p), branches: [b] }));
-    const discounts = BUNDLES.filter(b => b.keys.every(k => f.includes(k))).map(b => ({ label: b.name, amount: b[p] }));
     const subtotal = lines.reduce((a, l) => a + l.amount, 0);
+    // الخصم على الخدمات بس (بدون الفروع)
+    const rate = bundleRate(f, p), base = f.reduce((a, k) => a + FEATURES[k][p], 0);
+    const cores = f.filter(k => CORE.includes(k)).length;
+    const discounts = rate ? [{ label: `خصم ${cores === 2 ? 'خدمتين' : `${cores} خدمات`} (${Math.round(rate * 100)}%)`, amount: Math.round(base * rate), rate }] : [];
     const discount = discounts.reduce((a, d) => a + d.amount, 0);
     return { features: f, period: p, lines, discounts, subtotal, discount, total: Math.max(0, subtotal - discount) };
   }
@@ -137,7 +139,7 @@
   // يقدر المحل يستخدم هالقالب؟ كل القوالب تحتاج إضافة «المنيو التفاعلي»
   const ixAllowed = (store, key) => !!IX_TEMPLATES[key] && has(store, 'ixpro');
 
-  const api = { FEATURES, ORDER, CHAT, TRIAL_DAYS, FREE, isFree, pagerLite, BRANCH, BUNDLES, LEGACY, ACCOUNT_WIDE, BRANCH_KEYS, ownBranch, branchFeatures, price, branchPrice, featuresOf, has, ixGift, ixAllowed, IX_TEMPLATES, live, clean, toggle, coveredBy, coveredNote };
+  const api = { FEATURES, ORDER, CHAT, TRIAL_DAYS, FREE, isFree, pagerLite, BRANCH, BUNDLES, CORE, BUNDLE_RATE, bundleRate, LEGACY, ACCOUNT_WIDE, BRANCH_KEYS, ownBranch, branchFeatures, price, branchPrice, featuresOf, has, ixGift, ixAllowed, IX_TEMPLATES, live, clean, toggle, coveredBy, coveredNote };
   if (typeof module === 'object' && module.exports) module.exports = api;
   else root.DMPlans = api;
 })(typeof window !== 'undefined' ? window : globalThis);
