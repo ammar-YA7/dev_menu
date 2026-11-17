@@ -146,6 +146,7 @@
       tile('متوسط الانتظار', avg === null ? '—' : `${avg} د`, 'ph-timer', 'text-ink');
     ['nav-waitlist', 'bnav-waitlist'].forEach(id => {
       const b = document.getElementById(id);
+      if (!b) return;
       b.textContent = waiting; b.classList.toggle('hidden', waiting === 0);
     });
     document.getElementById('wl-count-active').textContent = waiting + notified ? `(${waiting + notified})` : '';

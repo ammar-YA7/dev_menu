@@ -1,0 +1,93 @@
+/* =====================================================================
+   DEV MENU — لوحة التحكم بأسلوب تطبيقات أبل، بألوان ديف منيو (أخضر وأبيض)
+   فوق skin-shadcn.css: خط النظام، عناوين كبيرة، بطاقات بيضاء بحواف 20 بدون إطار،
+   أزرار كبسولة، شريط تبويبات زجاجي تحت في الجوال، وتبويبات فرعية (segmented) فوق كل قسم
+   للرجوع: احذف سطر <link> هذا الملف وسطر js/admin/nav.js من admin.html
+   ===================================================================== */
+:root {
+  --ap-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Arabic", "IBM Plex Sans Arabic", system-ui, "Segoe UI", sans-serif;
+  --ap-bg: #f2f4f2; --ap-card: #ffffff; --ap-ink: #1d2a21; --ap-muted: #6e7a71; --ap-sep: rgba(29, 42, 33, .08);
+  --ap-green: #233d2c; --ap-green-2: #3f7a4a; --ap-pale: #eaf3ec; --ap-fill: #e6e9e6;
+  --ap-ease: cubic-bezier(.2, .8, .2, 1);
+  --page: var(--ap-bg); --line: var(--ap-sep);
+}
+body, button, input, select, textarea, h1, h2, h3, h4, p, span, label, a, td, th { font-family: var(--ap-font) !important; }
+body { background: var(--ap-bg) !important; color: var(--ap-ink); -webkit-font-smoothing: antialiased; letter-spacing: 0; }
+
+/* ─── العنوان الكبير ─── */
+header.sticky { background: rgba(242, 244, 242, .72) !important; -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); border-bottom: 1px solid transparent !important; transition: border-color .2s; }
+header.sticky.ap-scrolled { border-bottom-color: var(--ap-sep) !important; }
+#page-title { font-size: 28px !important; font-weight: 700 !important; letter-spacing: -.01em; color: var(--ap-ink); line-height: 1.15 !important; }
+#page-subtitle { font-size: 14px !important; color: var(--ap-muted) !important; margin-top: 2px; }
+@media (min-width: 1024px) { #page-title { font-size: 32px !important; } }
+header button.bg-cream, header select.bg-cream, header select, #notif-btn { border: 0 !important; background: var(--ap-card) !important; border-radius: 980px !important; box-shadow: none !important; min-height: 36px; }
+
+/* ─── البطاقات: أبيض، حواف 20، بدون إطار ─── */
+.pro-card { border: 0 !important; border-radius: 20px !important; box-shadow: 0 1px 2px rgba(29, 42, 33, .04) !important; background: var(--ap-card) !important; }
+.pro-card h3 { font-size: 17px !important; font-weight: 600 !important; color: var(--ap-ink) !important; }
+main .rounded-xl { border-radius: 14px; }
+main .rounded-2xl { border-radius: 20px; }
+
+/* ─── الأزرار: كبسولة ─── */
+main button.bg-brand, main a.bg-brand, header a.bg-brand, .dmd-box button.bg-brand {
+  background-color: var(--ap-green) !important; border-radius: 980px !important; box-shadow: none !important; font-weight: 600 !important; min-height: 40px;
+}
+main button.bg-brand:hover, main a.bg-brand:hover, header a.bg-brand:hover { background-color: #1a2e21 !important; }
+main button.bg-white, main a.bg-white, main button.bg-cream, main a.bg-cream,
+main button[class*="bg-brand/10"], main a[class*="bg-brand/10"], main button[class*="bg-brand/5"], main a[class*="bg-brand/5"] {
+  background-color: var(--ap-fill) !important; border: 0 !important; box-shadow: none !important; border-radius: 980px !important; color: var(--ap-green) !important; font-weight: 600 !important;
+}
+main button.bg-white:hover, main a.bg-white:hover, main button[class*="bg-brand/10"]:hover, main a[class*="bg-brand/10"]:hover { background-color: #dde1dd !important; }
+main button:active, main a.bg-brand:active { transform: scale(.97); transition: transform .12s var(--ap-ease); }
+
+/* ─── الحقول ─── */
+.input-pro, main input[type="text"], main input[type="tel"], main input[type="email"], main input[type="number"], main input[type="url"], main select, main textarea {
+  border-radius: 12px !important; border: 1px solid transparent !important; background: #f2f4f2 !important; font-size: 16px !important;
+}
+.input-pro:focus, main input:focus, main select:focus, main textarea:focus { background: #fff !important; border-color: var(--ap-green-2) !important; box-shadow: 0 0 0 4px rgba(63, 122, 74, .15) !important; outline: none !important; }
+
+/* ─── التبويبات الموجودة داخل الصفحات (segmented) ─── */
+.tab-btn { border-radius: 9px !important; font-weight: 500 !important; }
+.tab-btn.active { background: #fff !important; box-shadow: 0 1px 3px rgba(29, 42, 33, .12), 0 1px 1px rgba(29, 42, 33, .04) !important; font-weight: 600 !important; }
+
+/* ─── القائمة الجانبية (كمبيوتر): خمس أقسام بس ─── */
+aside.fixed { background: rgba(250, 251, 250, .9) !important; border-color: var(--ap-sep) !important; }
+aside.fixed > .mx-3 { border: 0 !important; border-radius: 14px !important; }
+#nav-legacy { display: none !important; }
+#nav-groups { padding: 12px; display: grid; gap: 2px; flex: 1; overflow-y: auto; align-content: start; }
+#nav-groups .nav-item { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 44px; padding: 0 12px; font-size: 15px; font-weight: 500; color: var(--ap-ink); border-radius: 10px; }
+#nav-groups .nav-item i { font-size: 20px; color: var(--ap-green-2); width: 22px; text-align: center; }
+#nav-groups .nav-item:hover { background: rgba(29, 42, 33, .05); }
+#nav-groups .nav-item.nav-active { background: var(--ap-green) !important; color: #fff !important; font-weight: 600; }
+#nav-groups .nav-item.nav-active i { color: #fff !important; }
+
+/* ─── شريط التبويبات تحت (جوال) ─── */
+nav.fixed.bottom-0 { background: rgba(250, 251, 250, .82) !important; -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); border-top: 1px solid var(--ap-sep) !important; }
+nav.fixed.bottom-0 .bnav { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 54px; padding-top: 6px; font-size: 10.5px !important; font-weight: 500 !important; color: #8a948c !important; background: none !important; }
+nav.fixed.bottom-0 .bnav i { font-size: 24px !important; color: inherit !important; }
+nav.fixed.bottom-0 .bnav.nav-active { color: var(--ap-green) !important; }
+nav.fixed.bottom-0 .ap-badge { position: absolute; top: 4px; inset-inline-start: 50%; margin-inline-start: 6px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: #d93f2f; color: #fff; font-size: 11px; font-weight: 600; display: grid; place-items: center; }
+nav.fixed.bottom-0 .ap-badge.hidden { display: none; }
+nav.fixed.bottom-0 .bnav.nav-active i { font-family: "Phosphor-Fill" !important; }
+
+/* ─── التبويبات الفرعية فوق كل قسم ─── */
+#seg-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 20px; }
+#seg-bar:empty { display: none; }
+.ap-seg { display: inline-flex; max-width: 100%; overflow-x: auto; scrollbar-width: none; background: var(--ap-fill); border-radius: 11px; padding: 2px; gap: 2px; }
+.ap-seg::-webkit-scrollbar { display: none; }
+.ap-seg button { flex: none; min-height: 34px; padding: 0 16px; border: 0; border-radius: 9px; background: transparent; font-size: 14px; font-weight: 500; color: var(--ap-ink); cursor: pointer; white-space: nowrap; transition: background .2s var(--ap-ease), box-shadow .2s; }
+.ap-seg button[aria-selected="true"] { background: #fff; font-weight: 600; box-shadow: 0 1px 3px rgba(29, 42, 33, .12), 0 1px 1px rgba(29, 42, 33, .04); }
+.ap-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.ap-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 0 14px; border-radius: 980px; background: var(--ap-card); color: var(--ap-green); font-size: 14px; font-weight: 600; border: 0; cursor: pointer; }
+.ap-chip i { font-size: 16px; }
+.ap-chip:active { transform: scale(.97); }
+@media (max-width: 640px) { #seg-bar { flex-direction: column; align-items: stretch; } .ap-seg { width: 100%; } .ap-seg button { flex: 1 0 auto; } }
+
+/* ─── النوافذ: تطلع من تحت في الجوال ─── */
+.dmd-box { border-radius: 22px !important; border: 0 !important; }
+@media (max-width: 640px) { .dmd-box { border-radius: 22px 22px 0 0 !important; } }
+
+/* ─── حركة دخول الصفحة ─── */
+main > [data-page]:not(.hidden) { animation: ap-in .35s var(--ap-ease); }
+@keyframes ap-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { main > [data-page]:not(.hidden) { animation: none; } main button:active { transform: none; } }

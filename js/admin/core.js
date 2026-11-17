@@ -303,6 +303,7 @@
     document.querySelectorAll('[data-needs]').forEach(el => { el.style.display = el.dataset.needs.split('|').every(featureLocked) ? 'none' : ''; });
     document.querySelectorAll('[data-hide-always]').forEach(el => { el.style.display = 'none'; });
     applyFreeHide();
+    if (typeof renderNavGroups === 'function') renderNavGroups(location.hash.slice(1) || 'dashboard');
   }
   // البيجر المجاني: نخفي اللي ما يخصه (data-free-hide)، ونطلع عدّاد الأرقام في الرئيسية
   function applyFreeHide() {
@@ -326,12 +327,14 @@
       document.getElementById('page-title').textContent = DMPlans.FEATURES[key].name;
       document.getElementById('page-subtitle').textContent = 'أضفها لباقتك وتشتغل على طول';
       if (location.hash !== '#' + page) history.replaceState(null, '', location.pathname + location.search + '#' + page);
+      if (typeof renderNavGroups === 'function') renderNavGroups(page);
       return window.scrollTo({ top: 0 });
     }
     document.querySelectorAll('[data-nav]').forEach(b => b.classList.toggle('nav-active', b.dataset.nav === page));
     document.getElementById('page-title').textContent = PAGES[page][0];
     document.getElementById('page-subtitle').textContent = PAGES[page][1];
     if (location.hash !== '#' + page) history.replaceState(null, '', location.pathname + location.search + '#' + page);
+    if (typeof renderNavGroups === 'function') renderNavGroups(page);
     window.scrollTo({ top: 0 });
     if (typeof onWaitlistPage === 'function') onWaitlistPage(page === 'waitlist');
     // صفحات الولاء والعملاء والرسائل تاخذ بياناتها من بطاقة الولاء
