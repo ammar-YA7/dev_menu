@@ -116,3 +116,24 @@ main > [data-page]:not(.hidden) { animation: ap-in .35s var(--ap-ease); }
 /* مربعات أيقونات عناوين البطاقات في كل الصفحات: أخضر فاتح وأيقونة خضراء (كانت أزرق وأصفر وبنفسجي)، والأحمر يبقى للتنبيه */
 main .pro-card h3 > i:first-child, [data-page="dashboard"] .pro-card h3 > i { background: var(--ap-pale) !important; color: var(--ap-green-2) !important; border-radius: 10px !important; }
 main .pro-card h3 > i:first-child[class*="red"], main .pro-card h3 > i:first-child[class*="rose"] { background: #fde8e6 !important; color: #c0392b !important; }
+
+/* ─── إضافة الطبق في الجوال: نافذة من تحت ─── */
+.ap-sheet-top { display: none; }
+@media (max-width: 1023px) {
+  #product-form-col { position: fixed; inset-inline: 0; bottom: 0; z-index: 60; max-height: 92vh; overflow-y: auto; overscroll-behavior: contain; transform: translateY(105%); transition: transform .4s var(--ap-ease); visibility: hidden; }
+  body.ap-dish-open #product-form-col { transform: none; visibility: visible; }
+  body.ap-dish-open { overflow: hidden; }
+  #product-form-col #add-product-form { border-radius: 22px 22px 0 0 !important; padding-bottom: calc(28px + env(safe-area-inset-bottom)) !important; box-shadow: 0 -10px 40px rgba(10, 18, 13, .18) !important; }
+  .ap-sheet-top { display: flex; justify-content: center; position: sticky; top: -20px; margin: -8px -20px 4px; padding: 8px 20px 4px; background: #fff; z-index: 2; }
+  .ap-grabber { width: 38px; height: 5px; border-radius: 3px; background: #d5dad6; }
+  .ap-sheet-x { position: absolute; inset-inline-end: 14px; top: 6px; width: 32px; height: 32px; border-radius: 50%; border: 0; background: var(--ap-fill); color: var(--ap-ink); display: grid; place-items: center; }
+  .ap-backdrop { position: fixed; inset: 0; z-index: 59; background: rgba(10, 18, 13, .38); opacity: 0; pointer-events: none; transition: opacity .3s var(--ap-ease); }
+  body.ap-dish-open .ap-backdrop { opacity: 1; pointer-events: auto; }
+}
+@media (prefers-reduced-motion: reduce) { #product-form-col { transition: none; } }
+
+/* ─── الإعدادات: البطاقات داخل البطاقات تصير مساحات رمادية بدون إطار ─── */
+main .pro-card .pro-card, main .pro-card div.rounded-xl.border:not([aria-checked]):not([aria-pressed]), main .pro-card div.rounded-2xl.border:not([aria-checked]):not([aria-pressed]) { border-color: transparent !important; background: #f6f7f6 !important; box-shadow: none !important; }
+/* زر اختيار الملف: كبسولة بالعربي بدل «Choose File» */
+main input[type="file"] { font-size: 13px !important; color: var(--ap-muted); }
+main input[type="file"]::file-selector-button { border: 0; border-radius: 980px; background: var(--ap-green); color: #fff; font: 600 13px var(--ap-font); padding: 8px 16px; margin-inline-end: 10px; cursor: pointer; }

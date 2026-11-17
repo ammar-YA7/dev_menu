@@ -117,3 +117,30 @@
   });
   // العنوان الكبير: خط فاصل تحته أول ما تنزل
   addEventListener('scroll', () => { const h = document.querySelector('header.sticky'); if (h) h.classList.toggle('ap-scrolled', scrollY > 4); }, { passive: true });
+
+  // ─── إضافة وتعديل الطبق في الجوال: نافذة تطلع من تحت بدل ما ينزل لآخر الصفحة ───
+  const dishMQ = matchMedia('(max-width: 1023px)');
+  function dishSheet(on) {
+    const col = document.getElementById('product-form-col');
+    if (!col || (on && !dishMQ.matches)) return;
+    if (!document.getElementById('ap-dish-bd')) {
+      const bd = document.createElement('div'); bd.id = 'ap-dish-bd'; bd.className = 'ap-backdrop';
+      bd.addEventListener('click', closeDishSheet); document.body.appendChild(bd);
+      const form = document.getElementById('add-product-form');
+      const top = document.createElement('div'); top.className = 'ap-sheet-top';
+      top.innerHTML = '<span class="ap-grabber"></span><button type="button" class="ap-sheet-x" aria-label="إغلاق"><i class="ph-bold ph-x"></i></button>';
+      top.querySelector('button').addEventListener('click', closeDishSheet);
+      form.prepend(top);
+    }
+    document.body.classList.toggle('ap-dish-open', on);
+    if (on) col.scrollTop = 0;
+  }
+  function closeDishSheet() {
+    if (typeof editingProductId !== 'undefined' && editingProductId) cancelEdit(); else dishSheet(false);
+  }
+  addEventListener('keydown', (e) => { if (e.key === 'Escape' && document.body.classList.contains('ap-dish-open')) closeDishSheet(); });
+  dishMQ.addEventListener('change', () => { if (!dishMQ.matches) dishSheet(false); });
+  // نلف دوال المنيو: فتح الإضافة والتعديل يفتح النافذة، والإلغاء أو الحفظ يقفلها
+  if (typeof goAddDish === 'function') { const f = goAddDish; goAddDish = function () { f.apply(this, arguments); dishSheet(true); }; }
+  if (typeof startEdit === 'function') { const f = startEdit; startEdit = function () { f.apply(this, arguments); dishSheet(true); }; }
+  if (typeof cancelEdit === 'function') { const f = cancelEdit; cancelEdit = function () { f.apply(this, arguments); dishSheet(false); }; }
