@@ -10,6 +10,21 @@ const { assertCronKey } = require('./_lib/cron');
 const { runAssistant, pushWalletCards } = require('./_lib/loyalty-assistant');
 const { runWinback } = require('./_lib/winback');
 const { runComeback } = require('./_lib/comeback');
+const { runSubsRemind } = require('./_lib/subs-remind');
+
+// تذكيرات بطاقة الاشتراكات: غاب وعنده رصيد، قرب الانتهاء، التجديد
+async function subsRemindAll(started, limitMs) {
+  const ids = await rest(`clients?subs_remind=not.is.null&is_active=is.true&parent_id=is.null&select=id&order=id.asc&limit=300`).catch(() => []);
+  const out = [];
+  for (const s of ids) {
+    const left = limitMs - (Date.now() - started);
+    if (left < 2e3) break;
+    try { out.push({ store: s.id, ...(await runSubsRemind(s.id, { limitMs: Math.min(20e3, left) })) }); }
+    catch (e) { out.push({ store: s.id, error: e.code || e.message }); }
+  }
+  console.log('SUBS_REMIND', JSON.stringify(out));
+  return out;
+}
 
 
 // استرجاع اللي غاب (بطاقة الأختام): 3 رسائل لكل غيبة
@@ -30,6 +45,8 @@ module.exports = handler(['GET', 'POST'], async (req) => {
   const started = Date.now();
   // ?only=comeback: رسائل الاسترجاع بس
   if (req.query.only === 'comeback') return { comeback: await comebackAll(started, 50e3) };
+  // ?only=subs: تذكيرات الاشتراكات بس
+  if (req.query.only === 'subs') return { subsRemind: await subsRemindAll(started, 50e3) };
   // الفروع ولاءها على المحل الرئيسي، فالمساعد يشتغل على الرئيسي بس
   const stores = await rest('clients?loyalty_enabled=is.true&loyalty_ai=is.true&is_active=is.true&parent_id=is.null&select=id&order=id.asc&limit=200');
   // بطاقات المحفظة اللي فشل تحديثها (مثل رصيد خدمة المحفظة الشهري خلص): نعيد إرسالها بعدد أختامها الصحيح
@@ -66,6 +83,7 @@ module.exports = handler(['GET', 'POST'], async (req) => {
     }
   } catch (e) { console.error('SUBS_NEAR_CRON', e.message); }
   const comeback = await comebackAll(started, 50e3);
+  const subsRemind = await subsRemindAll(started, 51e3);
   const wbStores = await rest(`clients?pager_winback->>enabled=eq.true&is_active=is.true&parent_id=is.null&select=*&order=id.asc&limit=200`).catch(() => []);
   const winback = [];
   for (const s of wbStores) {
@@ -74,7 +92,7 @@ module.exports = handler(['GET', 'POST'], async (req) => {
     catch (e) { winback.push({ store: s.id, error: e.code || e.message }); }
   }
   console.log('PAGER_WINBACK', JSON.stringify(winback));
-  return { stores: stores.length, retry, results, comeback, winback, subsNear };
+  return { stores: stores.length, retry, results, comeback, subsRemind, winback, subsNear };
 });
 
 module.exports.config = { maxDuration: 60 };

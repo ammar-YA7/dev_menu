@@ -2118,6 +2118,17 @@
             </div>
             <div id="pk-plans" class="grid sm:grid-cols-2 gap-3"></div>
           </div>
+          <!-- تذكيرات تلقائية على بطاقة العميل في المحفظة: غاب وعنده رصيد، قرب الانتهاء، التجديد -->
+          <div class="pro-card p-5 space-y-4">
+            <div>
+              <h3 class="text-base font-bold"><i class="ph-bold ph-bell-ringing text-emerald-600"></i> التذكيرات التلقائية</h3>
+              <p class="text-[12.5px] text-ink mt-1 leading-relaxed max-w-xl">رسائل تصل العميل على بطاقته في المحفظة، حتى يعود ويستخدم باقته أو يجدّدها. شغّل ما يناسبك منها، وعدّل نصّها إن أردت.</p>
+            </div>
+            <div id="pr-list" class="space-y-3"></div>
+            <p class="text-[11px] text-ink leading-relaxed">يمكنك استخدام: <b dir="ltr">{name}</b> اسم العميل، <b dir="ltr">{plan}</b> اسم الباقة، <b dir="ltr">{left}</b> الرصيد المتبقي، <b dir="ltr">{date}</b> تاريخ الانتهاء، <b dir="ltr">{store}</b> اسم المحل. تصل الرسائل يومياً عصراً، ورسالة واحدة على الأكثر للعميل في اليوم.</p>
+            <p id="pr-stats" class="hidden text-[12px] text-ink bg-brand/5 border border-brand/15 rounded-xl px-3 py-2 leading-relaxed"></p>
+            <div class="flex justify-end"><button type="button" id="pr-save" class="bg-brand hover:bg-brand-dark text-cream px-4 py-2 rounded-xl text-[13px] font-bold transition"><i class="ph-bold ph-floppy-disk"></i> احفظ التذكيرات</button></div>
+          </div>
           <div class="pro-card p-5 space-y-4">
             <div class="flex flex-wrap items-center justify-between gap-3">
               <div><h3 class="text-base font-bold">باقات العملاء</h3><p id="pk-sub" class="text-xs text-ink mt-0.5"></p></div>

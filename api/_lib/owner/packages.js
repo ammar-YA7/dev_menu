@@ -32,8 +32,10 @@ module.exports.pre = async function pre(action, req) {
       // الكاشير يحتاج الباقات بس (يبيع ويمسح)، والقائمة الكاملة لصاحب المحل
       desk ? Promise.resolve([]) : rest(`loyalty_pkg_cards?client_id=eq.${store.id}&select=*&order=created_at.desc&limit=300`)
     ]);
-    const design = desk ? null : ((await rest(`clients?id=eq.${store.id}&select=subs_design`).catch(() => []))[0] || {}).subs_design || {};
-    return { plans, design, cards: cards.map(c => ({ ...P.cardView(c), phone: c.phone || null })) };
+    const row = desk ? {} : ((await rest(`clients?id=eq.${store.id}&select=subs_design,subs_remind`).catch(() => []))[0] || {});
+    const R = require('../subs-remind');
+    const remind = desk ? null : { ...R.normalize(row.subs_remind), stats: await R.stats(store.id).catch(() => null) };
+    return { plans, design: desk ? null : row.subs_design || {}, remind, cards: cards.map(c => ({ ...P.cardView(c), phone: c.phone || null })) };
   }
   return NEXT;
 };
@@ -88,6 +90,21 @@ module.exports.post = async function post(action, req, b, env) {
     require('../wallet').stampsCacheClear(sid);
     const updated = await pushWalletCards(sid).catch(() => 0);
     return { design: out, wallet_updated: updated };
+  }
+
+  // التذكيرات التلقائية: غاب وعنده رصيد، قرب الانتهاء، التجديد
+  if (action === 'loyalty-pkg-remind') {
+    ownerOnly();
+    const R = require('../subs-remind');
+    const src = b.remind || {}, out = {};
+    for (const k of R.KINDS) {
+      const s = src[k] || {};
+      const text = String(s.text || '').trim();
+      if (s.on && text.length > 160) throw new ApiError(400, 'الرسالة طويلة، الحد 160 حرف');
+      out[k] = { on: !!s.on, days: R.OPTIONS[k].includes(Number(s.days)) ? Number(s.days) : R.DEFAULTS[k].days, text: text && text !== R.DEFAULTS[k].text ? text.slice(0, 160) : '' };
+    }
+    await rest(`clients?id=eq.${sid}`, { method: 'PATCH', body: { subs_remind: out } });
+    return { remind: R.normalize(out) };
   }
 
   if (action === 'loyalty-pkg-plan-off') {

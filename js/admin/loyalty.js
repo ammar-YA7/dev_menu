@@ -709,10 +709,53 @@
   }
   async function loadPackages() {
     renderSubsLocation();
-    try { const r = await api('loyalty-pkg'); pk.plans = r.plans || []; pk.cards = r.cards || []; if (!pk.dirty) { pk.design = { ...(r.design || {}) }; pk.saved = { ...pk.design }; } }
+    try { const r = await api('loyalty-pkg'); pk.plans = r.plans || []; pk.cards = r.cards || []; pk.remind = r.remind || null; if (!pk.dirty) { pk.design = { ...(r.design || {}) }; pk.saved = { ...pk.design }; } }
     catch (e) { showToast(e.message || 'تعذر تحميل الباقات', true); return; }
-    renderPackages();
+    renderPackages(); renderPkRemind();
   }
+  // ─── التذكيرات التلقائية لبطاقة الاشتراكات ───
+  const PR = {
+    away: { icon: 'ph-arrow-u-up-left', title: 'العميل الغائب ولديه رصيد', desc: 'تذكّره بالرصيد المتبقي في باقته، مرة واحدة في كل غياب.', when: 'إذا لم يستخدم باقته منذ', opts: [[7, '7 أيام'], [14, '14 يوماً'], [21, '21 يوماً'], [30, '30 يوماً']] },
+    expiry: { icon: 'ph-hourglass-medium', title: 'قرب انتهاء الباقة', desc: 'للباقات التي لها مدة، وفيها رصيد لم يُستخدم. مرة واحدة لكل باقة.', when: 'قبل الانتهاء بـ', opts: [[3, '3 أيام'], [7, '7 أيام'], [14, '14 يوماً']] },
+    renew: { icon: 'ph-arrows-clockwise', title: 'تجديد الباقة', desc: 'بعد انتهاء رصيده أو مدة باقته، إذا لم يجدّدها. مرة واحدة لكل باقة.', when: 'بعد انتهاء الباقة بـ', opts: [[1, 'يوم'], [3, '3 أيام'], [7, '7 أيام']] }
+  };
+  function renderPkRemind() {
+    const r = pk.remind; if (!r) return;
+    document.getElementById('pr-list').innerHTML = Object.entries(PR).map(([k, d]) => `
+      <div class="rounded-xl border border-black/10 p-4 space-y-3">
+        <label class="flex items-start justify-between gap-3 cursor-pointer">
+          <span><b class="text-[13px] block"><i class="ph-bold ${d.icon}"></i> ${d.title}</b><span class="text-[11.5px] text-ink">${d.desc}</span></span>
+          <input type="checkbox" data-pr-on="${k}" ${r[k].on ? 'checked' : ''} class="w-5 h-5 mt-0.5 accent-[#384f3d] cursor-pointer shrink-0">
+        </label>
+        <div data-pr-box="${k}" class="space-y-2 ${r[k].on ? '' : 'hidden'}">
+          <div class="flex flex-wrap items-center gap-2 text-xs"><span class="text-ink">${d.when}</span>
+            <select data-pr-days="${k}" class="input-pro !w-auto !py-1.5 text-xs">${d.opts.map(([v, t]) => `<option value="${v}" ${Number(r[k].days) === v ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
+          <textarea data-pr-text="${k}" rows="2" maxlength="160" class="input-pro text-sm resize-none">${esc(r[k].text)}</textarea>
+        </div>
+      </div>`).join('');
+    document.querySelectorAll('[data-pr-on]').forEach(el => el.addEventListener('change', () => document.querySelector(`[data-pr-box="${el.dataset.prOn}"]`).classList.toggle('hidden', !el.checked)));
+    const st = r.stats, line = [];
+    if (st) {
+      if (st.away.sent) line.push(`تذكير الغياب وصل ${st.away.sent} عميل، وعاد منهم ${st.away.back}`);
+      if (st.expiry.sent) line.push(`تذكير الانتهاء وصل ${st.expiry.sent}، واستخدم باقته منهم ${st.expiry.back}`);
+      if (st.renew.sent) line.push(`تذكير التجديد وصل ${st.renew.sent}، وجدّد منهم ${st.renew.back}`);
+    }
+    const box = document.getElementById('pr-stats');
+    box.classList.toggle('hidden', !line.length);
+    box.textContent = line.length ? `آخر 90 يوماً: ${line.join('. ')}.` : '';
+  }
+  document.getElementById('pr-save').addEventListener('click', async () => {
+    const btn = document.getElementById('pr-save'); btn.disabled = true;
+    const remind = {};
+    for (const k of Object.keys(PR)) remind[k] = { on: document.querySelector(`[data-pr-on="${k}"]`).checked, days: Number(document.querySelector(`[data-pr-days="${k}"]`).value), text: document.querySelector(`[data-pr-text="${k}"]`).value.trim() };
+    try {
+      const r = await api('loyalty-pkg-remind', { remind });
+      pk.remind = { ...r.remind, stats: pk.remind && pk.remind.stats };
+      renderPkRemind();
+      showToast(Object.values(r.remind).some(x => x.on) ? 'تم حفظ التذكيرات، وتبدأ بالوصول من عصر اليوم' : 'تم إيقاف التذكيرات');
+    } catch (e) { showToast(e.message || 'لم تُحفظ التذكيرات', true); }
+    btn.disabled = false;
+  });
   function renderSubsQr() {
     const url = DM.storeUrl(client.client_slug, 'loyalty');   // رمز واحد: يسجّل في البطاقة ويختار باقته
     document.getElementById('pk-link').textContent = url.replace(/^https?:\/\//, '');
