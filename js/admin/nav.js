@@ -7,16 +7,16 @@
     { id: 'home', label: 'الرئيسية', icon: 'ph-house', pages: ['dashboard'] },
     { id: 'menu', label: 'المنيو', icon: 'ph-fork-knife', pages: ['menu'] },
     { id: 'pager', label: 'البيجر', icon: 'ph-bell-ringing', pages: ['pagerset', 'waitlist'] },
-    { id: 'people', label: 'العملاء', icon: 'ph-users', pages: ['customers', 'loyalty', 'subs', 'carddesign', 'messages'] },
+    // العملاء: تبويبين بس (العملاء، البطاقة). الأختام والاشتراكات والتصميم والرسائل صفحات تفاصيل تنفتح من «البطاقة»
+    { id: 'people', label: 'العملاء', icon: 'ph-users', pages: ['customers', 'cardhub'], detail: ['loyalty', 'subs', 'carddesign', 'messages'] },
     { id: 'settings', label: 'الإعدادات', icon: 'ph-gear-six', pages: ['settings', 'branches', 'devices', 'account'] }
   ];
-  const SEG_LABELS = { pagerset: 'البيجر', waitlist: 'قائمة الانتظار', customers: 'العملاء', loyalty: 'الأختام', subs: 'الاشتراكات', carddesign: 'التصميم', messages: 'الرسائل', settings: 'الهوية', branches: 'الفروع', devices: 'الأجهزة', account: 'الاشتراك' };
+  const SEG_LABELS = { pagerset: 'البيجر', waitlist: 'قائمة الانتظار', customers: 'العملاء', loyalty: 'الأختام', subs: 'الاشتراكات', carddesign: 'التصميم', messages: 'الرسائل', cardhub: 'البطاقة', settings: 'الهوية', branches: 'الفروع', devices: 'الأجهزة', account: 'الاشتراك' };
   // اختصارات كل قسم: تنسخ نفس الأزرار القديمة (بصلاحياتها) بشكل كبسولة
   const NAV_ACTIONS = {
     home: [['[data-page="dashboard"] [onclick="goAddDish()"]', 'ph-plus', 'أضف طبق']],
     menu: [['#sidebar-preview', 'ph-eye', 'معاينة المنيو'], ['[onclick="copyMenuLink()"]', 'ph-link-simple', 'نسخ الرابط']],
     pager: [['#nav-legacy a[href="pager-desk.html"]', 'ph-arrow-square-out', null]],
-    people: [['#nav-legacy a[href="cashier.html"]', 'ph-cash-register', 'شاشة الكاشير']]
   };
 
   // الصفحة متاحة لهالمشترك؟ (زرها القديم ما انخفى بالصلاحيات)
@@ -30,8 +30,9 @@
     for (let n = el; n && n.id !== 'nav-legacy'; n = n.parentElement) if (n.style && n.style.display === 'none') return false;
     return true;
   }
-  const groupOf = (page) => NAV_GROUPS.find(g => g.pages.includes(page)) || NAV_GROUPS[0];
-  const groupPages = (g) => g.pages.filter(navPageOn);
+  const groupOf = (page) => NAV_GROUPS.find(g => g.pages.includes(page) || (g.detail || []).includes(page)) || NAV_GROUPS[0];
+  // محل البيجر بس (بدون ولاء): قسم العملاء فيه الرسائل بس
+  const groupPages = (g) => { const on = g.pages.filter(navPageOn); return !on.length && g.id === 'people' && navPageOn('messages') ? ['messages'] : on; };
 
   function goGroup(id) {
     const g = NAV_GROUPS.find(x => x.id === id);
@@ -72,10 +73,20 @@
       bar.innerHTML = segHome + navActionsHtml(g);
       return;
     }
-    const seg = pages.length > 1 ? `<div class="ap-seg" role="tablist">${pages.map(p => `<button type="button" role="tab" aria-selected="${p === page}" data-seg="${p}">${SEG_LABELS[p] || PAGES[p][0]}</button>`).join('')}</div>` : '';
-    bar.innerHTML = seg + navActionsHtml(g);
+    // صفحة تفاصيل (الأختام، الاشتراكات، التصميم، الرسائل): التبويب المختار هو اللي جيت منه، ومعه زر رجوع
+    const isDetail = (g.detail || []).includes(page) && !pages.includes(page);
+    const selected = isDetail ? (cardFrom === 'customers' && pages.includes('customers') ? 'customers' : 'cardhub') : page;
+    const seg = pages.length > 1 ? `<div class="ap-seg" role="tablist">${pages.map(p => `<button type="button" role="tab" aria-selected="${p === selected}" data-seg="${p}">${SEG_LABELS[p] || PAGES[p][0]}</button>`).join('')}</div>` : '';
+    const back = isDetail && pages.includes(selected) ? `<div class="ap-actions"><button type="button" class="ap-chip" data-seg="${selected}"><i class="ph-bold ph-caret-left ap-flip"></i> ${SEG_LABELS[selected]}</button></div>` : '';
+    if (isDetail && cardTitle) { document.getElementById('page-title').textContent = cardTitle; document.getElementById('page-subtitle').textContent = ''; }
+    bar.innerHTML = seg + (back || navActionsHtml(g, page));
+    if (page === 'cardhub') renderCardHub();
+    // عنده «البطاقة»: التبويبات القديمة داخل الأختام والرسائل تختفي (القائمة هي اللي تختار)
+    document.body.classList.toggle('ap-hub', navPageOn('cardhub'));
   }
-  function navActionsHtml(g) {
+  function navActionsHtml(g, page) {
+    // العملاء: «رسالة جديدة» (تفتح صفحة الإرسال)
+    if (g.id === 'people') return page === 'customers' && navPageOn('messages') ? '<div class="ap-actions"><button type="button" class="ap-chip ap-chip-fill" data-card="msg-send"><i class="ph-bold ph-paper-plane-tilt"></i> رسالة جديدة</button></div>' : '';
     // المنيو: «أضف طبق» وزر «المزيد» يفتح قائمة (معاينة، نسخ الرابط، المنيو من صورة، Excel، بطاقة QR)
     if (g.id === 'menu') return '<div class="ap-actions"><button type="button" class="ap-chip ap-chip-fill" data-fn="add-dish"><i class="ph-bold ph-plus"></i> أضف طبق</button><button type="button" class="ap-chip" data-fn="menu-more" aria-label="المزيد"><i class="ph-bold ph-dots-three-vertical"></i> المزيد</button></div>';
     const acts = (NAV_ACTIONS[g.id] || []).map(([sel, icon, label], i) => {
@@ -277,3 +288,60 @@
     const f = renderProductsList;
     renderProductsList = function () { f.apply(this, arguments); document.querySelector('[data-page="menu"]')?.classList.toggle('ap-has-dishes', loadedProducts.length > 0); };
   }
+
+  // ─── «البطاقة»: كل إعدادات بطاقة العملاء ورسائلها في قائمة وحدة، وكل صف يفتح مكانه (بنفس الصلاحيات) ───
+  let cardFrom = null, cardTitle = null;
+  const hasF = (k) => typeof DMPlans !== 'undefined' && DMPlans.has(client, k);
+  const CARD_ROWS = () => {
+    const L = hasF('loyalty'), P = hasF('subs');
+    const needed = (typeof ly !== 'undefined' && ly.data && ly.data.settings && ly.data.settings.needed) || (client && client.loyalty_settings && client.loyalty_settings.needed) || null;
+    return [
+      ['البطاقة', [
+        L && ['reward', 'ph-gift', 'المكافأة', needed ? `${needed} أختام` : ''],
+        L && ['numbers', 'ph-chart-bar', 'الأرقام والزيارات', ''],
+        P && ['plans', 'ph-package', 'الباقات', ''],
+        ['look', 'ph-palette', 'الشكل', '']
+      ]],
+      ['الرسائل', [
+        navPageOn('messages') && ['msg-send', 'ph-paper-plane-tilt', 'رسالة لكل العملاء', ''],
+        navPageOn('messages') && ['msg-auto', 'ph-hand-waving', L ? 'الترحيب والمكافأة' : 'الترحيب', ''],
+        L && ['comeback', 'ph-arrow-counter-clockwise', 'استرجاع الغائب', ''],
+        P && ['reminders', 'ph-calendar-blank', 'تذكيرات الباقات', '']
+      ]],
+      ['في المحل', [
+        L && ['register', 'ph-qr-code', 'كرت التسجيل', ''],
+        document.querySelector('#nav-legacy a[href="cashier.html"]') && ['cashier', 'ph-storefront', 'شاشة الكاشير', '']
+      ]]
+    ].map(([h, rows]) => [h, rows.filter(Boolean)]).filter(([, rows]) => rows.length);
+  };
+  function renderCardHub() {
+    const box = document.getElementById('cardhub'); if (!box) return;
+    box.innerHTML = CARD_ROWS().map(([h, rows]) => `<p class="ap-st-head">${h}</p><div class="ap-st-group">${rows.map(([k, icon, t, v]) => `
+      <button type="button" class="ap-st-row" data-card="${k}"><span class="ap-st-ic"><i class="ph-bold ${icon}"></i></span><span class="ap-st-txt"><b>${t}</b></span>${v ? `<span class="ap-st-val">${esc(v)}</span>` : ''}<i class="ph-bold ph-caret-left ap-st-chev"></i></button>`).join('')}</div>`).join('');
+  }
+  // كل صف: الصفحة اللي يفتحها، وش يسوي بعد ما تنفتح، والعنوان
+  const CARD_GO = {
+    reward: ['loyalty', () => setLyTab('settings'), 'المكافأة'],
+    numbers: ['loyalty', () => setLyTab('overview'), 'الأرقام والزيارات'],
+    plans: ['subs', null, 'الباقات'],
+    look: ['carddesign', null, 'الشكل'],
+    'msg-send': ['messages', () => setMgTab('send'), 'رسالة جديدة'],
+    'msg-auto': ['messages', () => setMgTab('auto'), 'الترحيب والمكافأة'],
+    comeback: ['loyalty', () => { setLyTab('messages'); setTimeout(() => document.getElementById('ly-cb')?.closest('.space-y-2')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200); }, 'استرجاع الغائب'],
+    reminders: ['subs', () => setTimeout(() => document.getElementById('pr-list')?.closest('.pro-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 250), 'تذكيرات الباقات'],
+    register: ['loyalty', () => setLyTab('register'), 'كرت التسجيل']
+  };
+  document.addEventListener('click', (e) => {
+    const r = e.target.closest('[data-card]'); if (!r) return;
+    const k = r.dataset.card;
+    if (k === 'cashier') return document.querySelector('#nav-legacy a[href="cashier.html"]')?.click();
+    const go = CARD_GO[k]; if (!go) return;
+    cardFrom = location.hash.slice(1) === 'customers' ? 'customers' : 'cardhub';
+    cardTitle = go[2];
+    const [page, after] = go;
+    const done = () => { if (after) after(); renderNavGroups(page); };
+    if (location.hash === '#' + page) { showPage(page); setTimeout(done, 60); }
+    else { location.hash = page; setTimeout(done, 120); }
+  });
+  // الخروج من صفحة تفاصيل بأي طريق ثاني (التبويبات، الشريط السفلي): ننسى العنوان
+  addEventListener('hashchange', () => { const p = location.hash.slice(1); if (!['loyalty', 'subs', 'carddesign', 'messages'].includes(p)) { cardTitle = null; cardFrom = null; } });

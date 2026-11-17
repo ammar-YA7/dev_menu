@@ -300,3 +300,20 @@ main span.bg-amber-400 { background: #fff !important; color: var(--ap-green) !im
   .ap-st-txt small { font-size: 14px; }
   .ap-st-head { font-size: 14px; }
 }
+
+/* ─── «البطاقة»: قائمة صفوف (في كل الشاشات) ─── */
+#cardhub { max-width: 640px; }
+#cardhub .ap-st-head { font-size: 14px; color: var(--ap-muted); margin: 22px 16px 8px; }
+#cardhub .ap-st-head:first-child { margin-top: 4px; }
+#cardhub .ap-st-group { background: var(--ap-card); border-radius: 14px; overflow: hidden; }
+#cardhub .ap-st-row { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px; padding: 10px 14px; border: 0; background: none; text-align: start; cursor: pointer; position: relative; }
+#cardhub .ap-st-row + .ap-st-row::before { content: ""; position: absolute; top: 0; inset-inline-start: 60px; inset-inline-end: 0; border-top: 1px solid var(--ap-sep); }
+#cardhub .ap-st-row:hover { background: #f6f7f6; }
+#cardhub .ap-st-row:active { background: #eceeec; }
+#cardhub .ap-st-ic { width: 32px; height: 32px; border-radius: 9px; background: var(--ap-green-2); color: #fff; display: grid; place-items: center; flex: none; font-size: 17px; }
+#cardhub .ap-st-txt { flex: 1; min-width: 0; }
+#cardhub .ap-st-txt b { font-size: 16px; font-weight: 500; color: var(--ap-ink); }
+#cardhub .ap-st-val { font-size: 15px; color: var(--ap-muted); }
+#cardhub .ap-st-chev { color: #b9c0ba; font-size: 15px; flex: none; }
+/* التبويبات القديمة داخل الأختام والرسائل: القائمة صارت هي اللي تختار */
+body.ap-hub [data-page="loyalty"] .ly-tabs[aria-label="أقسام الولاء"], body.ap-hub [data-page="messages"] .ly-tabs[aria-label="أقسام الرسائل"] { display: none !important; }

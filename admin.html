@@ -558,6 +558,7 @@
       <p class="px-3 pt-3 pb-0.5 text-[11px] text-ink font-semibold">بطاقة الولاء</p>
       <button data-nav="loyalty" class="nav-item"><i class="ph-bold ph-seal-check"></i> بطاقة الأختام</button>
       <button data-nav="subs" class="nav-item"><i class="ph-bold ph-package"></i> بطاقة الاشتراكات</button>
+      <button data-nav="cardhub" data-needs="loyalty|subs" class="nav-item">البطاقة</button>
       <button data-nav="carddesign" data-needs="loyalty|subs" class="nav-item"><i class="ph-bold ph-palette"></i> تصميم البطاقة</button>
       <a href="cashier.html" data-needs="loyalty|subs" onclick="this.href='cashier.html'+location.search" class="nav-item"><i class="ph-bold ph-cash-register"></i> شاشة الكاشير</a>
       <p class="px-3 pt-4 pb-1 text-[11px] text-ink font-semibold">منشأتك</p>
@@ -2190,6 +2191,9 @@
       </section>
 
       <!-- ═════════════════ الرسائل: رسائل بطاقة النداء أو بطاقة الولاء ═════════════════ -->
+      <!-- البطاقة: كل إعدادات بطاقة العملاء ورسائلها في قائمة وحدة (js/admin/nav.js) -->
+      <section data-page="cardhub" class="hidden space-y-5"><div id="cardhub"></div></section>
+
       <section data-page="messages" class="hidden space-y-5">
         <!-- تبويبات الرسائل: اللي ترسلها بنفسك، واللي تروح تلقائياً -->
         <div class="ly-tabs max-w-xl" role="tablist" aria-label="أقسام الرسائل">

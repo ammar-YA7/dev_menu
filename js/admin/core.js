@@ -112,6 +112,7 @@
     carddesign: ['تصميم البطاقة', 'لون بطاقة عملائك وشكلها وشعارها، في صفحة البطاقة والمحفظة.'],
     subs:      ['بطاقة الاشتراكات', 'يدفع العميل مقدّماً ويستخدم باقته على دفعات، ويتحدّث رصيده في بطاقته مع كل زيارة.'],
     customers: ['العملاء', 'أعضاء بطاقة الأختام في كل فروعك'],
+    cardhub:   ['البطاقة', 'إعدادات بطاقة عملائك ورسائلها'],
     messages:  ['الرسائل', 'أرسل عروضك وأخبارك لجوالات عملائك'],
     branches:  ['الفروع', 'فروعك ومميزات كل فرع'],
     devices:   ['الأجهزة', 'روابط شاشات المحل: الكاشير وشاشة الزبون والجهاز اللوحي'],
@@ -121,7 +122,7 @@
   };
   // المميزات اللي مو ضمن باقة المشترك: الصفحة تعرض "أضفها لباقتك" بدل محتواها
   // الرسائل: من بطاقة الولاء، أو من بطاقة النداء (إضافة على البيجر)
-  const PAGE_FEATURE = { menu: 'menu', pagerset: 'pager', waitlist: 'waitlist', loyalty: 'loyalty', subs: 'subs', carddesign: () => DMPlans.has(client, 'loyalty') || DMPlans.has(client, 'subs') ? null : 'loyalty', customers: () => DMPlans.has(client, 'loyalty') || DMPlans.has(client, 'subs') ? null : 'loyalty', messages: () => DMPlans.has(client, 'loyalty') || DMPlans.has(client, 'subs') || DMPlans.has(client, 'pager') ? null : 'pager' };
+  const PAGE_FEATURE = { menu: 'menu', pagerset: 'pager', waitlist: 'waitlist', loyalty: 'loyalty', subs: 'subs', carddesign: () => DMPlans.has(client, 'loyalty') || DMPlans.has(client, 'subs') ? null : 'loyalty', customers: () => DMPlans.has(client, 'loyalty') || DMPlans.has(client, 'subs') ? null : 'loyalty', cardhub: () => DMPlans.has(client, 'loyalty') || DMPlans.has(client, 'subs') ? null : 'loyalty', messages: () => DMPlans.has(client, 'loyalty') || DMPlans.has(client, 'subs') || DMPlans.has(client, 'pager') ? null : 'pager' };
   // الخدمات اللي مو ضمن باقته (في التجربة أو الاشتراك) تختفي من اللوحة كلها
   const featureLocked = (key) => !!client && ['active', 'trial'].includes(client.subscription_status) && !DMPlans.has(client, key);
   let lockedKey = null;
