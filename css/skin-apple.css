@@ -232,3 +232,16 @@ main input[type="file"]::file-selector-button { border: 0; border-radius: 980px;
 #ly-rows .ly-av { background: var(--ap-pale) !important; color: var(--ap-green) !important; }
 #ly-rows .ly-prog span[style*="c9a227"] { background: var(--ap-green-2) !important; }
 #ly-rows .bg-amber-100 { background: var(--ap-pale) !important; color: var(--ap-green) !important; }
+
+/* ─── البيجر وقائمة الانتظار ─── */
+/* البطاقات الخضراء الغامقة: العناوين والنصوص بيضاء (كانت غامقة فوق غامق وما تنقرا) */
+main .bg-brand h2, main .bg-brand h3, main .bg-brand h4 { color: #fff !important; }
+main .bg-brand p[class*="text-cream"] { color: rgba(255, 255, 255, .82) !important; }
+/* شارة «ضمن باقتك» وأمثالها: بيضاء بدل الذهبي */
+main span.bg-amber-400 { background: #fff !important; color: var(--ap-green) !important; }
+/* صفحة «ليست ضمن باقتك»: مربع الأيقونة أخضر */
+#lock-icon { color: var(--ap-green-2) !important; }
+#lock-icon:not(:only-child), span:has(> #lock-icon) { background: var(--ap-pale) !important; }
+/* خطوات إعداد البيجر (قبل أخذ الرقم، أثناء الانتظار، بعد الاستلام) بشكل التبويبات */
+[data-page="pagerset"] [role="tablist"] { background: var(--ap-fill) !important; border-radius: 11px !important; padding: 2px !important; border: 0 !important; }
+[data-page="pagerset"] [role="tablist"] [aria-selected="true"] { background: #fff !important; box-shadow: 0 1px 3px rgba(29, 42, 33, .12) !important; border-radius: 9px !important; }
