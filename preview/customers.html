@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#f2f4f2">
+<title>DEV MENU | معاينة قسم العملاء</title>
+<link rel="icon" href="/favicon.ico?v=2">
+<link rel="stylesheet" href="/css/fonts.css">
+<link rel="stylesheet" href="/css/icons.css">
+<style>
+/* =====================================================================
+   معاينة قسم العملاء المبسّط: تبويبين (العملاء، البطاقة) بدل 9
+   صفحة تجربة ببيانات وهمية، ما تتصل بأي بيانات حقيقية
+   ===================================================================== */
+:root {
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Arabic", "IBM Plex Sans Arabic", system-ui, sans-serif;
+  --bg: #f2f4f2; --card: #fff; --ink: #1d2a21; --muted: #6e7a71; --sep: rgba(29, 42, 33, .09);
+  --green: #233d2c; --green-2: #3f7a4a; --pale: #eaf3ec; --fill: #e6e9e6; --switch: #34a853;
+  --ease: cubic-bezier(.2, .8, .2, 1);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); background: var(--bg); color: var(--ink); font-size: 16px; line-height: 1.45; -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+.app { max-width: 560px; margin: 0 auto; min-height: 100vh; padding: 0 16px calc(96px + env(safe-area-inset-bottom)); }
+
+/* العنوان والتبويبات */
+.top { position: sticky; top: 0; z-index: 10; margin: 0 -16px; padding: 14px 16px 12px; background: rgba(242, 244, 242, .85); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); }
+.top h1 { font-size: 32px; font-weight: 700; letter-spacing: -.01em; }
+.top-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.seg { display: flex; background: var(--fill); border-radius: 11px; padding: 2px; margin-top: 12px; }
+.seg button { flex: 1; min-height: 38px; border-radius: 9px; font-size: 15px; font-weight: 500; }
+.seg button[aria-selected="true"] { background: #fff; font-weight: 600; box-shadow: 0 1px 3px rgba(29, 42, 33, .12), 0 1px 1px rgba(29, 42, 33, .04); }
+.chip { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 16px; border-radius: 980px; background: var(--green); color: #fff; font-size: 15px; font-weight: 600; }
+.chip.soft { background: var(--card); color: var(--green); }
+.view { display: none; padding-top: 6px; }
+.view.on { display: block; animation: fade .3s var(--ease); }
+@keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* البحث والفلاتر */
+.search { display: flex; align-items: center; gap: 8px; background: var(--fill); border-radius: 12px; padding: 0 12px; min-height: 44px; color: var(--muted); }
+.search input { flex: 1; border: 0; background: none; font: inherit; font-size: 17px; color: var(--ink); outline: none; min-width: 0; }
+.filters { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin: 12px -16px 0; padding: 0 16px; }
+.filters::-webkit-scrollbar { display: none; }
+.filters button { flex: none; min-height: 36px; padding: 0 14px; border-radius: 980px; background: var(--card); font-size: 14.5px; font-weight: 500; white-space: nowrap; }
+.filters button b { font-weight: 600; color: var(--muted); margin-inline-start: 4px; }
+.filters button[aria-pressed="true"] { background: var(--green); color: #fff; }
+.filters button[aria-pressed="true"] b { color: rgba(255, 255, 255, .75); }
+
+/* الأرقام */
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 14px; }
+.stat { background: var(--card); border-radius: 16px; padding: 12px; }
+.stat b { display: block; font-size: 24px; font-weight: 700; letter-spacing: -.01em; }
+.stat span { font-size: 13px; color: var(--muted); }
+
+/* القوائم المجمّعة */
+.head { font-size: 14px; color: var(--muted); margin: 22px 16px 8px; }
+.group { background: var(--card); border-radius: 14px; overflow: hidden; }
+.row { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 62px; padding: 10px 14px; text-align: start; position: relative; }
+.row + .row::before { content: ""; position: absolute; top: 0; inset-inline-start: 62px; inset-inline-end: 0; border-top: 1px solid var(--sep); }
+button.row:active { background: #eceeec; }
+.av { width: 40px; height: 40px; border-radius: 50%; background: var(--pale); color: var(--green); display: grid; place-items: center; font-weight: 700; font-size: 17px; flex: none; }
+.ic { width: 32px; height: 32px; border-radius: 9px; background: var(--green-2); color: #fff; display: grid; place-items: center; font-size: 17px; flex: none; margin-inline: 4px; }
+.txt { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.txt b { font-size: 16.5px; font-weight: 500; }
+.txt small { font-size: 14px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.end { display: grid; justify-items: end; gap: 4px; flex: none; font-size: 14px; color: var(--muted); }
+.val { font-size: 15px; color: var(--muted); max-width: 46%; text-align: end; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chev { color: #b9c0ba; font-size: 15px; flex: none; }
+.dots { display: flex; gap: 3px; }
+.dots i { width: 7px; height: 7px; border-radius: 50%; background: #dde2de; }
+.dots i.on { background: var(--green-2); }
+.tag { font-size: 12.5px; font-weight: 600; padding: 2px 8px; border-radius: 980px; background: var(--pale); color: var(--green); }
+.tag.warn { background: #fdecdc; color: #a8521a; }
+.note { font-size: 13.5px; color: var(--muted); margin: 8px 16px 0; line-height: 1.5; }
+
+/* مفتاح الآيفون */
+.sw { width: 51px; height: 31px; border-radius: 16px; background: #e3e6e3; position: relative; flex: none; transition: background .2s; }
+.sw::after { content: ""; position: absolute; top: 2px; inset-inline-start: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff; box-shadow: 0 3px 8px rgba(0, 0, 0, .15), 0 1px 1px rgba(0, 0, 0, .16); transition: inset-inline-start .2s var(--ease); }
+.sw[aria-checked="true"] { background: var(--switch); }
+.sw[aria-checked="true"]::after { inset-inline-start: 22px; }
+
+/* معاينة البطاقة */
+.pass { margin: 4px auto 0; max-width: 340px; border-radius: 18px; background: linear-gradient(160deg, #2d4c37, #1f3527); color: #fff; padding: 16px; box-shadow: 0 16px 32px -18px rgba(29, 42, 33, .6); }
+.pass-top { display: flex; justify-content: space-between; align-items: center; font-size: 14px; opacity: .9; }
+.pass-top b { font-size: 16px; opacity: 1; }
+.pass-stamps { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; margin: 16px 0 12px; }
+.pass-stamps i { aspect-ratio: 1; border-radius: 50%; border: 1.5px dashed rgba(255, 255, 255, .35); display: grid; place-items: center; font-size: 13px; }
+.pass-stamps i.on { background: #fff; color: var(--green); border: 0; }
+.pass-foot { display: flex; justify-content: space-between; font-size: 13px; opacity: .85; }
+
+/* الشريط السفلي */
+.tabbar { position: fixed; bottom: 0; inset-inline: 0; z-index: 20; display: flex; justify-content: center; background: rgba(250, 251, 250, .85); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); border-top: 1px solid var(--sep); padding-bottom: env(safe-area-inset-bottom); }
+.tabbar div { display: flex; width: 100%; max-width: 560px; }
+.tabbar span { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 7px 0 6px; font-size: 10.5px; color: #8a948c; }
+.tabbar span i { font-size: 24px; }
+.tabbar span.on { color: var(--green); }
+
+/* النوافذ اللي تطلع من تحت، والصفحات اللي تدخل من الجنب */
+.sheet { position: fixed; inset: 0; z-index: 50; background: rgba(10, 18, 13, .38); display: flex; align-items: flex-end; justify-content: center; opacity: 0; pointer-events: none; transition: opacity .3s var(--ease); }
+.sheet.on { opacity: 1; pointer-events: auto; }
+.sheet-card { width: 100%; max-width: 560px; max-height: 92vh; overflow-y: auto; background: var(--bg); border-radius: 22px 22px 0 0; padding: 8px 16px calc(24px + env(safe-area-inset-bottom)); transform: translateY(100%); transition: transform .4s var(--ease); }
+.sheet.on .sheet-card { transform: none; }
+.grab { width: 38px; height: 5px; border-radius: 3px; background: #d0d5d1; margin: 0 auto 8px; }
+.sheet-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.sheet-head h2 { font-size: 20px; font-weight: 700; }
+.x { width: 32px; height: 32px; border-radius: 50%; background: var(--fill); display: grid; place-items: center; }
+.push { position: fixed; inset: 0; z-index: 40; background: var(--bg); overflow-y: auto; transform: translateX(-100%); transition: transform .4s var(--ease); }
+.push.on { transform: none; }
+.push .app { padding-top: 12px; }
+.back { display: inline-flex; align-items: center; gap: 4px; color: var(--green-2); font-size: 17px; min-height: 40px; }
+.back i { display: inline-block; transform: scaleX(-1); }
+.push h1 { font-size: 30px; font-weight: 700; margin: 4px 0 2px; }
+.lead { font-size: 15px; color: var(--muted); }
+.big-btn { width: 100%; min-height: 50px; border-radius: 14px; background: var(--green); color: #fff; font-size: 17px; font-weight: 600; margin-top: 18px; }
+.field { width: 100%; min-height: 50px; border-radius: 12px; background: var(--card); border: 1px solid transparent; font: inherit; font-size: 17px; padding: 10px 14px; outline: none; color: var(--ink); }
+textarea.field { min-height: 110px; resize: vertical; line-height: 1.5; }
+.field:focus { border-color: var(--green-2); box-shadow: 0 0 0 4px rgba(63, 122, 74, .15); }
+.radio { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; min-height: 54px; padding: 0 16px; text-align: start; position: relative; font-size: 16.5px; }
+.radio + .radio::before { content: ""; position: absolute; top: 0; inset-inline: 16px 0; border-top: 1px solid var(--sep); }
+.radio i { color: var(--green-2); font-size: 20px; visibility: hidden; }
+.radio[aria-checked="true"] i { visibility: visible; }
+.stepper { display: flex; align-items: center; gap: 10px; }
+.stepper button { width: 36px; height: 36px; border-radius: 10px; background: var(--fill); font-size: 20px; }
+.stepper b { min-width: 28px; text-align: center; font-size: 18px; }
+.bubble { background: var(--card); border-radius: 18px; border-start-start-radius: 6px; padding: 12px 14px; font-size: 15.5px; line-height: 1.55; }
+.bubble small { display: block; font-size: 12.5px; color: var(--muted); margin-top: 6px; }
+.prof { text-align: center; padding: 6px 0 4px; }
+.prof .av { width: 72px; height: 72px; font-size: 30px; margin: 0 auto 8px; }
+.prof h2 { font-size: 24px; font-weight: 700; }
+.prof p { font-size: 14.5px; color: var(--muted); }
+.acts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 16px; }
+.acts button { background: var(--card); border-radius: 14px; min-height: 70px; display: grid; place-items: center; gap: 2px; font-size: 13.5px; font-weight: 500; color: var(--green); padding: 8px 4px; }
+.acts button i { font-size: 22px; }
+.flag { position: fixed; bottom: calc(70px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); z-index: 30; pointer-events: none; background: rgba(29, 42, 33, .85); color: #fff; font-size: 12px; padding: 5px 11px; border-radius: 980px; }
+@media (prefers-reduced-motion: reduce) { .view.on, .sheet, .sheet-card, .push { animation: none; transition: none; } }
+:focus-visible { outline: 3px solid #7fb685; outline-offset: 2px; }
+</style>
+</head>
+<body>
+<p class="flag">معاينة: بيانات وهمية</p>
+
+<div class="app">
+  <header class="top">
+    <div class="top-row">
+      <h1 id="title">العملاء</h1>
+      <button class="chip" id="new-msg" type="button"><i class="ph-bold ph-paper-plane-tilt"></i> رسالة جديدة</button>
+    </div>
+    <div class="seg" role="tablist">
+      <button type="button" role="tab" aria-selected="true" data-v="people">العملاء</button>
+      <button type="button" role="tab" aria-selected="false" data-v="card">البطاقة</button>
+    </div>
+  </header>
+
+  <!-- العملاء -->
+  <section class="view on" id="v-people">
+    <label class="search"><i class="ph-bold ph-magnifying-glass"></i><input id="q" type="search" placeholder="ابحث بالاسم أو الجوال"></label>
+    <div class="filters" id="filters"></div>
+    <div class="stats">
+      <div class="stat"><b>128</b><span>عضو</span></div>
+      <div class="stat"><b>46</b><span>زيارة هالأسبوع</span></div>
+      <div class="stat"><b>9</b><span>رجعوا بعد الرسائل</span></div>
+    </div>
+    <p class="head" id="list-head">كل العملاء</p>
+    <div class="group" id="list"></div>
+  </section>
+
+  <!-- البطاقة -->
+  <section class="view" id="v-card">
+    <div class="pass" aria-label="شكل البطاقة في المحفظة">
+      <div class="pass-top"><b>قهوة المساء</b><span>بطاقة الولاء</span></div>
+      <div class="pass-stamps"><i class="on ph-bold ph-coffee"></i><i class="on ph-bold ph-coffee"></i><i class="on ph-bold ph-coffee"></i><i class="on ph-bold ph-coffee"></i><i class="on ph-bold ph-coffee"></i><i></i><i></i><i class="ph-bold ph-gift"></i></div>
+      <div class="pass-foot"><span>سارة</span><span>باقي 3 على قهوة مجانية</span></div>
+    </div>
+    <p class="head">البطاقة</p>
+    <div class="group">
+      <button class="row" data-push="type"><span class="ic"><i class="ph-bold ph-wallet"></i></span><span class="txt"><b>نوع البطاقة</b></span><span class="val" id="val-type">أختام وباقات</span><i class="ph-bold ph-caret-left chev"></i></button>
+      <button class="row" data-push="reward"><span class="ic"><i class="ph-bold ph-gift"></i></span><span class="txt"><b>المكافأة</b></span><span class="val" id="val-reward">قهوة مجانية بعد 8</span><i class="ph-bold ph-caret-left chev"></i></button>
+      <button class="row" data-push="plans"><span class="ic"><i class="ph-bold ph-package"></i></span><span class="txt"><b>الباقات</b></span><span class="val">3 باقات</span><i class="ph-bold ph-caret-left chev"></i></button>
+      <button class="row" data-push="look"><span class="ic"><i class="ph-bold ph-palette"></i></span><span class="txt"><b>الشكل</b></span><span class="val">أخضر، بشعارك</span><i class="ph-bold ph-caret-left chev"></i></button>
+    </div>
+    <p class="head">الرسائل التلقائية</p>
+    <div class="group" id="auto"></div>
+    <p class="note">المساعد يكتب كل رسالة لكل عميل باسمه، وتوصل على بطاقته في المحفظة.</p>
+    <p class="head">في المحل</p>
+    <div class="group">
+      <button class="row" data-push="qr"><span class="ic"><i class="ph-bold ph-qr-code"></i></span><span class="txt"><b>كرت التسجيل</b><small>رمز QR يمسحه العميل وينضم</small></span><i class="ph-bold ph-caret-left chev"></i></button>
+      <button class="row" data-push="cashier"><span class="ic"><i class="ph-bold ph-storefront"></i></span><span class="txt"><b>شاشة الكاشير</b><small>يمسح البطاقة ويختم أو يخصم من الباقة</small></span><i class="ph-bold ph-caret-left chev"></i></button>
+    </div>
+  </section>
+</div>
+
+<nav class="tabbar" aria-label="الأقسام"><div>
+  <span><i class="ph-bold ph-house"></i>الرئيسية</span>
+  <span><i class="ph-bold ph-coffee"></i>المنيو</span>
+  <span><i class="ph-bold ph-bell"></i>البيجر</span>
+  <span class="on"><i class="ph-bold ph-users"></i>العملاء</span>
+  <span><i class="ph-bold ph-storefront"></i>الإعدادات</span>
+</div></nav>
+
+<!-- ملف العميل -->
+<div class="sheet" id="sh-member" role="dialog" aria-modal="true" aria-label="ملف العميل"><div class="sheet-card" id="member-body"></div></div>
+<!-- رسالة جديدة -->
+<div class="sheet" id="sh-msg" role="dialog" aria-modal="true" aria-label="رسالة جديدة"><div class="sheet-card">
+  <div class="grab"></div>
+  <div class="sheet-head"><h2>رسالة جديدة</h2><button class="x" data-close aria-label="إغلاق"><i class="ph-bold ph-x"></i></button></div>
+  <p class="head" style="margin-top:10px">لمين؟</p>
+  <div class="group" role="radiogroup" id="to">
+    <button class="radio" role="radio" aria-checked="true">كل العملاء (128)<i class="ph-bold ph-check"></i></button>
+    <button class="radio" role="radio" aria-checked="false">اللي غابوا أكثر من أسبوعين (23)<i class="ph-bold ph-check"></i></button>
+    <button class="radio" role="radio" aria-checked="false">مكافأتهم جاهزة (4)<i class="ph-bold ph-check"></i></button>
+  </div>
+  <p class="head">الرسالة</p>
+  <textarea class="field" maxlength="200" placeholder="مثال: اليوم الختم دبل! زورونا قبل الساعة 6"></textarea>
+  <button class="big-btn" data-close type="button">أرسل</button>
+  <p class="note" style="text-align:center">في المعاينة ما ينرسل شي.</p>
+</div></div>
+
+<!-- صفحات التفاصيل -->
+<div class="push" id="push" aria-live="polite"><div class="app" id="push-body"></div></div>
+
+<script>
+(() => {
+  const $ = (s) => document.querySelector(s);
+  const NEED = 8;
+  const people = [
+    { n: 'سارة العتيبي', g: 'f', s: 5, last: 'قبل 3 أيام', v: 14, pkg: null },
+    { n: 'فهد القحطاني', g: 'm', s: 8, last: 'أمس', v: 23, pkg: null, ready: true },
+    { n: 'نورة', g: 'f', s: 2, last: 'قبل 19 يوم', v: 4, pkg: { name: '30 وجبة', left: 4, exp: '21 نوفمبر' }, away: true },
+    { n: 'خالد الشهري', g: 'm', s: 7, last: 'اليوم', v: 31, pkg: { name: '10 أكواب قهوة', left: 6, exp: null } },
+    { n: 'ريم', g: 'f', s: 0, last: 'قبل 26 يوم', v: 1, pkg: null, away: true },
+    { n: 'عبدالله', g: 'm', s: 3, last: 'قبل 5 أيام', v: 9, pkg: null },
+    { n: 'مها', g: 'f', s: 8, last: 'قبل يومين', v: 17, pkg: null, ready: true },
+    { n: 'سلطان', g: 'm', s: 4, last: 'قبل 15 يوم', v: 6, pkg: { name: '10 أكواب قهوة', left: 1, exp: '2 ديسمبر' }, away: true }
+  ];
+  const FILTERS = [['all', 'الكل', () => true, 128], ['ready', 'مكافأتهم جاهزة', p => p.ready, 4], ['away', 'غابوا', p => p.away, 23], ['top', 'الأكثر زيارة', p => p.v >= 14, 18], ['pkg', 'عندهم باقة', p => p.pkg, 12]];
+  let filter = 'all';
+  const dots = (s) => `<span class="dots">${Array.from({ length: NEED }, (_, i) => `<i class="${i < s ? 'on' : ''}"></i>`).join('')}</span>`;
+  function renderList() {
+    const q = $('#q').value.trim();
+    $('#filters').innerHTML = FILTERS.map(([k, t, , c]) => `<button type="button" aria-pressed="${k === filter}" data-f="${k}">${t}<b>${c}</b></button>`).join('');
+    const f = FILTERS.find(x => x[0] === filter);
+    $('#list-head').textContent = filter === 'all' ? 'كل العملاء' : f[1];
+    const rows = people.map((p, i) => ({ p, i })).filter(({ p }) => f[2](p) && (!q || p.n.includes(q)));
+    $('#list').innerHTML = rows.map(({ p, i }) => `
+      <button class="row" data-m="${i}">
+        <span class="av">${p.n[0]}</span>
+        <span class="txt"><b>${p.n}</b><small>${p.pkg ? `باقة ${p.pkg.name}، باقي ${p.pkg.left}` : `آخر زيارة ${p.last}`}</small></span>
+        <span class="end">${p.ready ? '<span class="tag">مكافأة جاهزة</span>' : p.away ? `<span class="tag warn">غاب</span>` : ''}${dots(p.s)}</span>
+      </button>`).join('') || '<p class="row" style="color:var(--muted)">ما فيه أحد هنا.</p>';
+  }
+  function openMember(i) {
+    const p = people[i];
+    $('#member-body').innerHTML = `
+      <div class="grab"></div>
+      <div class="sheet-head"><span></span><button class="x" data-close aria-label="إغلاق"><i class="ph-bold ph-x"></i></button></div>
+      <div class="prof"><span class="av">${p.n[0]}</span><h2>${p.n}</h2><p>#10${i} | ${p.g === 'f' ? 'أنثى' : 'ذكر'} | ${p.v} زيارة</p></div>
+      <div class="acts">
+        <button type="button"><i class="ph-bold ph-seal-check"></i>أضف ختم</button>
+        <button type="button"><i class="ph-bold ph-package"></i>${p.pkg ? 'خصم من الباقة' : 'باقة جديدة'}</button>
+        <button type="button"><i class="ph-bold ph-paper-plane-tilt"></i>رسالة</button>
+      </div>
+      <p class="head">الأختام</p>
+      <div class="group"><div class="row"><span class="txt"><b>${p.s} من ${NEED}</b><small>${p.ready ? 'المكافأة جاهزة، يستلمها من الكاشير' : `باقي ${NEED - p.s} على القهوة المجانية`}</small></span>${dots(p.s)}</div></div>
+      ${p.pkg ? `<p class="head">الباقة</p><div class="group"><div class="row"><span class="txt"><b>${p.pkg.name}</b><small>باقي ${p.pkg.left}${p.pkg.exp ? `، تنتهي ${p.pkg.exp}` : ''}</small></span></div></div>` : ''}
+      <p class="head">آخر الرسائل</p>
+      <div style="display:grid;gap:8px">
+        <div class="bubble">${p.n.split(' ')[0]}، وحشتنا طلتك! باقي لك ${NEED - p.s} أختام وت${p.g === 'f' ? 'وصلين' : 'وصل'} للقهوة المجانية.<small>استرجاع الغائب، قبل 4 أيام</small></div>
+        <div class="bubble">حيّاك ${p.n.split(' ')[0]} في قهوة المساء، أول ختم وصل!<small>الترحيب، قبل شهرين</small></div>
+      </div>`;
+    open('#sh-member');
+  }
+  const AUTO = [
+    ['welcome', 'ph-hand-waving', 'الترحيب', 'أول ما ينضم', true],
+    ['ready', 'ph-gift', 'المكافأة جاهزة', 'لما يكمّل الأختام', true],
+    ['comeback', 'ph-arrow-counter-clockwise', 'استرجاع الغائب', 'بعد 21 يوم غياب، 3 رسائل', true],
+    ['balance', 'ph-package', 'رصيد الباقة', 'لما يغيب وعنده رصيد', false],
+    ['expiry', 'ph-calendar-blank', 'قرب انتهاء الباقة', 'قبل 7 أيام', true],
+    ['renew', 'ph-clock-counter-clockwise', 'التجديد', 'بعد ما تخلص الباقة بـ 3 أيام', false]
+  ];
+  function renderAuto() {
+    $('#auto').innerHTML = AUTO.map(([k, ic, t, sub, on], i) => `
+      <div class="row"><button class="txt" data-push="msg:${i}" style="display:flex;align-items:center;gap:12px;text-align:start;flex:1;min-width:0"><span class="ic" style="margin:0 4px"><i class="ph-bold ${ic}"></i></span><span class="txt"><b>${t}</b><small>${sub}</small></span></button>
+      <button class="sw" role="switch" aria-checked="${on}" aria-label="${t}" data-sw="${i}"></button></div>`).join('');
+  }
+  const PUSH = {
+    type: () => `<h1>نوع البطاقة</h1><p class="lead">وش يحصل العميل في محفظته؟</p>
+      <div class="group" role="radiogroup" style="margin-top:16px">${[['أختام', 'يجمع أختام ويوصل لمكافأة'], ['باقات', 'يدفع مقدّماً ويستخدم على دفعات'], ['أختام وباقات', 'الاثنين في بطاقة وحدة']].map(([t, s], i) => `
+        <button class="radio" role="radio" aria-checked="${i === 2}" data-type="${t}"><span class="txt"><b>${t}</b><small>${s}</small></span><i class="ph-bold ph-check"></i></button>`).join('')}</div>`,
+    reward: () => `<h1>المكافأة</h1><p class="lead">بعد كم ختم، ووش يحصل؟</p>
+      <p class="head">عدد الأختام</p><div class="group"><div class="row"><span class="txt"><b>الأختام للمكافأة</b></span><span class="stepper"><button type="button" data-step="-1">−</button><b id="need">8</b><button type="button" data-step="1">+</button></span></div></div>
+      <p class="head">المكافأة</p><input class="field" value="قهوة مجانية" aria-label="المكافأة">
+      <p class="note">تنحفظ تلقائياً.</p>`,
+    plans: () => `<h1>الباقات</h1><p class="lead">الباقات اللي تبيعها لعملائك.</p>
+      <div class="group" style="margin-top:16px">${[['10 أكواب قهوة', '150 ر.س، صالحة 60 يوم'], ['30 وجبة', '900 ر.س، صالحة 90 يوم'], ['5 حلى', '90 ر.س، بدون انتهاء']].map(([t, s]) => `<div class="row"><span class="ic"><i class="ph-bold ph-package"></i></span><span class="txt"><b>${t}</b><small>${s}</small></span><i class="ph-bold ph-caret-left chev"></i></div>`).join('')}</div>
+      <button class="big-btn" type="button"><i class="ph-bold ph-plus"></i> باقة جديدة</button>`,
+    look: () => `<h1>الشكل</h1><p class="lead">لون البطاقة وشعارك وصورة الختم.</p><p class="note" style="margin:16px 0 0">هنا تنتقل إعدادات «تصميم البطاقة» الحالية كما هي.</p>`,
+    qr: () => `<h1>كرت التسجيل</h1><p class="lead">اطبعه وحطه عند الكاشير.</p><p class="note" style="margin:16px 0 0">هنا ينتقل «كرت التسجيل» الحالي كما هو.</p>`,
+    cashier: () => `<h1>شاشة الكاشير</h1><p class="lead">يفتحها الكاشير من جهازه ويمسح بطاقة العميل.</p><button class="big-btn" type="button">افتح شاشة الكاشير</button>`,
+    msg: (i) => { const [, , t, sub] = AUTO[i]; return `<h1>${t}</h1><p class="lead">${sub}</p>
+      <p class="head">مين يكتبها؟</p><div class="group" role="radiogroup"><button class="radio" role="radio" aria-checked="true"><span class="txt"><b>المساعد يكتبها</b><small>كل عميل رسالة مختلفة باسمه</small></span><i class="ph-bold ph-check"></i></button><button class="radio" role="radio" aria-checked="false"><span class="txt"><b>أكتبها بنفسي</b><small>نفس الرسالة للكل</small></span><i class="ph-bold ph-check"></i></button></div>
+      <p class="head">مثال من المساعد</p><div class="bubble">نورة، الكرسي اللي عند الشباك ما زال ينتظرك، وباقي لك 6 أختام على القهوة المجانية.<small>يتغيّر لكل عميل</small></div>`; }
+  };
+  function push(key) {
+    const [k, arg] = key.split(':');
+    $('#push-body').innerHTML = `<button class="back" type="button" data-back><i class="ph-bold ph-caret-left"></i> البطاقة</button>` + PUSH[k](arg);
+    $('#push').classList.add('on'); $('#push').scrollTop = 0;
+    history.pushState({ p: 1 }, '');
+  }
+  const unpush = () => $('#push').classList.remove('on');
+  function open(sel) { $(sel).classList.add('on'); document.body.style.overflow = 'hidden'; }
+  function close() { document.querySelectorAll('.sheet.on').forEach(s => s.classList.remove('on')); document.body.style.overflow = ''; }
+
+  document.addEventListener('click', (e) => {
+    const t = e.target;
+    const v = t.closest('[data-v]');
+    if (v) {
+      document.querySelectorAll('[data-v]').forEach(b => b.setAttribute('aria-selected', b === v));
+      document.querySelectorAll('.view').forEach(x => x.classList.toggle('on', x.id === 'v-' + v.dataset.v));
+      $('#title').textContent = v.dataset.v === 'people' ? 'العملاء' : 'البطاقة';
+      $('#new-msg').style.visibility = v.dataset.v === 'people' ? '' : 'hidden';
+      return;
+    }
+    const f = t.closest('[data-f]'); if (f) { filter = f.dataset.f; return renderList(); }
+    const m = t.closest('[data-m]'); if (m) return openMember(Number(m.dataset.m));
+    if (t.closest('#new-msg')) return open('#sh-msg');
+    if (t.closest('[data-close]') || t.classList.contains('sheet')) return close();
+    const sw = t.closest('[data-sw]'); if (sw) { const on = sw.getAttribute('aria-checked') !== 'true'; sw.setAttribute('aria-checked', on); AUTO[sw.dataset.sw][4] = on; return; }
+    const p = t.closest('[data-push]'); if (p) return push(p.dataset.push);
+    if (t.closest('[data-back]')) return history.back();
+    const r = t.closest('.radio'); if (r) { r.parentElement.querySelectorAll('.radio').forEach(x => x.setAttribute('aria-checked', x === r)); if (r.dataset.type) $('#val-type').textContent = r.dataset.type; return; }
+    const st = t.closest('[data-step]'); if (st) { const b = $('#need'); const n = Math.min(20, Math.max(3, Number(b.textContent) + Number(st.dataset.step))); b.textContent = n; $('#val-reward').textContent = `قهوة مجانية بعد ${n}`; }
+  });
+  addEventListener('popstate', unpush);
+  addEventListener('keydown', (e) => { if (e.key === 'Escape') { close(); if ($('#push').classList.contains('on')) history.back(); } });
+  $('#q').addEventListener('input', renderList);
+  renderList(); renderAuto();
+})();
+</script>
+</body>
+</html>
