@@ -101,7 +101,7 @@ async function loyaltyMessages({ storeName, businessType, reward, needed, guests
 
 /**
  * رسائل التذكير التلقائية (استرجاع الغائب في بطاقة الأختام، وتذكيرات بطاقة الاشتراكات): رسالة مختلفة لكل عميل
- * guests: [{ ref, kind, name, lang, left, days_since, gift, plan, uses_left, expires }]
+ * guests: [{ ref, kind, name, gender, lang, left, days_since, gift, plan, uses_left, expires }]
  * @returns {Promise<Record<string,string>>} ref → نص الرسالة
  */
 const REMIND_KINDS = `Kinds for this batch:
@@ -113,7 +113,7 @@ const REMIND_KINDS = `Kinds for this batch:
 - subs_expiry: their prepaid package ends on the date in expires and still has uses_left uses. Urge them kindly to use it before it ends, mentioning the date.
 - subs_renew: their prepaid package is finished. Thank them and invite them to renew it at the cashier.
 Prepaid packages are not stamps: never mention stamps or rewards in subs_* messages.
-Max 150 characters. Use the first name naturally when given. Never write placeholders or brackets.`;
+Max 150 characters. Use the first name naturally when given. If gender is given, use correct Arabic gender agreement (gender="f": تعالي، خذي، باقتك تنتظرك يا نورة; gender="m": تعال، خذ). If gender is missing, keep every verb and address gender-neutral (e.g. حيّاك، ننتظرك، بطاقتك محفوظة) so it fits anyone. Never write placeholders or brackets.`;
 async function remindMessages({ storeName, businessType, reward, needed, guests }) {
   if (!guests.length) return {};
   if (guests.length > 25) {
@@ -128,7 +128,7 @@ async function remindMessages({ storeName, businessType, reward, needed, guests 
     reward ? `<reward>${reward} بعد ${needed} أختام</reward>` : '',
     REMIND_KINDS,
     '<guests>',
-    ...guests.map(g => `<guest${attr('ref', g.ref)}${attr('kind', g.kind)}${attr('first_name', String(g.name || '').trim().split(/\s+/)[0])}${g.lang === 'en' ? ' lang="en"' : ''}${attr('stamps_left', g.left)}${attr('days_since', g.days_since)}${attr('gift', g.gift ? 'yes' : '')}${attr('plan', g.plan)}${attr('uses_left', g.uses_left)}${attr('expires', g.expires)}></guest>`),
+    ...guests.map(g => `<guest${attr('ref', g.ref)}${attr('kind', g.kind)}${attr('first_name', String(g.name || '').trim().split(/\s+/)[0])}${g.gender === 'm' || g.gender === 'f' ? ` gender="${g.gender}"` : ''}${g.lang === 'en' ? ' lang="en"' : ''}${attr('stamps_left', g.left)}${attr('days_since', g.days_since)}${attr('gift', g.gift ? 'yes' : '')}${attr('plan', g.plan)}${attr('uses_left', g.uses_left)}${attr('expires', g.expires)}></guest>`),
     '</guests>',
     'Write one message per guest. JSON: {"messages":[{"ref":"...","text":"..."}]}'
   ].join('\n');

@@ -58,7 +58,7 @@ async function runComeback(storeId) {
   if (!cb.enabled || !wallet.configured()) return { skipped: 'off' };
   if (!(await storeHasFeature(storeId, 'loyalty'))) return { skipped: 'plan' };
   const now = Date.now();
-  const cards = await rest(`loyalty_cards?client_id=eq.${storeId}&wallet_serial=not.is.null&last_stamp_at=lt.${q(new Date(now - cb.days * DAY).toISOString())}&select=id,name,lang,stamps,visits,last_stamp_at,wallet_serial,wallet_platform,comeback_step,comeback_at&order=last_stamp_at.desc&limit=3000`);
+  const cards = await rest(`loyalty_cards?client_id=eq.${storeId}&wallet_serial=not.is.null&last_stamp_at=lt.${q(new Date(now - cb.days * DAY).toISOString())}&select=id,name,gender,lang,stamps,visits,last_stamp_at,wallet_serial,wallet_platform,comeback_step,comeback_at&order=last_stamp_at.desc&limit=3000`);
   const due = dueCards(cards, cb, now).slice(0, BATCH);
   if (!due.length) return { sent: 0 };
   const bodies = {}, rows = [];
@@ -66,7 +66,7 @@ async function runComeback(storeId) {
   const ready = (card, step) => step === 1 && card.stamps >= settings.needed;
   const ai = cb.mode === 'ai' ? await require('./ai').remindMessages({
     storeName: store.name, businessType: require('./sectors').label(store), reward: settings.reward, needed: settings.needed,
-    guests: due.map(({ card, step }) => ({ ref: String(card.id), kind: ready(card, step) ? 'comeback_ready' : `comeback_${step}`, name: card.name, lang: card.lang,
+    guests: due.map(({ card, step }) => ({ ref: String(card.id), kind: ready(card, step) ? 'comeback_ready' : `comeback_${step}`, name: card.name, gender: card.gender, lang: card.lang,
       left: Math.max(0, settings.needed - Math.min(Number(card.stamps || 0), settings.needed)), days_since: Math.round((now - Date.parse(card.last_stamp_at)) / DAY), gift: step === 3 && cb.gift }))
   }).catch(e => { console.error('COMEBACK_AI', e.message); return {}; }) : {};
   for (const { card, step } of due) {

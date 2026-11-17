@@ -97,9 +97,19 @@ async function runSubsRemind(storeId, { limitMs = 20e3 } = {}) {
   const P = require('./packages');
   const sent = { away: 0, expiry: 0, renew: 0 };
   // المساعد يكتبها: رسالة مختلفة لكل عميل (ولو تعطّل الذكاء نرجع للنص الجاهز)
+  // جنس العميل من بطاقة الأختام المربوطة (أو بنفس الجوال) عشان المساعد يخاطبه صح، ولو ما عرفناه يكتب بصيغة تناسب الكل
+  const gender = {};
+  if (cfg.mode === 'ai' && due.length) {
+    const ids = [...new Set(due.map(d => d.card.loyalty_card_id).filter(Boolean))];
+    const phones = [...new Set(due.filter(d => !d.card.loyalty_card_id && d.card.phone).map(d => d.card.phone))];
+    const byId = {}, byPhone = {};
+    if (ids.length) (await rest(`loyalty_cards?id=in.(${ids.join(',')})&gender=not.is.null&select=id,gender`).catch(() => [])).forEach(r => { byId[r.id] = r.gender; });
+    if (phones.length) (await rest(`loyalty_cards?client_id=eq.${storeId}&phone=in.(${phones.map(p => q(p)).join(',')})&gender=not.is.null&select=phone,gender`).catch(() => [])).forEach(r => { byPhone[r.phone] = r.gender; });
+    for (const { card } of due) gender[card.id] = byId[card.loyalty_card_id] || byPhone[card.phone] || null;
+  }
   const ai = cfg.mode === 'ai' && due.length ? await require('./ai').remindMessages({
     storeName: store.name, businessType: require('./sectors').label(store),
-    guests: due.map(({ card, kind }) => ({ ref: String(card.id), kind: `subs_${kind}`, name: /^عضو\s/.test(card.name || '') ? '' : card.name, plan: card.plan_name,
+    guests: due.map(({ card, kind }) => ({ ref: String(card.id), kind: `subs_${kind}`, name: /^عضو\s/.test(card.name || '') ? '' : card.name, gender: gender[card.id], plan: card.plan_name,
       uses_left: kind === 'renew' ? null : times(card.remaining), expires: kind === 'expiry' && card.expires_at ? dateText(card.expires_at) : null,
       days_since: kind === 'away' ? Math.round((now - Math.max(Date.parse(card.created_at), card.last_used_at ? Date.parse(card.last_used_at) : 0)) / DAY) : null }))
   }).catch(e => { console.error('SUBS_REMIND_AI', e.message); return {}; }) : {};
