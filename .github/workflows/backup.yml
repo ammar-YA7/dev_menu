@@ -20,9 +20,9 @@ env:
   BUCKET: devmenu-backups
   STORAGE_PUBLIC: https://czdoamcgxgkicrbufpcn.supabase.co/storage/v1/object/public
   KEEP_DAYS: 30
-  AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-  AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
   AWS_DEFAULT_REGION: auto
+  AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+  AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
   AWS_EC2_METADATA_DISABLED: 'true'
 
 jobs:
@@ -30,6 +30,20 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
+      - name: Cloudflare R2 keys (trim stray spaces/newlines from pasted secrets)
+        env:
+          K: ${{ secrets.R2_ACCESS_KEY_ID }}
+          S: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          E: ${{ secrets.R2_ENDPOINT }}
+        run: |
+          set -euo pipefail
+          k=$(printf %s "$K" | tr -d '[:space:]'); s=$(printf %s "$S" | tr -d '[:space:]'); e=$(printf %s "$E" | tr -d '[:space:]'); e=${e%/}; e=${e%/devmenu-backups}
+          echo "::add-mask::$k"; echo "::add-mask::$s"
+          [ -n "$k" ] && [ -n "$s" ] || { echo "::error::R2 keys are empty"; exit 1; }
+          [[ "$e" == https://*.r2.cloudflarestorage.com ]] || { echo "::error::R2_ENDPOINT must look like https://<account>.r2.cloudflarestorage.com"; exit 1; }
+          { echo "AWS_ACCESS_KEY_ID=$k"; echo "AWS_SECRET_ACCESS_KEY=$s"; echo "R2=$e"; } >> "$GITHUB_ENV"
+          echo "key length ${#k}, secret length ${#s}"
+
       - name: Tools (pg_dump 17, age)
         run: |
           sudo apt-get update -qq
@@ -51,16 +65,16 @@ jobs:
           [ "$tables" -gt 40 ] && [ "$size" -gt 100000 ] || { echo "Dump looks incomplete"; exit 1; }
           age -r "$AGE_RECIPIENT" -o db.dump.age db.dump
           rm -f db.dump
-          aws s3 cp db.dump.age "s3://$BUCKET/db/$day.dump.age" --endpoint-url "${{ secrets.R2_ENDPOINT }}" --only-show-errors
+          aws s3 cp db.dump.age "s3://$BUCKET/db/$day.dump.age" --endpoint-url "$R2" --only-show-errors
           echo "Uploaded db/$day.dump.age"
 
       - name: Remove dumps older than ${{ env.KEEP_DAYS }} days
         run: |
           set -euo pipefail
           cutoff=$(date -u -d "-$KEEP_DAYS days" +%F)
-          aws s3 ls "s3://$BUCKET/db/" --endpoint-url "${{ secrets.R2_ENDPOINT }}" | awk '{print $4}' | while read -r f; do
+          aws s3 ls "s3://$BUCKET/db/" --endpoint-url "$R2" | awk '{print $4}' | while read -r f; do
             d=${f%%.dump.age}
-            if [[ "$d" < "$cutoff" ]]; then aws s3 rm "s3://$BUCKET/db/$f" --endpoint-url "${{ secrets.R2_ENDPOINT }}" --only-show-errors; echo "removed $f"; fi
+            if [[ "$d" < "$cutoff" ]]; then aws s3 rm "s3://$BUCKET/db/$f" --endpoint-url "$R2" --only-show-errors; echo "removed $f"; fi
           done
 
       - name: Menu images (new ones only)
@@ -69,7 +83,7 @@ jobs:
         run: |
           set -euo pipefail
           /usr/lib/postgresql/17/bin/psql "$PROD_DB_URL" -Atc "select bucket_id || '/' || name from storage.objects where name not like '%/.emptyFolderPlaceholder' order by 1" > all.txt
-          aws s3 ls "s3://$BUCKET/images/" --recursive --endpoint-url "${{ secrets.R2_ENDPOINT }}" | awk '{ $1=$2=$3=""; sub(/^ +/, ""); print }' | sed 's#^images/##' | sort > have.txt
+          aws s3 ls "s3://$BUCKET/images/" --recursive --endpoint-url "$R2" | awk '{ $1=$2=$3=""; sub(/^ +/, ""); print }' | sed 's#^images/##' | sort > have.txt
           sort all.txt | comm -23 - have.txt > missing.txt
           echo "images: $(wc -l < all.txt) total, $(wc -l < missing.txt) new"
           mkdir -p img
@@ -79,7 +93,7 @@ jobs:
             url="$STORAGE_PUBLIC/$(python3 -c 'import sys,urllib.parse;print(urllib.parse.quote(sys.argv[1]))' "$p")"
             curl -sfL --retry 2 -o "img/$p" "$url" || { echo "skip $p"; fail=$((fail+1)); rm -f "img/$p"; }
           done < missing.txt
-          [ -n "$(ls -A img)" ] && aws s3 cp img "s3://$BUCKET/images/" --recursive --endpoint-url "${{ secrets.R2_ENDPOINT }}" --only-show-errors
+          [ -n "$(ls -A img)" ] && aws s3 cp img "s3://$BUCKET/images/" --recursive --endpoint-url "$R2" --only-show-errors
           echo "failed downloads: $fail"
 
       - name: Record success (for the daily health check)
