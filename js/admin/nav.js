@@ -76,6 +76,8 @@
     bar.innerHTML = seg + navActionsHtml(g);
   }
   function navActionsHtml(g) {
+    // المنيو: «أضف طبق» وزر «المزيد» يفتح قائمة (معاينة، نسخ الرابط، المنيو من صورة، Excel، بطاقة QR)
+    if (g.id === 'menu') return '<div class="ap-actions"><button type="button" class="ap-chip ap-chip-fill" data-fn="add-dish"><i class="ph-bold ph-plus"></i> أضف طبق</button><button type="button" class="ap-chip" data-fn="menu-more" aria-label="المزيد"><i class="ph-bold ph-dots-three-vertical"></i> المزيد</button></div>';
     const acts = (NAV_ACTIONS[g.id] || []).map(([sel, icon, label], i) => {
       const src = document.querySelector(sel);
       if (!src || src.style.display === 'none' || (src.closest('[style*="display: none"]'))) return '';
@@ -108,6 +110,18 @@
     if (home) { homeTabNow = home.dataset.home; try { localStorage.setItem('dm_home_tab', homeTabNow); } catch {} renderNavGroups('dashboard'); window.scrollTo({ top: 0 }); return; }
     const seg = e.target.closest('[data-seg]');
     if (seg) { location.hash = seg.dataset.seg; return; }
+    const fn = e.target.closest('[data-fn]');
+    if (fn) {
+      if (fn.dataset.fn === 'add-dish') return goAddDish();
+      if (fn.dataset.fn === 'menu-more') return apSheet('المنيو', [
+        ['ph-eye', 'معاينة المنيو', () => { const a = document.getElementById('sidebar-preview'); if (a) a.click(); }],
+        ['ph-link-simple', 'نسخ رابط المنيو', () => copyMenuLink()],
+        ['ph-printer', 'بطاقة QR للطباعة', () => downloadQrCard()],
+        ['ph-camera', 'المنيو من صورة', () => document.getElementById('mp-file').click(), 'صوّر منيوك الورقي ويضيف الأطباق لحاله'],
+        ['ph-microsoft-excel-logo', 'استيراد من Excel', () => document.getElementById('pi-file').click()],
+        ['ph-download-simple', 'نموذج ملف Excel', () => downloadProductTemplate()]
+      ]);
+    }
     const act = e.target.closest('[data-act]');
     if (act) {
       const [gid, i] = act.dataset.act.split(':');
@@ -240,3 +254,26 @@
       btn.after(note);
     }
   });
+
+  // ─── قائمة خيارات تطلع من تحت (زي قوائم الآيفون) ───
+  function apSheet(title, items) {
+    document.getElementById('ap-sheet')?.remove();
+    const el = document.createElement('div'); el.id = 'ap-sheet'; el.className = 'ap-asheet'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', title);
+    el.innerHTML = `<div class="ap-asheet-card"><p class="ap-asheet-title">${esc(title)}</p><div class="ap-asheet-list">${items.map(([icon, label, , sub], i) => `
+      <button type="button" data-sheet-i="${i}"><i class="ph-bold ${icon}"></i><span><b>${esc(label)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}</span></button>`).join('')}</div>
+      <button type="button" class="ap-asheet-cancel">إلغاء</button></div>`;
+    const close = () => { el.classList.remove('on'); setTimeout(() => el.remove(), 250); };
+    el.addEventListener('click', (e) => {
+      if (e.target === el || e.target.closest('.ap-asheet-cancel')) return close();
+      const b = e.target.closest('[data-sheet-i]'); if (!b) return;
+      close(); items[Number(b.dataset.sheetI)][2]();
+    });
+    document.body.appendChild(el); void el.offsetWidth; el.classList.add('on');
+    el.querySelector('[data-sheet-i]')?.focus();
+  }
+  addEventListener('keydown', (e) => { const s = document.getElementById('ap-sheet'); if (e.key === 'Escape' && s) s.click(); });
+  // أزرار الاستيراد في شريط البحث تختفي لما يكون عنده أطباق (صارت في «المزيد»)، وتبقى للمنيو الفاضي عشان يبدأ بسرعة
+  if (typeof renderProductsList === 'function') {
+    const f = renderProductsList;
+    renderProductsList = function () { f.apply(this, arguments); document.querySelector('[data-page="menu"]')?.classList.toggle('ap-has-dishes', loadedProducts.length > 0); };
+  }

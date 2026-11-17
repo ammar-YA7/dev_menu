@@ -166,3 +166,42 @@ main input[type="file"]::file-selector-button { border: 0; border-radius: 980px;
 .ap-autosaved { display: none !important; }
 .ap-autosave-note { font-size: 12px; color: var(--ap-muted); display: flex; align-items: center; gap: 5px; margin: 0; }
 .ap-autosave-note i { color: var(--ap-green-2); }
+
+/* ─── صفحة المنيو ─── */
+.ap-chip-fill { background: var(--ap-green) !important; color: #fff !important; }
+.ap-has-dishes [onclick="document.getElementById('pi-file').click()"], .ap-has-dishes [onclick="document.getElementById('mp-file').click()"], .ap-has-dishes [onclick="downloadProductTemplate()"] { display: none !important; }
+/* الزر العائم + في الجوال: دائرة خضراء */
+[data-page="menu"] > button[aria-label="أضف طبق"] { border-radius: 50% !important; background: var(--ap-green) !important; box-shadow: 0 8px 24px rgba(35, 61, 44, .35) !important; }
+/* قائمة الأطباق: عناوين الأقسام هادية، والصفوف بفواصل خفيفة، والصور مربعات ناعمة */
+.dish-cat { border-bottom: 0 !important; margin-top: 26px !important; padding-bottom: 6px !important; }
+.dish-cat h4 { font-size: 13px !important; font-weight: 600 !important; color: var(--ap-muted) !important; }
+.dish-row { border-bottom: 1px solid var(--ap-sep) !important; padding: 10px 0 !important; }
+.dish-thumb { border-radius: 12px !important; }
+.dish-name { font-size: 15.5px !important; font-weight: 600 !important; color: var(--ap-ink) !important; }
+.dish-price { font-size: 15px !important; font-weight: 600 !important; }
+.dish-cat-btn { border: 0 !important; background: var(--ap-fill) !important; border-radius: 980px !important; }
+.dish-row.is-editing { background: var(--ap-pale) !important; }
+/* مفتاح «متوفر» زي مفتاح الآيفون */
+.avail-track { width: 51px !important; height: 31px !important; background: #e3e6e3 !important; }
+.avail-track::after { top: 2px !important; inset-inline-start: 2px !important; width: 27px !important; height: 27px !important; box-shadow: 0 3px 8px rgba(0, 0, 0, .15), 0 1px 1px rgba(0, 0, 0, .16) !important; }
+.avail[aria-checked="true"] .avail-track { background: #34a853 !important; }
+.avail[aria-checked="true"] .avail-track::after { inset-inline-start: 22px !important; }
+.avail-label { color: var(--ap-muted) !important; font-weight: 500 !important; }
+.avail[aria-checked="true"] .avail-label { color: var(--ap-muted) !important; }
+
+/* ─── قائمة الخيارات (action sheet) ─── */
+.ap-asheet { position: fixed; inset: 0; z-index: 80; background: rgba(10, 18, 13, .38); display: flex; align-items: flex-end; justify-content: center; padding: 10px; padding-bottom: calc(10px + env(safe-area-inset-bottom)); opacity: 0; transition: opacity .25s var(--ap-ease); }
+.ap-asheet.on { opacity: 1; }
+.ap-asheet-card { width: 100%; max-width: 440px; display: grid; gap: 8px; transform: translateY(30px); transition: transform .35s var(--ap-ease); }
+.ap-asheet.on .ap-asheet-card { transform: none; }
+@media (min-width: 1024px) { .ap-asheet { align-items: center; } }
+.ap-asheet-title { background: rgba(255, 255, 255, .96); border-radius: 14px 14px 0 0; margin-bottom: -8px; padding: 12px 16px 10px; text-align: center; font-size: 13px; color: var(--ap-muted); border-bottom: 1px solid var(--ap-sep); }
+.ap-asheet-list { background: rgba(255, 255, 255, .96); border-radius: 0 0 14px 14px; overflow: hidden; }
+.ap-asheet-list button { display: flex; align-items: center; gap: 14px; width: 100%; min-height: 56px; padding: 8px 18px; border: 0; background: none; text-align: start; font-size: 17px; color: var(--ap-ink); cursor: pointer; }
+.ap-asheet-list button + button { border-top: 1px solid var(--ap-sep); }
+.ap-asheet-list button:active { background: #eceeec; }
+.ap-asheet-list i { font-size: 22px; color: var(--ap-green-2); width: 24px; text-align: center; }
+.ap-asheet-list span { display: grid; gap: 1px; }
+.ap-asheet-list b { font-weight: 500; }
+.ap-asheet-list small { font-size: 12.5px; color: var(--ap-muted); }
+.ap-asheet-cancel { min-height: 56px; border: 0; border-radius: 14px; background: #fff; font-size: 17px; font-weight: 600; color: var(--ap-green); cursor: pointer; }
