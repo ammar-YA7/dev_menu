@@ -91,3 +91,28 @@ nav.fixed.bottom-0 .bnav.nav-active i { font-family: "Phosphor-Fill" !important;
 main > [data-page]:not(.hidden) { animation: ap-in .35s var(--ap-ease); }
 @keyframes ap-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { main > [data-page]:not(.hidden) { animation: none; } main button:active { transform: none; } }
+
+/* ─── الرئيسية ─── */
+/* الترحيب صار العنوان الكبير، وأزراره صارت فوق في شريط الأقسام */
+[data-page="dashboard"] > div:first-child:has(#greeting) { display: none !important; }
+[data-page="dashboard"][data-home-tab="today"] .home-link { display: none !important; }
+[data-page="dashboard"][data-home-tab="links"] > :not(.home-links-wrap) { display: none !important; }
+[data-page="dashboard"][data-home-tab="links"] .home-links-wrap > :not(.home-link) { display: none !important; }
+/* بطاقة «ثبّت اللوحة» بألوان الهوية بدل الأزرق */
+#install-card { background: var(--ap-pale) !important; border: 0 !important; }
+#install-card #install-go { background: var(--ap-green) !important; border-radius: 980px !important; }
+/* أيقونات الكروت والمربعات الملوّنة: أخضر الهوية (الأحمر والبرتقالي يبقون للتنبيهات بس) */
+[data-page="dashboard"] i[class*="text-emerald-"], [data-page="dashboard"] i[class*="text-amber-"], [data-page="dashboard"] i[class*="text-blue-"], [data-page="dashboard"] i[class*="text-purple-"], [data-page="dashboard"] i[class*="text-violet-"], [data-page="dashboard"] i[class*="text-sky-"], [data-page="dashboard"] i[class*="text-indigo-"] { color: var(--ap-green-2) !important; }
+#quick-counts [class*="bg-blue-"], #quick-counts [class*="bg-purple-"], #quick-counts [class*="bg-emerald-"], #quick-counts [class*="bg-green-"], #quick-counts [class*="bg-violet-"] { background: var(--ap-pale) !important; color: var(--ap-green) !important; }
+#quick-counts [class*="bg-blue-"] i, #quick-counts [class*="bg-purple-"] i, #quick-counts [class*="bg-emerald-"] i, #quick-counts [class*="bg-green-"] i, #quick-counts [class*="bg-violet-"] i { color: var(--ap-green) !important; }
+/* أزرار «شغل اليوم» (امسح بطاقة، كود ختم...): مربعات بيضاء كبيرة زي اختصارات الآيفون */
+#quick-actions .qa { background: var(--ap-card) !important; border: 0 !important; border-radius: 18px !important; box-shadow: 0 1px 2px rgba(29, 42, 33, .04) !important; color: var(--ap-ink) !important; font-weight: 600 !important; }
+#quick-actions .qa i { color: var(--ap-green-2) !important; }
+#quick-actions .qa.qa-main { background: var(--ap-green) !important; color: #fff !important; }
+#quick-actions .qa.qa-main i { color: #fff !important; }
+[data-page="dashboard"] [class*="bg-amber-"]:has(> i), [data-page="dashboard"] [class*="bg-yellow-"]:has(> i), [data-page="dashboard"] [class*="bg-blue-"]:has(> i), [data-page="dashboard"] [class*="bg-purple-"]:has(> i), [data-page="dashboard"] [class*="bg-emerald-"]:has(> i), [data-page="dashboard"] [class*="bg-green-"]:has(> i) { background: var(--ap-pale) !important; border-color: transparent !important; }
+[data-page="dashboard"] [class*="bg-amber-"]:has(> i) > i, [data-page="dashboard"] [class*="bg-yellow-"]:has(> i) > i { color: var(--ap-green-2) !important; }
+#setup-card { border: 0 !important; }
+/* مربعات أيقونات عناوين البطاقات في كل الصفحات: أخضر فاتح وأيقونة خضراء (كانت أزرق وأصفر وبنفسجي)، والأحمر يبقى للتنبيه */
+main .pro-card h3 > i:first-child, [data-page="dashboard"] .pro-card h3 > i { background: var(--ap-pale) !important; color: var(--ap-green-2) !important; border-radius: 10px !important; }
+main .pro-card h3 > i:first-child[class*="red"], main .pro-card h3 > i:first-child[class*="rose"] { background: #fde8e6 !important; color: #c0392b !important; }

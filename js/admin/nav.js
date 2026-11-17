@@ -13,6 +13,7 @@
   const SEG_LABELS = { pagerset: 'البيجر', waitlist: 'قائمة الانتظار', customers: 'العملاء', loyalty: 'الأختام', subs: 'الاشتراكات', carddesign: 'تصميم البطاقة', messages: 'الرسائل', settings: 'الهوية', branches: 'الفروع', devices: 'الأجهزة', account: 'الاشتراك' };
   // اختصارات كل قسم: تنسخ نفس الأزرار القديمة (بصلاحياتها) بشكل كبسولة
   const NAV_ACTIONS = {
+    home: [['[data-page="dashboard"] [onclick="goAddDish()"]', 'ph-plus', 'أضف طبق']],
     menu: [['#sidebar-preview', 'ph-eye', 'معاينة المنيو'], ['[onclick="copyMenuLink()"]', 'ph-link-simple', 'نسخ الرابط']],
     pager: [['#nav-legacy a[href="pager-desk.html"]', 'ph-arrow-square-out', null]],
     people: [['#nav-legacy a[href="cashier.html"]', 'ph-cash-register', 'شاشة الكاشير']]
@@ -59,18 +60,52 @@
     const bar = document.getElementById('seg-bar');
     if (!bar) return;
     const pages = groupPages(g);
+    // الرئيسية: العنوان الكبير ترحيب باسم المحل، وتبويب «اليوم» و«روابطك» (الروابط والباركود وأرقام المنيو)
+    if (page === 'dashboard') {
+      const name = (typeof client !== 'undefined' && client && client.name) || '';
+      document.getElementById('page-title').textContent = name ? `أهلاً، ${name}` : 'الرئيسية';
+      document.getElementById('page-subtitle').textContent = homeTab() === 'links' ? 'روابط خدماتك وباركود المنيو' : 'شغل اليوم وأرقام خدماتك';
+      markHomeLinks();
+      const sec = document.querySelector('[data-page="dashboard"]');
+      if (sec) sec.dataset.homeTab = homeTab();
+      const segHome = homeHasLinks() ? `<div class="ap-seg" role="tablist">${[['today', 'اليوم'], ['links', 'روابطك وباركودك']].map(([k, t]) => `<button type="button" role="tab" aria-selected="${homeTab() === k}" data-home="${k}">${t}</button>`).join('')}</div>` : '';
+      bar.innerHTML = segHome + navActionsHtml(g);
+      return;
+    }
     const seg = pages.length > 1 ? `<div class="ap-seg" role="tablist">${pages.map(p => `<button type="button" role="tab" aria-selected="${p === page}" data-seg="${p}">${SEG_LABELS[p] || PAGES[p][0]}</button>`).join('')}</div>` : '';
+    bar.innerHTML = seg + navActionsHtml(g);
+  }
+  function navActionsHtml(g) {
     const acts = (NAV_ACTIONS[g.id] || []).map(([sel, icon, label], i) => {
       const src = document.querySelector(sel);
       if (!src || src.style.display === 'none' || (src.closest('[style*="display: none"]'))) return '';
       return `<button type="button" class="ap-chip" data-act="${g.id}:${i}"><i class="ph-bold ${icon}"></i> ${label || src.textContent.trim()}</button>`;
     }).join('');
-    bar.innerHTML = seg + (acts ? `<div class="ap-actions">${acts}</div>` : '');
+    return acts ? `<div class="ap-actions">${acts}</div>` : '';
   }
+
+  // ─── الرئيسية: «اليوم» و«روابطك وباركودك» ───
+  let homeTabNow = null;
+  function homeTab() {
+    if (!homeTabNow) { try { homeTabNow = localStorage.getItem('dm_home_tab') || 'today'; } catch { homeTabNow = 'today'; } }
+    return homeHasLinks() ? homeTabNow : 'today';
+  }
+  // كروت الروابط: روابط الخدمات، وباركود المنيو، وأرقام المنيو
+  function markHomeLinks() {
+    ['svc-links', 'qrcode', 'quick-counts'].forEach(id => {
+      const el = document.getElementById(id); if (!el) return;
+      const card = el.classList.contains('pro-card') ? el : el.closest('.pro-card');
+      if (card) { card.classList.add('home-link'); card.parentElement.classList.add('home-links-wrap'); }
+    });
+  }
+  const homeHasLinks = () => { markHomeLinks(); return [...document.querySelectorAll('.home-link')].some(c => c.style.display !== 'none' && !c.classList.contains('hidden')); };
+
 
   document.addEventListener('click', (e) => {
     const grp = e.target.closest('[data-group]');
     if (grp) return goGroup(grp.dataset.group);
+    const home = e.target.closest('[data-home]');
+    if (home) { homeTabNow = home.dataset.home; try { localStorage.setItem('dm_home_tab', homeTabNow); } catch {} renderNavGroups('dashboard'); window.scrollTo({ top: 0 }); return; }
     const seg = e.target.closest('[data-seg]');
     if (seg) { location.hash = seg.dataset.seg; return; }
     const act = e.target.closest('[data-act]');
