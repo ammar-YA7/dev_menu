@@ -8,11 +8,13 @@
 //   • كل رسالة لها نتيجة: sent (وصلت) أو gone (حذف البطاقة) أو failed
 //   "طلبك جاهز" ما يمر من هنا: ينرسل لحظياً من owner.js
 // =====================================================================
-const { rest, q } = require('./core');
+const { rest, rpc, q } = require('./core');
 const wallet = require('./wallet');
 const { riyadhDayStart } = require('./waitlist');
 
 const GOOGLE_DAILY = 3, READY_RESERVE = 1, DAY = 864e5, RETRY_MS = 2 * 60e3, MAX_ATTEMPTS = 3;
+// كم رسالة تنرسل مع بعض في كل دفعة
+const BATCH = 50;
 const PRIORITY = { pager_msg: 5, loyalty_msg: 5, loyalty_ai: 7, loyalty_comeback: 8, winback: 8 };
 const isLoyalty = (kind) => kind.startsWith('loyalty');
 
@@ -100,28 +102,29 @@ async function sendOne(row, stores) {
 }
 
 // يرسل الجاهز من الطابور لين يخلص أو يقرب وقت الدالة يخلص
+//   claim_notifications يحجز الدفعة (status = sending) فما ترسلها دالتين مع بعض، ويوزّعها بالدور بين المحلات
 async function processQueue(maxMs = 45e3) {
-  const started = Date.now(), stores = new Map(), counts = { sent: 0, gone: 0, failed: 0, deferred: 0 };
+  const started = Date.now(), stores = new Map(), counts = { sent: 0, gone: 0, failed: 0, deferred: 0 }, refs = new Map();
   while (Date.now() - started < maxMs) {
-    const rows = await rest(`notification_queue?status=eq.pending&run_at=lte.${q(new Date().toISOString())}&select=*&order=priority.asc,id.asc&limit=20`);
-    if (!rows.length) break;
+    const rows = await rpc('claim_notifications', { p_limit: BATCH });
+    if (!rows || !rows.length) break;
     await Promise.all(rows.map(async (row) => {
       let out;
       try { out = await sendOne(row, stores); } catch (e) { out = { status: 'failed', result: e.message }; }
       const attempts = row.attempts + (out.status === 'pending' ? 0 : 1);
-      const patch = { attempts, result: String(out.result || '').slice(0, 300) };
-      if (out.status === 'pending') { patch.run_at = out.run_at; counts.deferred++; }
-      else if (out.status === 'failed' && attempts < MAX_ATTEMPTS) { patch.run_at = new Date(Date.now() + RETRY_MS).toISOString(); counts.failed++; }
+      const patch = { attempts, result: String(out.result || '').slice(0, 300), claimed_at: null };
+      if (out.status === 'pending') { patch.status = 'pending'; patch.run_at = out.run_at; counts.deferred++; }
+      else if (out.status === 'failed' && attempts < MAX_ATTEMPTS) { patch.status = 'pending'; patch.run_at = new Date(Date.now() + RETRY_MS).toISOString(); counts.failed++; }
       else { patch.status = out.status; patch.sent_at = new Date().toISOString(); counts[out.status === 'sent' ? 'sent' : out.status === 'gone' ? 'gone' : 'failed']++; }
       await rest(`notification_queue?id=eq.${row.id}`, { method: 'PATCH', body: patch }).catch(() => {});
     }));
-    // الرسائل اللي خلصت: نحدّث عدد اللي وصلتهم
-    const refs = [...new Map(rows.filter(r => r.ref_id).map(r => [`${r.kind}:${r.ref_id}`, r])).values()];
-    for (const r of refs) {
-      const sent = (await rest(`notification_queue?ref_id=eq.${r.ref_id}&kind=eq.${r.kind}&status=eq.sent&select=id`).catch(() => [])).length;
-      if (r.kind === 'pager_msg') await rest(`pager_messages?id=eq.${r.ref_id}`, { method: 'PATCH', body: { sent } }).catch(() => {});
-      else await rest(`loyalty_messages?id=eq.${r.ref_id}`, { method: 'PATCH', body: { wallet_sent: sent } }).catch(() => {});
-    }
+    rows.filter(r => r.ref_id).forEach(r => refs.set(`${r.kind}:${r.ref_id}`, r));
+  }
+  // الرسائل اللي اشتغلنا عليها: نحدّث عدد اللي وصلتهم (مرة وحدة في آخر التشغيل)
+  for (const r of refs.values()) {
+    const sent = (await rest(`notification_queue?ref_id=eq.${r.ref_id}&kind=eq.${r.kind}&status=eq.sent&select=id`).catch(() => [])).length;
+    if (r.kind === 'pager_msg') await rest(`pager_messages?id=eq.${r.ref_id}`, { method: 'PATCH', body: { sent } }).catch(() => {});
+    else await rest(`loyalty_messages?id=eq.${r.ref_id}`, { method: 'PATCH', body: { wallet_sent: sent } }).catch(() => {});
   }
   return counts;
 }
@@ -130,7 +133,7 @@ async function processQueue(maxMs = 45e3) {
 async function messageStatus(msgId, kind = 'pager_msg') {
   const rows = await rest(`notification_queue?ref_id=eq.${Number(msgId)}&kind=eq.${kind}&select=status,result`).catch(() => []);
   const c = { total: rows.length, sent: 0, gone: 0, failed: 0, pending: 0, waiting_limit: 0 };
-  rows.forEach(r => { c[r.status] = (c[r.status] || 0) + 1; if (r.status === 'pending' && r.result === 'google daily limit') c.waiting_limit++; });
+  rows.forEach(r => { const st = r.status === 'sending' ? 'pending' : r.status; c[st] = (c[st] || 0) + 1; if (r.status === 'pending' && r.result === 'google daily limit') c.waiting_limit++; });
   return c;
 }
 
