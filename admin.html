@@ -32,6 +32,8 @@
 <script src="/js/vendor/sortable.min.js" defer></script>
 
 <style>
+  /* الاستيراد والتصدير للمدير العام بس (body.dm-sa)، وصاحب المحل يطلبها من فريقنا */
+  body:not(.dm-sa) [data-sa-only] { display: none !important; }
   /* ─── نظام التصميم: ألوان الشعار (أخضر + رملي)، والزعفراني للي يحتاج انتباه، والطوبي لـ"نفدت" ─── */
   /* قيم Shopify Polaris (@shopify/polaris-tokens 9.4.2)، والأخضر لون DEV MENU للأزرار الأساسية */
   :root {
@@ -705,7 +707,7 @@
                     <button data-days="30" class="stats-period px-3 py-1.5 rounded-lg bg-brand text-cream">30 يوم</button>
                     <button data-days="90" class="stats-period px-3 py-1.5 rounded-lg text-ink">90 يوم</button>
                   </div>
-                  <button id="stats-export" onclick="exportStatsCsv()" title="تصدير Excel" class="bg-brand/10 hover:bg-brand/10 border border-brand/45 text-ink/90 px-3 py-1.5 rounded-xl text-[11px] font-bold transition disabled:opacity-40">
+                  <button id="stats-export" data-sa-only onclick="exportStatsCsv()" title="تصدير Excel" class="bg-brand/10 hover:bg-brand/10 border border-brand/45 text-ink/90 px-3 py-1.5 rounded-xl text-[11px] font-bold transition disabled:opacity-40">
                     <i class="ph-bold ph-file-arrow-down"></i> تصدير
                   </button>
                 </div>
@@ -1285,12 +1287,12 @@
             <option value="all">جميع الأقسام</option>
           </select>
           <!-- استيراد الأطباق من Excel: بدل ما يضيفها وحدة وحدة -->
-          <button type="button" onclick="document.getElementById('pi-file').click()" class="bg-brand/10 hover:bg-brand/15 text-ink px-3.5 py-2.5 rounded-xl text-xs font-bold border border-brand/25 transition"><i class="ph-bold ph-microsoft-excel-logo"></i> استيراد من Excel</button>
+          <button type="button" data-sa-only onclick="document.getElementById('pi-file').click()" class="bg-brand/10 hover:bg-brand/15 text-ink px-3.5 py-2.5 rounded-xl text-xs font-bold border border-brand/25 transition"><i class="ph-bold ph-microsoft-excel-logo"></i> استيراد من Excel</button>
           <input type="file" id="pi-file" accept=".xlsx,.xls,.csv" class="hidden" onchange="readProductImport(this)">
           <!-- المنيو من صورة: الذكاء الاصطناعي يقرأ المنيو الورقي، وصاحب المحل يراجع قبل الإضافة -->
           <button type="button" onclick="document.getElementById('mp-file').click()" class="bg-brand text-cream hover:bg-brand-dark px-3.5 py-2.5 rounded-xl text-xs font-bold transition"><i class="ph-bold ph-camera"></i> المنيو من صورة</button>
           <input type="file" id="mp-file" accept="image/*" multiple class="hidden" onchange="readMenuPhoto(this)">
-          <button type="button" onclick="downloadProductTemplate()" class="text-[11px] font-bold text-ink hover:text-ink underline underline-offset-4">نموذج الملف</button>
+          <button type="button" data-sa-only onclick="downloadProductTemplate()" class="text-[11px] font-bold text-ink hover:text-ink underline underline-offset-4">نموذج الملف</button>
         </div>
         <!-- أطباق صورها مو 4:3 (تظهر بحواف في المنيو): قصّها من هنا بدون ما يرفع صورة جديدة -->
         <div id="crop-needed" class="pro-card px-4 sm:px-5 py-4 mb-3 hidden">
@@ -1623,7 +1625,7 @@
             <div class="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h3 class="text-xs font-black flex items-center gap-2"><i class="ph-bold ph-address-book text-brand"></i> سجل الضيوف</h3>
-                <p class="text-[11px] text-ink mt-0.5">كل تسجيلات قائمة الانتظار محفوظة، وتقدر تنزّلها ملف Excel.</p>
+                <p class="text-[11px] text-ink mt-0.5">كل تسجيلات قائمة الانتظار محفوظة، وإذا احتجتها في ملف Excel تواصل معنا ونجهّزها لك.</p>
               </div>
               <div class="flex flex-wrap gap-2">
                 <select id="wlh-range" class="input-pro text-xs !w-auto">
@@ -1633,8 +1635,8 @@
                   <option value="90">آخر 90 يوم</option>
                   <option value="all">كل السجل</option>
                 </select>
-                <button onclick="exportGuests('visits')" class="bg-brand hover:bg-brand-dark text-cream px-3 py-2 rounded-xl text-[11px] font-bold transition disabled:opacity-40"><i class="ph-bold ph-file-arrow-down"></i> كل التسجيلات</button>
-                <button onclick="exportGuests('guests')" class="bg-brand/10 hover:bg-brand/15 border border-brand/45 text-ink px-3 py-2 rounded-xl text-[11px] font-bold transition"><i class="ph-bold ph-users"></i> قائمة الضيوف</button>
+                <button data-sa-only onclick="exportGuests('visits')" class="bg-brand hover:bg-brand-dark text-cream px-3 py-2 rounded-xl text-[11px] font-bold transition disabled:opacity-40"><i class="ph-bold ph-file-arrow-down"></i> كل التسجيلات</button>
+                <button data-sa-only onclick="exportGuests('guests')" class="bg-brand/10 hover:bg-brand/15 border border-brand/45 text-ink px-3 py-2 rounded-xl text-[11px] font-bold transition"><i class="ph-bold ph-users"></i> قائمة الضيوف</button>
               </div>
             </div>
             <div id="wlh-stats" class="grid grid-cols-2 md:grid-cols-4 gap-2"></div>
@@ -2158,9 +2160,9 @@
             <div><h3 class="text-base font-bold">الأعضاء</h3><p id="ly-members-sub" class="text-xs text-ink mt-0.5"></p></div>
             <div class="flex flex-wrap gap-2">
               <div class="relative"><i class="ph-bold ph-magnifying-glass absolute start-3 top-1/2 -translate-y-1/2 text-ink text-sm"></i><input id="ly-q" type="search" placeholder="بحث بالاسم أو الجوال أو رقم العضوية" class="input-pro !w-72 max-w-full !min-h-0 !py-2 !ps-9" oninput="renderLyMembers()"></div>
-              <button type="button" onclick="document.getElementById('ly-import-file').click()" class="bg-brand text-cream hover:bg-brand-dark px-3.5 py-2 rounded-xl text-[13px] font-bold transition"><i class="ph-bold ph-file-arrow-up"></i> استيراد من نظام سابق</button>
+              <button type="button" data-sa-only onclick="document.getElementById('ly-import-file').click()" class="bg-brand text-cream hover:bg-brand-dark px-3.5 py-2 rounded-xl text-[13px] font-bold transition"><i class="ph-bold ph-file-arrow-up"></i> استيراد من نظام سابق</button>
               <input type="file" id="ly-import-file" accept=".csv,.xlsx,.xls,text/csv" class="hidden" onchange="readLyImport(this)">
-              <button type="button" onclick="exportLyCsv()" class="bg-brand/10 hover:bg-brand/10 border border-brand/45 text-ink px-3.5 py-2 rounded-xl text-[13px] font-bold transition"><i class="ph-bold ph-file-arrow-down"></i> تصدير CSV</button>
+              <button type="button" data-sa-only onclick="exportLyCsv()" class="bg-brand/10 hover:bg-brand/10 border border-brand/45 text-ink px-3.5 py-2 rounded-xl text-[13px] font-bold transition"><i class="ph-bold ph-file-arrow-down"></i> تصدير CSV</button>
             </div>
           </div>
           <!-- أعضاء كل فرع (للي عنده أكثر من فرع) -->

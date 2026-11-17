@@ -221,6 +221,8 @@ module.exports.post = async function post(action, req, b, env) {
   }
 
   if (action === 'products-import') {
+    // الاستيراد يسويه فريقنا (المدير العام من لوحة المتجر)، صاحب المحل يتواصل معنا
+    if (!env.admin) throw new ApiError(403, 'استيراد البيانات يتم عن طريق فريق DEV MENU، تواصل معنا ونجهّزها لك');
     const rows = Array.isArray(b.rows) ? b.rows.slice(0, 500) : [];
     if (!rows.length) throw new ApiError(400, 'ما فيه أطباق في الملف');
     const cats = await rest(`categories?client_id=eq.${sid}&select=key,name,sort_order`);
