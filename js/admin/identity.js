@@ -1029,17 +1029,18 @@
     const off = (p) => p.is_available === false || p.is_hidden === true;
     return `
       <span class="block text-[11px] text-ink/70 leading-relaxed">اضغط على الطبق عشان تضيفه أو تشيله. تطلع بالترتيب اللي تختاره، كل صورة 6 ثوانٍ.</span>
-      <span class="block text-[11px] font-bold ${c.saver_items.length ? 'text-brand' : 'text-ink/70'}">${c.saver_items.length ? `اخترت ${c.saver_items.length} من ${withImg.length}` : 'ما اخترت شي، فتطلع كل الأطباق'}</span>
-      <div class="grid grid-cols-4 sm:grid-cols-5 gap-2 max-h-72 overflow-y-auto p-0.5">${withImg.map(p => { const n = order.get(Number(p.id)); return `
-        <button type="button" onclick="toggleSaverItem(${Number(p.id)})" aria-pressed="${!!n}" title="${esc(p.name)}" class="relative text-start rounded-xl overflow-hidden border-2 transition ${n ? 'border-brand' : 'border-transparent'} ${off(p) ? 'opacity-50' : ''}">
+      <span id="sv-count" class="block text-[11px] font-bold ${c.saver_items.length ? 'text-brand' : 'text-ink/70'}">${svCountText(c.saver_items.length, withImg.length)}</span>
+      <div id="sv-grid" class="grid grid-cols-4 sm:grid-cols-5 gap-2 max-h-72 overflow-y-auto p-0.5">${withImg.map(p => { const n = order.get(Number(p.id)); return `
+        <button type="button" data-sv="${Number(p.id)}" onclick="toggleSaverItem(${Number(p.id)})" aria-pressed="${!!n}" title="${esc(p.name)}" class="relative text-start rounded-xl overflow-hidden border-2 transition ${n ? 'border-brand' : 'border-transparent'} ${off(p) ? 'opacity-50' : ''}">
           <img src="${esc(p.image_url)}" alt="" loading="lazy" class="w-full aspect-square object-cover bg-black/5">
-          ${n ? `<span class="absolute top-1 start-1 min-w-[20px] h-5 px-1 rounded-full bg-brand text-cream text-[11px] font-bold grid place-items-center">${n}</span>` : ''}
+          <span class="sv-n absolute top-1 start-1 min-w-[20px] h-5 px-1 rounded-full bg-brand text-cream text-[11px] font-bold place-items-center ${n ? 'grid' : 'hidden'}">${n || ''}</span>
           <span class="block px-1 py-1 text-[10.5px] font-semibold text-ink truncate">${esc(p.name)}</span>
         </button>`; }).join('')}
       </div>
       ${withImg.some(off) ? '<span class="block text-[11px] text-ink/70">الأطباق الباهتة غير متوفرة أو مخفية، وما تطلع في العرض لين ترجع.</span>' : ''}`;
   }
-  let svSaveT = null;
+  const svCountText = (n, total) => n ? `اخترت ${n} من ${total}` : 'ما اخترت شي، فتطلع كل الأطباق';
+  let svSaveT = null, svPending = null;
   function toggleSaverItem(id) {
     const c = ixCfg();
     let items = c.saver_items.filter(x => x !== id);
@@ -1048,10 +1049,31 @@
       items = [...items, id];
     }
     client.menu_ix = { ...(client.menu_ix || {}), saver_pick: true, saver_items: items };
-    renderIxLook();
-    // نحفظ بعد ما يوقف اختيار (عشان ما يطلع حفظ مع كل ضغطة)
+    svPending = items;
+    // نحدّث الصور والأرقام في مكانها بدون ما نعيد رسم القسم، عشان القائمة ما ترجع لأولها
+    const order = new Map(items.map((x, i) => [x, i + 1]));
+    document.querySelectorAll('#sv-grid [data-sv]').forEach(b => {
+      const n = order.get(Number(b.dataset.sv)), badge = b.querySelector('.sv-n');
+      b.setAttribute('aria-pressed', !!n);
+      b.classList.toggle('border-brand', !!n); b.classList.toggle('border-transparent', !n);
+      badge.textContent = n || ''; badge.classList.toggle('grid', !!n); badge.classList.toggle('hidden', !n);
+    });
+    const count = document.getElementById('sv-count');
+    if (count) {
+      count.textContent = svCountText(items.length, document.querySelectorAll('#sv-grid [data-sv]').length);
+      count.classList.toggle('text-brand', !!items.length); count.classList.toggle('text-ink/70', !items.length);
+    }
+    // نحفظ بعد ما يوقف اختيار (عشان ما يطلع حفظ مع كل ضغطة)، والحفظ ما يعيد رسم القسم
     clearTimeout(svSaveT);
-    svSaveT = setTimeout(() => saveIxLook({}), 900);
+    svSaveT = setTimeout(async () => {
+      const latest = () => ixCfg().saver_items;
+      const sent = latest(), ok = await updateClient({ menu_ix: ixCfg() });
+      // لو اختار أطباق ثانية والحفظ شغّال، ما نخلي رد الخادم يمسحها (وبيجي حفظ ثاني بعدها)
+      const now = client.menu_ix && client.menu_ix.saver_items;
+      if (svPending && JSON.stringify(now) !== JSON.stringify(svPending)) client.menu_ix = { ...client.menu_ix, saver_pick: true, saver_items: svPending };
+      if (ok) { if (JSON.stringify(sent) === JSON.stringify(latest())) showToast('تم حفظ أطباق شاشة الانتظار'); }
+      else showToast('تعذر حفظ الأطباق، جرّب مرة ثانية', true);
+    }, 900);
   }
   async function saveIxLook(patch) {
     if (await updateClient({ menu_ix: { ...ixCfg(), ...patch } })) { renderIxLook(); showToast('تم حفظ شكل المنيو التفاعلي'); }
