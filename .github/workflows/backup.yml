@@ -3,6 +3,7 @@
 #   db/      نسخة قاعدة البيانات (public + auth + storage) مشفّرة بـ age، ونحتفظ بآخر 30 يوم
 #            فك التشفير يحتاج المفتاح الخاص (عند صاحب المشروع فقط، مو في GitHub)
 #   images/  صور المنيو (عامة أصلاً)، تنضاف الجديدة بس كل ليلة
+#   آخر خطوة تسجّل وقت النجاح في app_settings.backup_last_at (الكتابة الوحيدة على القاعدة)، والفحص اليومي ينبّه لو تأخر
 # الاسترجاع: README في supabase/BACKUP.md
 # =====================================================================
 name: Nightly backup
@@ -80,3 +81,9 @@ jobs:
           done < missing.txt
           [ -n "$(ls -A img)" ] && aws s3 cp img "s3://$BUCKET/images/" --recursive --endpoint-url "${{ secrets.R2_ENDPOINT }}" --only-show-errors
           echo "failed downloads: $fail"
+
+      - name: Record success (for the daily health check)
+        env:
+          PROD_DB_URL: ${{ secrets.PROD_DB_URL }}
+        run: |
+          /usr/lib/postgresql/17/bin/psql "$PROD_DB_URL" -q -c "insert into public.app_settings (key, value) values ('backup_last_at', to_char(now() at time zone 'utc', 'YYYY-MM-DD\"T\"HH24:MI:SS\"Z\"')) on conflict (key) do update set value = excluded.value"

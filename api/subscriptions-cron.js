@@ -6,6 +6,7 @@
 //   • بعد الانتهاء (خلال مهلة الـ 3 أيام للمشتركين، أو انتهاء التجربة): "انتهى اشتراكك"
 // كل تذكير ينرسل مرة وحدة لكل تاريخ انتهاء (reminder_key)، بالبريد وإشعار على أجهزة صاحب المتجر.
 // وبعدها: المحلات المحذوفة من 30 يوم تنمسح نهائياً (_lib/store-delete.js).
+// وآخرها: فحص صحة النظام (_lib/health.js): النسخة الاحتياطية وحدود Supabase.
 // =====================================================================
 const { rest, handler } = require('./_lib/core');
 const { assertCronKey } = require('./_lib/cron');
@@ -13,6 +14,7 @@ const { sendMail, mailConfigured } = require('./_lib/mail');
 const { sendPush } = require('./_lib/push');
 const PLANS = require('./_lib/plans');
 const { purgeExpired } = require('./_lib/store-delete');
+const { checkHealth } = require('./_lib/health');
 
 const DAY = 864e5;
 const GRACE_DAYS = 3;
@@ -100,7 +102,10 @@ module.exports = handler(['GET', 'POST'], async (req) => {
   let purged = [];
   try { purged = await purgeExpired(); } catch (e) { console.error('PURGE_EXPIRED', e.message); }
   if (purged.length) console.log('PURGED', JSON.stringify(purged));
-  return { checked: stores.length, reminded: results.length, results, purged };
+  // صحة النظام: النسخة الاحتياطية وحدود Supabase (إيميل للإدارة لو فيه شي)
+  const health = await checkHealth().catch(e => { console.error('HEALTH', e.message); return { error: e.message }; });
+  console.log('HEALTH', JSON.stringify(health));
+  return { checked: stores.length, reminded: results.length, results, purged, health };
 });
 
 module.exports.config = { maxDuration: 60 };
