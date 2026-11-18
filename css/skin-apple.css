@@ -399,3 +399,70 @@ body.ap-cd #pkd-save, body.ap-cd #pkd-undo { display: none !important; }
   body.ap-cd #ly-phone { zoom: .52; margin-inline: auto; }
   body.ap-cd #ly-design-block > div:last-child > label.pro-card { display: none; }
 }
+
+/* =====================================================================
+   تنظيف 2026-11-18: رأس الجوال سطر واحد، شارة المدير بالأخضر، الفلاتر تنسحب بدل ما تنكسر لأسطر،
+   صفوف الإعدادات (المفاتيح) مسطحة داخل البطاقة، و«ابدأ هنا» أخف
+   ===================================================================== */
+/* شارة وضع المدير العام: أخضر بدل الذهبي */
+#admin-mode-badge { background: var(--ap-pale) !important; color: var(--ap-green) !important; border: 0 !important; font-weight: 600 !important; border-radius: 980px !important; }
+#admin-mode-badge i { color: var(--ap-green-2); }
+
+@media (max-width: 767px) {
+  /* الرأس: الشعار والعنوان والأزرار في سطر واحد */
+  header.sticky > div { flex-wrap: nowrap !important; padding-block: 8px !important; gap: 8px !important; }
+  header.sticky > div > div:first-child { min-width: 0 !important; flex: 1 1 auto !important; gap: 10px !important; }
+  header.sticky > div > div:last-child { width: auto !important; flex: none !important; gap: 6px !important; flex-wrap: wrap; justify-content: flex-end; }
+  #mobile-logo { width: 32px !important; height: 32px !important; border-radius: 8px !important; }
+  #page-title { font-size: 22px !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #page-subtitle { display: none; }
+  #notif-btn, header [data-lang-toggle], #preview-menu-btn, #admin-mode-badge { height: 34px !important; min-height: 34px !important; }
+  #notif-btn { width: 34px !important; }
+  header [data-lang-toggle] { padding: 0 10px !important; font-size: 13px !important; font-weight: 600 !important; }
+  /* المعاينة: أيقونة بس */
+  #preview-menu-btn { width: 34px; padding: 0 !important; justify-content: center; border-radius: 50% !important; }
+  #preview-menu-btn span { display: none !important; }
+  #preview-menu-btn i { font-size: 16px !important; }
+  /* شارة المدير: التاج بس */
+  #admin-mode-badge:not(.hidden) { display: inline-grid !important; place-items: center; width: 34px; padding: 0 !important; font-size: 0 !important; }
+  #admin-mode-badge i { font-size: 16px; }
+  /* الفرع ينزل سطر لحاله */
+  #branch-switch:not(.hidden) { order: 9; flex-basis: 100%; }
+  /* زر + العائم في المنيو: فوقه زر «أضف طبق»، فما نحتاجه ويغطي الأطباق */
+  main button.fixed.bottom-24 { display: none !important; }
+}
+
+/* فلاتر العملاء: سطر واحد ينسحب بالعرض */
+#ly-filters { display: flex !important; flex-wrap: nowrap !important; gap: 6px !important; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+#ly-filters::-webkit-scrollbar { display: none; }
+#ly-filters button { flex: none; height: 34px; padding: 0 14px !important; border: 0 !important; border-radius: 980px !important; background: var(--ap-fill) !important; color: var(--ap-ink) !important; font-size: 14px !important; font-weight: 500 !important; white-space: nowrap; }
+#ly-filters button span { font-weight: 600 !important; color: var(--ap-muted); margin-inline-start: 2px; }
+#ly-filters button.bg-brand { background: var(--ap-green) !important; color: #fff !important; }
+#ly-filters button.bg-brand span { color: rgba(255, 255, 255, .75); }
+
+/* صفوف المفاتيح (البيجر والولاء وغيرها): بدون صندوق داخل الصندوق، خط فاصل بينها مثل إعدادات الآيفون */
+main label:has(> .dm-switch) { background: none !important; border: 0 !important; border-radius: 0 !important; padding: 14px 0 !important; margin: 0 !important; align-items: center !important; gap: 14px !important; }
+main label:has(> .dm-switch) + label:has(> .dm-switch) { border-top: 1px solid var(--ap-sep) !important; }
+main label:has(> .dm-switch) b { font-size: 16px !important; font-weight: 600 !important; }
+main label:has(> .dm-switch) b i { color: var(--ap-green-2) !important; margin-inline-end: 4px; }
+main label:has(> .dm-switch) span.block { font-size: 13.5px !important; color: var(--ap-muted) !important; line-height: 1.5 !important; margin-top: 3px !important; }
+main .space-y-3 > label:has(> .dm-switch) + label:has(> .dm-switch) { margin-top: 0 !important; }
+.dm-switch { width: 51px !important; height: 31px !important; background: #e3e6e3 !important; }
+.dm-switch::after { width: 27px !important; height: 27px !important; top: 2px !important; inset-inline-start: 2px !important; }
+.dm-switch:checked { background: var(--ap-green-2) !important; }
+[dir="rtl"] .dm-switch:checked::after { transform: translateX(-20px) !important; }
+[dir="ltr"] .dm-switch:checked::after { transform: translateX(20px) !important; }
+
+/* ابدأ هنا: بطاقة عادية، وزر الخطوة الجاية بس أخضر */
+.setup-card { border: 0 !important; padding: 18px !important; }
+.setup-card h3 { font-size: 20px !important; font-weight: 700 !important; }
+.su-step { gap: 12px !important; padding: 13px 0 !important; }
+.su-step.next { background: none !important; margin: 0 !important; padding-inline: 0 !important; }
+.su-num { width: 28px !important; height: 28px !important; border: 0 !important; background: var(--ap-fill); color: var(--ap-ink) !important; font-weight: 600 !important; }
+.su-step.next .su-num { background: var(--ap-green); color: #fff !important; }
+.su-step.done .su-num { background: var(--ap-green-2) !important; color: #fff !important; }
+.su-title { font-size: 15.5px !important; font-weight: 600 !important; }
+.su-hint { font-size: 13.5px !important; color: var(--ap-muted) !important; line-height: 1.45; }
+.su-go { background: var(--ap-fill) !important; color: var(--ap-green) !important; border-radius: 980px !important; font-size: 13.5px !important; font-weight: 600 !important; padding: 7px 14px !important; white-space: nowrap; }
+.su-step.next .su-go { background: var(--ap-green) !important; color: #fff !important; }
+.su-hide { text-decoration: none !important; color: var(--ap-green-2) !important; font-size: 14px !important; }
