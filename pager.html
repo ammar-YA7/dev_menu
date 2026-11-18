@@ -1729,9 +1729,9 @@
     if (/Android/.test(ua)) return `https://api.walletwallet.dev/api/passes/${m[1]}/google`;
     return url;
   }
-  // ─── خطوات أخذ الرقم: بطاقة النداء ← رقم الفاتورة ← خذ رقمك ───
-  // رقم الفاتورة اختياري: العميل ياخذ رقمه على طول، ويقدر يضيف الفاتورة من رابط تحت الزر أو بعدين من صفحة الانتظار
-  let cardOffer = false, stepInv = '', stepAt = '', invSkipped = true;
+  // ─── خطوات أخذ الرقم: رقم الفاتورة ← الجوال (المحل المربوط بواتساب) ← بطاقة النداء ← السيارة ← خذ رقمك ───
+  // رقم الفاتورة أول خطوة لكل المحلات، ويقدر يتخطاها بـ «ما عندي فاتورة»
+  let cardOffer = false, stepInv = '', stepAt = '', invSkipped = false;
   const SKIP_KEY = `${KEY}_pcskip`;
   const cardSkipped = () => { try { return sessionStorage.getItem(SKIP_KEY) === '1'; } catch { return false; } };
   // خطوة وحدة بس قدّامه: البطاقة (لو ما عنده) ← رقم الفاتورة ← السيارة (لو المحل يوصّل للسيارة) ← خذ رقمك
@@ -1742,14 +1742,11 @@
   function renderSteps() {
     const cardDone = !cardOffer || !!pagerCard() || cardSkipped(), invDone = !!stepInv || invSkipped, carDone = !carOffer || !!stepCar || carSkipped;
     const phoneDone = !waOffer || !!stepPhone || phoneSkipped;
-    const cur = stepAt || (waOffer
-      ? (!invDone ? 'inv' : !phoneDone ? 'phone' : !cardDone ? 'card' : !carDone ? 'car' : 'take')
-      : (!cardDone ? 'card' : !invDone ? 'inv' : !carDone ? 'car' : 'take'));
+    // كل المحلات: رقم الفاتورة أول، والمربوط بواتساب بعدها الجوال، بعدها خذ رقمك
+    const cur = stepAt || (!invDone ? 'inv' : !phoneDone ? 'phone' : !cardDone ? 'card' : !carDone ? 'car' : 'take');
     ['card', 'inv', 'phone', 'car', 'take'].forEach(k => { const el = $(`s-${k}`); el.classList.toggle('hidden', k !== cur); el.classList.toggle('on', k === cur); });
     // نقاط التقدم (بدون أرقام): الخطوات اللي بيمر عليها في هالزيارة
-    const steps = waOffer
-      ? ['inv', 'phone', ...(cardOffer && !hadCard ? ['card'] : []), ...(carOffer ? ['car'] : []), 'take']
-      : [...(cardOffer && !hadCard ? ['card'] : []), ...(cur === 'inv' ? ['inv'] : []), ...(carOffer ? ['car'] : []), 'take'];
+    const steps = ['inv', ...(waOffer ? ['phone'] : []), ...(cardOffer && !hadCard ? ['card'] : []), ...(carOffer ? ['car'] : []), 'take'];
     const at = steps.indexOf(cur);
     $('s-dots').innerHTML = steps.length > 1 ? steps.map((k, i) => `<span class="${i === at ? 'on' : i < at ? 'done' : ''}"></span>`).join('') : '';
     let just = false; try { just = sessionStorage.getItem(JUST_KEY) === '1'; } catch {}
@@ -1836,7 +1833,7 @@
     try {
       const lt = await DM.loyaltyToken(slug);   // بطاقة الولاء (ولو انسجّلت من فرع ثاني)
       const r = await DM.post('/api/pager?action=take', { slug, lt: lt || undefined, pc: pagerCard() || undefined, invoice: stepInv || undefined, car: stepCar || undefined, phone: (waOffer && stepPhone) || undefined });
-      stepInv = ''; stepAt = ''; stepCar = null; carSkipped = false; stepPhone = ''; phoneSkipped = false; invSkipped = !waOffer; try { sessionStorage.removeItem(JUST_KEY); } catch {}
+      stepInv = ''; stepAt = ''; stepCar = null; carSkipped = false; stepPhone = ''; phoneSkipped = false; invSkipped = false; try { sessionStorage.removeItem(JUST_KEY); } catch {}
       saveToken(r.token); setStore(r.store); dismissed = false;
       if (r.card_ok === false) forgetPagerCard();   // بطاقته القديمة انلغت: نعرض عليه يضيف وحدة جديدة
       if (perm) await perm;
@@ -2125,7 +2122,7 @@
     if (PREVIEW) { document.documentElement.classList.add('is-preview'); return poll(); }
     // نتأكد إن المتجر موجود، ونجيب مفتاح الإشعارات
     let fullNow = false;
-    try { const info = await DM.get(`/api/pager?action=info&slug=${encodeURIComponent(slug)}`); setStore(info.store); pushKey = info.push_key || ''; brand = Number(info.brand) || 0; fullNow = info.full === true; cardOffer = info.card === true; carOffer = info.car === true; waOffer = info.wa === true; if (waOffer) invSkipped = false; }
+    try { const info = await DM.get(`/api/pager?action=info&slug=${encodeURIComponent(slug)}`); setStore(info.store); pushKey = info.push_key || ''; brand = Number(info.brand) || 0; fullNow = info.full === true; cardOffer = info.card === true; carOffer = info.car === true; waOffer = info.wa === true; }
     catch (e) { return unavailable('البيجر غير متاح حالياً', 'اسأل الموظف.'); }
     // بطاقة النداء محفوظة في هالجوال (ولو من قبل تحديث الفروع): نجدد حفظها لكل devmenu.digital عشان كل فرع يعرفها
     { const pc = pagerCard(); if (pc) savePagerCard(pc); hadCard = !!pc;
