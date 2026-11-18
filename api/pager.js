@@ -204,7 +204,8 @@ module.exports = handler(['GET', 'POST'], async (req, res) => {
     // بطاقة النداء تنعرض قبل أخذ الرقم (المحل اللي ما عنده ولاء)
     const card = wallet.configured() && !store.free && !store.cardOff && !(await wallet.cardMaintenance()) && !(await loyaltyOf(store.id)).enabled;
     const car = (await rest(`clients?id=eq.${store.id}&select=pager_car`).catch(() => []))[0]?.pager_car === true;   // خطوة السيارة قبل الرقم
-    return { store: { name: store.display_name || store.name, logo_url: store.logo_url, business_type: store.business_type, accent_color: store.accent_color || null }, push_key: pushPublicKey(), brand: await brandOf(store), card, car, ...(full ? { full: true } : {}) };
+    const wa = await WA.askPhone(store.id).catch(() => false);   // المحل المربوط بواتساب: خطوة الجوال قبل الرقم
+    return { store: { name: store.display_name || store.name, logo_url: store.logo_url, business_type: store.business_type, accent_color: store.accent_color || null }, push_key: pushPublicKey(), brand: await brandOf(store), card, car, wa, ...(full ? { full: true } : {}) };
   }
 
   // بطاقة النداء المحفوظة في جواله: شغالة؟ (لو انلغت أو انحذفت، الصفحة تعرض عليه يضيف وحدة جديدة)
@@ -222,11 +223,15 @@ module.exports = handler(['GET', 'POST'], async (req, res) => {
     if (store.free && (await monthTickets(store.id, PLANS.FREE.pager)) >= PLANS.FREE.pager) throw new ApiError(409, 'البيجر متوقف مؤقتاً، تفضّل عند الكاشير وبيبلغك أول ما يجهز طلبك.', 'FREE_FULL');
     const invoice = cleanInvoice(b.invoice);
     if (invoice && (await rest(`pager_tickets?client_id=eq.${store.id}&invoice_no=eq.${q(invoice)}&created_at=gte.${q(riyadhDayStart())}&status=in.(waiting,ready)&select=number&limit=1`)).length) throw new ApiError(409, 'هذي الفاتورة مسجلة على رقم ثاني، تأكد من الرقم', 'DUPLICATE');
+    // جوال الواتساب (المحل المربوط بس): ينكتب قبل الرقم، ونتأكد منه قبل ما ناخذ رقم
+    const rawPhone = String(b.phone || '').trim();
+    const waPhone = rawPhone && await WA.linked(store.id) ? WA.intlPhone(rawPhone) : null;
+    if (rawPhone && waPhone === null && await WA.linked(store.id)) throw new ApiError(400, 'اكتب رقم جوال صحيح، مثل 0512345678', 'BAD_PHONE');
     const token = crypto.randomBytes(18).toString('base64url');
     try {
       const res = await rpc('server_pager_take', { p_client_id: store.id, p_token: token });
       const car = cleanCar(b.car);
-      if (invoice || car) await rest(`pager_tickets?token=eq.${q(res.token)}&client_id=eq.${store.id}`, { method: 'PATCH', body: { ...(invoice ? { invoice_no: invoice } : {}), ...(car ? { car } : {}) } }).catch(() => {});
+      if (invoice || car || waPhone) await rest(`pager_tickets?token=eq.${q(res.token)}&client_id=eq.${store.id}`, { method: 'PATCH', body: { ...(invoice ? { invoice_no: invoice } : {}), ...(car ? { car } : {}), ...(waPhone ? { wa_phone: waPhone } : {}) } }).catch(() => {});
       if (reqLang(req) === 'en') await rest(`pager_tickets?token=eq.${q(res.token)}&client_id=eq.${store.id}`, { method: 'PATCH', body: { lang: 'en' } }).catch(() => {});
       // عنده بطاقة ولاء في نفس الجوال: نربطها برقم البيجر، وينختم لما يجهز الطلب
       if (/^[A-Za-z0-9_-]{10,64}$/.test(String(b.lt || ''))) {

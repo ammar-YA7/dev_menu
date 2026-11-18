@@ -20,7 +20,7 @@
 .field, .it-note, .mn-search input { border-radius: 10px !important; border-width: 1px !important; }
 .stp .field { background: #fff !important; border: 1px solid #e2e8f0 !important; }
 .stp .field:focus { border-color: #94a3b8 !important; box-shadow: 0 0 0 3px rgba(148, 163, 184, .3); }
-#s-inv-in.stp-in { border-radius: 12px !important; }
+#s-inv-in.stp-in, #s-phone-in.stp-in { border-radius: 12px !important; }
 .car-c { border-width: 1px !important; border-radius: 8px !important; }
 .it-sizes button, .mn-cats button, .ask-chips button { border-radius: 8px !important; border-width: 1px !important; }
 .it-add, .ups-show { border-radius: 10px !important; }

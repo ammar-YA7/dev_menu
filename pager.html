@@ -324,7 +324,7 @@
   .stp .field { background: #faf8f4; color: var(--ink); border: 1px solid #ddd5c6; }
   .stp .field:focus { background: #fff; border-color: var(--brand); }
   .stp .field::placeholder { color: #c2b9aa; }
-  #s-inv-in.stp-in { text-align: center; font-size: 32px; font-weight: 700; letter-spacing: .12em; padding: 12px; border-radius: 16px; }
+  #s-phone-in.stp-in, #s-inv-in.stp-in { text-align: center; font-size: 32px; font-weight: 700; letter-spacing: .12em; padding: 12px; border-radius: 16px; }
   .stp.top { justify-content: flex-start; padding-top: 18px; }
   .stp.top .stp-ic { width: 44px; height: 44px; font-size: 22px; border-radius: 14px; margin-bottom: 8px; }
   .stp.top .stp-h { font-size: 22px; } .stp.top .stp-sub { font-size: 14.5px; margin-bottom: 12px; } .stp.top .btn { padding: 16px; }
@@ -453,6 +453,17 @@
         <button type="button" id="s-inv-skip" class="stp-skip">ما عندي فاتورة</button>
       </form>
     </div>
+    <div id="s-phone" class="stp top">
+      <div class="stp-ic"><i class="ph-bold ph-whatsapp-logo"></i></div>
+      <h3 class="stp-h">رقم جوالك</h3>
+      <form id="s-phone-form" class="stp-b" novalidate>
+        <p class="stp-sub">توصلك رسالة واتساب أول ما يجهز طلبك.</p>
+        <input id="s-phone-in" class="field stp-in" type="tel" inputmode="tel" autocomplete="tel" maxlength="16" dir="ltr" placeholder="05xxxxxxxx">
+        <p id="s-phone-err" class="hidden text-[14px] font-bold text-rose-700 mt-2"></p>
+        <button id="s-phone-next" class="btn btn-wallet mt-3">التالي</button>
+        <button type="button" id="s-phone-skip" class="stp-skip">بدون واتساب</button>
+      </form>
+    </div>
     <div id="s-car" class="stp top">
       <div class="stp-ic"><i class="ph-bold ph-car"></i></div>
       <h3 class="stp-h">وش سيارتك؟</h3>
@@ -477,6 +488,7 @@
         <button id="take-btn" class="btn btn-wallet"><i class="ph-bold ph-ticket"></i> خذ رقمي وفعّل التنبيه</button>
         <div class="flex flex-wrap justify-center gap-x-4">
           <button type="button" id="s-take-inv" class="stp-skip !no-underline">🧾 عندك رقم فاتورة؟ اكتبه (اختياري)</button>
+          <button type="button" id="s-take-phone" class="stp-skip !no-underline hidden"><i class="ph-bold ph-whatsapp-logo"></i> <span dir="ltr"></span> <i class="ph-bold ph-pencil-simple text-xs"></i></button>
           <button type="button" id="s-take-car" class="stp-skip !no-underline hidden">🚗 <span></span> <i class="ph-bold ph-pencil-simple text-xs"></i></button>
         </div>
       </div>
@@ -1724,18 +1736,28 @@
   const cardSkipped = () => { try { return sessionStorage.getItem(SKIP_KEY) === '1'; } catch { return false; } };
   // خطوة وحدة بس قدّامه: البطاقة (لو ما عنده) ← رقم الفاتورة ← السيارة (لو المحل يوصّل للسيارة) ← خذ رقمك
   let carOffer = false, stepCar = null, carSkipped = false, sCarColor = '', hadCard = false;
+  // المحل المربوط بواتساب: الفاتورة أول، بعدها الجوال، بعدها خذ رقمك
+  let waOffer = false, stepPhone = '', phoneSkipped = false;
   const JUST_KEY = `${KEY}_pcjust`;   // أضاف البطاقة الحين: نأكد له في الخطوة اللي بعدها
   function renderSteps() {
     const cardDone = !cardOffer || !!pagerCard() || cardSkipped(), invDone = !!stepInv || invSkipped, carDone = !carOffer || !!stepCar || carSkipped;
-    const cur = stepAt || (!cardDone ? 'card' : !invDone ? 'inv' : !carDone ? 'car' : 'take');
-    ['card', 'inv', 'car', 'take'].forEach(k => { const el = $(`s-${k}`); el.classList.toggle('hidden', k !== cur); el.classList.toggle('on', k === cur); });
+    const phoneDone = !waOffer || !!stepPhone || phoneSkipped;
+    const cur = stepAt || (waOffer
+      ? (!invDone ? 'inv' : !phoneDone ? 'phone' : !cardDone ? 'card' : !carDone ? 'car' : 'take')
+      : (!cardDone ? 'card' : !invDone ? 'inv' : !carDone ? 'car' : 'take'));
+    ['card', 'inv', 'phone', 'car', 'take'].forEach(k => { const el = $(`s-${k}`); el.classList.toggle('hidden', k !== cur); el.classList.toggle('on', k === cur); });
     // نقاط التقدم (بدون أرقام): الخطوات اللي بيمر عليها في هالزيارة
-    const steps = [...(cardOffer && !hadCard ? ['card'] : []), ...(cur === 'inv' ? ['inv'] : []), ...(carOffer ? ['car'] : []), 'take'], at = steps.indexOf(cur);
+    const steps = waOffer
+      ? ['inv', 'phone', ...(cardOffer && !hadCard ? ['card'] : []), ...(carOffer ? ['car'] : []), 'take']
+      : [...(cardOffer && !hadCard ? ['card'] : []), ...(cur === 'inv' ? ['inv'] : []), ...(carOffer ? ['car'] : []), 'take'];
+    const at = steps.indexOf(cur);
     $('s-dots').innerHTML = steps.length > 1 ? steps.map((k, i) => `<span class="${i === at ? 'on' : i < at ? 'done' : ''}"></span>`).join('') : '';
     let just = false; try { just = sessionStorage.getItem(JUST_KEY) === '1'; } catch {}
     $('s-note').classList.toggle('hidden', !(just && pagerCard() && cur !== 'card'));
     $('s-take-inv').classList.remove('hidden');
     $('s-take-inv').innerHTML = stepInv ? `🧾 فاتورة <span dir="ltr">${stepInv.replace(/[<>&"]/g, '')}</span> <i class="ph-bold ph-pencil-simple text-xs"></i>` : '🧾 عندك رقم فاتورة؟ اكتبه (اختياري)';
+    $('s-take-phone').classList.toggle('hidden', !waOffer || !stepPhone);
+    if (stepPhone) $('s-take-phone').querySelector('span').textContent = stepPhone;
     $('s-take-car').classList.toggle('hidden', !stepCar);
     if (stepCar) $('s-take-car').querySelector('span').textContent = carText(stepCar);
     if (cur === 'car' && !$('s-car-colors').children.length) {
@@ -1749,10 +1771,23 @@
     stepAt = k || ''; renderSteps();
     const cur = $('v-start').querySelector('.stp.on');
     if (cur && cur.id === 's-inv') { $('s-inv-in').value = stepInv; $('s-inv-in').focus(); }
+    if (cur && cur.id === 's-phone') { $('s-phone-in').value = stepPhone; $('s-phone-in').focus(); }
   }
   // يعدّل رقم الفاتورة أو السيارة قبل ما ياخذ الرقم
   $('s-take-inv').onclick = () => goStep('inv');
   $('s-take-car').onclick = () => goStep('car');
+  $('s-take-phone').onclick = () => goStep('phone');
+  // الجوال: 05xxxxxxxx أو 5xxxxxxxx أو دولي، والخادم يتأكد منه مرة ثانية
+  $('s-phone-form').onsubmit = (e) => {
+    e.preventDefault();
+    const v = $('s-phone-in').value.replace(/[\u0660-\u0669\u06F0-\u06F9]/g, d => String(d.charCodeAt(0) & 15)).replace(/[^\d+]/g, '');
+    $('s-phone-err').classList.add('hidden');
+    if (!v) return $('s-phone-in').focus();
+    const d = v.replace(/\D/g, '');
+    if (!(/^0?5\d{8}$/.test(d) || (/^(00|\+)?[1-9]\d{9,14}$/.test(v) && !/^0/.test(d)))) { $('s-phone-err').textContent = 'اكتب رقم جوال صحيح، مثل 0512345678'; return $('s-phone-err').classList.remove('hidden'); }
+    stepPhone = v; phoneSkipped = false; $('s-phone-in').blur(); goStep('');
+  };
+  $('s-phone-skip').onclick = () => { stepPhone = ''; phoneSkipped = true; $('s-phone-err').classList.add('hidden'); $('s-phone-in').blur(); goStep(''); };
   function paintStepColors() {
     $('s-car-colors').innerHTML = CAR_COLORS.map(([n, hex]) => `<button type="button" role="radio" aria-checked="${sCarColor === n}" data-c="${n}" class="car-c"><span class="w-4 h-4 rounded-full border border-black/20" style="background:${hex}"></span>${n}</button>`).join('');
   }
@@ -1789,7 +1824,7 @@
   };
   $('s-inv-skip').onclick = () => { stepInv = ''; invSkipped = true; $('s-inv-err').classList.add('hidden'); $('s-inv-in').blur(); goStep(''); };
   // الآيفون يحرّك الصفحة لما يطلع الكيبورد ويخليها متحركة بعد ما ينزل: نرجعها مكانها
-  ['s-inv-in', 's-car-model', 's-car-plate'].forEach(id => $(id).addEventListener('blur', () => setTimeout(() => { if (!document.activeElement || !/INPUT/.test(document.activeElement.tagName)) window.scrollTo(0, 0); }, 60)));
+  ['s-inv-in', 's-phone-in', 's-car-model', 's-car-plate'].forEach(id => $(id).addEventListener('blur', () => setTimeout(() => { if (!document.activeElement || !/INPUT/.test(document.activeElement.tagName)) window.scrollTo(0, 0); }, 60)));
   // رجع من صفحة المحفظة: نحدّث الخطوات
   window.addEventListener('pageshow', () => { if (!$('v-start').classList.contains('hidden')) renderSteps(); });
 
@@ -1800,8 +1835,8 @@
     const btn = $('take-btn'); btn.disabled = true; btn.innerHTML = '<i class="ph-bold ph-spinner-gap ph-spin"></i>';
     try {
       const lt = await DM.loyaltyToken(slug);   // بطاقة الولاء (ولو انسجّلت من فرع ثاني)
-      const r = await DM.post('/api/pager?action=take', { slug, lt: lt || undefined, pc: pagerCard() || undefined, invoice: stepInv || undefined, car: stepCar || undefined });
-      stepInv = ''; stepAt = ''; stepCar = null; carSkipped = false; try { sessionStorage.removeItem(JUST_KEY); } catch {}
+      const r = await DM.post('/api/pager?action=take', { slug, lt: lt || undefined, pc: pagerCard() || undefined, invoice: stepInv || undefined, car: stepCar || undefined, phone: (waOffer && stepPhone) || undefined });
+      stepInv = ''; stepAt = ''; stepCar = null; carSkipped = false; stepPhone = ''; phoneSkipped = false; invSkipped = !waOffer; try { sessionStorage.removeItem(JUST_KEY); } catch {}
       saveToken(r.token); setStore(r.store); dismissed = false;
       if (r.card_ok === false) forgetPagerCard();   // بطاقته القديمة انلغت: نعرض عليه يضيف وحدة جديدة
       if (perm) await perm;
@@ -1810,6 +1845,7 @@
       offerPerm();   // تطلع بس لو التنبيه أو الصوت ناقص
     } catch (e) {
       stopKeeper();
+      if (e.code === 'BAD_PHONE') { stepAt = 'phone'; renderSteps(); $('s-phone-err').textContent = e.message; $('s-phone-err').classList.remove('hidden'); return; }
       if (e.code === 'DUPLICATE' || e.status === 400) { stepAt = 'inv'; renderSteps(); $('s-inv-err').textContent = e.message; $('s-inv-err').classList.remove('hidden'); return; }
       unavailable(e.code === 'FULL' ? 'وصلنا الحد اليومي للأرقام' : 'تعذر أخذ رقم', 'اسأل الموظف.');
     } finally { btn.disabled = false; btn.innerHTML = '<i class="ph-bold ph-ticket"></i> خذ رقمي وفعّل التنبيه'; }
@@ -2062,7 +2098,7 @@
     $('rate-thanks').textContent = 'وصلت ملاحظتك، شكراً لأنك ساعدتنا نتحسّن';
     $('rate-thanks').classList.remove('hidden');
   };
-  $('new-btn').onclick = () => { saveToken(''); hideRating(); stepInv = ''; invSkipped = false; stepAt = ''; stepCar = null; carSkipped = false; $('s-inv-in').value = ''; show('start'); };
+  $('new-btn').onclick = () => { saveToken(''); hideRating(); stepInv = ''; invSkipped = false; stepAt = ''; stepCar = null; carSkipped = false; stepPhone = ''; phoneSkipped = false; $('s-inv-in').value = ''; $('s-phone-in').value = ''; show('start'); };
   // ─── يرجع يشتغل لوحده: رجع للصفحة، رجع النت، أو المتصفح جمّد الصفحة وهو بتطبيق ثاني ───
   function revive() {
     if (document.hidden || !loadToken()) return;
@@ -2089,7 +2125,7 @@
     if (PREVIEW) { document.documentElement.classList.add('is-preview'); return poll(); }
     // نتأكد إن المتجر موجود، ونجيب مفتاح الإشعارات
     let fullNow = false;
-    try { const info = await DM.get(`/api/pager?action=info&slug=${encodeURIComponent(slug)}`); setStore(info.store); pushKey = info.push_key || ''; brand = Number(info.brand) || 0; fullNow = info.full === true; cardOffer = info.card === true; carOffer = info.car === true; }
+    try { const info = await DM.get(`/api/pager?action=info&slug=${encodeURIComponent(slug)}`); setStore(info.store); pushKey = info.push_key || ''; brand = Number(info.brand) || 0; fullNow = info.full === true; cardOffer = info.card === true; carOffer = info.car === true; waOffer = info.wa === true; if (waOffer) invSkipped = false; }
     catch (e) { return unavailable('البيجر غير متاح حالياً', 'اسأل الموظف.'); }
     // بطاقة النداء محفوظة في هالجوال (ولو من قبل تحديث الفروع): نجدد حفظها لكل devmenu.digital عشان كل فرع يعرفها
     { const pc = pagerCard(); if (pc) savePagerCard(pc); hadCard = !!pc;
