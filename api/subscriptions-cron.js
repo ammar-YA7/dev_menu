@@ -26,8 +26,8 @@ function message(store, stage, end, branches) {
   const trial = store.subscription_status === 'trial';
   // السعر حسب مميزات المحل (التجربة: الباقة الكاملة)
   const features = store.subscription_status === 'active' ? PLANS.featuresOf(store) : PLANS.LEGACY;
-  const year = PLANS.price(features, 'year', branches).total;
-  const month = PLANS.price(features, 'month', branches).total;
+  const year = PLANS.price(features, 'year', branches, store).total;
+  const month = PLANS.price(features, 'month', branches, store).total;
   const what = trial ? 'التجربة المجانية' : 'اشتراك';
   const graceEnd = new Date(Date.parse(end) + GRACE_DAYS * DAY);
   let title, body;
@@ -62,7 +62,7 @@ module.exports = handler(['GET', 'POST'], async (req) => {
   await assertCronKey(req);
   const now = Date.now();
   // المتاجر الرئيسية فقط (الفروع تتبعها)، والموقوفة من الإدارة ما نذكّرها
-  const stores = await rest('clients?parent_id=is.null&is_active=is.true&subscription_status=in.(active,trial)&select=id,name,email,subscription_status,subscription_end_date,trial_ends_at,reminder_key,plan_features,requested_plan');
+  const stores = await rest('clients?parent_id=is.null&is_active=is.true&subscription_status=in.(active,trial)&select=id,name,email,subscription_status,subscription_end_date,trial_ends_at,reminder_key,plan_features,requested_plan,custom_discount');
   const results = [];
   for (const s of stores) {
     // اللي اختار البيجر المجاني من البداية (أو حوّلته الإدارة له) ما عنده تجربة تنتهي: لا نرسل له "انتهت التجربة"

@@ -303,7 +303,9 @@ module.exports.post = async function post(action, req, b, env) {
     const mainId = store.parent_id || sid;   // اشتراك الفروع تابع للمتجر الرئيسي
     // السعر: نفس حسبة لوحة صاحب المحل ولوحة المشتركين والفاتورة (المميزات + الفروع - الخصم)
     const reqBranches = await rest(`clients?parent_id=eq.${mainId}&deleted_at=is.null&select=name,client_slug,branch_features&order=id.asc`).catch(() => []);
-    const priced = PLANS.price(features, plan, reqBranches);
+    // الخصم الخاص (لو الإدارة حاطة له خصم) من المتجر الرئيسي
+    const disc = ((await rest(`clients?id=eq.${mainId}&select=custom_discount`).catch(() => []))[0] || {});
+    const priced = PLANS.price(features, plan, reqBranches, disc);
     // العميل يرسل السعر اللي شافه: لو يختلف (ملف أسعار قديم في جواله) ما نحفظ الطلب، ونطلب منه يحدّث
     if (b.expected_total != null && Number(b.expected_total) !== priced.total) {
       console.error('PLAN_PRICE_MISMATCH', mainId, plan, b.expected_total, priced.total);

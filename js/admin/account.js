@@ -22,7 +22,7 @@
     }
     return DMPlans.clean([...pickFeatures]);
   }
-  const planTotal = (plan = 'year', feats = chosenFeatures()) => DMPlans.price(feats, plan, branchList()).total;
+  const planTotal = (plan = 'year', feats = chosenFeatures()) => DMPlans.price(feats, plan, branchList(), client).total;
   function renewMsg(plan) {
     const feats = chosenFeatures();
     const names = [...feats, ...wide].map(k => DMPlans.FEATURES[k].name).join(' + ');
@@ -107,7 +107,7 @@
   // الترقية من الشهري للسنوي: كم يوفّر، وطلب يوصل للإدارة بضغطة
   function upgradeBox() {
     const f = myFeatures(), list = branchList();
-    const month = DMPlans.price(f, 'month', list).total, year = DMPlans.price(f, 'year', list).total, save = month * 12 - year;
+    const month = DMPlans.price(f, 'month', list, client).total, year = DMPlans.price(f, 'year', list, client).total, save = month * 12 - year;
     return `<div class="rounded-2xl border border-emerald-600/30 bg-emerald-600/5 p-3.5 space-y-2">
       <p class="text-[13px] font-bold text-ink"><i class="ph-bold ph-arrow-circle-up text-emerald-700"></i> رقّ اشتراكك إلى السنوي</p>
       <p class="text-[12px] text-ink">اشتراكك الحالي شهري (${month} ر.س). السنوي ${year} ر.س${save > 0 ? `، وتوفّر ${save} ر.س في السنة` : ''}، ويشمل فروعك.</p>
@@ -189,7 +189,7 @@
 
   // تفصيل حسبة الطلب: كل ميزة بسعرها، والفروع، والخصم، والمجموع
   function reqBreakdown(plan, feats) {
-    const pr = DMPlans.price(feats, plan, branchList());
+    const pr = DMPlans.price(feats, plan, branchList(), client);
     const line = (label, amount, cls = '') => `<p class="flex justify-between gap-3 ${cls}"><span>${esc(label)}</span><span class="tnum">${amount}</span></p>`;
     return `<div class="mt-2 rounded-xl bg-white border border-brand/15 p-3 space-y-1 text-[12.5px] text-ink">
       ${pr.lines.map(l => line(l.label, sar(l.amount))).join('')}
@@ -217,7 +217,7 @@
     }
     const feats = chosenFeatures();
     const pick = planPick || 'year';
-    const pr = DMPlans.price(feats, pick, branchList());
+    const pr = DMPlans.price(feats, pick, branchList(), client);
     const save = planTotal('month') * 12 - planTotal('year');
     const row = (k) => {
       const f = DMPlans.FEATURES[k], on = feats.includes(k), covered = DMPlans.coveredNote(feats, k);
@@ -540,7 +540,7 @@
     const day = (iso) => iso ? new Date(iso).toLocaleDateString('ar-SA-u-ca-gregory-nu-latn', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
     // في التجربة: الخدمات اللي اختارها وسعرها بعد التجربة
     const feats = status === 'active' ? myFeatures() : chosenFeatures(), period = status === 'active' ? (monthly ? 'month' : 'year') : (client.requested_plan === 'month' ? 'month' : 'year');
-    const pr = DMPlans.price(feats, period, branchList()), per = period === 'month' ? 'بالشهر' : 'بالسنة';
+    const pr = DMPlans.price(feats, period, branchList(), client), per = period === 'month' ? 'بالشهر' : 'بالسنة';
     const state = client.is_active === false ? 'موقوف'
       : DMPlans.isFree(client) ? `الباقة المجانية: البيجر (${DMPlans.FREE.pager} رقم بالشهر)`
       : status === 'trial' ? `تجربة مجانية، تنتهي ${day(client.trial_ends_at)}`

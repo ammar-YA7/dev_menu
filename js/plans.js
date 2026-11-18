@@ -84,9 +84,22 @@
     const p = period === 'month' ? 'month' : 'year';
     return BRANCH[p] + (Array.isArray(features) ? price(ownBranch(features), p).total : 0);
   }
+  // خصم خاص لعميل معيّن (تحطه الإدارة من لوحة المشتركين، clients.custom_discount):
+  //   { type: 'pct' | 'amount', value, until? }  نسبة من المجموع، أو ريالات تنقص من كل فاتورة
+  //   ينطبق بعد خصم الجمع على المجموع كله (الخدمات والفروع)، وينتهي في until لو محدد
+  function special(store) {
+    const d = store && (store.custom_discount || (store.type ? store : null));
+    if (!d || typeof d !== 'object') return null;
+    const type = d.type === 'amount' ? 'amount' : d.type === 'pct' ? 'pct' : null, value = Number(d.value);
+    if (!type || !(value > 0)) return null;
+    if (d.until && Date.parse(d.until) <= Date.now()) return null;
+    return { type, value: type === 'pct' ? Math.min(100, value) : Math.round(value), until: d.until || null };
+  }
+  const specialLabel = (d) => d.type === 'pct' ? `خصم خاص ${d.value}%` : 'خصم خاص';
   // تفاصيل السعر: { lines, discount, total }
   // branches: عدد الفروع القديمة، أو قائمة الفروع [{ name, branch_features }]
-  function price(features, period = 'year', branches = 0) {
+  // extra: الخصم الخاص للعميل (المحل نفسه أو special(store))، اختياري
+  function price(features, period = 'year', branches = 0, extra = null) {
     const f = clean(features), p = period === 'month' ? 'month' : 'year';
     const lines = f.map(k => ({ key: k, label: FEATURES[k].name, amount: FEATURES[k][p] }));
     const list = Array.isArray(branches) ? branches : Array.from({ length: Number(branches) || 0 }, () => ({}));
@@ -102,6 +115,12 @@
     if (rate) {
       const net = prettyPrice(base - Math.round(base * rate), p === 'year' ? base * 12 / 11 : base);
       discounts = [{ label: 'خصم الجمع بين الخدمات', amount: base - net, rate: cores >= 3 ? BUNDLE_RATE[p][3] : BUNDLE_RATE[p][2] }];
+    }
+    const sp = special(extra);
+    if (sp) {
+      const left = Math.max(0, subtotal - discounts.reduce((a, d) => a + d.amount, 0));
+      const amount = Math.min(left, sp.type === 'pct' ? Math.round(left * sp.value / 100) : sp.value);
+      if (amount > 0) discounts.push({ key: 'special', label: specialLabel(sp), amount, special: sp });
     }
     const discount = discounts.reduce((a, d) => a + d.amount, 0);
     return { features: f, period: p, lines, discounts, subtotal, discount, total: Math.max(0, subtotal - discount) };
@@ -152,7 +171,7 @@
   // يقدر المحل يستخدم هالقالب؟ كل القوالب تحتاج إضافة «المنيو التفاعلي»
   const ixAllowed = (store, key) => !!IX_TEMPLATES[key] && has(store, 'ixpro');
 
-  const api = { FEATURES, ORDER, CHAT, TRIAL_DAYS, FREE, isFree, pagerLite, BRANCH, BUNDLES, CORE, BUNDLE_RATE, bundleRate, LEGACY, ACCOUNT_WIDE, BRANCH_KEYS, ownBranch, branchFeatures, price, branchPrice, featuresOf, has, ixGift, ixAllowed, IX_TEMPLATES, live, clean, toggle, coveredBy, coveredNote };
+  const api = { FEATURES, ORDER, CHAT, TRIAL_DAYS, FREE, isFree, pagerLite, BRANCH, BUNDLES, CORE, BUNDLE_RATE, bundleRate, LEGACY, ACCOUNT_WIDE, BRANCH_KEYS, ownBranch, branchFeatures, price, special, branchPrice, featuresOf, has, ixGift, ixAllowed, IX_TEMPLATES, live, clean, toggle, coveredBy, coveredNote };
   if (typeof module === 'object' && module.exports) module.exports = api;
   else root.DMPlans = api;
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -285,12 +285,12 @@ async function run(req, user, action) {
     await followParentFeatures(id, features);
     await syncBranchSubscriptions(id);
     // فاتورة مدفوعة: المتجر + كل فرع
-    const main = (await rest(`clients?id=eq.${id}&select=id,name,email,subscription_end_date`))[0];
+    const main = (await rest(`clients?id=eq.${id}&select=id,name,email,subscription_end_date,custom_discount`))[0];
     let branches = [];
     try { branches = await rest(`clients?parent_id=eq.${id}&select=name,client_slug,branch_features&order=id.asc`); } catch {}
     const yearly = b.period === 'year';
     const span = yearly ? 'سنة' : 'شهر';
-    const pr = PLANS.price(features, b.period, branches);
+    const pr = PLANS.price(features, b.period, branches, main);
     const invoice = await sendInvoice(main, {
       status: 'paid', validUntil: main.subscription_end_date,
       lines: [
@@ -313,7 +313,7 @@ async function run(req, user, action) {
   // فاتورة مستحقة الدفع: تنرسل لبريد صاحب الحساب بالباقة اللي تختارها، بدون ما يتغير اشتراكه
   if (action === 'send-invoice') {
     if (!['month', 'year'].includes(b.period)) throw new ApiError(400, 'مدة غير صحيحة');
-    const main = (await rest(`clients?id=eq.${id}&select=id,name,email,parent_id`))[0];
+    const main = (await rest(`clients?id=eq.${id}&select=id,name,email,parent_id,custom_discount`))[0];
     if (!main) throw new ApiError(404, 'المتجر غير موجود');
     if (main.parent_id) throw new ApiError(400, 'الفاتورة تنرسل للمتجر الرئيسي', 'BRANCH_FOLLOWS_PARENT');
     const features = PLANS.clean(Array.isArray(b.features) ? b.features : []);
@@ -321,7 +321,7 @@ async function run(req, user, action) {
     let branches = [];
     try { branches = await rest(`clients?parent_id=eq.${id}&select=name,client_slug,branch_features&order=id.asc`); } catch {}
     const span = b.period === 'year' ? 'سنة' : 'شهر';
-    const pr = PLANS.price(features, b.period, branches);
+    const pr = PLANS.price(features, b.period, branches, main);
     // عرض سعر: صالح 14 يوم، ومعه خصم خاص اختياري (نسبة)، والخصم الكلي مع خصم الجمع والشهر المجاني ما يتعدى 20%
     const quote = b.kind === 'quote';
     const extra = quote ? specialDiscount(features, b.period, pr, Number(b.extra_pct) || 0) : 0;
@@ -337,6 +337,20 @@ async function run(req, user, action) {
       ]
     });
     return { ok: true, invoice, total, extra };
+  }
+  // خصم خاص لعميل: نسبة أو مبلغ ينقص من سعره الحقيقي في كل مكان (لوحته، الطلب، الفواتير، التذكير)
+  //   b.type: 'pct' | 'amount' | 'none' (يشيل الخصم)، b.value، b.until (اختياري). صاحب المحل يشوف الخصم في لوحته
+  if (action === 'discount') {
+    const target = (await rest(`clients?id=eq.${id}&select=id,parent_id`))[0];
+    if (!target) throw new ApiError(404, 'المتجر غير موجود');
+    if (target.parent_id) throw new ApiError(400, 'الخصم يكون على المتجر الرئيسي ويشمل فروعه', 'BRANCH_FOLLOWS_PARENT');
+    if (b.type === 'none') return patch({ custom_discount: null });
+    const type = b.type === 'amount' ? 'amount' : b.type === 'pct' ? 'pct' : null, value = Math.round(Number(b.value));
+    if (!type) throw new ApiError(400, 'اختر نوع الخصم: نسبة أو مبلغ');
+    if (!(value > 0) || (type === 'pct' && value > 100) || (type === 'amount' && value > 100000)) throw new ApiError(400, type === 'pct' ? 'النسبة من 1 إلى 100' : 'اكتب مبلغ الخصم بالريال');
+    const until = b.until ? new Date(b.until) : null;
+    if (until && !(until.getTime() > Date.now())) throw new ApiError(400, 'تاريخ انتهاء الخصم لازم يكون بعد اليوم');
+    return patch({ custom_discount: { type, value, until: until ? until.toISOString() : null, set_at: new Date().toISOString() } });
   }
   // إيقاف/تشغيل المتجر الرئيسي يشمل فروعه، والفرع يقدر ينوقف لحاله
   if (action === 'set-active') {

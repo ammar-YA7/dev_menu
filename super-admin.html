@@ -33,9 +33,6 @@
   /* البطاقة اللي قائمتها مفتوحة تطلع فوق باقي البطاقات (تأثير الزجاج يخلي كل بطاقة طبقة لحالها) */
   .card:has(.menu-pop) { position: relative; z-index: 40; }
   .no-scrollbar::-webkit-scrollbar { display: none; }
-  /* تبويبات اللوحة */
-  .sa-tab { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; padding: 14px 14px 12px; font-size: 13px; font-weight: 800; color: rgba(34,54,42,.55); border-bottom: 3px solid transparent; }
-  .sa-tab[aria-selected="true"] { color: #22362a; border-bottom-color: #384f3d; }
   /* ═══ نفس أساس لوحة التاجر: Shopify Polaris (@shopify/polaris-tokens 9.4.2) والأخضر للأساسي ═══ */
   :root { --brand: #384f3d; --brand-dark: #2a3e2f;
     --shadow-card: 0 1px 0 rgba(26,26,26,.07), inset 1px 0 0 rgba(0,0,0,.13), inset -1px 0 0 rgba(0,0,0,.13), inset 0 -1px 0 rgba(0,0,0,.17), inset 0 1px 0 rgba(204,204,204,.5);
@@ -50,22 +47,6 @@
   .chip:hover { background: rgba(56,79,61,.12); color: var(--brand); }
   .chip.on, .chip:active { background: var(--brand); color: #fff; box-shadow: var(--shadow-primary); }
   header.bg-brand { background: var(--brand) !important; }
-  /* التبويبات: المرور أخضر فاتح، والمفتوح أخضر */
-  .sa-tab { color: #616161; font-weight: 700; border-radius: 8px 8px 0 0; }
-  .sa-tab:hover { color: var(--brand); background: rgba(56,79,61,.08); }
-  .sa-tab[aria-selected="true"] { color: var(--brand); border-bottom-color: var(--brand); }
-  /* منيو جانبي من 1024px وفوق */
-  @media (min-width: 1024px) {
-    .sa-shell { display: flex; align-items: flex-start; }
-    .sa-shell > nav { position: sticky; top: 0; align-self: flex-start; height: 100vh; width: 232px; flex-shrink: 0; background: #fff; border-bottom: 0; border-inline-end: 1px solid #e3e3e3; backdrop-filter: none; }
-    .sa-shell > nav > div { flex-direction: column; gap: 2px; padding: 16px 10px; margin: 0; max-width: none; overflow: visible; }
-    .sa-shell > nav .sa-tab { width: 100%; padding: 10px 12px; border-bottom: 0; border-radius: 8px; font-size: 13.5px; }
-    .sa-shell > nav .sa-tab > i { font-size: 17px; width: 20px; }
-    .sa-shell > nav .sa-tab > span { margin-inline-start: auto; }
-    .sa-shell > nav .sa-tab[aria-selected="true"] { background: rgba(56,79,61,.1); color: var(--brand); }
-    .sa-shell > main { flex: 1; min-width: 0; margin: 0; }
-    .sa-shell .sa-tools { top: 12px; }
-  }
   main button.bg-brand, main a.bg-brand, .dmd-box button.bg-brand { border-radius: 8px !important; box-shadow: var(--shadow-primary); font-weight: 600; }
   main button.bg-brand:hover, main a.bg-brand:hover { background-color: var(--brand-dark); }
   .menu-pop { border: 0; border-radius: 12px; box-shadow: 0 8px 16px -4px rgba(26,26,26,.22), var(--shadow-card); }
@@ -79,7 +60,6 @@
 </style>
 <link rel="stylesheet" href="/css/tw/super-admin.css">
 <!-- تجربة: شكل shadcn مثل لوحة التحكم. للرجوع احذف هالسطر -->
-<link rel="stylesheet" href="/css/skin-shadcn-sa.css">
 <link rel="stylesheet" href="/css/skin-apple-sa.css">
 </head>
 <body style="padding-bottom: env(safe-area-inset-bottom)">
@@ -164,168 +144,149 @@
 </div>
 
 <div id="app" style="visibility:hidden">
-  <!-- الشريط العلوي -->
-  <header class="bg-brand text-cream">
-    <div class="max-w-[1500px] mx-auto px-4 md:px-8 py-4 flex items-center justify-between gap-4">
-      <div class="flex items-center gap-4">
-        <img src="images/logo-full-sm.png" alt="DEV MENU" width="96" height="66" class="h-[52px] w-auto" style="height:44px" dir="ltr">
-        <span class="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-black bg-amber-400 text-black px-2.5 py-1 rounded-full"><i class="ph-bold ph-crown"></i> لوحة المشتركين</span>
-      </div>
-      <div class="flex items-center gap-2">
-        <span id="admin-email" class="hidden md:inline text-[11px] text-cream/60" dir="ltr"></span>
-        <button type="button" data-lang-toggle class="h-9 px-3 rounded-xl bg-cream/10 hover:bg-cream/20 text-xs font-bold"></button>
-        <button onclick="loadClients(true)" aria-label="تحديث" class="w-9 h-9 rounded-xl bg-cream/10 hover:bg-cream/20 flex items-center justify-center"><i class="ph-bold ph-arrows-clockwise text-xs"></i></button>
-        <button onclick="logout()" class="h-9 px-3 rounded-xl bg-cream/10 hover:bg-cream/20 text-xs font-bold flex items-center gap-1.5"><i class="ph-bold ph-sign-out text-[10px]"></i> <span class="hidden sm:inline">خروج</span></button>
-      </div>
-    </div>
+  <!-- الشريط العلوي (الجوال): اسم القسم وأزرار التحديث والمزيد -->
+  <header class="sa-top">
+    <img src="images/logo-mark.png" alt="DEV MENU" width="30" height="30" class="sa-top-logo">
+    <p id="sa-top-title" class="sa-top-title">المشتركين</p>
+    <button type="button" class="sa-icon-btn" onclick="loadClients(true)" aria-label="تحديث"><i class="ph-bold ph-arrows-clockwise"></i></button>
   </header>
 
-  <!-- التبويبات: كل شغلة في مكانها -->
-  <!-- الشاشات الكبيرة: القوائم منيو جانبي ثابت، والجوال: تبويبات فوق تنسحب -->
+  <!-- التنقل: قائمة جانبية في الكمبيوتر، وشريط تحت في الجوال -->
   <div class="sa-shell">
-  <nav class="sticky top-0 z-30 bg-[#f1f1f1]/95 backdrop-blur border-b border-[#e3e3e3]">
-    <div class="max-w-[1500px] mx-auto px-3 md:px-8 flex gap-1 overflow-x-auto no-scrollbar" role="tablist">
-      <button type="button" data-satab-btn="requests" class="sa-tab"><i class="ph-bold ph-chat-circle-text"></i> الطلبات <span id="sup-open" class="text-[10px] font-black bg-red-500 text-white rounded-full px-2 py-0.5 hidden"></span></button>
-      <button type="button" data-satab-btn="stores" class="sa-tab"><i class="ph-bold ph-storefront"></i> المشتركين <span id="stores-count" class="text-[10px] font-black bg-ink/10 rounded-full px-2 py-0.5"></span></button>
-      <button type="button" data-satab-btn="usage" class="sa-tab"><i class="ph-bold ph-pulse"></i> الاستخدام <span id="usage-idle" class="text-[10px] font-black bg-amber-500 text-white rounded-full px-2 py-0.5 hidden"></span></button>
-      <button type="button" data-satab-btn="overview" class="sa-tab"><i class="ph-bold ph-chart-line-up"></i> الأرقام والدخل</button>
-      <button type="button" data-satab-btn="log" class="sa-tab"><i class="ph-bold ph-clock-counter-clockwise"></i> السجل</button>
-      <button type="button" data-satab-btn="notify" class="sa-tab"><i class="ph-bold ph-megaphone"></i> الإشعارات</button>
+  <nav class="sa-nav" aria-label="أقسام لوحة المشتركين">
+    <div class="sa-brand">
+      <img src="images/logo-full-sm.png" alt="DEV MENU" width="96" height="66" dir="ltr">
+      <span>لوحة المشتركين</span>
+    </div>
+    <div class="sa-nav-list" role="tablist">
+      <button type="button" data-satab-btn="requests" class="sa-tab"><i class="ph-bold ph-chat-circle-dots"></i><span class="sa-tab-l">الطلبات</span><span id="sup-open" class="sa-badge hot hidden"></span></button>
+      <button type="button" data-satab-btn="stores" class="sa-tab"><i class="ph-bold ph-storefront"></i><span class="sa-tab-l">المشتركين</span><span id="stores-count" class="sa-badge"></span></button>
+      <button type="button" data-satab-btn="usage" class="sa-tab"><i class="ph-bold ph-chart-line-up"></i><span class="sa-tab-l">الاستخدام</span><span id="usage-idle" class="sa-badge warn hidden"></span></button>
+      <button type="button" data-satab-btn="overview" class="sa-tab"><i class="ph-bold ph-chart-bar"></i><span class="sa-tab-l">الأرقام</span></button>
+      <button type="button" data-satab-btn="log" class="sa-tab sa-more-item"><i class="ph-bold ph-clock-counter-clockwise"></i><span class="sa-tab-l">السجل</span></button>
+      <button type="button" data-satab-btn="notify" class="sa-tab sa-more-item"><i class="ph-bold ph-megaphone"></i><span class="sa-tab-l">الإشعارات</span></button>
+      <button type="button" class="sa-tab sa-more-btn" onclick="saMore()"><i class="ph-bold ph-dots-three-outline"></i><span class="sa-tab-l">المزيد</span></button>
+    </div>
+    <div class="sa-nav-foot">
+      <span id="admin-email" dir="ltr"></span>
+      <div>
+        <button type="button" data-lang-toggle class="sa-foot-btn"></button>
+        <button type="button" class="sa-foot-btn" onclick="loadClients(true)"><i class="ph-bold ph-arrows-clockwise"></i> تحديث</button>
+        <button type="button" class="sa-foot-btn" onclick="logout()"><i class="ph-bold ph-sign-out"></i> خروج</button>
+      </div>
     </div>
   </nav>
 
-  <main class="max-w-[1500px] mx-auto px-3 md:px-8 py-6 space-y-6">
-    <!-- ═══ الاستخدام: مين يستخدم إيش، وصحة كل محل ═══ -->
-    <div data-satab="usage" class="space-y-6">
-      <section class="card p-5 space-y-4">
-        <div class="flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <p class="text-sm font-black"><i class="ph-bold ph-squares-four text-brand"></i> الميزات: مين يستخدم إيش</p>
-            <p class="text-[12px] text-ink/60 mt-0.5">المحلات الشغالة (مشترك، تجربة، مجاني) بدون العملاء المحتملين. «استخدموها» = آخر 7 أيام.</p>
-          </div>
-          <button type="button" onclick="loadUsage(true)" class="text-[11px] font-bold text-ink/60"><i class="ph-bold ph-arrow-clockwise"></i> تحديث</button>
-        </div>
-        <div id="feat-usage" class="overflow-x-auto"></div>
-        <p id="usage-missing" class="hidden text-[11px] text-amber-800"></p>
-      </section>
-      <section id="health-box" class="card p-5 space-y-4">
-        <div>
-          <p class="text-sm font-black"><i class="ph-bold ph-heartbeat text-red-600"></i> صحة المحلات</p>
-          <p class="text-[12px] text-ink/60 mt-0.5">الخامل وقليل الاستخدام فوق: هذولي اللي يحتاجون اتصال قبل لا يلغون.</p>
-        </div>
-        <div id="health-filters" class="flex flex-wrap gap-1.5"></div>
-        <div id="health-list" class="grid gap-2.5 md:grid-cols-2 xl:grid-cols-3"></div>
-      </section>
-    </div>
-
-    <!-- ═══ الأرقام والدخل ═══ -->
-    <div data-satab="overview" class="space-y-6">
-    <!-- صيانة بطاقة النداء -->
-    <section class="card p-5 flex flex-wrap items-center justify-between gap-3">
-      <div class="min-w-0">
-        <p class="text-sm font-black"><i class="ph-bold ph-wallet text-amber-600"></i> صيانة بطاقة النداء</p>
-        <p class="text-[12px] text-ink/65 leading-relaxed">لما تشغّلها: خيار "أضف بطاقة النداء" يختفي من البيجر عند كل المحلات، وتوقف تحديثات البطاقات ورسائلها. البيجر نفسه يشتغل عادي ويرن من الصفحة.</p>
+  <main class="sa-main-col">
+    <!-- عنوان القسم الكبير -->
+    <div class="sa-page-head">
+      <div>
+        <h1 id="sa-title">المشتركين</h1>
+        <p id="sa-sub"></p>
       </div>
-      <button type="button" id="cm-btn" onclick="toggleCardMaintenance()" class="px-4 py-2.5 rounded-xl text-xs font-bold border"></button>
-    </section>
-    <section id="kpis" class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-5 gap-3"></section>
-
-    <section class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-      <div class="card p-5 space-y-3">
-        <p class="text-xs font-black flex items-center gap-2"><i class="ph-bold ph-money text-green-700"></i> الدخل السنوي من المشتركين</p>
-        <p id="mrr" class="text-3xl font-black"></p>
-        <div id="mrr-break" class="space-y-1.5 text-[11px] text-ink/70"></div>
-        <p class="text-[10px] text-ink/45 leading-relaxed">المشتركين الساريين بسعر باقاتهم، والشهري محسوب × 12.</p>
-      </div>
-      <div class="card p-5 lg:col-span-2 space-y-3">
-        <div class="flex items-center justify-between">
-          <p class="text-xs font-black flex items-center gap-2"><i class="ph-bold ph-user-plus text-blue-700"></i> تسجيلات جديدة آخر 30 يوم</p>
-          <p id="signups-total" class="text-[11px] font-bold text-ink/60"></p>
-        </div>
-        <div id="signups-chart" class="flex items-end gap-[3px] h-28" dir="ltr"></div>
-        <div class="flex justify-between text-[9px] text-ink/45" dir="ltr"><span>قبل 30 يوم</span><span>اليوم</span></div>
-      </div>
-    </section>
-
-    <!-- من وين سمعوا عنا (جواب «كيف سمعت عنا؟» في لوحة صاحب المحل) -->
-    <section class="card p-5 space-y-4">
-      <div class="flex flex-wrap items-center justify-between gap-2">
-        <p class="text-xs font-black flex items-center gap-2"><i class="ph-bold ph-megaphone text-violet-600"></i> من وين سمعوا عنا</p>
-        <p id="heard-total" class="text-[11px] font-bold text-ink/60"></p>
-      </div>
-      <div id="heard-list" class="space-y-2.5"></div>
-      <p class="text-[10px] text-ink/45 leading-relaxed">المتاجر الرئيسية بس (بدون الفروع والعملاء المحتملين). «مشترك» = اشتراكه مدفوع وساري الحين.</p>
-    </section>
-
+      <div id="sa-head-actions" class="sa-head-actions"></div>
     </div>
 
     <!-- ═══ الطلبات: التجديد وتغيير الباقة والفروع والتواصل ═══ -->
-    <section data-satab="requests" class="card p-5 space-y-3">
-      <div class="flex flex-wrap items-center justify-between gap-2">
-        <div id="sup-filters" class="flex gap-1.5"></div>
-        <button type="button" onclick="loadSupport()" class="text-[11px] font-bold text-ink/60"><i class="ph-bold ph-arrow-clockwise"></i> تحديث</button>
-      </div>
-      <div id="sup-list" class="space-y-2"></div>
-    </section>
-
-    <!-- ═══ سجل العمليات: مين سوّى إيش ومتى ═══ -->
-    <section data-satab="log" class="card p-5 space-y-3">
-      <div class="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <p class="text-sm font-black"><i class="ph-bold ph-clock-counter-clockwise text-brand"></i> سجل العمليات</p>
-          <p class="text-[12px] text-ink/60 mt-0.5">كل تفعيل وتجديد وتعديل وحذف واسترجاع: مين سوّاه ومتى وعلى أي محل.</p>
-        </div>
-        <div class="flex items-center gap-2">
-          <input id="log-search" type="search" placeholder="ابحث بالمحل أو العملية أو المدير..." class="field md:w-72 text-[12px]">
-          <button type="button" onclick="loadAudit()" class="text-[11px] font-bold text-ink/60 whitespace-nowrap"><i class="ph-bold ph-arrow-clockwise"></i> تحديث</button>
-        </div>
-      </div>
-      <div id="log-store"></div>
-      <div id="log-list" class="divide-y divide-ink/[0.07]"></div>
-    </section>
-
-    <!-- ═══ الإشعارات ═══ -->
-    <section data-satab="notify" class="grid gap-4 md:grid-cols-2 items-start">
-      <div class="card p-5 space-y-3">
-        <p class="text-sm font-black"><i class="ph-bold ph-megaphone text-blue-700"></i> إشعار للمشتركين</p>
-        <p class="text-[12px] text-ink/65 leading-relaxed">يوصل في جرس الإشعارات بلوحة كل مشترك على طول. تختار ترسله للكل، أو اللي في التجربة، أو المشتركين المدفوعين.</p>
-        <button type="button" onclick="notifyAll()" class="px-4 py-2.5 rounded-xl bg-brand text-cream text-xs font-bold"><i class="ph-bold ph-paper-plane-tilt"></i> اكتب إشعار</button>
-      </div>
-      <div class="card p-5 space-y-2">
-        <p class="text-sm font-black"><i class="ph-bold ph-storefront text-ink/70"></i> إشعار لمحل واحد</p>
-        <p class="text-[12px] text-ink/65 leading-relaxed">من تبويب "المشتركين"، افتح قائمة المحل (⋯) واختر "إرسال إشعار".</p>
-        <p class="text-[12px] text-ink/65 leading-relaxed">وردّك على أي طلب يوصله إشعار تلقائي.</p>
-      </div>
+    <section data-satab="requests" class="sa-sec">
+      <div id="sup-filters" class="sa-seg" role="tablist"></div>
+      <div id="sup-list" class="sa-cells"></div>
     </section>
 
     <!-- ═══ المشتركين ═══ -->
-    <div data-satab="stores" class="space-y-6">
-    <!-- الأدوات -->
-    <section class="sa-tools card p-3 md:p-4 space-y-3 sticky top-14 z-20">
-      <div class="flex flex-col md:flex-row gap-2">
-        <div class="relative flex-1">
-          <i class="ph-bold ph-magnifying-glass absolute right-3.5 top-1/2 -translate-y-1/2 text-ink/40 text-xs"></i>
-          <input id="search" type="search" placeholder="ابحث بالاسم أو الرابط أو البريد أو الجوال..." class="field pr-9">
+    <div data-satab="stores" class="sa-sec">
+      <div class="sa-tools">
+        <div class="sa-search">
+          <i class="ph-bold ph-magnifying-glass"></i>
+          <input id="search" type="search" placeholder="ابحث بالاسم أو الرابط أو البريد أو الجوال" autocomplete="off">
         </div>
-        <div class="grid grid-cols-2 md:flex gap-2 [&>button]:py-2.5">
-          <select id="sector" class="field md:w-44" aria-label="نوع النشاط"><option value="">كل الأنشطة</option></select>
-          <select id="sort" class="field md:w-52">
-            <option value="new">الأحدث تسجيلاً</option>
-            <option value="expiry">الأقرب انتهاءً</option>
-            <option value="usage">الأقل استخداماً</option>
-            <option value="name">الاسم</option>
-          </select>
-          <button onclick="createProspect()" class="shrink-0 px-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold whitespace-nowrap"><i class="ph-bold ph-magic-wand"></i> منيو لعميل محتمل</button>
-          <button onclick="exportCsv()" class="shrink-0 px-3 rounded-xl bg-brand/10 hover:bg-brand/15 border border-brand/20 text-xs font-bold whitespace-nowrap"><i class="ph-bold ph-file-arrow-down"></i> تصدير</button>
+        <div id="filters" class="sa-seg sa-seg-scroll" role="tablist"></div>
+        <div class="sa-refine">
+          <label class="sa-select"><span>تصفية</span>
+            <select id="filter-more" aria-label="تصفية إضافية"></select></label>
+          <label class="sa-select"><span>النشاط</span>
+            <select id="sector" aria-label="نوع النشاط"><option value="">الكل</option></select></label>
+          <label class="sa-select"><span>الترتيب</span>
+            <select id="sort" aria-label="الترتيب">
+              <option value="new">الأحدث تسجيلاً</option>
+              <option value="expiry">الأقرب انتهاءً</option>
+              <option value="usage">الأقل استخداماً</option>
+              <option value="name">الاسم</option>
+            </select></label>
         </div>
       </div>
-      <div id="filters" class="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5"></div>
+      <section id="stores"></section>
+      <div id="empty" class="hidden sa-empty"><i class="ph-bold ph-magnifying-glass"></i><p>ما فيه محلات بهالبحث أو الفلتر.</p></div>
+    </div>
+
+    <!-- ═══ الاستخدام: مين يستخدم إيش، وصحة كل محل ═══ -->
+    <div data-satab="usage" class="sa-sec">
+      <p class="sa-h2">الخدمات <small>«استخدموها» = آخر 7 أيام. المحلات الشغالة بدون العملاء المحتملين.</small></p>
+      <div class="sa-card sa-pad0"><div id="feat-usage" class="sa-table-wrap"></div></div>
+      <p id="usage-missing" class="hidden sa-warn-text"></p>
+      <div id="health-box">
+        <p class="sa-h2">صحة المحلات <small>الخامل وقليل الاستخدام أول، هذولي يحتاجون تواصل قبل لا يلغون.</small></p>
+        <div id="health-filters" class="sa-seg sa-seg-scroll"></div>
+        <div id="health-list" class="sa-health"></div>
+      </div>
+    </div>
+
+    <!-- ═══ الأرقام والدخل ═══ -->
+    <div data-satab="overview" class="sa-sec">
+      <div class="sa-ov">
+        <div class="sa-card sa-rev">
+          <p class="sa-cap">الدخل السنوي من المشتركين</p>
+          <p id="mrr" class="sa-big"></p>
+          <div id="mrr-break" class="sa-list"></div>
+          <p class="sa-foot-note">المشتركين الساريين بسعر باقاتهم بعد الخصومات، والشهري × 12.</p>
+        </div>
+        <div class="sa-card">
+          <div class="sa-card-head"><p class="sa-cap">تسجيلات جديدة آخر 30 يوم</p><p id="signups-total" class="sa-cap-num"></p></div>
+          <div id="signups-chart" class="sa-chart" dir="ltr"></div>
+          <div class="sa-chart-axis" dir="ltr"><span>قبل 30 يوم</span><span>اليوم</span></div>
+        </div>
+      </div>
+      <p class="sa-h2">المحلات</p>
+      <div id="kpis" class="sa-kpis"></div>
+      <p class="sa-h2">من وين سمعوا عنا <small id="heard-total"></small></p>
+      <div class="sa-card">
+        <div id="heard-list" class="sa-bars"></div>
+        <p class="sa-foot-note">المتاجر الرئيسية بس (بدون الفروع والعملاء المحتملين). «مشترك» = اشتراكه مدفوع وساري.</p>
+      </div>
+      <p class="sa-h2">الصيانة</p>
+      <div class="sa-group">
+        <div class="sa-setting">
+          <div><b>صيانة بطاقة النداء</b><small>تخفي «أضف بطاقة النداء» من البيجر عند كل المحلات وتوقف تحديثات البطاقات ورسائلها. البيجر نفسه يشتغل عادي.</small></div>
+          <button type="button" id="cm-btn" onclick="toggleCardMaintenance()" role="switch" class="sa-switch"></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ سجل العمليات: مين سوّى إيش ومتى ═══ -->
+    <section data-satab="log" class="sa-sec">
+      <div class="sa-search">
+        <i class="ph-bold ph-magnifying-glass"></i>
+        <input id="log-search" type="search" placeholder="ابحث بالمحل أو العملية أو المدير" autocomplete="off">
+      </div>
+      <div id="log-store"></div>
+      <div id="log-list" class="sa-group sa-log"></div>
     </section>
 
-    <!-- المتاجر -->
-    <section id="stores" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></section>
-    <p id="empty" class="hidden text-center text-sm text-ink/50 py-16"><i class="ph-bold ph-prohibit text-2xl block mb-2"></i> لا توجد نتائج</p>
-    </div>
+    <!-- ═══ الإشعارات ═══ -->
+    <section data-satab="notify" class="sa-sec">
+      <div class="sa-group">
+        <button type="button" class="sa-cell-link" onclick="notifyAll()">
+          <span class="sa-cell-ic"><i class="ph-bold ph-megaphone"></i></span>
+          <span><b>إشعار للمشتركين</b><small>يوصل لجرس الإشعارات في لوحة كل مشترك. تختار: الكل، أو اللي في التجربة، أو المدفوعين.</small></span>
+          <i class="ph-bold ph-caret-left"></i>
+        </button>
+        <button type="button" class="sa-cell-link" onclick="showTab('stores')">
+          <span class="sa-cell-ic"><i class="ph-bold ph-storefront"></i></span>
+          <span><b>إشعار لمحل واحد</b><small>من «المشتركين» افتح ملف المحل واختر «إشعار في لوحته». وردّك على أي طلب يوصله إشعار تلقائي.</small></span>
+          <i class="ph-bold ph-caret-left"></i>
+        </button>
+      </div>
+    </section>
   </main>
   </div>
 </div>
@@ -353,7 +314,7 @@
   const featNames = (list) => list.map(k => DMPlans.FEATURES[k].name).join(' + ');
   const totalFor = (c, period = 'year', feats) => {
     if (c && c.parent_id) return DMPlans.branchPrice(c.branch_features, period);
-    return DMPlans.price(feats || (c && c.requested_plan ? reqFeats(c) : planFeats(c)), period, c ? branchesOf(c) : 0).total;
+    return DMPlans.price(feats || (c && c.requested_plan ? reqFeats(c) : planFeats(c)), period, c ? branchesOf(c) : 0, c).total;
   };
   // فرع ينضاف في نص الاشتراك: يدفع الأيام الباقية لين تاريخ تجديد الحساب، وبعدها يتجدد مع الحساب كامل
   // features: مميزات الفرع (رسوم الفرع + سعرها)
@@ -492,33 +453,47 @@
   function renderSupport() {
     const n = { open: supRows.filter(x => x.status === 'open').length, done: supRows.filter(x => x.status !== 'open').length, all: supRows.length };
     document.getElementById('sup-filters').innerHTML = [['open', 'المفتوحة'], ['done', 'المنتهية'], ['all', 'الكل']].map(([k, l]) =>
-      `<button type="button" onclick="supFilter='${k}'; renderSupport()" class="text-[12px] font-bold px-3 py-1.5 rounded-full border ${supFilter === k ? 'bg-brand text-cream border-brand' : 'border-ink/15'}">${l} <span class="opacity-60">${n[k]}</span></button>`).join('');
+      `<button type="button" role="tab" aria-selected="${supFilter === k}" onclick="supFilter='${k}'; renderSupport()">${l} <span>${n[k]}</span></button>`).join('');
     const rows = supRows.filter(x => supFilter === 'all' || (supFilter === 'open' ? x.status === 'open' : x.status !== 'open'));
     const byId = Object.fromEntries(clients.map(c => [c.id, c]));
     const when = (iso) => new Date(iso).toLocaleString('ar-SA-u-ca-gregory-nu-latn', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
     document.getElementById('sup-list').innerHTML = !supReady ? '<p class="text-[12px] text-red-700">جدول الطلبات ما انشأ للحين: شغّل supabase/48-support-requests.sql</p>'
-      : rows.slice(0, 60).map(x => { const c = byId[x.client_id] || {}; return `
-        <div class="rounded-xl border ${x.status === 'open' ? 'border-amber-400/60 bg-amber-50/60' : 'border-ink/10 bg-white/60'} p-3 space-y-1.5">
-          <div class="flex flex-wrap items-center justify-between gap-2 text-[11px]">
-            <span class="font-black">${esc(c.name || `متجر #${x.client_id}`)} <span class="text-ink/45 font-bold" dir="ltr">${esc(c.client_slug || '')}</span> · ${SUP_KIND[x.kind] || 'رسالة'}</span>
-            <span class="text-ink/50">${when(x.created_at)}</span>
+      : rows.slice(0, 60).map(x => { const c = byId[x.client_id] || {}; const open = x.status === 'open'; return `
+        <article class="sa-cell ${open ? 'open' : ''}">
+          <div class="sa-cell-top">
+            <span class="sa-logo sm">${safeUrl(c.logo_url) ? `<img src="${esc(safeUrl(c.logo_url))}" alt="">` : esc((c.name || '؟').trim().charAt(0))}</span>
+            <div class="sa-cell-who">
+              <b>${c.id ? `<button type="button" data-profile="${Number(c.id)}">${esc(c.name || `متجر #${x.client_id}`)}</button>` : esc(`متجر #${x.client_id}`)}</b>
+              <small><span class="sa-tag ${open ? 's-req' : ''}">${SUP_KIND[x.kind] || 'رسالة'}</span> ${when(x.created_at)}${c.phone ? ` · <span dir="ltr">${esc(c.phone)}</span>` : ''}</small>
+            </div>
           </div>
-          <p class="text-[12.5px] whitespace-pre-line">${esc(x.body)}</p>
-          ${x.reply ? `<p class="text-[12px] text-ink/70"><b>ردك:</b> ${esc(x.reply)}</p>` : ''}
-          <div class="flex flex-wrap gap-2 pt-1">
-            ${x.kind === 'addon' && x.status === 'open' && x.meta && x.meta.branch_id ? `<button type="button" onclick="approveBranchFeatures(${x.id})" class="text-[11px] font-bold px-3 py-1.5 rounded-lg bg-emerald-700 text-white"><i class="ph-bold ph-sliders-horizontal"></i> فعّل مميزات "${esc(x.meta.name || '')}"</button>` : ''}
-            ${x.kind === 'branch' && x.status === 'open' && x.meta && x.meta.name ? `<button type="button" onclick="approveBranch(${x.id})" class="text-[11px] font-bold px-3 py-1.5 rounded-lg bg-emerald-700 text-white"><i class="ph-bold ph-git-branch"></i> وافق وأضف الفرع "${esc(x.meta.name)}"</button><button type="button" onclick="editBranchRequest(${x.id})" class="text-[11px] font-bold px-3 py-1.5 rounded-lg bg-white border border-[#233d2c]/20"><i class="ph-bold ph-pencil-simple"></i> عدّل قبل الإضافة</button>` : ''}
-            <button type="button" onclick="replySupport(${x.id})" class="text-[11px] font-bold px-3 py-1.5 rounded-lg ${x.kind === 'branch' && x.status === 'open' ? 'border border-ink/15' : 'bg-ink text-white'}">${x.reply ? 'عدّل الرد' : x.kind === 'branch' && x.status === 'open' ? 'اعتذر برد' : 'رد'}</button>
-            <button type="button" onclick="setSupport(${x.id}, '${x.status === 'open' ? 'done' : 'open'}')" class="text-[11px] font-bold px-3 py-1.5 rounded-lg border border-ink/15">${x.status === 'open' ? 'تم' : 'رجّعه مفتوح'}</button>
-            ${c.phone ? `<span class="text-[11px] text-ink/50 self-center" dir="ltr">${esc(c.phone)}</span>` : ''}
+          <p class="sa-cell-body">${esc(x.body)}</p>
+          ${x.reply ? `<p class="sa-cell-reply"><b>ردك:</b> ${esc(x.reply)}</p>` : ''}
+          <div class="sa-cell-acts">
+            ${x.kind === 'addon' && open && x.meta && x.meta.branch_id ? `<button type="button" onclick="approveBranchFeatures(${x.id})" class="sa-pill fill"><i class="ph-bold ph-check"></i> فعّل مميزات "${esc(x.meta.name || '')}"</button>` : ''}
+            ${x.kind === 'branch' && open && x.meta && x.meta.name ? `<button type="button" onclick="approveBranch(${x.id})" class="sa-pill fill"><i class="ph-bold ph-check"></i> وافق وأضف "${esc(x.meta.name)}"</button><button type="button" onclick="editBranchRequest(${x.id})" class="sa-pill">عدّل قبل الإضافة</button>` : ''}
+            <button type="button" onclick="replySupport(${x.id})" class="sa-pill ${x.kind === 'branch' && open ? '' : open ? 'fill' : ''}">${x.reply ? 'عدّل الرد' : x.kind === 'branch' && open ? 'اعتذر برد' : 'رد'}</button>
+            <button type="button" onclick="setSupport(${x.id}, '${open ? 'done' : 'open'}')" class="sa-pill">${open ? 'تم' : 'رجّعه مفتوح'}</button>
           </div>
-        </div>`; }).join('') || `<p class="text-[12px] text-ink/50 py-6 text-center">${supFilter === 'open' ? 'ما فيه طلبات مفتوحة، كل شي تمام ✓' : 'ما فيه طلبات.'}</p>`;
+        </article>`; }).join('') || `<div class="sa-empty"><i class="ph-bold ph-check-circle"></i><p>${supFilter === 'open' ? 'ما فيه طلبات مفتوحة.' : 'ما فيه طلبات.'}</p></div>`;
   }
   // ─── التبويبات ───
   let saTab = '', saAuto = !location.hash;
+  const TAB_HEAD = {
+    requests: ['الطلبات', 'التجديد وتغيير الباقة والفروع ورسائل المشتركين.', `<button type="button" class="sa-pill" onclick="loadSupport()"><i class="ph-bold ph-arrows-clockwise"></i> تحديث</button>`],
+    stores: ['المشتركين', 'اضغط على أي محل يفتح ملفه: الاشتراك والسعر والخصم والفواتير.', `<button type="button" class="sa-pill fill" onclick="createProspect()"><i class="ph-bold ph-plus"></i> منيو لعميل محتمل</button><button type="button" class="sa-pill" onclick="exportCsv()"><i class="ph-bold ph-download-simple"></i> تصدير</button>`],
+    usage: ['الاستخدام', 'مين يستخدم إيش من خدماته، ومين يحتاج تواصل.', `<button type="button" class="sa-pill" onclick="loadUsage(true)"><i class="ph-bold ph-arrows-clockwise"></i> تحديث</button>`],
+    overview: ['الأرقام', 'الدخل والتسجيلات وحالة المحلات.', ''],
+    log: ['السجل', 'كل تفعيل وتجديد وتعديل وحذف: مين سوّاه ومتى.', `<button type="button" class="sa-pill" onclick="loadAudit()"><i class="ph-bold ph-arrows-clockwise"></i> تحديث</button>`],
+    notify: ['الإشعارات', 'رسائل تطلع في جرس لوحة المشترك.', '']
+  };
   function showTab(t) {
     if (!['requests', 'stores', 'usage', 'overview', 'log', 'notify'].includes(t)) t = 'stores';
     saTab = t;
+    const [title, sub, acts] = TAB_HEAD[t];
+    document.getElementById('sa-title').textContent = title; document.getElementById('sa-top-title').textContent = title;
+    document.getElementById('sa-sub').textContent = sub; document.getElementById('sa-head-actions').innerHTML = acts;
+    document.querySelector('.sa-more-btn').setAttribute('aria-selected', String(t === 'log' || t === 'notify'));
     document.querySelectorAll('[data-satab]').forEach(el => el.classList.toggle('hidden', el.dataset.satab !== t));
     document.querySelectorAll('[data-satab-btn]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.satabBtn === t)));
     if (location.hash !== '#' + t) history.replaceState(null, '', location.pathname + location.search + '#' + t);
@@ -530,8 +505,7 @@
   let cardOff = false;
   function paintCardMaintenance() {
     const b = document.getElementById('cm-btn');
-    b.className = `px-4 py-2.5 rounded-xl text-xs font-bold border ${cardOff ? 'bg-amber-500 text-white border-amber-500' : 'bg-white text-ink border-ink/20'}`;
-    b.innerHTML = cardOff ? '<i class="ph-bold ph-wrench"></i> الصيانة شغّالة، اضغط لإيقافها' : '<i class="ph-bold ph-wrench"></i> شغّل الصيانة';
+    b.setAttribute('aria-checked', String(cardOff)); b.setAttribute('aria-label', cardOff ? 'الصيانة شغّالة، اضغط لإيقافها' : 'شغّل الصيانة');
   }
   async function loadCardMaintenance() { try { cardOff = (await DM.get(A('card-maintenance'), true)).on === true; } catch {} paintCardMaintenance(); }
   async function toggleCardMaintenance() {
@@ -604,19 +578,20 @@
   function renderKpis() {
     const n = counts();
     document.getElementById('stores-count').textContent = n.all;
-    const tile = (label, value, icon, color, f) => `
-      <button onclick="setFilter('${f}')" class="card kpi hover:border-brand/40 transition ${filter === f ? 'ring-2 ring-brand/50' : ''}">
-        <span class="ic"><i class="ph-bold ${icon} ${color}"></i></span>
-        <span class="min-w-0"><b>${value}</b><small>${label}</small></span>
-      </button>`;
-    document.getElementById('kpis').innerHTML =
-      tile('كل المتاجر', n.all, 'ph-storefront', 'text-ink/60', 'all') +
-      tile('مشتركون', n.paid, 'ph-check-circle', 'text-green-700', 'paid') +
-      tile('تجريبي', n.trial, 'ph-flask', 'text-blue-700', 'trial') +
-      tile('ينتهي خلال 3 أيام', n.soon, 'ph-clock', 'text-amber-600', 'soon') +
-      tile('منتهي', n.expired, 'ph-warning-circle', 'text-amber-800', 'expired') +
-      tile('موقوف', n.suspended, 'ph-prohibit', 'text-red-700', 'suspended') +
-      DMPlans.ORDER.map(k => tile(`مشتركين ${DMPlans.FEATURES[k].name}`, n['f_' + k], DMPlans.FEATURES[k].icon, FEAT_COLOR[k], 'f_' + k)).join('');
+    const row = (label, value, f, icon, tone = '') => `
+      <button type="button" onclick="setFilter('${f}')" class="sa-kpi ${tone}"><i class="ph-bold ${icon}"></i><span>${label}</span><b>${value}</b><i class="ph-bold ph-caret-left sa-chev"></i></button>`;
+    document.getElementById('kpis').innerHTML = `
+      <div class="sa-group">
+        ${row('كل المتاجر', n.all, 'all', 'ph-storefront')}
+        ${row('مشتركون', n.paid, 'paid', 'ph-check-circle')}
+        ${row('في التجربة', n.trial, 'trial', 'ph-flask')}
+        ${row('ينتهي خلال 3 أيام', n.soon, 'soon', 'ph-clock', n.soon ? 'warn' : '')}
+        ${row('منتهي', n.expired, 'expired', 'ph-warning-circle', n.expired ? 'warn' : '')}
+        ${row('موقوف', n.suspended, 'suspended', 'ph-prohibit')}
+      </div>
+      <div class="sa-group">
+        ${DMPlans.ORDER.map(k => row(`${DMPlans.FEATURES[k].name}`, n['f_' + k], 'f_' + k, DMPlans.FEATURES[k].icon)).join('')}
+      </div>`;
   }
 
   function renderRevenue() {
@@ -628,10 +603,9 @@
     const trial = clients.filter(c => statusOf(c).key === 'trial' && !c.parent_id).length;
     document.getElementById('mrr').textContent = money(total);
     document.getElementById('mrr-break').innerHTML = `
-      <div class="flex justify-between"><span>${paid.filter(c => c.subscription_plan !== 'month').length} سنوي · ${paid.filter(c => c.subscription_plan === 'month').length} شهري</span><b>${paid.length} حساب</b></div>
-      ${byFeat.map(([k, l]) => `<div class="flex justify-between"><span><i class="ph-bold ${DMPlans.FEATURES[k].icon} ${FEAT_COLOR[k]}"></i> ${DMPlans.FEATURES[k].name}</span><b>${l.length} مشترك</b></div>`).join('')}
-      <div class="flex justify-between"><span>متوسط شهري</span><b>${money(Math.round(total / 12))}</b></div>
-      <div class="flex justify-between border-t border-brand/10 pt-1.5"><span>لو اشترك كل التجريبيين بالباقة الكاملة سنوي (${trial})</span><b>+ ${money(trial * DMPlans.price(DMPlans.LEGACY, 'year').total)}</b></div>`;
+      <p><span>المشتركين</span><b>${paid.length} (${paid.filter(c => c.subscription_plan !== 'month').length} سنوي، ${paid.filter(c => c.subscription_plan === 'month').length} شهري)</b></p>
+      <p><span>متوسط الشهر</span><b>${money(Math.round(total / 12))}</b></p>
+      <p><span>لو اشترك اللي في التجربة (${trial}) سنوي بالباقة الكاملة</span><b>+ ${money(trial * DMPlans.price(DMPlans.LEGACY, 'year').total)}</b></p>`;
   }
 
   // عدد المتاجر من كل مصدر، ومنهم كم صار مشترك مدفوع
@@ -644,21 +618,18 @@
       return { k, n: list.length, paid: list.filter(c => c.subscription_status === 'active').length, notes: k === 'other' ? list.map(c => c.heard_from_note).filter(Boolean) : [] };
     }).filter(r => r.n).sort((a, b) => b.n - a.n);
     const max = Math.max(1, ...rows.map(r => r.n));
-    document.getElementById('heard-total').textContent = `${answered.length} جاوبوا من ${mains.length} متجر`;
+    document.getElementById('heard-total').textContent = `${answered.length} جاوبوا من ${mains.length}`;
     box.innerHTML = rows.length ? rows.map(r => `
-      <div>
-        <div class="flex items-center justify-between gap-2 text-[12px]">
-          <span class="font-bold">${esc(HEARD_FROM[r.k])}</span>
-          <span class="text-ink/70"><b class="text-ink">${r.n}</b> متجر${r.paid ? ` · <span class="text-emerald-700 font-bold">${r.paid} مشترك</span>` : ''}</span>
-        </div>
-        <div class="h-2 mt-1 rounded-full bg-ink/[0.06] overflow-hidden"><div class="h-full rounded-full bg-brand" style="width:${Math.round(r.n / max * 100)}%"></div></div>
-        ${r.notes.length ? `<p class="text-[10.5px] text-ink/55 mt-1">${r.notes.map(esc).join('، ')}</p>` : ''}
-      </div>`).join('') : '<p class="text-[12px] text-ink/55 py-2">ما فيه أجوبة للحين. تطلع هنا أول ما يجاوب أصحاب المحلات من لوحاتهم.</p>';
+      <div class="sa-bar">
+        <p><span>${esc(HEARD_FROM[r.k])}</span><b>${r.n}${r.paid ? ` <small>· ${r.paid} مشترك</small>` : ''}</b></p>
+        <i><em style="width:${Math.round(r.n / max * 100)}%"></em></i>
+        ${r.notes.length ? `<small>${r.notes.map(esc).join('، ')}</small>` : ''}
+      </div>`).join('') : '<p class="sa-muted">ما فيه أجوبة للحين. تطلع هنا أول ما يجاوب أصحاب المحلات من لوحاتهم.</p>';
   }
   function renderSignups() {
     const hasDates = clients.some(c => c.created_at);
     const chart = document.getElementById('signups-chart');
-    if (!hasDates) { chart.innerHTML = '<p class="text-[11px] text-ink/50 m-auto">تاريخ التسجيل غير متوفر في الجدول</p>'; return; }
+    if (!hasDates) { chart.innerHTML = '<p class="sa-muted">تاريخ التسجيل غير متوفر</p>'; return; }
     const days = Array.from({ length: 30 }, (_, i) => {
       const d = new Date(Date.now() - (29 - i) * 86400000);
       return { key: d.toLocaleDateString('en-CA', { timeZone: 'Asia/Riyadh' }), label: d.toLocaleDateString('ar-SA-u-ca-gregory-nu-latn', { day: 'numeric', month: 'numeric' }), v: 0 };
@@ -667,8 +638,8 @@
     clients.forEach(c => { if (!c.created_at) return; const k = new Date(c.created_at).toLocaleDateString('en-CA', { timeZone: 'Asia/Riyadh' }); if (map[k]) map[k].v++; });
     const max = Math.max(1, ...days.map(d => d.v));
     const total = days.reduce((a, d) => a + d.v, 0);
-    document.getElementById('signups-total').textContent = `${total} متجر جديد`;
-    chart.innerHTML = days.map(d => `<div class="flex-1 rounded-t ${d.v ? 'bg-brand/70 hover:bg-brand' : 'bg-brand/10'}" style="height:${d.v ? Math.max(8, d.v / max * 100) : 4}%" title="${esc(d.label)}: ${d.v}"></div>`).join('');
+    document.getElementById('signups-total').textContent = `${total} محل`;
+    chart.innerHTML = days.map(d => `<i class="${d.v ? 'on' : ''}" style="height:${d.v ? Math.max(8, d.v / max * 100) : 3}%" title="${esc(d.label)}: ${d.v}"></i>`).join('');
   }
 
 
@@ -679,12 +650,12 @@
     notify: 'رسالة لزبائن البيجر', waitlist: 'تسجيل في الانتظار', stamps: 'ختم وهدية', lmsg: 'رسالة ولاء'
   };
   // كل ميزة وش يدل إنها مستخدمة (المنيو التفاعلي ما ينقاس لحاله: زياراته ضمن زيارات المنيو)
-  const FEAT_METRICS = { menu: ['views', 'orders'], chat: ['chat'], ixpro: [], pager: ['pager', 'cards'], notify: ['notify'], waitlist: ['waitlist'], loyalty: ['stamps', 'lmsg'] };
+  const FEAT_METRICS = { menu: ['views', 'orders'], chat: ['chat'], ixpro: [], pager: ['pager', 'cards'], notify: ['notify'], waitlist: ['waitlist'], loyalty: ['stamps', 'lmsg'], subs: [] };
   const HEALTH = {
-    idle:   { label: 'خامل', cls: 'bg-red-500/10 text-red-700 border-red-500/25', rank: 0 },
-    down:   { label: 'قلّ استخدامه', cls: 'bg-amber-400/20 text-amber-900 border-amber-500/40', rank: 1 },
-    fresh:  { label: 'جديد، ما بدأ', cls: 'bg-sky-500/10 text-sky-800 border-sky-500/25', rank: 2 },
-    active: { label: 'نشط', cls: 'bg-emerald-500/10 text-emerald-800 border-emerald-500/25', rank: 3 }
+    idle:   { label: 'خامل', cls: 'h-idle', rank: 0 },
+    down:   { label: 'قلّ استخدامه', cls: 'h-down', rank: 1 },
+    fresh:  { label: 'جديد، ما بدأ', cls: 'h-fresh', rank: 2 },
+    active: { label: 'نشط', cls: 'h-active', rank: 3 }
   };
   let usage = null, usageMissing = [], healthFilter = 'all', featPick = null;
   const num = (n) => Number(n || 0).toLocaleString('en-US');
@@ -716,7 +687,7 @@
   const tracked = () => clients.filter(c => !c.parent_id && !isProspect(c) && statusOf(c).live);
   function usageLine(c) {
     const h = healthOf(c);
-    return `<p class="flex justify-between gap-2"><span class="text-ink/55">الاستخدام</span><span><b class="text-[10px] font-black px-2 py-0.5 rounded-full border ${h.cls}">${h.label}</b> <span class="text-ink/60">${esc(agoOf(c))}</span></span></p>`;
+    return `<p class="flex justify-between gap-2"><span class="text-ink/55">الاستخدام</span><span><b class="sa-tag ${h.cls}">${h.label}</b> <span class="text-ink/60">${esc(agoOf(c))}</span></span></p>`;
   }
   function renderUsage() {
     if (!usage) return;
@@ -728,19 +699,19 @@
       const totals = FEAT_METRICS[f].map(k => [k, on.reduce((a, c) => a + metricOf(c, k)[0], 0)]);
       return { f, on: on.length, used: used.length, unused: measurable ? on.length - used.length : null, totals, measurable };
     });
-    const cell = (f, mode, n, cls) => n ? `<button type="button" onclick="pickFeat('${f}', '${mode}')" class="font-black underline underline-offset-4 decoration-dotted ${cls} ${featPick && featPick.f === f && featPick.mode === mode ? 'bg-brand/10 rounded px-1' : ''}">${n}</button>` : `<span class="text-ink/35">0</span>`;
+    const cell = (f, mode, n, cls) => n ? `<button type="button" onclick="pickFeat('${f}', '${mode}')" class="sa-num ${cls} ${featPick && featPick.f === f && featPick.mode === mode ? 'on' : ''}">${n}</button>` : `<span class="sa-zero">0</span>`;
     document.getElementById('feat-usage').innerHTML = `
-      <table class="w-full text-[12.5px] min-w-[640px]">
-        <thead><tr class="text-[11px] text-ink/55 text-right">
-          <th class="font-bold py-2">الميزة</th><th class="font-bold">مفعّلة عند</th><th class="font-bold">استخدموها</th><th class="font-bold">مفعّلة وما استخدموها</th><th class="font-bold">الحجم هالأسبوع</th>
+      <table class="sa-table">
+        <thead><tr>
+          <th>الخدمة</th><th>مفعّلة عند</th><th>استخدموها</th><th>ما استخدموها</th><th>الحجم هالأسبوع</th>
         </tr></thead>
         <tbody>${rows.map(r => `
-          <tr class="border-t border-ink/[0.07]">
-            <td class="py-2.5 font-bold whitespace-nowrap"><i class="ph-bold ${DMPlans.FEATURES[r.f].icon} ${FEAT_COLOR[r.f]}"></i> ${DMPlans.FEATURES[r.f].name}</td>
+          <tr>
+            <td class="sa-td-name"><i class="ph-bold ${DMPlans.FEATURES[r.f].icon}"></i> ${DMPlans.FEATURES[r.f].name}</td>
             <td>${cell(r.f, 'on', r.on, '')}</td>
-            <td>${r.measurable ? cell(r.f, 'used', r.used, 'text-emerald-700') : '<span class="text-[11px] text-ink/45">ضمن زيارات المنيو</span>'}</td>
-            <td>${r.measurable ? cell(r.f, 'unused', r.unused, 'text-red-700') : '<span class="text-ink/35">—</span>'}</td>
-            <td class="text-[11.5px] text-ink/70">${r.totals.map(([k, n]) => `${num(n)} ${METRICS[k]}`).join(' · ') || '—'}</td>
+            <td>${r.measurable ? cell(r.f, 'used', r.used, 'good') : '<span class="sa-zero">ما تنقاس لحالها</span>'}</td>
+            <td>${r.measurable ? cell(r.f, 'unused', r.unused, 'bad') : '<span class="sa-zero">—</span>'}</td>
+            <td class="sa-td-muted">${r.totals.map(([k, n]) => `${num(n)} ${METRICS[k]}`).join('، ') || '—'}</td>
           </tr>`).join('')}</tbody>
       </table>`;
     const miss = document.getElementById('usage-missing');
@@ -762,9 +733,9 @@
     const badge = document.getElementById('usage-idle'); badge.textContent = idleAll; badge.classList.toggle('hidden', !idleAll);
     const pickText = featPick ? `${DMPlans.FEATURES[featPick.f].name}: ${featPick.mode === 'on' ? 'مفعّلة عندهم' : featPick.mode === 'used' ? 'استخدموها' : 'مفعّلة وما استخدموها'}` : '';
     document.getElementById('health-filters').innerHTML =
-      (featPick ? `<button type="button" onclick="featPick=null; renderUsage()" class="chip on"><i class="ph-bold ph-x"></i> ${esc(pickText)}</button>` : '') +
+      (featPick ? `<button type="button" onclick="featPick=null; renderUsage()" class="sa-seg-x"><i class="ph-bold ph-x"></i> ${esc(pickText)}</button>` : '') +
       [['all', 'الكل'], ...Object.entries(HEALTH).map(([k, h]) => [k, h.label])].map(([k, l]) =>
-        `<button type="button" onclick="healthFilter='${k}'; renderHealth()" class="chip ${healthFilter === k ? 'on' : ''}">${l} <span class="opacity-60">${n[k]}</span></button>`).join('');
+        `<button type="button" role="tab" aria-selected="${healthFilter === k}" onclick="healthFilter='${k}'; renderHealth()">${l} <span>${n[k]}</span></button>`).join('');
     if (healthFilter !== 'all') list = list.filter(c => healthOf(c).key === healthFilter);
     list.sort((a, b) => healthOf(a).rank - healthOf(b).rank || (Date.parse(usageOf(a).last || 0) - Date.parse(usageOf(b).last || 0)));
     document.getElementById('health-list').innerHTML = list.map(c => {
@@ -772,19 +743,15 @@
       const feats = DMPlans.ORDER.filter(f => DMPlans.has(c, f) && FEAT_METRICS[f].length);
       const metrics = feats.flatMap(f => FEAT_METRICS[f]).filter((k, i, a) => a.indexOf(k) === i);
       return `
-        <div class="rounded-xl border border-ink/10 bg-white/70 p-3 space-y-2">
-          <div class="flex items-start justify-between gap-2">
-            <div class="min-w-0">
-              <p class="text-[13px] font-black truncate">${esc(c.name || 'بدون اسم')}</p>
-              <p class="text-[10.5px] text-ink/50"><span class="font-mono" dir="ltr">${esc(c.client_slug)}</span> · ${s.label}</p>
-            </div>
-            <span class="shrink-0 text-[10px] font-black px-2 py-0.5 rounded-full border ${h.cls}">${h.label}</span>
+        <article class="sa-hc" data-profile="${Number(c.id)}">
+          <div class="sa-hc-top">
+            <div><b>${esc(c.name || 'بدون اسم')}</b><small>${s.label} · ${esc(agoOf(c))}</small></div>
+            <span class="sa-tag ${h.cls}">${h.label}</span>
           </div>
-          <p class="text-[11px] text-ink/60"><i class="ph-bold ph-clock"></i> ${esc(agoOf(c))}</p>
-          <div class="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px]">${metrics.map(k => { const [w, p] = metricOf(c, k); const arrow = w > p ? '<i class="ph-bold ph-arrow-up text-emerald-700"></i>' : w < p ? '<i class="ph-bold ph-arrow-down text-red-600"></i>' : ''; return `<p class="flex justify-between gap-1"><span class="text-ink/55 truncate">${METRICS[k]}</span><span class="whitespace-nowrap"><b>${num(w)}</b> ${arrow}<span class="text-ink/40 text-[10px]"> قبله ${num(p)}</span></span></p>`; }).join('') || '<p class="text-ink/45 col-span-2">ما عنده ميزة تنقاس</p>'}</div>
-          ${phone ? `<a href="https://wa.me/${phone}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-[11px] font-bold text-green-700"><i class="ph-bold ph-whatsapp-logo"></i> كلّمه واتساب</a>` : ''}
-        </div>`;
-    }).join('') || '<p class="text-[12px] text-ink/50 py-6 text-center md:col-span-2 xl:col-span-3">ما فيه محلات بهالفلتر.</p>';
+          <div class="sa-hc-m">${metrics.map(k => { const [w, p] = metricOf(c, k); const arrow = w > p ? '<i class="ph-bold ph-arrow-up good"></i>' : w < p ? '<i class="ph-bold ph-arrow-down bad"></i>' : ''; return `<p><span>${METRICS[k]}</span><b>${num(w)} ${arrow}</b><small>قبله ${num(p)}</small></p>`; }).join('') || '<p class="sa-muted">ما عنده خدمة تنقاس</p>'}</div>
+          ${phone ? `<a href="https://wa.me/${phone}" target="_blank" rel="noopener" class="sa-pill"><i class="ph-bold ph-whatsapp-logo"></i> واتساب</a>` : ''}
+        </article>`;
+    }).join('') || '<div class="sa-empty"><p>ما فيه محلات بهالفلتر.</p></div>';
   }
 
   // ─── الفلاتر والبحث ───
@@ -794,18 +761,25 @@
   ];
   // أرقام "الأرقام والدخل" تفتح المشتركين بنفس الفلتر
   function setFilter(f) { filter = f; renderKpis(); renderFilters(); renderStores(); if (saTab && saTab !== 'stores') showTab('stores'); }
+  // الفلاتر الأساسية فوق كأزرار، والباقي في قائمة «تصفية»
+  const MAIN_FILTERS = ['all', 'requests', 'trial', 'paid', 'soon', 'expired'];
   function renderFilters() {
     const n = counts();
-    document.getElementById('filters').innerHTML = FILTERS.map(([k, label]) =>
-      `<button onclick="setFilter('${k}')" class="chip ${filter === k ? 'on' : ''}">${label} <span class="opacity-60">${n[k]}</span></button>`).join('');
+    document.getElementById('filters').innerHTML = FILTERS.filter(([k]) => MAIN_FILTERS.includes(k)).map(([k, label]) =>
+      `<button type="button" role="tab" aria-selected="${filter === k}" onclick="setFilter('${k}')">${label} <span>${n[k]}</span></button>`).join('');
+    const more = document.getElementById('filter-more');
+    more.innerHTML = `<option value="">بدون</option>` + FILTERS.filter(([k]) => !MAIN_FILTERS.includes(k)).map(([k, label]) => `<option value="${k}">${label} (${n[k]})</option>`).join('');
+    more.value = MAIN_FILTERS.includes(filter) ? '' : filter;
+    more.closest('.sa-select').classList.toggle('on', !!more.value);
   }
+  document.getElementById('filter-more').addEventListener('change', (e) => setFilter(e.target.value || 'all'));
   document.getElementById('search').addEventListener('input', () => renderStores());
   document.getElementById('sort').addEventListener('change', () => renderStores());
   document.getElementById('sector').addEventListener('change', () => renderStores());
   function renderSectorFilter() {
     const sel = document.getElementById('sector'), keep = sel.value;
     const accounts = clients.filter(c => !c.parent_id);
-    sel.innerHTML = '<option value="">كل الأنشطة</option>' + DMSectors.KEYS.map(k => [k, accounts.filter(c => (c.business_type || 'restaurant') === k).length]).filter(([, n]) => n)
+    sel.innerHTML = '<option value="">الكل</option>' + DMSectors.KEYS.map(k => [k, accounts.filter(c => (c.business_type || 'restaurant') === k).length]).filter(([, n]) => n)
       .map(([k, n]) => `<option value="${k}">${TYPES[k][0]} (${n})</option>`).join('');
     sel.value = keep;
   }
@@ -1218,7 +1192,7 @@
   function setFeatPeriod(p) { fd.period = p; renderFeat(); }
   function renderFeat() {
     const c = find(fd.id), feats = DMPlans.clean([...fd.feats]);
-    const isBranch = !!c.parent_id, pr = DMPlans.price(feats, fd.period, isBranch ? 0 : branchesOf(c));
+    const isBranch = !!c.parent_id, pr = DMPlans.price(feats, fd.period, isBranch ? 0 : branchesOf(c), isBranch ? null : c);
     // الفرع: رسوم الفرع + مميزاته، بنوع اشتراك الحساب
     if (isBranch) { const fee = DMPlans.BRANCH[fd.period]; pr.lines.unshift({ key: 'fee', label: 'ربط الفرع', amount: fee }); pr.total += fee; }
     // الفرع: مميزاته الخاصة بس (الولاء والرسائل للحساب كله)
@@ -1251,7 +1225,7 @@
     }).join('');
     const per = document.getElementById('feat-period');
     // نوع الاشتراك (شهري / سنوي): في التفعيل يحدد مدة التجديد، وفي المميزات يغيّر النوع بدون ما يتغير التاريخ
-    per.innerHTML = isBranch ? '' : [['year', 'سنة'], ['month', 'شهر']].map(([p, l]) => `<button type="button" onclick="setFeatPeriod('${p}')" class="rounded-xl py-2 text-[12px] font-black border ${fd.period === p ? 'bg-brand text-cream border-brand' : 'bg-white border-brand/15'}">${l} · ${money(DMPlans.price(feats, p, branchesOf(c)).total)}</button>`).join('');
+    per.innerHTML = isBranch ? '' : [['year', 'سنة'], ['month', 'شهر']].map(([p, l]) => `<button type="button" onclick="setFeatPeriod('${p}')" class="rounded-xl py-2 text-[12px] font-black border ${fd.period === p ? 'bg-brand text-cream border-brand' : 'bg-white border-brand/15'}">${l} · ${money(DMPlans.price(feats, p, branchesOf(c), c).total)}</button>`).join('');
     document.getElementById('feat-sum').innerHTML = !feats.length && !isBranch ? '<p class="text-red-700 font-bold">اختر ميزة وحدة على الأقل</p>' : `
       ${pr.lines.map(l => `<p class="flex justify-between"><span>${l.label}</span><span>${money(l.amount)}</span></p>`).join('')}
       ${pr.discounts.map(d => `<p class="flex justify-between text-emerald-800"><span>${d.label}</span><span>- ${money(d.amount)}</span></p>`).join('')}
@@ -1543,7 +1517,7 @@
     rename: 'تغيير الاسم', transfer: 'تسليم المتجر لصاحبه', notify: 'إشعار لمحل', 'notify-all': 'إشعار للمشتركين', featured: 'أمثلة الرئيسية', 'pager-card': 'بطاقة النداء',
     'wa-save': 'ربط واتساب', 'wa-test': 'تجربة واتساب', 'wa-delete': 'فصل واتساب', 'business-type': 'نوع النشاط', 'waitlist-addon': 'قائمة الانتظار',
     features: 'تعديل المميزات', 'branch-create': 'إضافة فرع', delete: 'حذف (أرشفة)', restore: 'استرجاع', purge: 'مسح نهائي', 'owner-delete': 'صاحب المحل حذف حسابه', 'owner-restore': 'صاحب المحل استرجع حسابه',
-    export: 'تنزيل بيانات المحل', 'support-update': 'تحديث طلب', 'prospect-create': 'منيو لعميل محتمل', 'card-maintenance': 'صيانة بطاقة النداء'
+    export: 'تنزيل بيانات المحل', 'support-update': 'تحديث طلب', 'prospect-create': 'منيو لعميل محتمل', 'card-maintenance': 'صيانة بطاقة النداء', discount: 'خصم خاص'
   };
   const AUDIT_TONE = { delete: 'text-red-700', purge: 'text-red-700', 'owner-delete': 'text-red-700', restore: 'text-emerald-700', 'owner-restore': 'text-emerald-700', activate: 'text-emerald-700' };
   let auditRows = null, auditStore = null;
@@ -1562,7 +1536,7 @@
   function renderAudit() {
     const box = document.getElementById('log-list');
     const c = auditStore ? find(auditStore) || findArchived(auditStore) : null;
-    document.getElementById('log-store').innerHTML = auditStore ? `<button type="button" onclick="auditStore=null; loadAudit()" class="chip on"><i class="ph-bold ph-x"></i> ${esc(c ? c.name : `متجر #${auditStore}`)} بس</button>` : '';
+    document.getElementById('log-store').innerHTML = auditStore ? `<button type="button" onclick="auditStore=null; loadAudit()" class="sa-seg-x"><i class="ph-bold ph-x"></i> ${esc(c ? c.name : `متجر #${auditStore}`)} بس</button>` : '';
     if (auditRows && auditRows.notReady) { box.innerHTML = '<p class="text-[12px] text-red-700 py-4">جدول السجل ما انشأ للحين: شغّل supabase/100-admin-audit-archive.sql</p>'; return; }
     const q = document.getElementById('log-search').value.trim().toLowerCase();
     const rows = (auditRows || []).filter(r => !q || [r.client_name, r.admin_email, AUDIT_LABEL[r.action], r.action].some(v => v && String(v).toLowerCase().includes(q)));
@@ -1570,15 +1544,14 @@
     box.innerHTML = rows.map(r => {
       const d = Object.entries(r.details || {}).filter(([, v]) => v !== '' && v !== null && v !== undefined).map(([k, v]) => `<span class="text-ink/45">${esc(k)}:</span> ${esc(auditValue(k, v).slice(0, 160))}`).join(' · ');
       return `
-        <div class="py-2.5 grid gap-1 md:grid-cols-[150px_1fr_auto] md:gap-4 items-start">
-          <p class="text-[11px] text-ink/55">${when(r.at)}</p>
-          <div class="min-w-0">
-            <p class="text-[12.5px]"><b class="${AUDIT_TONE[r.action] || ''}">${esc(AUDIT_LABEL[r.action] || r.action)}</b>${r.client_name || r.client_id ? ` · <button type="button" onclick="openAudit(${Number(r.client_id)})" class="font-bold underline underline-offset-4 decoration-dotted">${esc(r.client_name || `#${r.client_id}`)}</button>` : ''}</p>
-            ${d ? `<p class="text-[11px] text-ink/70 break-words mt-0.5">${d}</p>` : ''}
+        <div class="sa-log-row">
+          <div class="sa-log-main">
+            <p><b class="${AUDIT_TONE[r.action] || ''}">${esc(AUDIT_LABEL[r.action] || r.action)}</b>${r.client_name || r.client_id ? ` · <button type="button" onclick="openAudit(${Number(r.client_id)})">${esc(r.client_name || `#${r.client_id}`)}</button>` : ''}</p>
+            ${d ? `<small>${d}</small>` : ''}
           </div>
-          <p class="text-[11px] text-ink/50 truncate" dir="ltr">${esc(r.admin_email === 'system' ? 'تلقائي' : r.admin_email)}</p>
+          <div class="sa-log-meta"><span>${when(r.at)}</span><span dir="ltr">${esc(r.admin_email === 'system' ? 'تلقائي' : r.admin_email)}</span></div>
         </div>`;
-    }).join('') || `<p class="text-[12px] text-ink/50 py-8 text-center">${auditRows ? 'ما فيه عمليات مسجّلة.' : 'جاري التحميل...'}</p>`;
+    }).join('') || `<div class="sa-empty"><p>${auditRows ? 'ما فيه عمليات مسجّلة.' : 'جاري التحميل...'}</p></div>`;
   }
   document.getElementById('log-search').addEventListener('input', () => renderAudit());
 
