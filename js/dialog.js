@@ -131,6 +131,8 @@
       };
       fields.forEach(f => { if (f.type !== 'choice' && f.type !== 'multi') values[f.name] = String(f.value ?? '').trim(); });
       refresh();
+      // الكتابة في الحقول تحدّث النص الحي (مثل السعر بعد الخصم)
+      if (live) inputs.forEach(inp => inp.addEventListener('input', () => { values[inp.dataset.name] = inp.value.trim(); refresh(); }));
       setTimeout(() => { const f = inputs[0] || back.querySelector('[data-act="ok"]'); f.focus(); if (inputs[0]) inputs[0].select(); }, 60);
 
       const close = (result) => {
