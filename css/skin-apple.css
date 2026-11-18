@@ -385,12 +385,12 @@ body.ap-cd #pkd-save, body.ap-cd #pkd-undo { display: none !important; }
 .cd-custom span { flex: 1; }
 .cd-custom input { width: 48px; height: 34px; border: 0; padding: 0; background: none; }
 /* شريط الحفظ */
-#cd-savebar { position: fixed; inset-inline: 0; bottom: 0; z-index: 45; padding: 8px 16px calc(8px + env(safe-area-inset-bottom)); background: rgba(250, 251, 250, .92); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); border-top: 1px solid var(--ap-sep); transform: translateY(110%); transition: transform .35s var(--ap-ease); }
+#cd-savebar { position: fixed; inset-inline: 0; bottom: 0; z-index: 45; padding: 6px 16px calc(6px + env(safe-area-inset-bottom)); background: rgba(250, 251, 250, .92); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); border-top: 1px solid var(--ap-sep); transform: translateY(110%); transition: transform .35s var(--ap-ease); }
 #cd-savebar.on { transform: none; }
-#cd-savebar div { max-width: 260px; margin: 0 auto; display: flex; gap: 8px; }
-#cd-savebar button { min-height: 34px; border-radius: 980px; border: 0; font-size: 14px; font-weight: 600; cursor: pointer; }
+#cd-savebar div { max-width: 200px; margin: 0 auto; display: flex; gap: 8px; }
+#cd-savebar button { min-height: 30px; border-radius: 980px; border: 0; font-size: 13px; font-weight: 600; cursor: pointer; }
 #cd-savebar .cd-save { flex: 1; background: var(--ap-green); color: #fff; }
-#cd-savebar .cd-undo { padding: 0 14px; background: var(--ap-fill); color: var(--ap-ink); }
+#cd-savebar .cd-undo { padding: 0 12px; background: var(--ap-fill); color: var(--ap-ink); }
 @media (min-width: 1024px) { #cd-savebar { inset-inline-start: 16rem; } }
 /* الجوال: المعاينة ثابتة فوق وأصغر، والتعديل تحتها */
 @media (max-width: 1023px) {
