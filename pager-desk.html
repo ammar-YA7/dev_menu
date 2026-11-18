@@ -817,11 +817,18 @@
   // ─── مسح بطاقة الزبون بالكاميرا ───
   let scanStream = null, scanBusy = false, scanLoop = null, lastQr = '', lastQrAt = 0;
   const scanCanvas = document.createElement('canvas'), scanCtx = scanCanvas.getContext('2d', { willReadFrequently: true });
-  function scanShow(ok, html) {
+  function scanShow(ok, html, keep) {
     const el = $('scan-result');
     el.className = `absolute inset-0 flex flex-col items-center justify-center gap-2 p-4 text-white text-center ${ok ? 'bg-emerald-700' : 'bg-amber-700'}`;
     el.innerHTML = html;
-    clearTimeout(el._h); el._h = setTimeout(() => { el.className = 'absolute inset-0 hidden'; }, 4500);
+    clearTimeout(el._h); el._h = setTimeout(() => { el.className = 'absolute inset-0 hidden'; }, keep ? 30000 : 4500);
+  }
+  // زر «اعطِ المكافأة» داخل نتيجة المسح نفسها، لكل مكافأة جاهزة (أختام مكتملة أو هدية صديق)
+  let giveFor = null;
+  function giveBtns(who, rewards) {
+    if (!who || !rewards || !rewards.length) return '';
+    giveFor = { who, rewards };
+    return rewards.map((x, i) => `<button type="button" data-give="${i}" class="mt-1 w-full bg-white text-[#233d2c] rounded-2xl py-3 font-black flex items-center justify-center gap-2"><i class="ph-bold ph-gift text-xl text-[#3f7a4a]"></i> اعطِ المكافأة<span class="block text-xs font-bold opacity-70">${esc(x.label)}</span></button>`).join('');
   }
   // ─── الباقات المدفوعة مسبقاً: مسح كود الباقة ينقص واحد، مع تراجع لو انمسح بالغلط ───
   async function usePackage(payload) {
@@ -853,10 +860,24 @@
       catch (err) { scanShow(false, `<b>${esc(err.message || 'ما تفعّلت، حاول مرة ثانية')}</b>`); }
       return;
     }
+    const gv = e.target.closest('[data-give]');
+    if (gv && giveFor) {
+      const x = giveFor.rewards[+gv.dataset.give], who = giveFor.who; if (!x) return;
+      gv.disabled = true; gv.innerHTML = '<i class="ph-bold ph-spinner-gap ph-spin text-xl"></i>';
+      try {
+        const r = await call('loyalty-redeem', { card_id: who.id, gift: x.type === 'gift' ? x.code : undefined });
+        scanShow(true, `<i class="ph-bold ph-gift text-6xl"></i><b class="text-2xl">انصرفت المكافأة</b><b class="text-lg">${esc(r.who.name)}</b><span class="font-bold">${esc(r.reward)}</span>${giveBtns(r.who, r.rewards)}`, !!(r.rewards && r.rewards.length));
+        if (navigator.vibrate) navigator.vibrate(80);
+        load();
+      } catch (err) { gv.disabled = false; gv.innerHTML = `<i class="ph-bold ph-warning-circle"></i> ${esc(err.message || 'ما انصرفت، حاول مرة ثانية')}`; }
+      return;
+    }
     const pu = e.target.closest('[data-pkuse]'), ds = e.target.closest('[data-dostamp]');
     if (pu) { scanBusy = false; return usePackage({ card_id: Number(pu.dataset.pkuse) }); }
     if (ds && lastChoose) { scanBusy = false; return stampMember({ ...lastChoose.payload, mode: 'stamp' }); }
-    const b = e.target.closest('[data-undo]'); if (!b) return;
+    const b = e.target.closest('[data-undo]');
+    // ضغطة على النتيجة نفسها (بره الأزرار) تقفلها وترجع الكاميرا للزبون اللي بعده
+    if (!b) { if (!e.target.closest('button')) { clearTimeout($('scan-result')._h); $('scan-result').className = 'absolute inset-0 hidden'; } return; }
     b.disabled = true;
     try { const r = await call('loyalty-pkg-undo', { use_id: Number(b.dataset.undo) }); scanShow(true, `<i class="ph-bold ph-arrow-counter-clockwise text-6xl"></i><b class="text-2xl">تم التراجع</b><span class="font-black text-xl">باقي ${r.card.remaining} من ${r.card.total}</span>`); }
     catch (err) { scanShow(false, `<b>${esc(err.message || 'ما قدرنا نتراجع')}</b>`); }
@@ -940,6 +961,7 @@
         const el = $('scan-result');
         el.className = 'absolute inset-0 flex flex-col items-center justify-center gap-2.5 p-4 text-white text-center bg-[#233d2c]';
         el.innerHTML = `<b class="text-lg">${esc(r.who.name)}</b><span class="text-xs font-bold opacity-85" dir="ltr">#${esc(r.who.no)}</span>`
+          + giveBtns(r.who, r.rewards)
           + r.packages.map(p => p.pending
             ? `<button type="button" data-activate="${p.id}" class="w-full bg-[#eaf3ec] text-[#233d2c] rounded-2xl py-3 font-black"><i class="ph-bold ph-check-circle"></i> استلمت المبلغ، فعّل باقة ${esc(p.plan_name)}<span class="block text-xs font-bold opacity-70">${p.total} مرة${p.price != null ? ` · ${esc(fmtM(Number(p.price)))}` : ''}</span></button>`
             : `<button type="button" data-pkuse="${p.id}" class="w-full bg-white text-[#233d2c] rounded-2xl py-3 font-black"><i class="ph-bold ph-package"></i> خصم من باقة ${esc(p.plan_name)}<span class="block text-xs font-bold opacity-70">باقي ${p.remaining} من ${p.total}</span></button>`).join('')
@@ -953,18 +975,26 @@
       const who = esc(r.who.name), n = Math.min(r.stamps, r.needed);
       const dots = `<span class="flex flex-wrap justify-center gap-1.5 mt-1">${Array.from({ length: r.needed }, (_, i) => `<span class="w-4 h-4 rounded-full ${i < n ? 'bg-white' : 'bg-white/25'}"></span>`).join('')}</span>`;
       const no = `<span class="text-xs font-bold opacity-85" dir="ltr">#${esc(r.who.no)}</span>`;
+      const gifts = giveBtns(r.who, r.rewards);
       if (r.stamped) {
-        scanShow(true, `<i class="ph-bold ph-check-circle text-7xl"></i><b class="text-2xl">تم ${r.count > 1 ? 'الختم دبل' : 'الختم'}</b><b class="text-lg">${who}</b>${no}${dots}<span class="font-bold">${n} من ${r.needed}${n >= r.needed ? ' · المكافأة جاهزة' : ''}</span>`);
+        scanShow(true, `<i class="ph-bold ph-check-circle text-6xl"></i><b class="text-2xl">تم ${r.count > 1 ? 'الختم دبل' : 'الختم'}</b><b class="text-lg">${who}</b>${no}${dots}<span class="font-bold">${n} من ${r.needed}</span>${gifts}`, !!gifts);
         if (navigator.vibrate) navigator.vibrate(80);
-      } else scanShow(false, `<i class="ph-bold ${r.reason === 'FULL' ? 'ph-gift' : 'ph-clock'} text-7xl"></i><b class="text-2xl">ما انضاف ختم</b><b class="text-lg">${who}</b>${no}<span class="font-bold">${esc(r.note || '')}</span>`);
+      } else if (r.reason === 'FULL' && gifts) {
+        // بطاقته مكتملة: ما فيه ختم، بس زر المكافأة قدام الكاشير على طول
+        const el = $('scan-result');
+        el.className = 'absolute inset-0 flex flex-col items-center justify-center gap-2 p-4 text-white text-center bg-[#233d2c]';
+        el.innerHTML = `<i class="ph-bold ph-gift text-6xl text-[#7fb685]"></i><b class="text-2xl">مكافأته جاهزة</b><b class="text-lg">${who}</b>${no}${dots}${gifts}`;
+        clearTimeout(el._h); el._h = setTimeout(() => { el.className = 'absolute inset-0 hidden'; }, 30000);
+      } else scanShow(false, `<i class="ph-bold ${r.reason === 'FULL' ? 'ph-gift' : 'ph-clock'} text-6xl"></i><b class="text-2xl">ما انضاف ختم</b><b class="text-lg">${who}</b>${no}<span class="font-bold">${esc(r.note || '')}</span>${gifts}`, !!gifts);
     } catch (e) { scanShow(false, `<i class="ph-bold ph-warning-circle text-6xl"></i><b>${esc(e.message || 'ما انختم. حاول مرة ثانية أو اكتب رقم العضوية')}</b>`); }
-    if (lastScan && lastScan.rewards && lastScan.rewards.length) setTimeout(() => openReward(lastScan.who, lastScan.rewards), 900);
     lastScan = null;
     setTimeout(() => { scanBusy = false; }, 1500);
   }
   function scanTick() {
     const v = $('scan-video');
-    if (v.readyState >= 2 && !scanBusy && window.jsQR) {
+    // فيه نتيجة عليها أزرار (مكافأة، باقة): ما نقرأ كود جديد لين يختار الكاشير أو يقفلها
+    const held = !$('scan-result').classList.contains('hidden') && $('scan-result').querySelector('[data-give],[data-pkuse],[data-activate]');
+    if (v.readyState >= 2 && !scanBusy && !held && window.jsQR) {
       const w = 480, h = Math.round(w * v.videoHeight / v.videoWidth) || 480;
       scanCanvas.width = w; scanCanvas.height = h;
       scanCtx.drawImage(v, 0, 0, w, h);

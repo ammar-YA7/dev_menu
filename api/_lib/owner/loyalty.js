@@ -246,7 +246,7 @@ module.exports.post = async function post(action, req, b, env) {
       if (live.length || !stampsOn) {
         const P = require('../packages');
         const prices = live.some(p => p.status === 'pending') ? Object.fromEntries((await rest(`loyalty_pkg_plans?client_id=eq.${sid}&select=id,price`).catch(() => [])).map(p => [p.id, p.price])) : {};
-        return { choose: true, who, stamps_on: stampsOn, stamps: card.stamps, needed: settings.needed,
+        return { choose: true, who, rewards: stampsOn ? rewards : [], stamps_on: stampsOn, stamps: card.stamps, needed: settings.needed,
           packages: live.map(p => ({ ...P.cardView(p), price: prices[p.plan_id] ?? null })), stamp_due: stampsOn && !cooldownLeft(card, settings) && card.stamps < settings.needed };
       }
     }
