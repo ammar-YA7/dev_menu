@@ -28,7 +28,10 @@
     const solidInk = inkFor(d.color || '#233d2c');
     const auto = d.style === 'paper' ? (d.color || '#233d2c') : d.style === 'dark' || d.style === 'glass' ? '#ffffff' : solidInk;
     // لون الخط: اختيار صاحب المحل، وإلا تلقائي حسب لون البطاقة
-    el.style.setProperty('--ink', d.text_color || auto);
+    // فوق صورة الخلفية (عليها طبقة غامقة) الخط الغامق ما ينقرا، فنخليه أبيض دايماً
+    const onImage = d.bg === 'image' && !!d.bg_image;
+    const ink = onImage && (!d.text_color || inkFor(d.text_color) === '#ffffff') ? '#ffffff' : (d.text_color || auto);
+    el.style.setProperty('--ink', ink);
     el.classList.toggle('ink-set', !!d.text_color);
     media(el, d);
     logo(el, d);
