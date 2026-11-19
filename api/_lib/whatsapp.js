@@ -90,7 +90,7 @@ const pick = (a) => a[Math.floor(Math.random() * a.length)];
 const THANKS = {
   hi: ['', '', 'هلا والله، ', 'أهلاً، ', '{greet}، '],
   thanks: ['شكراً لزيارتك {store}', 'نورتنا في {store}', 'سعدنا بزيارتك لـ {store}', 'شكراً لاختيارك {store}', 'يسعدنا إنك اخترت {store}', 'شكراً إنك زرت {store} اليوم'],
-  wish: ['نتمنى طلبك يعجبك', 'بالعافية عليك', 'بالهناء والعافية', 'نتمنى لك وقت ممتع', 'عساه يعجبك', 'نتمنى إنه كان على ذوقك'],
+  wish: ['نتمنى طلبك يعجبك', 'بالعافية عليك', 'بالهناء والعافية', 'رأيك يهمنا، لو عندك ملاحظة رد علينا هنا', 'عساه يعجبك', 'نتمنى إنه كان على ذوقك'],
   bye: ['ننتظرك مرة ثانية', 'نشوفك قريب', 'لا تحرمنا من زيارتك الجاية', 'بانتظارك دايماً', 'حياك الله أي وقت', ''],
   emoji: ['🌿', '☕', '🙏', '💚', '✨', '🤍', '']
 };
@@ -105,7 +105,7 @@ function thanksText(cfg, vars) {
   return fill(parts.join(sep), vars).replace(/\{greet\}/g, greet).trim() + (e ? ` ${e}` : '');
 }
 // نص الرسالة: لكل نوع نصه (الطلبات أو قائمة الانتظار أو الشكر)، ولو فاضي النص الافتراضي
-const textFor = (cfg, vars) => vars.kind === 'thanks' ? thanksText(cfg, vars) : fill(vars.kind === 'waitlist' ? (cfg.wl_message || DEFAULT_WL_MESSAGE) : (cfg.message || DEFAULT_MESSAGE), vars);
+const textFor = (cfg, vars) => vars.kind === 'thanks' ? (vars.text || thanksText(cfg, vars)) : fill(vars.kind === 'waitlist' ? (cfg.wl_message || DEFAULT_WL_MESSAGE) : (cfg.message || DEFAULT_MESSAGE), vars);
 
 // ─── الإرسال حسب المزوّد. يرجّع { ok, error } ───
 async function send(cfg, to, vars) {
@@ -200,10 +200,15 @@ async function pagerThanks(store, ticket) {
   // نحجز الرقم أول (لو انضغط «استلم» مرتين ما تنرسل مرتين)
   const held = await rest(`pager_tickets?id=eq.${ticket.id}&wa_thanks=is.null`, { method: 'PATCH', prefer: 'return=representation', body: { wa_thanks: 'sending' } }).catch(() => []);
   if (!held.length) return 'off';
-  const r = await send(cfg, ticket.wa_phone, { kind: 'thanks', number: ticket.number, store: store.display_name || store.name || '' });
+  // ما تتكرر نفس الرسالة على آخر 20 زبون في المحل
+  const vars = { kind: 'thanks', number: ticket.number, store: store.display_name || store.name || '' };
+  const recent = new Set((await rest(`pager_tickets?client_id=eq.${store.id}&wa_thanks_body=not.is.null&select=wa_thanks_body&order=closed_at.desc.nullslast&limit=20`).catch(() => [])).map(x => x.wa_thanks_body));
+  let text = thanksText(cfg, vars);
+  for (let i = 0; i < 30 && recent.has(text); i++) text = thanksText(cfg, vars);
+  const r = await send(cfg, ticket.wa_phone, { ...vars, text });
   const now = new Date().toISOString();
   await Promise.all([
-    rest(`pager_tickets?id=eq.${ticket.id}`, { method: 'PATCH', body: { wa_thanks: r.ok ? `${r.queued ? 'queued' : 'sent'} ${now.slice(11, 19)}` : `failed: ${r.error}`.slice(0, 200) } }).catch(() => {}),
+    rest(`pager_tickets?id=eq.${ticket.id}`, { method: 'PATCH', body: { wa_thanks: r.ok ? `${r.queued ? 'queued' : 'sent'} ${now.slice(11, 19)}` : `failed: ${r.error}`.slice(0, 200), wa_thanks_body: r.ok ? text : null } }).catch(() => {}),
     r.queued ? null : rest(`client_whatsapp?client_id=eq.${cfg.client_id}`, { method: 'PATCH', body: r.ok ? { last_sent_at: now, last_error: null } : { last_error: `${now.slice(0, 16)} ${r.error}`.slice(0, 220) } }).catch(() => {})
   ]);
   console.log('PAGER_WA_THANKS', store.id, ticket.id, r.ok ? 'sent' : r.error);
