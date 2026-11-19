@@ -6,7 +6,7 @@
 // =====================================================================
 const { tr } = require('./i18n');
 const { ApiError, rest } = require('./core');
-const { stampStrip, passColor } = require('./strip');
+const { stampStrip, passColor, smallLogo } = require('./strip');
 
 const BASE = 'https://api.walletwallet.dev/api/passes';
 const KEY = process.env.WALLET_API_KEY || '';
@@ -37,7 +37,7 @@ function pkgNearLine(lines, card, pkg, storeName) {
   return tr(card.lang, `قريب من ${storeName}؟ باقي لك ${pkg.remaining} في باقتك، حيّاك 👋`);
 }
 
-function passBody({ store, settings, card, url, restoreUrl, lat, lng, notice, strip, nearText, fresh, pkg, stampsOff, subsDesign, subsNear, passColor: bgColor }, full = true) {
+function passBody({ store, settings, card, url, restoreUrl, lat, lng, notice, strip, nearText, fresh, pkg, stampsOff, subsDesign, subsNear, passColor: bgColor, logo: smallLogoSrc }, full = true) {
   const n = settings.needed, s = Math.min(card.stamps, n);
   const L = (t) => tr(card.lang, t);   // لغة الزبون (آخر لغة فتح فيها بطاقته)
   const body = {
@@ -88,13 +88,14 @@ function passBody({ store, settings, card, url, restoreUrl, lat, lng, notice, st
     if (bgc) { body.color = bgc; delete body.colorPreset; }
     // شعار البطاقة الخاص لو حطه صاحب المحل، وإلا شعار المنيو
     const logo = (settings.design && settings.design.logo) || store.logo_url;
-    if (logo && /^https:\/\//.test(logo)) body.logoURL = logo;
+    if (smallLogoSrc) body.logoURL = smallLogoSrc;
+    else if (logo && /^https:\/\//.test(logo)) body.logoURL = logo;
     // صورة الأختام بنفس شكل بطاقة DEV MENU
     if (strip) body.stripURL = strip;
     // بطاقة الاشتراكات بس: لونها وشعارها وغلافها من تصميم الاشتراكات
     if (stampsOff && subsDesign) {
       if (subsDesign.color) { body.color = subsDesign.color; delete body.colorPreset; }
-      if (subsDesign.logo) body.logoURL = subsDesign.logo;
+      if (subsDesign.logo) body.logoURL = smallLogoSrc || subsDesign.logo;
       const sStrip = subsDesign.strip || (subsDesign.bg === 'image' && subsDesign.bg_image) || null;
       if (sStrip) body.stripURL = sStrip;
     }
@@ -141,9 +142,14 @@ async function createPass(ctx) {
   ctx = { ...ctx, ...(await extrasFor(ctx.card)) };
   ctx.strip = ctx.stampsOff ? null : await stampStrip(ctx.settings, ctx.card, ctx.pkg);
   ctx.passColor = ctx.stampsOff ? null : await passColor(ctx.settings.design).catch(() => null);
+  // الشعار مصغّر: خدمة المحفظة ترفض الصورة فوق 1MB، ولو انرفضت البطاقة تطلع بالشكل الافتراضي (أخضر بدون أختام)
+  { const raw = (ctx.stampsOff && ctx.subsDesign && ctx.subsDesign.logo) || (ctx.settings.design && ctx.settings.design.logo) || (ctx.store && ctx.store.logo_url);
+    ctx.logo = raw && /^https:\/\//.test(raw) ? await smallLogo(raw).catch(() => null) : null; }
   try { return await call('POST', '', passBody(ctx, true)); }
   catch (e) {
     if (e.status >= 400 && e.status < 500 && e.status !== 401 && e.status !== 429) {
+      // أول: نفس التصميم بدون الشعار (أكثر سبب للرفض)، وآخر حل: البطاقة الافتراضية
+      try { const nb = passBody(ctx, true); delete nb.logoURL; return await call('POST', '', nb); } catch {}
       try { return await call('POST', '', passBody(ctx, false)); } catch (e2) { e = e2; }
     }
     if (e.status === 429) throw new ApiError(503, 'المحفظة مشغولة الحين، جرّب بعد شوي', 'WALLET_LIMIT');
@@ -158,6 +164,9 @@ async function updatePass(serial, ctx) {
   ctx = { ...ctx, ...(await extrasFor(ctx.card)) };
   ctx.strip = ctx.stampsOff ? null : await stampStrip(ctx.settings, ctx.card, ctx.pkg);
   ctx.passColor = ctx.stampsOff ? null : await passColor(ctx.settings.design).catch(() => null);
+  // الشعار مصغّر: خدمة المحفظة ترفض الصورة فوق 1MB، ولو انرفضت البطاقة تطلع بالشكل الافتراضي (أخضر بدون أختام)
+  { const raw = (ctx.stampsOff && ctx.subsDesign && ctx.subsDesign.logo) || (ctx.settings.design && ctx.settings.design.logo) || (ctx.store && ctx.store.logo_url);
+    ctx.logo = raw && /^https:\/\//.test(raw) ? await smallLogo(raw).catch(() => null) : null; }
   try {
     const lb = passBody(ctx, true);
     const r = await call('PUT', `/${encodeURIComponent(serial)}`, lb);
@@ -167,6 +176,7 @@ async function updatePass(serial, ctx) {
   catch (e) {
     const first = `${e.status || ''} ${e.message || ''}`.trim();
     if (e.status >= 400 && e.status < 500 && e.status !== 401 && e.status !== 404 && e.status !== 429) {
+      try { const nb = passBody(ctx, true); delete nb.logoURL; await call('PUT', `/${encodeURIComponent(serial)}`, nb); return `nologo: ${first}`.slice(0, 300); } catch {}
       try { await call('PUT', `/${encodeURIComponent(serial)}`, passBody(ctx, false)); return `partial: ${first}`.slice(0, 300); }
       catch (e2) { return `${e2.status || ''} ${e2.message || ''}`.trim().slice(0, 300); }
     }

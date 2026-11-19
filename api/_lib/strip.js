@@ -235,12 +235,13 @@ async function smallLogo(url) {
   const hit = logos.get(url);
   if (hit && hit.at > Date.now() - 600e3) return hit.src;
   try {
-    const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
+    const res = await fetch(url, { signal: AbortSignal.timeout(12000) });   // شعارات كبيرة (2MB) تاخذ وقت
+    if (!res.ok) throw new Error(`logo ${res.status}`);
     const buf = await sharp(Buffer.from(await res.arrayBuffer())).resize(180, 180, { fit: 'inside', withoutEnlargement: true }).png({ compressionLevel: 9 }).toBuffer();
     const src = `data:image/png;base64,${buf.toString('base64')}`;
     logos.set(url, { src, at: Date.now() });
     return src;
-  } catch { return url; }
+  } catch (e) { console.error('SMALL_LOGO', e.message); return url; }
 }
 
 module.exports = { passColor, stampStrip, pagerStrip, brandColor, smallLogo };
