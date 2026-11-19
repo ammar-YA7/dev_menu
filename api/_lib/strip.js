@@ -7,6 +7,31 @@ const sharp = require('sharp');
 const ICONS = require('./stamp-icons');
 
 const W = 1125, H = 432;
+const PAPER = '#fbf8f3', DARK = '#161616';
+
+// لون خلفية بطاقة المحفظة نفسها (برا صورة الأختام)، عشان تطلع بنفس شكل البطاقة في الموقع:
+// ورقي = فاتح، داكن = أسود، صورة خلفية = اللون الغالب في الصورة مغمّق (نفس الطبقة الغامقة فوقها)، وغيرها لون المحل
+const photoColors = new Map();
+async function passColor(d) {
+  d = d || {};
+  if (d.bg !== 'color' && d.bg_image) {
+    const hit = photoColors.get(d.bg_image);
+    if (hit) return hit;
+    try {
+      const res = await fetch(d.bg_image, { signal: AbortSignal.timeout(8000) });
+      if (res.ok) {
+        const { dominant } = await sharp(Buffer.from(await res.arrayBuffer())).resize(64, 64, { fit: 'cover' }).stats();
+        const hex = '#' + [dominant.r, dominant.g, dominant.b].map(v => Math.round(v * .5).toString(16).padStart(2, '0')).join('');
+        photoColors.set(d.bg_image, hex);
+        return hex;
+      }
+    } catch {}
+    return '#1b1b1b';
+  }
+  if (d.style === 'paper') return PAPER;
+  if (d.style === 'dark') return DARK;
+  return /^#[0-9a-f]{6}$/i.test(d.color || '') ? d.color : null;
+}
 
 const hexRgb = (h) => { const n = parseInt(String(h).slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; };
 function inkFor(hex) {
@@ -19,6 +44,9 @@ const icon = (name, x, y, size, color, opacity = 1) =>
 // الخلفية بنفس لون بطاقة المحفظة عشان الصورة تندمج معها، مع وهج خفيف بلون الختم
 // متدرج بلونين: اللون الثاني في النص ويذوب للون البطاقة على الأطراف، عشان يندمج مع خلفية المحفظة (لون واحد) بدون حواف
 function background(d) {
+  // ورقي: ورق فاتح والكتابة بلون المحل، وداكن: أسود مع وهج خفيف بلون المحل (نفس بطاقة الموقع)
+  if (d.style === 'paper') return { fill: PAPER, ink: d.color || '#233d2c', glow: `<radialGradient id="g"><stop offset="0" stop-color="#fff" stop-opacity="0"/></radialGradient>` };
+  if (d.style === 'dark') return { fill: DARK, ink: '#f5f5f5', glow: `<radialGradient id="g" cx="100%" cy="0%" r="90%"><stop offset="0" stop-color="${d.color || '#233d2c'}" stop-opacity=".35"/><stop offset="1" stop-color="${d.color || '#233d2c'}" stop-opacity="0"/></radialGradient>` };
   const two = (d.style === 'gradient' || d.style === 'glass') && d.color2;
   return {
     fill: d.color, ink: inkFor(two ? d.color2 : d.color),
@@ -215,4 +243,4 @@ async function smallLogo(url) {
   } catch { return url; }
 }
 
-module.exports = { stampStrip, pagerStrip, brandColor, smallLogo };
+module.exports = { passColor, stampStrip, pagerStrip, brandColor, smallLogo };

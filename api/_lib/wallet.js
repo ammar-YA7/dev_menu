@@ -6,7 +6,7 @@
 // =====================================================================
 const { tr } = require('./i18n');
 const { ApiError, rest } = require('./core');
-const { stampStrip } = require('./strip');
+const { stampStrip, passColor } = require('./strip');
 
 const BASE = 'https://api.walletwallet.dev/api/passes';
 const KEY = process.env.WALLET_API_KEY || '';
@@ -37,7 +37,7 @@ function pkgNearLine(lines, card, pkg, storeName) {
   return tr(card.lang, `قريب من ${storeName}؟ باقي لك ${pkg.remaining} في باقتك، حيّاك 👋`);
 }
 
-function passBody({ store, settings, card, url, restoreUrl, lat, lng, notice, strip, nearText, fresh, pkg, stampsOff, subsDesign, subsNear }, full = true) {
+function passBody({ store, settings, card, url, restoreUrl, lat, lng, notice, strip, nearText, fresh, pkg, stampsOff, subsDesign, subsNear, passColor: bgColor }, full = true) {
   const n = settings.needed, s = Math.min(card.stamps, n);
   const L = (t) => tr(card.lang, t);   // لغة الزبون (آخر لغة فتح فيها بطاقته)
   const body = {
@@ -83,7 +83,9 @@ function passBody({ store, settings, card, url, restoreUrl, lat, lng, notice, st
   }
   if (full) {
     // لون المحل بدل اللون الجاهز (ما نرسل الاثنين، عشان الجاهز ما يغطي عليه)
-    if (settings.design && settings.design.color) { body.color = settings.design.color; delete body.colorPreset; }
+    // (ورقي فاتح، داكن أسود، صورة = لونها الغالب مغمّق) عشان المحفظة تطابق البطاقة في الموقع
+    const bgc = bgColor || (settings.design && settings.design.color);
+    if (bgc) { body.color = bgc; delete body.colorPreset; }
     // شعار البطاقة الخاص لو حطه صاحب المحل، وإلا شعار المنيو
     const logo = (settings.design && settings.design.logo) || store.logo_url;
     if (logo && /^https:\/\//.test(logo)) body.logoURL = logo;
@@ -138,6 +140,7 @@ async function createPass(ctx) {
   if (!String(ctx.notice || '').trim()) ctx = { ...ctx, notice: firstNotice(ctx.store, ctx.card && ctx.card.lang) };
   ctx = { ...ctx, ...(await extrasFor(ctx.card)) };
   ctx.strip = ctx.stampsOff ? null : await stampStrip(ctx.settings, ctx.card, ctx.pkg);
+  ctx.passColor = ctx.stampsOff ? null : await passColor(ctx.settings.design).catch(() => null);
   try { return await call('POST', '', passBody(ctx, true)); }
   catch (e) {
     if (e.status >= 400 && e.status < 500 && e.status !== 401 && e.status !== 429) {
@@ -154,6 +157,7 @@ async function updatePass(serial, ctx) {
   if (!configured() || !serial) return 'not configured';
   ctx = { ...ctx, ...(await extrasFor(ctx.card)) };
   ctx.strip = ctx.stampsOff ? null : await stampStrip(ctx.settings, ctx.card, ctx.pkg);
+  ctx.passColor = ctx.stampsOff ? null : await passColor(ctx.settings.design).catch(() => null);
   try {
     const lb = passBody(ctx, true);
     const r = await call('PUT', `/${encodeURIComponent(serial)}`, lb);
