@@ -490,3 +490,7 @@ main .space-y-3 > label:has(> .dm-switch) + label:has(> .dm-switch) { margin-top
 .cd-hide-logo[aria-checked="true"] i::after { transform: translateX(-20px); }
 [dir="ltr"] .cd-hide-logo[aria-checked="true"] i::after { transform: translateX(20px); }
 .cd-tiles.cd-dim .cd-tile:first-child { opacity: .45; }
+/* الحفظ التلقائي: الشريط يعرض الحالة */
+#cd-savebar .cd-status { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 30px; font-size: 13px; font-weight: 600; color: var(--ap-ink2, #6e6e73); }
+#cd-savebar .cd-status .ph-check-circle { color: var(--ap-green, #3f7a4a); }
+#cd-savebar .cd-status .ph-warning-circle { color: #b45309; }

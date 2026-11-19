@@ -27,14 +27,14 @@
     if (lyBlock && !lyBlock.classList.contains('hidden') && typeof ly !== 'undefined' && ly.design) return {
       kind: 'ly', block: lyBlock, d: ly.design, dirty: !!ly.dirty, stamp: true,
       set: (p) => setLyDesign(p), pick: (k, v) => pickLyColor(k, v), bg: (k) => pickCardBg(k), bgFile: '#ly-bg-file',
-      save: () => document.getElementById('ly-design-save').click(), undo: () => undoLyDesign(),
+      save: () => document.getElementById('ly-design-save').click(), undo: () => undoLyDesign(), autosave: () => saveLyDesign(true),
       images: [['logo', 'الشعار', "input[onchange=&quot;uploadLyImage(this, 'logo')&quot;]", 'ph-storefront', true], ['reward_image', 'صورة المكافأة', "input[onchange=&quot;uploadLyImage(this, 'reward_image')&quot;]", 'ph-gift', false]],
       note: (d) => `${d.logo ? 'شعار البطاقة يطلع بدل شعار المنيو.' : 'بدون شعار خاص، يطلع شعار المنيو.'} صورة المكافأة تطلع مكان آخر ختم.`
     };
     if (pkBlock && !pkBlock.classList.contains('hidden') && typeof pk !== 'undefined' && pk.design) return {
       kind: 'pkd', block: pkBlock, d: pk.design, dirty: !!pk.dirty, stamp: false,
       set: (p) => setPkd(p), pick: (k, v) => pickPkdColor(k, v), bg: (k) => pickPkdBg(k), bgFile: '#pkd-bg-file',
-      save: () => document.getElementById('pkd-save').click(), undo: () => document.getElementById('pkd-undo').click(),
+      save: () => document.getElementById('pkd-save').click(), undo: () => document.getElementById('pkd-undo').click(), autosave: () => savePkd(true),
       images: [['logo', 'الشعار', "input[onchange=&quot;uploadPkdImage(this, 'logo')&quot;]", 'ph-storefront', true], ['strip', 'صورة الغلاف', "input[onchange=&quot;uploadPkdImage(this, 'strip')&quot;]", 'ph-image', false]],
       note: () => 'صورة الغلاف تطلع وسط بطاقة المحفظة، مثل أطباقك أو واجهة المحل.'
     };
@@ -56,7 +56,8 @@
     if (box && box.parentElement !== block.firstElementChild) box.remove(), box = null;
     if (!document.getElementById('cd-savebar')) {
       const bar = document.createElement('div'); bar.id = 'cd-savebar';
-      bar.innerHTML = '<div><button type="button" class="cd-undo" data-cd="undo">تراجع</button><button type="button" class="cd-save" data-cd="save">حفظ</button></div>';
+      // الحفظ تلقائي: الشريط يعرض الحالة بس (جاري الحفظ ← تم الحفظ)
+      bar.innerHTML = '<div><span class="cd-status" role="status" aria-live="polite"></span></div>';
       document.body.appendChild(bar);
     }
     if (!box) {
@@ -110,7 +111,29 @@
   }
   let cdKind = null;
   const cdNoStamp = (t) => { const { stamp_color, ...rest } = t; return rest; };
-  function cdBar() { const b = document.getElementById('cd-savebar'), C = cdCtx(); if (b) b.classList.toggle('on', !!C && C.dirty && location.hash === '#carddesign'); }
+  function cdBar() { const b = document.getElementById('cd-savebar'); if (b) b.classList.toggle('on', !!cdState && location.hash === '#carddesign'); }
+  // ─── الحفظ التلقائي: بعد كل تعديل بثانية (لو كمّل يعدّل ننتظره)، والحالة تطلع في الشريط تحت ───
+  let cdState = '', cdTimer = null, cdBusy = false;
+  function cdStatus(st) {
+    cdState = st;
+    const el = document.querySelector('#cd-savebar .cd-status');
+    if (el) el.innerHTML = st === 'saving' ? '<i class="ph-bold ph-spinner-gap ph-spin"></i> جاري الحفظ…' : st === 'saved' ? '<i class="ph-bold ph-check-circle"></i> تم الحفظ' : st === 'error' ? '<i class="ph-bold ph-warning-circle"></i> ما انحفظ، جرّب مرة ثانية' : '';
+    cdBar();
+  }
+  function cdAutoSave() {
+    clearTimeout(cdTimer);
+    cdTimer = setTimeout(async () => {
+      const C = cdCtx(); if (!C || !C.dirty) return;
+      if (cdBusy) return cdAutoSave();
+      cdBusy = true; cdStatus('saving');
+      const ok = await C.autosave();
+      cdBusy = false;
+      const N = cdCtx();
+      if (N && N.dirty) return cdAutoSave();   // عدّل وهو يحفظ
+      cdStatus(ok ? 'saved' : 'error');
+      if (ok) setTimeout(() => { if (cdState === 'saved') cdStatus(''); }, 2000);
+    }, 900);
+  }
 
   function cdOpenPicker(k) {
     cdPicking = k;

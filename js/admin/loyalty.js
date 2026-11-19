@@ -99,11 +99,11 @@
   const LY_STYLES = [['gradient', 'متدرج'], ['glass', 'زجاجي'], ['solid', 'لون سادة'], ['paper', 'ورقي'], ['dark', 'داكن']];
   const LY_CARD_COLORS = ['#233d2c', '#1f2937', '#7c2d12', '#1e3a8a', '#831843', '#0f766e', '#b45309'];
   const LY_STAMP_COLORS = ['#c9a227', '#ffffff', '#f97316', '#ef4444', '#22c55e', '#38bdf8', '#1b1b1b'];
-  function setLyDesign(patch) { ly.design = { ...ly.design, ...patch }; ly.dirty = true; flashPhone(); renderDesign(); }
+  function setLyDesign(patch) { ly.design = { ...ly.design, ...patch }; ly.dirty = true; flashPhone(); renderDesign(); cdAutoSave(); }
   // وهو يسحب في منتقي اللون: نحدّث الجوال بس، بدون ما نعيد رسم الأزرار (إعادة الرسم تقفل المنتقي)
   function pickLyColor(key, value) {
     ly.design = { ...ly.design, [key]: value }; ly.dirty = true;
-    renderPhone();
+    renderPhone(); cdAutoSave();
   }
   function undoLyDesign() { ly.design = { ...ly.data.settings.design }; ly.dirty = false; flashPhone(); renderDesign(); }
   function flashPhone() {
@@ -215,7 +215,7 @@
     const url = await uploadFile(file, 'card_bg', 1280);
     if (!url) return showToast(lastUploadError || 'ما انرفعت الصورة. جرّب صورة أصغر أو تأكد من الإنترنت', true);
     setLyDesign({ bg: 'image', bg_image: url });
-    showToast('انرفعت الصورة، شوفها في الجوال واضغط "حفظ الشكل"');
+    showToast('انرفعت الصورة، وتنحفظ تلقائياً');
   }
   async function uploadStampImage(input) {
     const file = input.files && input.files[0]; input.value = '';
@@ -223,7 +223,7 @@
     const url = await uploadFile(file, 'stamp', 500);
     if (!url) return showToast(lastUploadError || 'ما انرفعت الصورة. جرّب صورة أصغر أو تأكد من الإنترنت', true);
     setLyDesign({ stamp_image: url });
-    showToast('انرفعت الصورة، شوفها في الجوال واضغط "حفظ الشكل"');
+    showToast('انرفعت الصورة، وتنحفظ تلقائياً');
   }
   // شعار البطاقة أو صورة المكافأة
   async function uploadLyImage(input, key) {
@@ -232,16 +232,20 @@
     const url = await uploadFile(file, 'stamp', 500);
     if (!url) return showToast(lastUploadError || 'ما انرفعت الصورة. جرّب صورة أصغر أو تأكد من الإنترنت', true);
     setLyDesign({ [key]: url });
-    showToast('انرفعت الصورة، شوفها في الجوال واضغط "حفظ الشكل"');
+    showToast('انرفعت الصورة، وتنحفظ تلقائياً');
   }
-  async function saveLyDesign() {
+  // auto: الحفظ التلقائي بعد كل تعديل (بدون رسالة، والحالة تطلع في الشريط تحت)
+  async function saveLyDesign(auto = false) {
     const btn = document.getElementById('ly-design-save'); btn.disabled = true;
+    const sent = JSON.stringify(ly.design);
     try {
       const r = await api('loyalty-settings', { settings: { design: ly.design } });
-      ly.data.settings = r.settings; ly.design = { ...r.settings.design }; ly.dirty = false;
-      showToast(r.wallet_pending ? `تم حفظ الشكل، وتتحدث ${r.wallet_pending} بطاقة في محافظ العملاء خلال دقيقة` : 'تم حفظ شكل البطاقة، ويطلع للزبائن على طول');
-    } catch (e) { showToast(e.message || 'لم يُحفظ التعديل. تأكد من الاتصال بالإنترنت وحاول مرة أخرى', true); }
-    renderDesign();
+      ly.data.settings = r.settings;
+      // عدّل شي ثاني وهو يحفظ: نخلي تعديله (وينحفظ بعده)
+      if (JSON.stringify(ly.design) === sent) { ly.design = { ...r.settings.design }; ly.dirty = false; }
+      if (!auto) showToast(r.wallet_pending ? `تم حفظ الشكل، وتتحدث ${r.wallet_pending} بطاقة في محافظ العملاء خلال دقيقة` : 'تم حفظ شكل البطاقة، ويطلع للزبائن على طول');
+      renderDesign(); return true;
+    } catch (e) { showToast(e.message || 'لم يُحفظ التعديل. تأكد من الاتصال بالإنترنت وحاول مرة أخرى', true); renderDesign(); return false; }
   }
 
   // ─── رسائل الأعضاء ───
@@ -617,9 +621,9 @@
   const PKD_COLORS = ['#233d2c', '#3f7a4a', '#1b1b1b', '#0f172a', '#7c2d12', '#be185d', '#1e4fa3', '#6b4e3d'];
   pk.design = {}; pk.saved = {}; pk.dirty = false;
   const pkdSame = () => { const k = [...new Set([...Object.keys(pk.design), ...Object.keys(pk.saved)])]; return k.every(x => (pk.design[x] ?? null) === (pk.saved[x] ?? null)); };
-  function setPkd(patch) { pk.design = { ...pk.design, ...patch }; Object.keys(pk.design).forEach(k => pk.design[k] == null && delete pk.design[k]); pk.dirty = !pkdSame(); renderPkd(); }
+  function setPkd(patch) { pk.design = { ...pk.design, ...patch }; Object.keys(pk.design).forEach(k => pk.design[k] == null && delete pk.design[k]); pk.dirty = !pkdSame(); renderPkd(); cdAutoSave(); }
   // وهو يسحب في منتقي اللون: نحدّث المعاينة بس (إعادة رسم الأزرار تقفل المنتقي)
-  function pickPkdColor(key, value) { pk.design = { ...pk.design, [key]: value }; pk.dirty = true; renderPkdPreview(); }
+  function pickPkdColor(key, value) { pk.design = { ...pk.design, [key]: value }; pk.dirty = true; renderPkdPreview(); cdAutoSave(); }
   function pickPkdBg(k) {
     if (k === 'color' || pk.design.bg_image) return setPkd({ bg: k });
     document.getElementById('pkd-bg-file').click();
@@ -675,18 +679,21 @@
     const url = await uploadFile(file, wide ? 'card_bg' : 'stamp', key === 'bg_image' ? 1280 : wide ? 1125 : 500);
     if (!url) return showToast(lastUploadError || 'ما انرفعت الصورة. جرّب صورة أصغر أو تأكد من الإنترنت', true);
     setPkd(key === 'bg_image' ? { bg: 'image', bg_image: url } : { [key]: url });
-    showToast('انرفعت الصورة، شوف المعاينة واضغط «حفظ التصميم»');
+    showToast('انرفعت الصورة، وتنحفظ تلقائياً');
   }
   document.getElementById('pkd-undo').addEventListener('click', () => { pk.design = { ...pk.saved }; pk.dirty = false; renderPkd(); });
-  document.getElementById('pkd-save').addEventListener('click', async () => {
+  async function savePkd(auto = false) {
     const btn = document.getElementById('pkd-save'); btn.disabled = true;
+    const sent = JSON.stringify(pk.design);
     try {
       const r = await api('loyalty-pkg-design', { design: pk.design });
-      pk.design = { ...(r.design || {}) }; pk.saved = { ...pk.design }; pk.dirty = false;
-      showToast(r.wallet_pending ? `تم حفظ التصميم، وتتحدث ${r.wallet_pending} بطاقة في محافظ العملاء خلال دقيقة` : 'تم حفظ تصميم بطاقة الاشتراكات');
-    } catch (e) { showToast(e.message || 'لم يُحفظ التصميم', true); }
-    renderPkd();
-  });
+      pk.saved = { ...(r.design || {}) };
+      if (JSON.stringify(pk.design) === sent) { pk.design = { ...pk.saved }; pk.dirty = false; } else pk.dirty = !pkdSame();
+      if (!auto) showToast(r.wallet_pending ? `تم حفظ التصميم، وتتحدث ${r.wallet_pending} بطاقة في محافظ العملاء خلال دقيقة` : 'تم حفظ تصميم بطاقة الاشتراكات');
+      renderPkd(); return true;
+    } catch (e) { showToast(e.message || 'لم يُحفظ التصميم', true); renderPkd(); return false; }
+  }
+  document.getElementById('pkd-save').addEventListener('click', () => savePkd());
   // موقع المحل لمحل الاشتراكات بس (نفس موقع البطاقة: شاشة القفل لما يقرب)
   async function renderSubsLocation() {
     const show = !DMPlans.has(client, 'loyalty');
