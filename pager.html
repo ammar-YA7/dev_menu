@@ -311,7 +311,7 @@
   #w-loyalty, #r-loyalty { background: #fff; color: var(--ink); box-shadow: 0 1px 0 var(--rule); }
 
   /* ─── خطوات أخذ الرقم ─── */
-  #v-start:not(.hidden) { display: flex; flex-direction: column; min-height: calc(100dvh - 190px); }
+  #v-start:not(.hidden) { display: flex; flex-direction: column; }
   .stp { flex: 1; display: none; flex-direction: column; justify-content: center; text-align: center; padding: 30px 22px; }
   .stp.on { display: flex; }
   .stp-ic { width: 72px; height: 72px; margin: 0 auto 16px; border-radius: 22px; display: grid; place-items: center; font-size: 34px; color: #fff; background: var(--brand); }
@@ -328,6 +328,25 @@
   .stp.top { justify-content: flex-start; padding-top: 18px; }
   .stp.top .stp-ic { width: 44px; height: 44px; font-size: 22px; border-radius: 14px; margin-bottom: 8px; }
   .stp.top .stp-h { font-size: 22px; } .stp.top .stp-sub { font-size: 14.5px; margin-bottom: 12px; } .stp.top .btn { padding: 16px; }
+  /* ─── كل الخطوات بنفس الشكل: البطاقة على قد محتواها، الأيقونة والعنوان فوق، والزر تحت الخانة ─── */
+  .stp, .stp.top { flex: none; justify-content: flex-start; padding: 26px 20px 22px; }
+  .stp .stp-ic, .stp.top .stp-ic { width: 52px; height: 52px; font-size: 26px; border-radius: 16px; margin: 0 auto 12px; }
+  .stp .stp-h, .stp.top .stp-h { font-size: 24px; line-height: 1.35; }
+  .stp .stp-b, .stp.top .stp-b { margin-top: 6px; }
+  .stp .stp-sub, .stp.top .stp-sub { font-size: 16px; line-height: 1.7; margin-bottom: 18px; }
+  .stp .btn, .stp.top .btn { padding: 17px; font-size: 17px; }
+  .stp .btn.mt-3 { margin-top: 14px; }
+  .stp-skip { margin-top: 14px; }
+  .stp-sum { margin: 0 0 16px; border: 1px solid var(--rule); border-radius: 14px; overflow: hidden; text-align: start; }
+  .sum-row { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; background: #fff; font-size: 16px; }
+  .sum-row + .sum-row:not(.hidden) { border-top: 1px solid var(--rule); }
+  .sum-k { display: flex; align-items: center; gap: 8px; color: var(--muted); font-weight: 600; }
+  .sum-k i { font-size: 18px; color: var(--brand); }
+  .sum-v { display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--ink); min-width: 0; }
+  .sum-v bdi { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sum-v i { font-size: 15px; color: var(--muted); }
+  .sum-v.empty { color: var(--brand); }
+  .sum-v.empty i { color: var(--brand); }
   .stp-dots { display: flex; justify-content: center; gap: 6px; margin-bottom: 12px; }
   .stp-dots span { width: 8px; height: 8px; border-radius: 99px; background: #ddd5c6; transition: width .25s; }
   .stp-dots span.done { background: color-mix(in srgb, var(--brand) 45%, #fff); }
@@ -485,12 +504,13 @@
       <h3 class="stp-h">خذ رقمك</h3>
       <div class="stp-b">
         <p id="t-start" class="stp-sub"></p>
-        <button id="take-btn" class="btn btn-wallet"><i class="ph-bold ph-ticket"></i> خذ رقمي وفعّل التنبيه</button>
-        <div class="flex flex-wrap justify-center gap-x-4">
-          <button type="button" id="s-take-inv" class="stp-skip !no-underline">🧾 عندك رقم فاتورة؟ اكتبه (اختياري)</button>
-          <button type="button" id="s-take-phone" class="stp-skip !no-underline hidden"><i class="ph-bold ph-whatsapp-logo"></i> <span dir="ltr"></span> <i class="ph-bold ph-pencil-simple text-xs"></i></button>
-          <button type="button" id="s-take-car" class="stp-skip !no-underline hidden">🚗 <span></span> <i class="ph-bold ph-pencil-simple text-xs"></i></button>
+        <!-- ملخص اللي كتبه قبل (يقدر يعدّله)، فوق الزر -->
+        <div class="stp-sum">
+          <button type="button" id="s-take-inv" class="sum-row"><span class="sum-k"><i class="ph-bold ph-receipt"></i> رقم الفاتورة</span><span class="sum-v"></span></button>
+          <button type="button" id="s-take-phone" class="sum-row hidden"><span class="sum-k"><i class="ph-bold ph-whatsapp-logo"></i> واتساب</span><span class="sum-v"></span></button>
+          <button type="button" id="s-take-car" class="sum-row hidden"><span class="sum-k"><i class="ph-bold ph-car"></i> السيارة</span><span class="sum-v"></span></button>
         </div>
+        <button id="take-btn" class="btn btn-wallet"><i class="ph-bold ph-ticket"></i> خذ رقمي وفعّل التنبيه</button>
       </div>
     </div>
   </section>
@@ -1751,12 +1771,15 @@
     $('s-dots').innerHTML = steps.length > 1 ? steps.map((k, i) => `<span class="${i === at ? 'on' : i < at ? 'done' : ''}"></span>`).join('') : '';
     let just = false; try { just = sessionStorage.getItem(JUST_KEY) === '1'; } catch {}
     $('s-note').classList.toggle('hidden', !(just && pagerCard() && cur !== 'card'));
-    $('s-take-inv').classList.remove('hidden');
-    $('s-take-inv').innerHTML = stepInv ? `🧾 فاتورة <span dir="ltr">${stepInv.replace(/[<>&"]/g, '')}</span> <i class="ph-bold ph-pencil-simple text-xs"></i>` : '🧾 عندك رقم فاتورة؟ اكتبه (اختياري)';
-    $('s-take-phone').classList.toggle('hidden', !waOffer || !stepPhone);
-    if (stepPhone) $('s-take-phone').querySelector('span').textContent = stepPhone;
+    // صف لكل معلومة: القيمة وقلم التعديل، أو «أضف» لو ما كتبها
+    const sumV = (id, v, ltr) => { const el = $(id).querySelector('.sum-v'); el.classList.toggle('empty', !v); el.innerHTML = '';
+      const t = document.createElement('bdi'); t.textContent = v || 'أضف'; if (v && ltr) t.dir = 'ltr'; el.append(t);
+      const i = document.createElement('i'); i.className = `ph-bold ${v ? 'ph-pencil-simple' : 'ph-plus'}`; el.append(i); };
+    sumV('s-take-inv', stepInv, true);
+    $('s-take-phone').classList.toggle('hidden', !waOffer);
+    if (waOffer) sumV('s-take-phone', stepPhone, true);
     $('s-take-car').classList.toggle('hidden', !stepCar);
-    if (stepCar) $('s-take-car').querySelector('span').textContent = carText(stepCar);
+    if (stepCar) sumV('s-take-car', carText(stepCar));
     if (cur === 'car' && !$('s-car-colors').children.length) {
       const c = !stepCar && !carSkipped && savedCar();
       if (c) { sCarColor = c.color || ''; $('s-car-model').value = c.model || ''; $('s-car-plate').value = c.plate || ''; }
