@@ -158,6 +158,27 @@ module.exports.post = async function post(action, req, b, env) {
 
   // ─── الخدمة الذاتية: العميل دفع، والكاشير يكتب رقم الفاتورة ← يدخل التجهيز برقم بيجر داخلي يرن عليه ───
   // ─── البيجر: الطلب جاهز (يرن جوال العميل) / تم التسليم / إلغاء / إرجاع للانتظار ───
+  // ─── رسائل الواتساب (المحل المربوط بواتساب): صاحب المحل يختار نص «طلبك جاهز» ورسالة الشكر ───
+  // الربط نفسه (المزوّد والمفتاح) عند المدير العام، وهنا النصوص بس
+  if (action === 'wa-msgs') {
+    const cfg = await WA.configFor(sid);
+    if (!cfg || cfg.provider === 'meta' || !(cfg.channels || ['pager']).includes('pager')) return { linked: false };
+    const name = store.display_name || store.name || '';
+    const samples = Array.from({ length: 3 }, () => WA.thanksText({}, { number: '1045', store: name }));
+    return { linked: true, message: cfg.message || null, default_message: WA.DEFAULT_MESSAGE, thanks: cfg.thanks === true, thanks_msgs: cfg.thanks_msgs || '', samples };
+  }
+  if (action === 'wa-msgs-save') {
+    const cfg = await WA.configFor(sid);
+    if (!cfg || cfg.provider === 'meta') throw new ApiError(409, 'محلك غير مربوط بواتساب', 'WA_OFF');
+    const body = {};
+    if ('message' in b) body.message = str(b.message, 500, 'نص رسالة «طلبك جاهز»') || null;
+    if ('thanks' in b) body.thanks = b.thanks === true;
+    if ('thanks_msgs' in b) body.thanks_msgs = String(b.thanks_msgs || '').split('\n').map(x => x.trim().slice(0, 300)).filter(Boolean).slice(0, 20).join('\n') || null;
+    await rest(`client_whatsapp?client_id=eq.${cfg.client_id}`, { method: 'PATCH', body: { ...body, updated_at: new Date().toISOString() } });
+    WA.forget();
+    return { ok: true };
+  }
+
   if (action === 'pager-update') {
     const id = int(b.id);
     const status = b.status;

@@ -203,9 +203,11 @@ module.exports = handler(['GET', 'POST'], async (req, res) => {
     const full = store.free && (await monthTickets(store.id, PLANS.FREE.pager)) >= PLANS.FREE.pager;   // البيجر المجاني خلّص عدده
     // بطاقة النداء تنعرض قبل أخذ الرقم (المحل اللي ما عنده ولاء)
     const card = wallet.configured() && !store.free && !store.cardOff && !(await wallet.cardMaintenance()) && !(await loyaltyOf(store.id)).enabled;
-    const car = (await rest(`clients?id=eq.${store.id}&select=pager_car`).catch(() => []))[0]?.pager_car === true;   // خطوة السيارة قبل الرقم
+    const flags = (await rest(`clients?id=eq.${store.id}&select=pager_car,pager_invoice_req`).catch(() => []))[0] || {};
+    const car = flags.pager_car === true;   // خطوة السيارة قبل الرقم
+    const invReq = flags.pager_invoice_req === true;   // رقم الفاتورة إجباري
     const wa = await WA.askPhone(store.id).catch(() => false);   // المحل المربوط بواتساب: خطوة الجوال قبل الرقم
-    return { store: { name: store.display_name || store.name, logo_url: store.logo_url, business_type: store.business_type, accent_color: store.accent_color || null }, push_key: pushPublicKey(), brand: await brandOf(store), card, car, wa, ...(full ? { full: true } : {}) };
+    return { store: { name: store.display_name || store.name, logo_url: store.logo_url, business_type: store.business_type, accent_color: store.accent_color || null }, push_key: pushPublicKey(), brand: await brandOf(store), card, car, wa, inv_req: invReq, ...(full ? { full: true } : {}) };
   }
 
   // بطاقة النداء المحفوظة في جواله: شغالة؟ (لو انلغت أو انحذفت، الصفحة تعرض عليه يضيف وحدة جديدة)
@@ -222,6 +224,8 @@ module.exports = handler(['GET', 'POST'], async (req, res) => {
     // المجانية: 200 رقم بالشهر. الزبون ما يشوف إن فيه حد، بس يطلب من الموظف
     if (store.free && (await monthTickets(store.id, PLANS.FREE.pager)) >= PLANS.FREE.pager) throw new ApiError(409, 'البيجر متوقف مؤقتاً، تفضّل عند الكاشير وبيبلغك أول ما يجهز طلبك.', 'FREE_FULL');
     const invoice = cleanInvoice(b.invoice);
+    // المحل جاعل رقم الفاتورة إجباري
+    if (!invoice && ((await rest(`clients?id=eq.${store.id}&select=pager_invoice_req`).catch(() => []))[0] || {}).pager_invoice_req === true) throw new ApiError(400, 'اكتب رقم فاتورتك، تلقاه في فاتورة طلبك', 'INVOICE_REQUIRED');
     if (invoice && (await rest(`pager_tickets?client_id=eq.${store.id}&invoice_no=eq.${q(invoice)}&created_at=gte.${q(riyadhDayStart())}&status=in.(waiting,ready)&select=number&limit=1`)).length) throw new ApiError(409, 'هذي الفاتورة مسجلة على رقم ثاني، تأكد من الرقم', 'DUPLICATE');
     // جوال الواتساب (المحل المربوط بس): ينكتب قبل الرقم، ونتأكد منه قبل ما ناخذ رقم
     const rawPhone = String(b.phone || '').trim();

@@ -2462,6 +2462,13 @@
           <button type="button" role="tab" data-ps="3" onclick="psStep(3)"><b>3</b> بعد الاستلام</button>
         </div>
         <div data-ps-step="1" class="space-y-3">
+        <label class="flex items-start gap-2.5 bg-brand/5 p-3 rounded-xl border border-brand/15 cursor-pointer">
+          <input type="checkbox" id="info-pager-invreq" onchange="togglePagerInvReq(this.checked)" class="dm-switch order-last ms-auto">
+          <span class="text-xs flex-1">
+            <b class="text-ink"><i class="ph-bold ph-receipt text-amber-600"></i> رقم الفاتورة إجباري</b>
+            <span class="block text-[11px] text-ink mt-0.5 leading-relaxed">يظهر للعميل في: أول خطوة في صفحة البيجر. عند التفعيل لا يستطيع أخذ رقم قبل كتابة رقم فاتورته، ويُستخدم رقم الفاتورة كرقم للطلب في رسائل الواتساب.</span>
+          </span>
+        </label>
         <!-- بطاقة النداء: تختفي لو الولاء شغّال ويختم مع البيجر (النداء يوصل من بطاقة الولاء) -->
         <div id="info-pager-card" class="bg-brand/5 p-3 rounded-xl border border-brand/15 space-y-3">
           <div class="flex flex-wrap items-start justify-between gap-2">
@@ -2484,6 +2491,19 @@
           <button type="button" onclick="psStep(2)" class="ps-next">التالي: أثناء الانتظار <i class="ph-bold ph-arrow-left"></i></button>
         </div>
         <div data-ps-step="2" class="hidden space-y-3">
+        <div id="wa-ready-card" class="hidden bg-brand/5 p-3 rounded-xl border border-brand/15 space-y-3">
+          <span class="text-xs block">
+            <b class="text-ink"><i class="ph-bold ph-whatsapp-logo text-amber-600"></i> رسالة الواتساب «طلبك جاهز»</b>
+            <span class="block text-[11px] text-ink mt-0.5 leading-relaxed">تصل العميل عندما يضغط الكاشير «جاهز». اختر رسالة جاهزة أو اكتب رسالتك.</span>
+          </span>
+          <div id="wa-ready-opts" class="space-y-2" role="radiogroup" aria-label="رسالة «طلبك جاهز»"></div>
+          <div id="wa-ready-own" class="hidden space-y-2">
+            <textarea id="wa-ready-text" rows="3" maxlength="400" class="input-pro text-xs w-full leading-relaxed" placeholder="اكتب رسالتك هنا"></textarea>
+            <div class="wa-chips" data-for="wa-ready-text"></div>
+          </div>
+          <div><p class="text-[11px] font-bold text-ink mb-1">كيف تظهر للعميل</p><div id="wa-ready-prev" class="wa-prev"></div></div>
+          <button type="button" id="wa-ready-save" onclick="saveWaReady()" class="bg-brand text-cream px-3.5 py-2 rounded-xl text-xs font-bold">حفظ الرسالة</button>
+        </div>
         <label class="flex items-start gap-2.5 bg-brand/5 p-3 rounded-xl border border-brand/15 cursor-pointer">
           <input type="checkbox" id="info-pager-car" onchange="togglePagerCar(this.checked)" class="dm-switch order-last ms-auto">
           <span class="text-xs flex-1">
@@ -2551,6 +2571,28 @@
           <button type="button" onclick="psStep(3)" class="ps-next">التالي: بعد الاستلام <i class="ph-bold ph-arrow-left"></i></button>
         </div>
         <div data-ps-step="3" class="hidden space-y-3">
+        <div id="wa-thanks-card" class="hidden bg-brand/5 p-3 rounded-xl border border-brand/15 space-y-3">
+          <label class="flex items-start gap-2.5 cursor-pointer">
+            <input type="checkbox" id="wa-thanks-on" onchange="toggleWaThanks(this.checked)" class="dm-switch order-last ms-auto">
+            <span class="text-xs flex-1">
+              <b class="text-ink"><i class="ph-bold ph-hand-heart text-amber-600"></i> رسالة شكر بالواتساب بعد الاستلام</b>
+              <span class="block text-[11px] text-ink mt-0.5 leading-relaxed">تصل العميل عندما يضغط الكاشير «استلم»، مرة واحدة لكل طلب.</span>
+            </span>
+          </label>
+          <div id="wa-thanks-body" class="hidden space-y-3">
+            <div class="space-y-2" role="radiogroup" aria-label="نوع رسالة الشكر">
+              <button type="button" class="wa-opt" data-tmode="auto" onclick="setThanksMode('auto')"><b>رسائل متنوعة تلقائياً</b><span>يُكتب لكل عميل شكر بصياغة مختلفة، ولا تتكرر نفس الرسالة على آخر 20 عميلاً. نوصي بها لحماية رقم الواتساب من الحظر.</span></button>
+              <button type="button" class="wa-opt" data-tmode="own" onclick="setThanksMode('own')"><b>رسائلي الخاصة</b><span>اكتب عدة صيغ، كل صيغة في سطر، وتُختار واحدة عشوائياً لكل عميل.</span></button>
+            </div>
+            <div id="wa-thanks-own" class="hidden space-y-2">
+              <textarea id="wa-thanks-text" rows="4" maxlength="3000" class="input-pro text-xs w-full leading-relaxed" placeholder="مثال: شكراً لزيارتك «اسم المحل»، نتمنى طلبك يعجبك 🌿"></textarea>
+              <div class="wa-chips" data-for="wa-thanks-text"></div>
+              <p class="text-[11px] text-ink leading-relaxed">كلما زادت الصيغ قلّ تكرار الرسالة. ننصح بثلاث صيغ أو أكثر.</p>
+            </div>
+            <div><p class="text-[11px] font-bold text-ink mb-1">أمثلة لما يصل العملاء</p><div id="wa-thanks-prev" class="space-y-2"></div></div>
+            <button type="button" onclick="saveWaThanks()" class="bg-brand text-cream px-3.5 py-2 rounded-xl text-xs font-bold">حفظ رسالة الشكر</button>
+          </div>
+        </div>
         <div class="bg-brand/5 p-3 rounded-xl border border-brand/15 space-y-2.5">
           <div class="flex flex-wrap items-start justify-between gap-2">
             <span class="text-xs">
@@ -2895,6 +2937,7 @@
 <script src="/js/admin/stats.js"></script>
 <script src="/js/admin/waitlist.js"></script>
 <script src="/js/admin/pager.js"></script>
+<script src="/js/admin/wamsgs.js"></script>
 <script src="/js/admin/occasions.js"></script>
 <script src="/js/admin/orders.js"></script>
 <script src="/js/admin/loyalty.js"></script>

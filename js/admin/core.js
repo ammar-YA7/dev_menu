@@ -407,7 +407,7 @@
   // الخطوة الأولى (موقع المحل ورسالة شاشة القفل) تختفي لو بطاقة النداء تجي من بطاقة الولاء
   let psCur = 1;
   function psStep(n) {
-    const card = document.getElementById('info-pager-card'), first = card && !card.classList.contains('hidden') ? 1 : 2;
+    const first = 1;   // الخطوة الأولى فيها دايماً «رقم الفاتورة إجباري» (حتى لو بطاقة النداء مخفية)
     psCur = Math.max(first, n || psCur);
     let shown = 0;   // ترقيم الخطوات الظاهرة بس (لو الخطوة الأولى مخفية تبدأ من 1 مو 2)
     document.querySelectorAll('[data-ps]').forEach(b => {

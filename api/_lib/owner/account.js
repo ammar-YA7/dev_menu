@@ -357,6 +357,7 @@ module.exports.post = async function post(action, req, b, env) {
     if (has('menu_chat')) p.menu_chat = b.menu_chat === true;
     if (has('kiosk_call')) p.kiosk_call = b.kiosk_call === true;
     if (has('pager_car')) p.pager_car = b.pager_car === true;
+    if (has('pager_invoice_req')) p.pager_invoice_req = b.pager_invoice_req === true;
     if (has('menu_order_mode')) {
       // الطلب من المنيو للكاشير: يحتاج المنيو في باقته
       const m = b.menu_order_mode ? 'table' : null;

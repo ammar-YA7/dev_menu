@@ -28,7 +28,7 @@ async function main(req) {
     return (await familyIds(store)).includes(want) ? want : here.id;
   };
   // المميزات حسب باقة المحل
-  if (['pager-update', 'pager-invoice', 'pager-ring', 'pager-eta', 'pager-addons-seen'].includes(action) && !PLANS.has(store, 'pager')) throw new ApiError(403, 'البيجر مو ضمن باقتك', 'ADDON_OFF');
+  if (['pager-update', 'pager-invoice', 'pager-ring', 'pager-eta', 'pager-addons-seen', 'wa-msgs-save'].includes(action) && !PLANS.has(store, 'pager')) throw new ApiError(403, 'البيجر مو ضمن باقتك', 'ADDON_OFF');
   if (['pager-message', 'pager-message-push', 'pager-winback'].includes(action) && !PLANS.has(store, 'notify')) throw new ApiError(403, '"رسائل لزبائنك" مو ضمن باقتك. أضفها من "اشتراكك" في لوحة التحكم', 'ADDON_OFF');
   if (String(action || '').startsWith('loyalty-pkg') && !PLANS.has(store, 'subs')) throw new ApiError(403, 'الاشتراكات مو ضمن باقتك أو انتهى اشتراكك', 'ADDON_OFF');
   // مسح بطاقة العميل: للأختام أو الاشتراكات (البطاقة وحدة)

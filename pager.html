@@ -1760,7 +1760,7 @@
   // خطوة وحدة بس قدّامه: البطاقة (لو ما عنده) ← رقم الفاتورة ← السيارة (لو المحل يوصّل للسيارة) ← خذ رقمك
   let carOffer = false, stepCar = null, carSkipped = false, sCarColor = '', hadCard = false;
   // المحل المربوط بواتساب: الفاتورة أول، بعدها الجوال، بعدها خذ رقمك
-  let waOffer = false, stepPhone = '', phoneSkipped = false;
+  let waOffer = false, stepPhone = '', phoneSkipped = false, invReq = false;   // invReq: المحل جاعل رقم الفاتورة إجباري
   const JUST_KEY = `${KEY}_pcjust`;   // أضاف البطاقة الحين: نأكد له في الخطوة اللي بعدها
   function renderSteps() {
     const cardDone = !cardOffer || !!pagerCard() || cardSkipped(), invDone = !!stepInv || invSkipped, carDone = !carOffer || !!stepCar || carSkipped;
@@ -1870,6 +1870,7 @@
       offerPerm();   // تطلع بس لو التنبيه أو الصوت ناقص
     } catch (e) {
       stopKeeper();
+      if (e.code === 'INVOICE_REQUIRED') { stepInv = ''; invSkipped = false; stepAt = 'inv'; renderSteps(); $('s-inv-err').textContent = e.message; $('s-inv-err').classList.remove('hidden'); return; }
       if (e.code === 'BAD_PHONE') { stepAt = 'phone'; renderSteps(); $('s-phone-err').textContent = e.message; $('s-phone-err').classList.remove('hidden'); return; }
       if (e.code === 'DUPLICATE' || e.status === 400) { stepAt = 'inv'; renderSteps(); $('s-inv-err').textContent = e.message; $('s-inv-err').classList.remove('hidden'); return; }
       unavailable(e.code === 'FULL' ? 'وصلنا الحد اليومي للأرقام' : 'تعذر أخذ رقم', 'اسأل الموظف.');
@@ -2150,7 +2151,7 @@
     if (PREVIEW) { document.documentElement.classList.add('is-preview'); return poll(); }
     // نتأكد إن المتجر موجود، ونجيب مفتاح الإشعارات
     let fullNow = false;
-    try { const info = await DM.get(`/api/pager?action=info&slug=${encodeURIComponent(slug)}`); setStore(info.store); pushKey = info.push_key || ''; brand = Number(info.brand) || 0; fullNow = info.full === true; cardOffer = info.card === true; carOffer = info.car === true; waOffer = info.wa === true; }
+    try { const info = await DM.get(`/api/pager?action=info&slug=${encodeURIComponent(slug)}`); setStore(info.store); pushKey = info.push_key || ''; brand = Number(info.brand) || 0; fullNow = info.full === true; cardOffer = info.card === true; carOffer = info.car === true; waOffer = info.wa === true; invReq = info.inv_req === true; $('s-inv-skip').classList.toggle('hidden', invReq); }
     catch (e) { return unavailable('البيجر غير متاح حالياً', 'اسأل الموظف.'); }
     // بطاقة النداء محفوظة في هالجوال (ولو من قبل تحديث الفروع): نجدد حفظها لكل devmenu.digital عشان كل فرع يعرفها
     { const pc = pagerCard(); if (pc) savePagerCard(pc); hadCard = !!pc;

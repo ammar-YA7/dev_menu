@@ -1166,6 +1166,7 @@
       document.getElementById('info-quiz-need').value = String(client.pager_quiz_need || 4);
     }
     renderPagerStatus();
+    if (typeof loadWaMsgs === 'function') loadWaMsgs();   // رسائل الواتساب ورقم الفاتورة الإجباري (js/admin/wamsgs.js)
     document.getElementById('calories-field').classList.toggle('hidden', !showCalories());
   }
   // حالة كل إعداد في البيجر: جاهز / غير مفعّل / ناقص
