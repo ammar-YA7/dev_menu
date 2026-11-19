@@ -70,7 +70,7 @@ const ctxFor = (store, settings, card, notice, fresh = false) => wallet.buildCtx
 });
 
 // تحديث بطاقات المحفظة (كلها أو اللي نحددها). notices: card.id → نص الرسالة الجديدة
-async function pushWalletCards(storeId, { cardIds = null, notice = null, notices = null } = {}) {
+async function pushWalletCards(storeId, { cardIds = null, notice = null, notices = null, budgetMs = 50e3 } = {}) {
   if (!wallet.configured()) return 0;
   // اشتراك منتهي أو موقوف (البطاقة للأختام أو الاشتراكات)
   if (!(await storeHasFeature(storeId, 'loyalty')) && !(await storeHasFeature(storeId, 'subs'))) return 0;
@@ -83,7 +83,7 @@ async function pushWalletCards(storeId, { cardIds = null, notice = null, notices
   const noticeFor = notice != null || notices ? null : await latestNotices(storeId, settings);
   let sent = 0;
   const started = Date.now();
-  for (let i = 0; i < cards.length && Date.now() - started < 50e3; i += 12) {
+  for (let i = 0; i < cards.length && Date.now() - started < budgetMs; i += 12) {
     await Promise.all(cards.slice(i, i + 12).map(async (c) => {
       const text = notices ? notices[c.id] : notice != null ? notice : noticeFor(c);
       const err = await wallet.updatePass(c.wallet_serial, ctxFor(store, settings, c, text, notice != null || !!notices));

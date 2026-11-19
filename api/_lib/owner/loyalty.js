@@ -142,8 +142,10 @@ module.exports.post = async function post(action, req, b, env) {
     }
     // الشكل أو المكافأة تغيّرت ← نحدّث البطاقات اللي في المحفظة
     wallet.stampsCacheClear(sid);   // تشغيل/إيقاف الأختام يغيّر شكل البطاقة (أختام أو باقة)، فما ناخذ الحالة القديمة من الذاكرة
-    const wallet_updated = await pushWalletCards(sid);
-    return { enabled: row.loyalty_enabled === true, settings: normalizeLoyalty(row.loyalty_settings), wallet_updated };
+    // التحديث بالخلفية: صاحب المحل ياخذ «تم الحفظ» على طول، والبطاقات تتحدث خلال دقيقة (المحل اللي عنده بطاقات كثيرة كان ينتظر دقيقة)
+    const wallet_pending = (await rest(`loyalty_cards?client_id=eq.${sid}&wallet_serial=not.is.null&select=id&limit=5000`).catch(() => [])).length;
+    if (wallet_pending) later(pushWalletCards(sid, { budgetMs: 240e3 }));
+    return { enabled: row.loyalty_enabled === true, settings: normalizeLoyalty(row.loyalty_settings), wallet_pending };
   }
 
   // ─── بطاقة الولاء: رسالة للكل أو لعضو واحد ───

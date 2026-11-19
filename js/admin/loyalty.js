@@ -239,7 +239,7 @@
     try {
       const r = await api('loyalty-settings', { settings: { design: ly.design } });
       ly.data.settings = r.settings; ly.design = { ...r.settings.design }; ly.dirty = false;
-      showToast(r.wallet_updated ? `تم حفظ الشكل، وتحدّثت ${r.wallet_updated} بطاقة في المحفظة` : 'تم حفظ شكل البطاقة، ويطلع للزبائن على طول');
+      showToast(r.wallet_pending ? `تم حفظ الشكل، وتتحدث ${r.wallet_pending} بطاقة في محافظ العملاء خلال دقيقة` : 'تم حفظ شكل البطاقة، ويطلع للزبائن على طول');
     } catch (e) { showToast(e.message || 'لم يُحفظ التعديل. تأكد من الاتصال بالإنترنت وحاول مرة أخرى', true); }
     renderDesign();
   }
@@ -683,7 +683,7 @@
     try {
       const r = await api('loyalty-pkg-design', { design: pk.design });
       pk.design = { ...(r.design || {}) }; pk.saved = { ...pk.design }; pk.dirty = false;
-      showToast(r.wallet_updated ? `تم حفظ التصميم، وتحدّثت ${r.wallet_updated} بطاقة في المحفظة` : 'تم حفظ تصميم بطاقة الاشتراكات');
+      showToast(r.wallet_pending ? `تم حفظ التصميم، وتتحدث ${r.wallet_pending} بطاقة في محافظ العملاء خلال دقيقة` : 'تم حفظ تصميم بطاقة الاشتراكات');
     } catch (e) { showToast(e.message || 'لم يُحفظ التصميم', true); }
     renderPkd();
   });

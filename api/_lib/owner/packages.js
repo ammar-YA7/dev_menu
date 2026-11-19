@@ -88,8 +88,9 @@ module.exports.post = async function post(action, req, b, env) {
     await rest(`clients?id=eq.${sid}`, { method: 'PATCH', body: { subs_design: out } });
     // بطاقات العملاء (بطاقة وحدة لكل عميل) تتحدث بالشكل الجديد
     require('../wallet').stampsCacheClear(sid);
-    const updated = await pushWalletCards(sid).catch(() => 0);
-    return { design: out, wallet_updated: updated };
+    const wallet_pending = (await rest(`loyalty_cards?client_id=eq.${sid}&wallet_serial=not.is.null&select=id&limit=5000`).catch(() => [])).length;
+    if (wallet_pending) later(pushWalletCards(sid, { budgetMs: 240e3 }));
+    return { design: out, wallet_pending };
   }
 
   // التذكيرات التلقائية: غاب وعنده رصيد، قرب الانتهاء، التجديد
