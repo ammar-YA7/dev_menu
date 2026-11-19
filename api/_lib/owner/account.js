@@ -473,10 +473,13 @@ module.exports.post = async function post(action, req, b, env) {
       });
     }
     // ترتيب أقسام صفحة الروابط والمخفي منها: مفاتيح معروفة بدون تكرار
+    const LINKS_SERVICES = ['svc-menu', 'svc-pager', 'svc-loyalty', 'svc-waitlist'];
     for (const k of ['links_order', 'links_hidden']) {
       if (!has(k)) continue;
       const o = b[k];
-      if (o !== null && (!Array.isArray(o) || o.some(x => !LINKS_SECTIONS.includes(x)) || new Set(o).size !== o.length)) throw new ApiError(400, 'ترتيب غير صحيح');
+      // المخفي: أقسام كاملة، أو خدمة وحدة داخل «خدماتك» (svc-menu، svc-pager، svc-loyalty، svc-waitlist)
+      const ok = k === 'links_hidden' ? (x) => LINKS_SECTIONS.includes(x) || LINKS_SERVICES.includes(x) : (x) => LINKS_SECTIONS.includes(x);
+      if (o !== null && (!Array.isArray(o) || o.some(x => !ok(x)) || new Set(o).size !== o.length)) throw new ApiError(400, 'ترتيب غير صحيح');
       p[k] = o && o.length ? o : null;
     }
     if (has('custom_links')) {

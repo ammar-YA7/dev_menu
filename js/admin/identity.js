@@ -12,6 +12,13 @@
     custom:   ['روابط أخرى', 'الروابط التي أضفتها بنفسك', 'ph-link-simple'],
     location: ['زورونا', 'موقعك على الخريطة', 'ph-map-pin']
   };
+  // الخدمات داخل «خدماتك»: تطلع بس الخدمة اللي في باقته، ويقدر يخفي أي وحدة منها
+  const LINKS_SVC = {
+    'svc-menu': ['المنيو', 'ph-fork-knife', () => DMPlans.has(client, 'menu')],
+    'svc-pager': ['البيجر', 'ph-bell', () => DMPlans.has(client, 'pager')],
+    'svc-loyalty': ['بطاقة الولاء', 'ph-seal-check', () => DMPlans.has(client, 'loyalty') || DMPlans.has(client, 'subs')],
+    'svc-waitlist': ['قائمة الانتظار', 'ph-hourglass-medium', () => DMPlans.has(client, 'waitlist') && client.waitlist_enabled === true]
+  };
   // هل القسم فيه روابط تظهر في الصفحة؟
   const LINKS_FILLED = {
     services: () => true,
@@ -36,7 +43,7 @@
     if (fromClient) {
       const saved = Array.isArray(client.links_order) ? client.links_order.filter(k => LINKS_SECTIONS[k]) : [];
       linksOrder = [...new Set([...saved, ...Object.keys(LINKS_SECTIONS)])];
-      linksHidden = new Set((client.links_hidden || []).filter(k => LINKS_SECTIONS[k]));
+      linksHidden = new Set((client.links_hidden || []).filter(k => LINKS_SECTIONS[k] || LINKS_SVC[k]));
     }
     const last = linksOrder.length - 1;
     const iconBtn = (attrs, icon, label, extra = '') => `<button type="button" ${attrs} aria-label="${label}" title="${label}" class="w-8 h-8 shrink-0 rounded-lg bg-white border border-brand/20 hover:bg-brand/10 text-ink transition disabled:opacity-30 disabled:hover:bg-white ${extra}"><i class="ph-bold ${icon}"></i></button>`;
@@ -45,6 +52,10 @@
       const hidden = linksHidden.has(k), empty = !LINKS_FILLED[k]();
       const state = hidden ? '<span class="text-[11px] font-bold text-ink bg-brand/10 px-1.5 py-0.5 rounded">مخفي</span>'
         : empty ? '<span class="text-[11px] font-bold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">فاضي، ما يظهر</span>' : '';
+      // «خدماتك»: زر لكل خدمة يخفيها أو يظهرها لحالها
+      const svcs = k === 'services' ? Object.entries(LINKS_SVC).filter(([, v]) => v[2]()) : [];
+      const svcRow = svcs.length ? `<span class="w-full flex flex-wrap gap-1.5 ps-6 pt-1">${svcs.map(([sk, [sn, si]]) => { const off = linksHidden.has(sk);
+        return `<button type="button" onclick="toggleLinksSection('${sk}')" aria-pressed="${!off}" title="${off ? 'إظهار في الصفحة' : 'إخفاء من الصفحة'}" class="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg border text-[11px] font-bold transition ${off ? 'bg-white border-brand/20 text-ink/50 line-through' : 'bg-brand/10 border-brand/45 text-ink'}"><i class="ph-bold ${si}"></i> ${sn} <i class="ph-bold ${off ? 'ph-eye-slash' : 'ph-eye'}"></i></button>`; }).join('')}</span>` : '';
       const edit = linksEditorCard(k) ? `<button type="button" onclick="editLinksSection('${k}')" class="h-8 shrink-0 px-2.5 rounded-lg bg-brand/10 border border-brand/45 hover:bg-brand/10 text-ink text-[11px] font-bold transition"><i class="ph-bold ph-pencil-simple"></i><span> ${empty ? 'أضف روابط' : 'تعديل'}</span></button>` : '';
       return `<li draggable="true" data-i="${i}" class="links-row flex flex-wrap sm:flex-nowrap items-center gap-2 bg-white rounded-xl border border-brand/15 px-2.5 py-2 transition ${hidden || empty ? 'opacity-60' : ''}">
         <i class="ph-bold ph-dots-six-vertical text-ink cursor-grab hidden sm:inline" aria-hidden="true"></i>
@@ -57,6 +68,7 @@
         ${iconBtn(`onclick="moveLinksSection(${i}, -1)" ${i === 0 ? 'disabled' : ''}`, 'ph-arrow-up', 'لفوق')}
         ${iconBtn(`onclick="moveLinksSection(${i}, 1)" ${i === last ? 'disabled' : ''}`, 'ph-arrow-down', 'لتحت')}
         </span>
+        ${svcRow}
       </li>`;
     }).join('');
   }
