@@ -182,7 +182,8 @@ async function pagerReady(store, ticket) {
   if (!ticket || !(ticket.wa_phone || ticket.invoice_no)) return 'off';
   const cfg = await configFor(store.id);
   if (!on(cfg, 'pager') || !(ticket.wa_phone || byInvoice(cfg))) return 'off';
-  const r = await send(cfg, ticket.wa_phone, { kind: 'pager', number: ticket.number, store: store.display_name || store.name || '', invoice: ticket.invoice_no || '' });
+  // رقم الطلب = رقم فاتورة العميل (ولو ما كتبها، رقم البيجر)
+  const r = await send(cfg, ticket.wa_phone, { kind: 'pager', number: ticket.invoice_no || ticket.number, store: store.display_name || store.name || '', invoice: ticket.invoice_no || '' });
   const now = new Date().toISOString();
   await Promise.all([
     rest(`pager_tickets?id=eq.${ticket.id}`, { method: 'PATCH', body: { wa_status: r.ok ? `${r.queued ? 'queued' : 'sent'} ${now.slice(11, 19)}` : `failed: ${r.error}`.slice(0, 200) } }).catch(() => {}),
@@ -201,7 +202,8 @@ async function pagerThanks(store, ticket) {
   const held = await rest(`pager_tickets?id=eq.${ticket.id}&wa_thanks=is.null`, { method: 'PATCH', prefer: 'return=representation', body: { wa_thanks: 'sending' } }).catch(() => []);
   if (!held.length) return 'off';
   // ما تتكرر نفس الرسالة على آخر 20 زبون في المحل
-  const vars = { kind: 'thanks', number: ticket.number, store: store.display_name || store.name || '' };
+  // رقم الطلب في رسالة الشكر = رقم الفاتورة بس (بدون فاتورة ما نذكر رقم)
+  const vars = { kind: 'thanks', number: ticket.invoice_no || '', store: store.display_name || store.name || '' };
   const recent = new Set((await rest(`pager_tickets?client_id=eq.${store.id}&wa_thanks_body=not.is.null&select=wa_thanks_body&order=closed_at.desc.nullslast&limit=20`).catch(() => [])).map(x => x.wa_thanks_body));
   let text = thanksText(cfg, vars);
   for (let i = 0; i < 30 && recent.has(text); i++) text = thanksText(cfg, vars);
