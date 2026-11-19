@@ -330,19 +330,23 @@
   .stp.top .stp-ic { width: 44px; height: 44px; font-size: 22px; border-radius: 14px; margin-bottom: 8px; }
   .stp.top .stp-h { font-size: 22px; } .stp.top .stp-sub { font-size: 14.5px; margin-bottom: 12px; } .stp.top .btn { padding: 16px; }
   /* ─── كل الخطوات بنفس الشكل: البطاقة على قد محتواها، الأيقونة والعنوان فوق، والزر تحت الخانة ─── */
-  .stp, .stp.top { flex: none; justify-content: flex-start; padding: 26px 20px 22px; }
-  .stp .stp-ic, .stp.top .stp-ic { width: 52px; height: 52px; font-size: 26px; border-radius: 16px; margin: 0 auto 12px; }
-  .stp .stp-h, .stp.top .stp-h { font-size: 24px; line-height: 1.35; }
-  .stp .stp-b, .stp.top .stp-b { margin-top: 6px; }
-  .stp .stp-sub, .stp.top .stp-sub { font-size: 16px; line-height: 1.7; margin-bottom: 18px; }
-  .stp .btn, .stp.top .btn { padding: 17px; font-size: 17px; }
-  .stp .btn.mt-3 { margin-top: 14px; }
-  .stp-skip { margin-top: 14px; }
+  .stp, .stp.top { flex: none; justify-content: flex-start; padding: 32px 22px 26px; }
+  .stp .stp-ic, .stp.top .stp-ic { width: 62px; height: 62px; font-size: 31px; border-radius: 18px; margin: 0 auto 14px; }
+  .stp .stp-h, .stp.top .stp-h { font-size: 28px; line-height: 1.35; }
+  .stp .stp-b, .stp.top .stp-b { margin-top: 8px; }
+  .stp .stp-sub, .stp.top .stp-sub { font-size: 17.5px; line-height: 1.7; margin-bottom: 20px; }
+  .stp .btn, .stp.top .btn { padding: 19px; font-size: 19px; }
+  .stp .btn.mt-3 { margin-top: 16px; }
+  .stp-skip, .stp .stp-skip { margin-top: 16px; font-size: 17px; }
+  .stp #s-inv-in.stp-in, .stp #s-phone-in.stp-in { font-size: 34px; padding: 16px 12px; }
+  /* الآيفون: ما يكبّر الصفحة لو ضغط مرتين بسرعة، ولما يكتب في خانة ترتفع البطاقة فوق الكيبورد بدل ما تتحرك الصفحة كلها */
+  html { touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+  #v-start.typing { justify-content: flex-start; min-height: 0; }
   .stp-sum { margin: 0 0 16px; border: 1px solid var(--rule); border-radius: 14px; overflow: hidden; text-align: start; }
-  .sum-row { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; background: #fff; font-size: 16px; }
+  .sum-row { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 18px; background: #fff; font-size: 17.5px; }
   .sum-row + .sum-row:not(.hidden) { border-top: 1px solid var(--rule); }
   .sum-k { display: flex; align-items: center; gap: 8px; color: var(--muted); font-weight: 600; }
-  .sum-k i { font-size: 18px; color: var(--brand); }
+  .sum-k i { font-size: 20px; color: var(--brand); }
   .sum-v { display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--ink); min-width: 0; }
   .sum-v bdi { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .sum-v i { font-size: 15px; color: var(--muted); }
@@ -404,8 +408,6 @@
   .ask-tx b, .ups-tx b { font-size: 17px; } .ask-tx small, .ups-tx small { font-size: 14.5px; }
   #push-btn, #keep-btn, #unlock-btn { font-size: 17px; padding: 18px; }
   .tips { font-size: 15px; padding: 15px 18px; } .tips li { font-size: 15px; }
-  .stp-h { font-size: 29px; } .stp-sub { font-size: 17px; } .stp-skip { font-size: 16px; }
-  .stp.top .stp-h { font-size: 24px; } .stp.top .stp-sub { font-size: 16px; }
   .field { font-size: 18px; padding: 14px 16px; }
   .mg-title { font-size: 19px; } .mg-sub { font-size: 14.5px; }
   #t-ready { font-size: 34px; } #r-body { font-size: 17px; }
@@ -1845,6 +1847,8 @@
   };
   $('s-inv-skip').onclick = () => { stepInv = ''; invSkipped = true; $('s-inv-err').classList.add('hidden'); $('s-inv-in').blur(); goStep(''); };
   // الآيفون يحرّك الصفحة لما يطلع الكيبورد ويخليها متحركة بعد ما ينزل: نرجعها مكانها
+  // وهو يكتب: البطاقة فوق (قريبة من الخانة) عشان الآيفون ما يحرّك الصفحة ويكبّرها
+  ['s-inv-in', 's-phone-in', 's-car-model', 's-car-plate'].forEach(id => { $(id).addEventListener('focus', () => $('v-start').classList.add('typing')); $(id).addEventListener('blur', () => setTimeout(() => { if (!document.activeElement || !/INPUT/.test(document.activeElement.tagName)) $('v-start').classList.remove('typing'); }, 80)); });
   ['s-inv-in', 's-phone-in', 's-car-model', 's-car-plate'].forEach(id => $(id).addEventListener('blur', () => setTimeout(() => { if (!document.activeElement || !/INPUT/.test(document.activeElement.tagName)) window.scrollTo(0, 0); }, 60)));
   // رجع من صفحة المحفظة: نحدّث الخطوات
   window.addEventListener('pageshow', () => { if (!$('v-start').classList.contains('hidden')) renderSteps(); });
