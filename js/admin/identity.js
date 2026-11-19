@@ -57,7 +57,7 @@
       const svcRow = svcs.length ? `<span class="w-full flex flex-wrap gap-1.5 ps-6 pt-1">${svcs.map(([sk, [sn, si]]) => { const off = linksHidden.has(sk);
         return `<button type="button" onclick="toggleLinksSection('${sk}')" aria-pressed="${!off}" title="${off ? 'إظهار في الصفحة' : 'إخفاء من الصفحة'}" class="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg border text-[11px] font-bold transition ${off ? 'bg-white border-brand/20 text-ink/50 line-through' : 'bg-brand/10 border-brand/45 text-ink'}"><i class="ph-bold ${si}"></i> ${sn} <i class="ph-bold ${off ? 'ph-eye-slash' : 'ph-eye'}"></i></button>`; }).join('')}</span>` : '';
       const edit = linksEditorCard(k) ? `<button type="button" onclick="editLinksSection('${k}')" class="h-8 shrink-0 px-2.5 rounded-lg bg-brand/10 border border-brand/45 hover:bg-brand/10 text-ink text-[11px] font-bold transition"><i class="ph-bold ph-pencil-simple"></i><span> ${empty ? 'أضف روابط' : 'تعديل'}</span></button>` : '';
-      return `<li draggable="true" data-i="${i}" class="links-row flex flex-wrap sm:flex-nowrap items-center gap-2 bg-white rounded-xl border border-brand/15 px-2.5 py-2 transition ${hidden || empty ? 'opacity-60' : ''}">
+      return `<li draggable="true" data-i="${i}" class="links-row flex flex-wrap ${svcRow ? '' : 'sm:flex-nowrap'} items-center gap-2 bg-white rounded-xl border border-brand/15 px-2.5 py-2 transition ${hidden || empty ? 'opacity-60' : ''}">
         <i class="ph-bold ph-dots-six-vertical text-ink cursor-grab hidden sm:inline" aria-hidden="true"></i>
         <span class="w-4 text-[11px] font-bold text-ink">${i + 1}</span>
         <i class="ph-bold ${icon} text-ink"></i>
