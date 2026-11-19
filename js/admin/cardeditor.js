@@ -96,8 +96,10 @@
         </div>
         ${d.stamp_image ? '<button type="button" class="cd-link cd-del" data-cd-clear="stamp_image">إزالة صورة الختم</button>' : ''}`;
     } else {
-      body = `
-        <div class="cd-tiles">${C.images.map(([k, t, sel, ic, round]) => { const url = d[k] || (k === 'logo' ? client.logo_url || '' : ''); return `
+      // بطاقة الولاء: خيار إخفاء الشعار من البطاقة (الصفحة والمحفظة)
+      const hideRow = C.kind === 'ly' ? `<button type="button" class="cd-hide-logo" data-cd-hidelogo role="switch" aria-checked="${!d.hide_logo}"><span><b>الشعار في البطاقة</b><small>${d.hide_logo ? 'مخفي: يظهر اسم المحل فقط' : 'ظاهر في صفحة البطاقة ومحفظة الجوال'}</small></span><i></i></button>` : '';
+      body = `${hideRow}
+        <div class="cd-tiles ${C.kind === 'ly' && d.hide_logo ? 'cd-dim' : ''}">${C.images.map(([k, t, sel, ic, round]) => { const url = d[k] || (k === 'logo' ? client.logo_url || '' : ''); return `
           <div class="cd-tile"><div class="cd-pic ${round ? '' : 'sq'}">${url ? `<img src="${esc(url)}" alt="">` : `<i class="ph-bold ${ic}"></i>`}</div><b>${t}</b>
             <div class="cd-acts"><button type="button" data-cd-file="${sel}">${d[k] ? 'تغيير' : 'رفع'}</button>${d[k] ? `<button type="button" class="cd-del" data-cd-clear="${k}">إزالة</button>` : ''}</div></div>`; }).join('')}
         </div>
@@ -141,6 +143,7 @@
     const sw = t.closest('[data-cd-c]'); if (sw && cdPicking) { C.set({ [cdPicking]: sw.dataset.cdC || null }); return cdClose(); }
     const ic = t.closest('[data-cd-icon]'); if (ic) return C.set({ icon: ic.dataset.cdIcon, stamp_image: null });
     const fl = t.closest('[data-cd-file]'); if (fl) { const inp = document.querySelector(fl.dataset.cdFile); if (inp) inp.click(); return; }
+    const hl = t.closest('[data-cd-hidelogo]'); if (hl) return C.set({ hide_logo: !C.d.hide_logo });
     const cl = t.closest('[data-cd-clear]'); if (cl) return C.set({ [cl.dataset.cdClear]: null });
     const act = t.closest('[data-cd]'); if (act) { if (act.dataset.cd === 'save') C.save(); else C.undo(); }
   });

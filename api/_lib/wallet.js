@@ -88,7 +88,9 @@ function passBody({ store, settings, card, url, restoreUrl, lat, lng, notice, st
     if (bgc) { body.color = bgc; delete body.colorPreset; }
     // شعار البطاقة الخاص لو حطه صاحب المحل، وإلا شعار المنيو
     const logo = (settings.design && settings.design.logo) || store.logo_url;
-    if (smallLogoSrc) body.logoURL = smallLogoSrc;
+    // أخفى الشعار من البطاقة: يبقى اسم المحل بس
+    if (settings.design && settings.design.hide_logo && !stampsOff) {}
+    else if (smallLogoSrc) body.logoURL = smallLogoSrc;
     else if (logo && /^https:\/\//.test(logo)) body.logoURL = logo;
     // صورة الأختام بنفس شكل بطاقة DEV MENU
     if (strip) body.stripURL = strip;
@@ -143,7 +145,8 @@ async function createPass(ctx) {
   ctx.strip = ctx.stampsOff ? null : await stampStrip(ctx.settings, ctx.card, ctx.pkg);
   ctx.passColor = ctx.stampsOff ? null : await passColor(ctx.settings.design).catch(() => null);
   // الشعار مصغّر: خدمة المحفظة ترفض الصورة فوق 1MB، ولو انرفضت البطاقة تطلع بالشكل الافتراضي (أخضر بدون أختام)
-  { const raw = (ctx.stampsOff && ctx.subsDesign && ctx.subsDesign.logo) || (ctx.settings.design && ctx.settings.design.logo) || (ctx.store && ctx.store.logo_url);
+  { const hide = !ctx.stampsOff && ctx.settings.design && ctx.settings.design.hide_logo;
+    const raw = hide ? null : (ctx.stampsOff && ctx.subsDesign && ctx.subsDesign.logo) || (ctx.settings.design && ctx.settings.design.logo) || (ctx.store && ctx.store.logo_url);
     ctx.logo = raw && /^https:\/\//.test(raw) ? await smallLogo(raw).catch(() => null) : null; }
   try { return await call('POST', '', passBody(ctx, true)); }
   catch (e) {
@@ -165,7 +168,8 @@ async function updatePass(serial, ctx) {
   ctx.strip = ctx.stampsOff ? null : await stampStrip(ctx.settings, ctx.card, ctx.pkg);
   ctx.passColor = ctx.stampsOff ? null : await passColor(ctx.settings.design).catch(() => null);
   // الشعار مصغّر: خدمة المحفظة ترفض الصورة فوق 1MB، ولو انرفضت البطاقة تطلع بالشكل الافتراضي (أخضر بدون أختام)
-  { const raw = (ctx.stampsOff && ctx.subsDesign && ctx.subsDesign.logo) || (ctx.settings.design && ctx.settings.design.logo) || (ctx.store && ctx.store.logo_url);
+  { const hide = !ctx.stampsOff && ctx.settings.design && ctx.settings.design.hide_logo;
+    const raw = hide ? null : (ctx.stampsOff && ctx.subsDesign && ctx.subsDesign.logo) || (ctx.settings.design && ctx.settings.design.logo) || (ctx.store && ctx.store.logo_url);
     ctx.logo = raw && /^https:\/\//.test(raw) ? await smallLogo(raw).catch(() => null) : null; }
   try {
     const lb = passBody(ctx, true);

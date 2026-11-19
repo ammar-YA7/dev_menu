@@ -39,7 +39,7 @@
   // شعار البطاقة الخاص (غير شعار المنيو) في زاوية البطاقة
   function logo(el, d) {
     let img = el.querySelector(':scope > .lcard-logo');
-    if (!d.logo) { if (img) img.remove(); return; }
+    if (!d.logo || d.hide_logo) { if (img) img.remove(); return; }
     if (!img) { img = document.createElement('img'); img.className = 'lcard-logo'; img.alt = ''; const m = el.querySelector(':scope > .lcard-media'); m ? m.after(img) : el.prepend(img); }
     if (img.getAttribute('src') !== d.logo) img.src = d.logo;
   }

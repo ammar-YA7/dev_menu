@@ -129,7 +129,7 @@
     const s = ly.pvCount = Math.max(0, Math.min(n, ly.pvCount));
     const range = document.getElementById('ly-pv-count'); range.max = n; range.value = s;
     document.getElementById('ly-pv-count-label').textContent = `${s}/${n}`;
-    const name = client.name || 'محلك', logo = d.logo || client.logo_url || '';
+    const name = client.name || 'محلك', logo = d.hide_logo ? '' : (d.logo || client.logo_url || '');
     const pic = (id, url) => { const el = document.getElementById(id); el.classList.toggle('hidden', !url); if (url && el.getAttribute('src') !== url) el.src = url; };
     // صفحة البطاقة
     document.getElementById('pv-store').textContent = name;

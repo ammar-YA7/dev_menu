@@ -27,6 +27,8 @@ function normalizeDesign(raw, def = 'coffee') {
     text_color: HEX.test(d.text_color) ? d.text_color.toLowerCase() : null,
     // شعار خاص بالبطاقة (غير شعار المنيو)، وصورة خاصة لخانة المكافأة الأخيرة
     logo: okUrl(d.logo),
+    // صاحب المحل يقدر يخفي الشعار من البطاقة (في الصفحة والمحفظة)
+    hide_logo: d.hide_logo === true,
     reward_image: okUrl(d.reward_image)
   };
 }
