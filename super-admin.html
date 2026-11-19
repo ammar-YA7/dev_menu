@@ -1370,6 +1370,10 @@
           { value: 'number_store', label: '{{1}} الرقم و {{2}} المحل' }, { value: 'number', label: '{{1}} الرقم فقط' }, { value: 'none', label: 'بدون متغيرات' }] },
         { name: 'message', label: 'نص رسالة الطلبات', value: w.message || '', multiline: true, maxlength: 500, placeholder: def, hint: 'استخدم {number} لرقم الطلب و {invoice} لرقم الفاتورة و {store} لاسم المحل. إذا تُرك فارغاً يُستخدم النص الظاهر.', showIf: (x) => x.provider !== 'meta' && x.channels.includes('pager') },
         { name: 'wl_message', label: 'نص رسالة قائمة الانتظار', value: w.wl_message || '', multiline: true, maxlength: 500, placeholder: defWl, hint: 'استخدم {name} لاسم العميل و {number} لرقم دوره و {store} لاسم المحل. إذا تُرك فارغاً يُستخدم النص الظاهر.', showIf: (x) => x.provider !== 'meta' && x.channels.includes('waitlist') },
+        { name: 'thanks', label: 'رسالة شكر بعد الاستلام', type: 'choice', value: w.thanks ? 'on' : 'off', showIf: (x) => x.provider !== 'meta' && x.channels.includes('pager'), options: [
+          { value: 'on', label: 'تُرسل', desc: 'عندما يضغط الكاشير «استلم» تصل العميل رسالة شكر، بصياغة مختلفة في كل مرة', icon: 'ph-hand-heart' },
+          { value: 'off', label: 'لا تُرسل', icon: 'ph-minus-circle' }] },
+        { name: 'thanks_msgs', label: 'صيغ رسالة الشكر', value: w.thanks_msgs || '', multiline: true, maxlength: 3000, placeholder: 'شكراً لزيارتك {store}، نتمنى طلبك يعجبك 🌿\n{greet}، نورتنا في {store}. ننتظرك مرة ثانية', hint: 'اكتب كل صيغة في سطر مستقل، وتُختار واحدة عشوائياً في كل مرة. المتغيرات: {store} اسم المحل، و {number} رقم الطلب، و {greet} صباح الخير أو مساء الخير. إذا تُرك فارغاً تُركّب الرسالة تلقائياً من عبارات متنوعة، فلا تتكرر بنفس النص.', showIf: (x) => x.provider !== 'meta' && x.channels.includes('pager') && x.thanks === 'on' },
         { name: 'enabled', label: 'الحالة', type: 'choice', value: cur && w.enabled === false ? 'off' : 'on', options: [
           { value: 'on', label: 'مفعّل', icon: 'ph-check-circle' }, { value: 'off', label: 'متوقف', icon: 'ph-pause' },
           ...(cur ? [{ value: 'remove', label: 'إلغاء الربط', icon: 'ph-trash' }] : [])] }]
@@ -1381,7 +1385,7 @@
       return showToast(err ? `تعذر الإلغاء: ${err.message}` : 'تم إلغاء ربط الواتساب', !!err);
     }
     let saved;
-    try { saved = await DM.post(A('wa-save'), { id, ...v, api_url: v.provider === 'greenapi' ? v.gapi_url : v.api_url, ask_phone: v.ask_phone !== 'off', enabled: v.enabled === 'on', new_pull_key: v.pull_key === 'new' }, true); }
+    try { saved = await DM.post(A('wa-save'), { id, ...v, api_url: v.provider === 'greenapi' ? v.gapi_url : v.api_url, ask_phone: v.ask_phone !== 'off', thanks: v.thanks === 'on', enabled: v.enabled === 'on', new_pull_key: v.pull_key === 'new' }, true); }
     catch (e) { forbidden(e); return showToast(`تعذر الحفظ: ${e.message}`, true); }
     showToast(v.enabled === 'on' ? 'تم حفظ الربط' : 'تم الحفظ، والربط متوقف');
     // صندوق الرسائل: مفتاح السحب يطلع مرة وحدة بس
@@ -1393,7 +1397,9 @@
     if (v.enabled !== 'on') return;
     const t = await DMDialog.form({ title: 'رسالة تجربة', subtitle: 'تُرسل رسالة تجربة للتأكد من الربط', icon: 'ph-paper-plane-tilt', confirmText: 'أرسل',
       fields: [
-        ...(v.channels.length > 1 ? [{ name: 'kind', label: 'نوع الرسالة', type: 'choice', value: 'pager', options: [{ value: 'pager', label: 'الطلبات' }, { value: 'waitlist', label: 'قائمة الانتظار' }] }] : []),
+        ...(v.channels.length > 1 || (v.thanks === 'on' && v.provider !== 'meta') ? [{ name: 'kind', label: 'نوع الرسالة', type: 'choice', value: 'pager', options: [
+          ...(v.channels.includes('pager') ? [{ value: 'pager', label: 'الطلبات' }] : []), ...(v.channels.includes('waitlist') ? [{ value: 'waitlist', label: 'قائمة الانتظار' }] : []),
+          ...(v.thanks === 'on' && v.provider !== 'meta' && v.channels.includes('pager') ? [{ value: 'thanks', label: 'الشكر بعد الاستلام' }] : [])] }] : []),
         { name: 'phone', label: 'رقم الجوال', placeholder: '05xxxxxxxx', dir: 'ltr', maxlength: 16, required: true },
         ...(v.provider === 'custom' && v.send_mode === 'invoice' && v.channels.includes('pager') ? [{ name: 'invoice', label: 'رقم فاتورة للتجربة', placeholder: '1045', dir: 'ltr', maxlength: 20, hint: 'رقم فاتورة موجود في قاعدة المزوّد حتى يجلب بيانات العميل.', showIf: (x) => (x.kind || 'pager') === 'pager' }] : [])] });
     if (!t) return;

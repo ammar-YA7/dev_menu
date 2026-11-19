@@ -204,6 +204,8 @@ module.exports.post = async function post(action, req, b, env) {
     }
     // المحل مربوط بواتساب، والعميل كتب جواله أو الرقم عليه فاتورة: رسالة «طلبك جاهز» (بالخلفية)
     if (status === 'ready' && (t.wa_phone || t.invoice_no)) later(WA.pagerReady(store, t).catch(e => console.error('PAGER_WA', e.message)));
+    // استلم طلبه: رسالة شكر (لو صاحب الربط مفعّلها)، كل مرة بصياغة مختلفة
+    if (status === 'done' && t.wa_phone && !t.wa_thanks) later(WA.pagerThanks(store, t).catch(e => console.error('PAGER_WA_THANKS', e.message)));
     const push = status === 'ready' ? await ringTicket(store, t) : 'off';
     await poke([topic('pager', sid), topic('ticket', t.token)]);
     return { ticket: { id: t.id, number: t.number, status: t.status, created_at: t.created_at, ready_at: t.ready_at, closed_at: t.closed_at, has_push: !!t.push_sub, ring_count: t.ring_count || 0, acked_at: t.acked_at || null }, push };

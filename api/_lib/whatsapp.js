@@ -82,8 +82,30 @@ function fillBody(tpl, vals) {
 const validBody = (tpl) => fillBody(tpl, { phone: '966500000000', phone_plus: '+966500000000', message: 'x', number: '1', store: 'x' }) !== null;
 
 const fill = (tpl, vars) => String(tpl).replace(/\{(number|store|invoice|name)\}/g, (_, k) => String(vars[k] ?? ''));
-// نص الرسالة: لكل نوع نصه (الطلبات أو قائمة الانتظار)، ولو فاضي النص الافتراضي
-const textFor = (cfg, vars) => fill(vars.kind === 'waitlist' ? (cfg.wl_message || DEFAULT_WL_MESSAGE) : (cfg.message || DEFAULT_MESSAGE), vars);
+
+// ─── رسالة الشكر بعد الاستلام: كل مرة بصياغة مختلفة ───
+// المزوّدات غير الرسمية (Wasender وأمثاله) ترسل من رقم واتساب عادي، وواتساب يحظر الرقم لو شاف نفس النص يتكرر على أرقام كثيرة
+// فنركّب الرسالة من أجزاء عشوائية (تحية، شكر، تمنّي، ختام، إيموجي)، أو نختار صيغة من صيغ صاحب الربط
+const pick = (a) => a[Math.floor(Math.random() * a.length)];
+const THANKS = {
+  hi: ['', '', 'هلا والله، ', 'أهلاً، ', '{greet}، '],
+  thanks: ['شكراً لزيارتك {store}', 'نورتنا في {store}', 'سعدنا بزيارتك لـ {store}', 'شكراً لاختيارك {store}', 'يسعدنا إنك اخترت {store}', 'شكراً إنك زرت {store} اليوم'],
+  wish: ['نتمنى طلبك يعجبك', 'بالعافية عليك', 'بالهناء والعافية', 'نتمنى لك وقت ممتع', 'عساه يعجبك', 'نتمنى إنه كان على ذوقك'],
+  bye: ['ننتظرك مرة ثانية', 'نشوفك قريب', 'لا تحرمنا من زيارتك الجاية', 'بانتظارك دايماً', 'حياك الله أي وقت', ''],
+  emoji: ['🌿', '☕', '🙏', '💚', '✨', '🤍', '']
+};
+function thanksText(cfg, vars) {
+  const greet = ((new Date().getUTCHours() + 3) % 24) < 12 ? 'صباح الخير' : 'مساء الخير';   // بتوقيت الرياض
+  const own = String(cfg.thanks_msgs || '').split('\n').map(x => x.trim()).filter(Boolean);
+  if (own.length) return fill(pick(own), vars).replace(/\{greet\}/g, greet);
+  const sep = pick(['، ', '. ', '، ']);
+  const order = Math.random() < .35 && vars.number ? ` (طلب ${vars.number})` : '';
+  const parts = [pick(THANKS.hi) + pick(THANKS.thanks) + order, pick(THANKS.wish), pick(THANKS.bye)].filter(Boolean);
+  const e = pick(THANKS.emoji);
+  return fill(parts.join(sep), vars).replace(/\{greet\}/g, greet).trim() + (e ? ` ${e}` : '');
+}
+// نص الرسالة: لكل نوع نصه (الطلبات أو قائمة الانتظار أو الشكر)، ولو فاضي النص الافتراضي
+const textFor = (cfg, vars) => vars.kind === 'thanks' ? thanksText(cfg, vars) : fill(vars.kind === 'waitlist' ? (cfg.wl_message || DEFAULT_WL_MESSAGE) : (cfg.message || DEFAULT_MESSAGE), vars);
 
 // ─── الإرسال حسب المزوّد. يرجّع { ok, error } ───
 async function send(cfg, to, vars) {
@@ -98,10 +120,12 @@ async function send(cfg, to, vars) {
   if (!token) return { ok: false, error: 'المفتاح ما ينقرأ، أدخله من جديد' };
   const phone = intlPhone(to);
   // برقم الفاتورة: الجوال اختياري (خادمهم يجيبه)، لكن لازم فاتورة أو جوال
-  if (!phone && !(vars.kind !== 'waitlist' && byInvoice(cfg) && vars.invoice)) return { ok: false, error: 'رقم الجوال غير صحيح' };
+  if (!phone && !(vars.kind === 'pager' && byInvoice(cfg) && vars.invoice)) return { ok: false, error: 'رقم الجوال غير صحيح' };
   const text = textFor(cfg, vars);
   let url, init;
   if (cfg.provider === 'meta') {
+    // واتساب الرسمي ما يرسل إلا قوالب معتمدة، ورسالة الشكر نصها يتغير
+    if (vars.kind === 'thanks') return { ok: false, error: 'رسالة الشكر غير متاحة مع Meta' };
     const template = vars.kind === 'waitlist' ? cfg.wl_template : cfg.template;
     if (!template) return { ok: false, error: vars.kind === 'waitlist' ? 'اكتب قالب Meta لرسالة قائمة الانتظار' : 'اكتب قالب Meta لرسالة الطلبات' };
     const params = cfg.template_vars === 'none' ? [] : cfg.template_vars === 'number' ? [vars.number] : [vars.number, vars.store];
@@ -168,6 +192,24 @@ async function pagerReady(store, ticket) {
   return r.ok ? 'sent' : 'failed';
 }
 
+// ─── «شكراً لزيارتك» لما يضغط الكاشير «استلم» (مرة وحدة لكل رقم، والزبون كتب جواله) ───
+async function pagerThanks(store, ticket) {
+  if (!ticket || !ticket.wa_phone || ticket.wa_thanks) return 'off';
+  const cfg = await configFor(store.id);
+  if (!on(cfg, 'pager') || !cfg.thanks || cfg.provider === 'meta') return 'off';
+  // نحجز الرقم أول (لو انضغط «استلم» مرتين ما تنرسل مرتين)
+  const held = await rest(`pager_tickets?id=eq.${ticket.id}&wa_thanks=is.null`, { method: 'PATCH', prefer: 'return=representation', body: { wa_thanks: 'sending' } }).catch(() => []);
+  if (!held.length) return 'off';
+  const r = await send(cfg, ticket.wa_phone, { kind: 'thanks', number: ticket.number, store: store.display_name || store.name || '' });
+  const now = new Date().toISOString();
+  await Promise.all([
+    rest(`pager_tickets?id=eq.${ticket.id}`, { method: 'PATCH', body: { wa_thanks: r.ok ? `${r.queued ? 'queued' : 'sent'} ${now.slice(11, 19)}` : `failed: ${r.error}`.slice(0, 200) } }).catch(() => {}),
+    r.queued ? null : rest(`client_whatsapp?client_id=eq.${cfg.client_id}`, { method: 'PATCH', body: r.ok ? { last_sent_at: now, last_error: null } : { last_error: `${now.slice(0, 16)} ${r.error}`.slice(0, 220) } }).catch(() => {})
+  ]);
+  console.log('PAGER_WA_THANKS', store.id, ticket.id, r.ok ? 'sent' : r.error);
+  return r.ok ? 'sent' : 'failed';
+}
+
 // ─── قائمة الانتظار: «جاء دورك» لما يضغط الموظف «الطاولة جاهزة» (العميل كتب جواله وهو يسجّل) ───
 async function waitlistReady(store, entry) {
   if (!entry || !entry.phone) return 'off';
@@ -184,4 +226,4 @@ async function waitlistReady(store, entry) {
 const pullHash = (key) => crypto.createHash('sha256').update(`dm-wa-pull:${String(key || '')}`).digest('hex');
 const newPullKey = () => { const key = 'dmwa_' + crypto.randomBytes(24).toString('base64url'); return { key, hash: pullHash(key) }; };
 
-module.exports = { OUTBOX_TTL_MS, pullHash, newPullKey, CHANNELS, DEFAULT_WL_MESSAGE, waitlistReady, PROVIDERS, AUTH_STYLES, DEFAULT_BODY, validBody, DEFAULT_MESSAGE, encrypt, decrypt, intlPhone, maskPhone, configFor, linked, askPhone, byInvoice, forget, send, pagerReady };
+module.exports = { pagerThanks, thanksText, OUTBOX_TTL_MS, pullHash, newPullKey, CHANNELS, DEFAULT_WL_MESSAGE, waitlistReady, PROVIDERS, AUTH_STYLES, DEFAULT_BODY, validBody, DEFAULT_MESSAGE, encrypt, decrypt, intlPhone, maskPhone, configFor, linked, askPhone, byInvoice, forget, send, pagerReady };
