@@ -117,7 +117,7 @@
   }));
   // التعديلات اللي ما انحفظت (بأسماء يفهمها صاحب المحل)
   const LY_CHANGE_LABELS = [[['color'], 'لون البطاقة'], [['color2'], 'اللون الثاني'], [['text_color'], 'لون الخط'], [['style'], 'الشكل'], [['bg', 'bg_image'], 'الخلفية'],
-    [['stamp_color'], 'لون الختم'], [['icon', 'stamp_image'], 'صورة الختم'], [['logo'], 'الشعار'], [['reward_image'], 'صورة المكافأة']];
+    [['stamp_color'], 'لون الختم'], [['icon', 'stamp_image'], 'صورة الختم'], [['logo'], 'الشعار'], [['hide_logo'], 'إظهار الشعار'], [['reward_image'], 'صورة المكافأة']];
   function lyChanges() {
     const a = ly.design || {}, b = (ly.data && ly.data.settings.design) || {};
     return LY_CHANGE_LABELS.filter(([keys]) => keys.some(k => (a[k] ?? null) !== (b[k] ?? null))).map(([, label]) => label);
