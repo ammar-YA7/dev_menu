@@ -280,10 +280,12 @@
   $('p-cc').innerHTML = DM.countryOptions();
   if (DM.fillMe) { DM.fillMe($('f-name'), $('f-phone'), $('f-cc')); DM.fillMe($('p-name'), $('p-phone'), $('p-cc')); }
 
+  // صاحب المحل أخفى الشعار من البطاقة: ينخفي شعار الصفحة بعد
+  function logoVis() { const el = $('logo'); el.classList.toggle('hidden', !el.getAttribute('src') || !!(settings && settings.design && settings.design.hide_logo)); }
   function setStore(s) {
     $('store-name').textContent = s.name || '';
     document.title = `بطاقة الولاء | ${s.name || 'DEV MENU'}`;
-    if (s.logo_url) { $('logo').src = s.logo_url; $('logo').classList.remove('hidden'); }
+    if (s.logo_url) { $('logo').src = s.logo_url; logoVis(); }
   }
 
   const stampsHTML = (count, needed, fresh = -1) => DMLoyaltyCard.stamps(count, needed, settings.design, fresh);
@@ -441,7 +443,7 @@
       if (stampCodeParam || ptParam) dropParams('c', 'pt');
       saveToken(r.token);
       if (params.get('s')) { params.delete('s'); history.replaceState(null, '', location.pathname + (params.toString() ? `?${params}` : '')); }
-      settings = enReward(r.settings); walletOn = !!r.wallet; justJoined = !!r.is_new; happyNow = !!r.happy_now; gifts = r.gifts || [];
+      settings = enReward(r.settings); logoVis(); walletOn = !!r.wallet; justJoined = !!r.is_new; happyNow = !!r.happy_now; gifts = r.gifts || [];
       afterStamp(r);
       walletFirst();
       if (r.reason === 'PAGER_PENDING') msg('ok', 'ph-bell', 'سجّلت! ينضاف لك ختم أول ما تستلم طلبك');
@@ -745,7 +747,7 @@
     try {
       if (token) {
         const r = await DM.get(`/api/loyalty?action=card&slug=${encodeURIComponent(slug)}&t=${encodeURIComponent(token)}`);
-        setStore(r.store); settings = enReward(r.settings); card = r.card; walletOn = !!r.wallet;
+        setStore(r.store); settings = enReward(r.settings); logoVis(); card = r.card; walletOn = !!r.wallet;
         happyNow = !!r.happy_now; gifts = r.gifts || []; survey = !!r.survey; setSubs(r);
         // جاي بكود الكاشير أو من صفحة البيجر: نختم على طول
         if (stampCodeParam || ptParam) {
@@ -776,7 +778,7 @@
         return;
       }
       const r = await DM.get(`/api/loyalty?action=info&slug=${encodeURIComponent(slug)}`);
-      setStore(r.store); settings = enReward(r.settings); happyNow = !!r.happy_now; setSubs(r);
+      setStore(r.store); settings = enReward(r.settings); logoVis(); happyNow = !!r.happy_now; setSubs(r);
       applyStampsMode(); renderJoinPlans();
       if (!stampsOn) $('j-note').textContent = 'بعد التسجيل يطلع لك كود، تعرضه للكاشير. ولو غيّرت جوالك، ترجع لبطاقتك بنفس الرقم.';
       renderHappy();

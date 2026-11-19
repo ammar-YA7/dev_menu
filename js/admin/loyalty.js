@@ -133,7 +133,7 @@
     const pic = (id, url) => { const el = document.getElementById(id); el.classList.toggle('hidden', !url); if (url && el.getAttribute('src') !== url) el.src = url; };
     // صفحة البطاقة
     document.getElementById('pv-store').textContent = name;
-    pic('pv-logo', client.logo_url || '');
+    pic('pv-logo', d.hide_logo ? '' : (client.logo_url || ''));
     DMLoyaltyCard.apply(document.getElementById('ly-preview'), d);
     document.getElementById('ly-pv-pkg').classList.toggle('hidden', !DMPlans.has(client, 'subs'));
     document.getElementById('ly-pv-needed').textContent = `${s}/${n}`;

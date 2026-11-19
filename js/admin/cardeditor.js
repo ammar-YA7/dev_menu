@@ -97,7 +97,7 @@
         ${d.stamp_image ? '<button type="button" class="cd-link cd-del" data-cd-clear="stamp_image">إزالة صورة الختم</button>' : ''}`;
     } else {
       // بطاقة الولاء: خيار إخفاء الشعار من البطاقة (الصفحة والمحفظة)
-      const hideRow = C.kind === 'ly' ? `<button type="button" class="cd-hide-logo" data-cd-hidelogo role="switch" aria-checked="${!d.hide_logo}"><span><b>الشعار في البطاقة</b><small>${d.hide_logo ? 'مخفي: يظهر اسم المحل فقط' : 'ظاهر في صفحة البطاقة ومحفظة الجوال'}</small></span><i></i></button>` : '';
+      const hideRow = C.kind === 'ly' ? `<button type="button" class="cd-hide-logo" data-cd-hidelogo role="switch" aria-checked="${!d.hide_logo}"><span><b>الشعار في البطاقة</b><small>${d.hide_logo ? 'مخفي: يظهر اسم المحل فقط' : 'ظاهر فوق صفحة البطاقة وفي محفظة الجوال'}</small></span><i></i></button>` : '';
       body = `${hideRow}
         <div class="cd-tiles ${C.kind === 'ly' && d.hide_logo ? 'cd-dim' : ''}">${C.images.map(([k, t, sel, ic, round]) => { const url = d[k] || (k === 'logo' ? client.logo_url || '' : ''); return `
           <div class="cd-tile"><div class="cd-pic ${round ? '' : 'sq'}">${url ? `<img src="${esc(url)}" alt="">` : `<i class="ph-bold ${ic}"></i>`}</div><b>${t}</b>
