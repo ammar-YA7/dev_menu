@@ -13,11 +13,12 @@
     document.querySelectorAll('[data-lytab]').forEach(el => el.classList.toggle('hidden', !el.dataset.lytab.split(' ').includes(tab)));
     document.getElementById('ly-grid').classList.toggle('hidden', !['settings', 'messages', 'register'].includes(tab));
     try { localStorage.setItem('dm_ly_tab', tab); } catch {}
+    if (tab === 'rewards') loadRewards();
   }
   document.querySelectorAll('[data-lyt]').forEach(b => b.addEventListener('click', () => setLyTab(b.dataset.lyt)));
   async function onLoyaltyPage() {
     let saved = ''; try { saved = localStorage.getItem('dm_ly_tab') || ''; } catch {}
-    setLyTab(['overview', 'settings', 'messages', 'register'].includes(ly.tab || saved) ? (ly.tab || saved) : 'overview');
+    setLyTab(['overview', 'rewards', 'settings', 'messages', 'register'].includes(ly.tab || saved) ? (ly.tab || saved) : 'overview');
     try { [ly.data, ly.members] = await Promise.all([api('loyalty'), api('loyalty-members').then(r => r.members)]); }
     catch (e) { showToast(e.message || 'تعذر تحميل بطاقة الأختام', true); return; }
     renderLoyalty();
@@ -432,6 +433,80 @@
       </tr>`; }).join('') || '<tr><td colspan="7" class="py-10 text-center text-ink">ما فيه أعضاء هنا.</td></tr>';
     document.getElementById('ly-more').textContent = list.length > 200 ? `يظهر أول 200 من ${list.length}. نزّل ملف CSV لترى الجميع.` : '';
   }
+  // ─── تقرير المكافآت ───
+  const LR = { range: '30', data: null };
+  const isoDay = (d) => new Date(d.getTime() + 3 * 3600e3).toISOString().slice(0, 10);   // يوم الرياض
+  function lrDates(r) {
+    const now = new Date(), riy = new Date(now.getTime() + 3 * 3600e3), y = riy.getUTCFullYear(), m = riy.getUTCMonth();
+    if (r === '7') return { from: isoDay(new Date(now - 6 * 864e5)), to: isoDay(now) };
+    if (r === '90') return { from: isoDay(new Date(now - 89 * 864e5)), to: isoDay(now) };
+    if (r === 'month') return { from: `${y}-${String(m + 1).padStart(2, '0')}-01`, to: isoDay(now) };
+    if (r === 'last') { const s = new Date(Date.UTC(y, m - 1, 1)), e = new Date(Date.UTC(y, m, 0)); return { from: s.toISOString().slice(0, 10), to: e.toISOString().slice(0, 10) }; }
+    return {};
+  }
+  async function loadRewards(r) {
+    if (r) LR.range = r;
+    if (!['7', 'month', 'last', '90', 'all'].includes(LR.range)) LR.range = 'month';
+    document.querySelectorAll('[data-lr]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.lr === LR.range)));
+    const { from, to } = lrDates(LR.range);
+    document.getElementById('lr-list').innerHTML = '<p class="text-xs text-ink py-3"><i class="ph-bold ph-spinner-gap ph-spin"></i> جاري التحميل…</p>';
+    try { LR.data = await api(`loyalty-rewards${from ? `&from=${from}&to=${to}` : ''}`); }
+    catch (e) { document.getElementById('lr-list').innerHTML = `<p class="text-xs text-red-700 py-3">${esc(e.message || 'تعذر تحميل التقرير')}</p>`; return; }
+    renderRewards();
+  }
+  document.querySelectorAll('[data-lr]').forEach(b => b.addEventListener('click', () => loadRewards(b.dataset.lr)));
+  function renderRewards() {
+    const d = LR.data, S = d.summary;
+    const kpi = (icon, label, v, sub = '') => `<div class="pro-card p-4"><p class="text-[11px] font-bold text-ink"><i class="ph-bold ${icon}"></i> ${label}</p><p class="text-2xl font-bold mt-1">${v}</p>${sub ? `<p class="text-[11px] text-ink mt-0.5">${sub}</p>` : ''}</div>`;
+    document.getElementById('lr-kpis').innerHTML = kpi('ph-gift', 'مكافآت انصرفت', S.total)
+      + kpi('ph-users', 'عملاء مختلفين', S.customers, S.customers && S.total > S.customers ? 'بعضهم أخذ أكثر من مرة' : '')
+      + kpi('ph-heart', 'هدايا من أصدقاء', S.gifts);
+    const bars = (list) => { const max = Math.max(1, ...list.map(x => x.n)); return list.length ? list.map(x => `<div><div class="flex items-center justify-between gap-2 text-[13px]"><span class="font-bold truncate">${esc(x.name)}</span><b>${x.n}</b></div><div class="h-2 rounded-full bg-brand/10 mt-1"><div class="h-2 rounded-full bg-brand" style="width:${Math.round(x.n / max * 100)}%"></div></div></div>`).join('') : '<p class="text-xs text-ink">ما فيه صرف في هذي الفترة.</p>'; };
+    document.getElementById('lr-by-reward').innerHTML = bars(S.by_reward);
+    document.getElementById('lr-branch-card').classList.toggle('hidden', !d.multi);
+    if (d.multi) document.getElementById('lr-by-branch').innerHTML = bars(S.by_branch);
+    renderFunnel(d.funnel);
+    const when = (iso) => new Date(iso).toLocaleString('ar-SA-u-ca-gregory-nu-latn', { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
+    document.getElementById('lr-list').innerHTML = d.rows.length ? d.rows.map(r => `
+      <button type="button" onclick="openLyMember(${Number(r.card_id)})" class="w-full flex items-center justify-between gap-3 py-2.5 text-start">
+        <span class="min-w-0"><b class="block text-[13px] truncate">${esc(r.name || `عضو #${r.no || ''}`)}${r.name && r.no ? ` <span class="text-[11px] font-normal text-ink">#${r.no}</span>` : ''}</b>
+          <span class="block text-[12px] text-ink truncate"><i class="ph-bold ${r.kind === 'gift_redeem' ? 'ph-heart' : 'ph-gift'}"></i> ${esc(r.reward)}${r.guessed && r.kind === 'redeem' ? ' *' : ''}${r.branch ? ` · ${esc(r.branch)}` : ''}</span></span>
+        <span class="shrink-0 text-[11px] text-ink">${when(r.at)}</span>
+      </button>`).join('') : '<p class="text-xs text-ink py-3">ما انصرفت مكافآت في هذي الفترة.</p>';
+    const guessed = d.rows.some(r => r.guessed && r.kind === 'redeem');
+    const note = document.getElementById('lr-note');
+    note.classList.toggle('hidden', !guessed && !d.more);
+    note.textContent = [guessed ? '* صرف قبل بدء تسجيل اسم المكافأة: يظهر اسم مكافأتك الحالية.' : '', d.more ? 'يظهر آخر 500 صرف، وكلها في ملف التصدير.' : ''].filter(Boolean).join(' ');
+  }
+  // نسبة الصرف: من اكتملت بطاقته، كم واحد رجع وأخذ مكافأته
+  function renderFunnel(f) {
+    if (!f) return;
+    const box = document.getElementById('lr-rate');
+    box.innerHTML = f.rate == null ? '<p class="text-xs text-ink">لم يكمل أي عميل بطاقته حتى الآن.</p>' : `
+      <div class="flex items-end gap-3"><b class="text-3xl">${f.rate}%</b><span class="text-[12px] text-ink pb-1">من المكافآت المستحقة تم استلامها</span></div>
+      <div class="h-2.5 rounded-full bg-brand/10 mt-2 overflow-hidden"><div class="h-2.5 rounded-full bg-brand" style="width:${f.rate}%"></div></div>
+      <p class="text-[12px] text-ink mt-2">${f.redeemed} مكافأة استُلمت، و${f.waiting} مكافأة مستحقة لم تُستلم بعد.</p>`;
+    const ago = (iso) => { if (!iso) return ''; const n = Math.floor((Date.now() - Date.parse(iso)) / 864e5); return n <= 0 ? 'اليوم' : n === 1 ? 'أمس' : `قبل ${n} يوم`; };
+    const row = (c, sub) => `<button type="button" onclick="openLyMember(${Number(c.card_id)})" class="w-full flex items-center justify-between gap-3 py-2 text-start">
+        <span class="min-w-0"><b class="block text-[13px] truncate">${esc(c.name || `عضو #${c.no || ''}`)}${c.name && c.no ? ` <span class="text-[11px] font-normal text-ink">#${c.no}</span>` : ''}</b><span class="block text-[12px] text-ink">${sub}</span></span>
+        <span class="shrink-0 text-[11px] text-ink">${c.last ? `آخر زيارة ${ago(c.last)}` : ''}</span></button>`;
+    const list = (id, items, sub, empty, total) => {
+      document.getElementById(id).innerHTML = items.length ? items.slice(0, 8).map(c => row(c, sub(c))).join('') + (total > 8 ? `<p class="text-[11px] text-ink pt-2">و${total - 8} آخرون</p>` : '') : `<p class="text-xs text-ink py-2">${empty}</p>`;
+      document.getElementById(id + '-n').textContent = total ? `(${total})` : '';
+    };
+    list('lr-ready', f.ready, c => { const k = Math.floor(c.stamps / f.needed); return k > 1 ? `له ${k} مكافآت مستحقة` : 'أكمل بطاقته'; }, 'لا يوجد عملاء ينتظرون مكافأتهم.', f.ready_count);
+    list('lr-near', f.near, c => c.left === 1 ? 'باقٍ له ختم واحد' : 'باقٍ له ختمان', 'لا يوجد عملاء قريبون من المكافأة.', f.near_count);
+  }
+  function exportRewardsCsv() {
+    const d = LR.data; if (!d) return;
+    const cell = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const rows = [['التاريخ', 'رقم العضو', 'الاسم', 'الجوال', 'المكافأة', 'النوع', ...(d.multi ? ['الفرع'] : [])]]
+      .concat(d.rows.map(r => [new Date(r.at).toLocaleString('en-GB', { timeZone: 'Asia/Riyadh', hour12: false }), r.no || '', r.name || '', r.phone || '', r.reward, r.kind === 'gift_redeem' ? 'هدية صديق' : 'مكافأة الأختام', ...(d.multi ? [r.branch || ''] : [])]));
+    const blob = new Blob(['\ufeff' + rows.map(r => r.map(cell).join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `loyalty-rewards-${client.client_slug}-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  }
+
   function exportLyCsv() {
     const M = ly.members || [], n = ly.data ? ly.data.settings.needed : 8;
     const d = (iso) => iso ? new Date(iso).toISOString().slice(0, 16).replace('T', ' ') : '';

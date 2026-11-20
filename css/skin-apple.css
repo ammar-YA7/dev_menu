@@ -494,3 +494,9 @@ main .space-y-3 > label:has(> .dm-switch) + label:has(> .dm-switch) { margin-top
 #cd-savebar .cd-status { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 30px; font-size: 13px; font-weight: 600; color: var(--ap-ink2, #6e6e73); }
 #cd-savebar .cd-status .ph-check-circle { color: var(--ap-green, #3f7a4a); }
 #cd-savebar .cd-status .ph-warning-circle { color: #b45309; }
+
+/* ─── تقرير المكافآت: اختيار الفترة ─── */
+.lr-range { display: flex; gap: 2px; padding: 2px; border-radius: 11px; background: var(--ap-fill, #eef0ee); overflow-x: auto; scrollbar-width: none; }
+.lr-range::-webkit-scrollbar { display: none; }
+.lr-range button { flex: none; padding: 7px 12px; border-radius: 9px; font-size: 12.5px; font-weight: 600; color: var(--ap-ink, #1d1d1f); white-space: nowrap; }
+.lr-range button[aria-selected="true"] { background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.12); }

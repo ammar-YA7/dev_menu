@@ -313,6 +313,7 @@
       ['البطاقة', [
         L && ['reward', 'ph-gift', 'المكافأة', needed ? `${needed} أختام` : ''],
         L && ['numbers', 'ph-chart-bar', 'الأرقام والزيارات', ''],
+        L && ['rewards', 'ph-gift', 'تقرير المكافآت', ''],
         P && ['plans', 'ph-package', 'الباقات', ''],
         ['look', 'ph-palette', 'الشكل', '']
       ]],
@@ -337,6 +338,7 @@
   const CARD_GO = {
     reward: ['loyalty', () => setLyTab('settings'), 'المكافأة'],
     numbers: ['loyalty', () => setLyTab('overview'), 'الأرقام والزيارات'],
+    rewards: ['loyalty', () => setLyTab('rewards'), 'تقرير المكافآت'],
     plans: ['subs', null, 'الباقات'],
     look: ['carddesign', null, 'الشكل'],
     'msg-send': ['messages', () => setMgTab('send'), 'رسالة جديدة'],

@@ -96,6 +96,49 @@ module.exports.pre = async function pre(action, req, b) {
   }
 
   // ─── بطاقة الولاء: تفاصيل عضو (زياراته ورسائله) ───
+  // ─── تقرير المكافآت: مين أخذ وش ومتى ومن أي فرع، لفترة يختارها صاحب المحل ───
+  if (action === 'loyalty-rewards' && req.method === 'GET') {
+    const { store } = await context(req);
+    const day = /^\d{4}-\d{2}-\d{2}$/;
+    // الأيام بتوقيت الرياض: من بداية يوم «from» لين نهاية يوم «to»
+    const from = day.test(req.query.from || '') ? new Date(`${req.query.from}T00:00:00+03:00`) : null;
+    const to = day.test(req.query.to || '') ? new Date(Date.parse(`${req.query.to}T00:00:00+03:00`) + 864e5) : null;
+    const range = `${from ? `&created_at=gte.${q(from.toISOString())}` : ''}${to ? `&created_at=lt.${q(to.toISOString())}` : ''}`;
+    const x = (await rest(`clients?id=eq.${store.id}&select=loyalty_settings`))[0] || {};
+    const settings = normalizeLoyalty(x.loyalty_settings);
+    const events = await rest(`loyalty_events?client_id=eq.${store.id}&kind=in.(redeem,gift_redeem)${range}&select=id,card_id,kind,reward,branch_id,created_at&order=created_at.desc&limit=2000`);
+    const ids = [...new Set(events.map(e => e.card_id).filter(Boolean))];
+    const cards = ids.length ? await rest(`loyalty_cards?id=in.(${ids.join(',')})&select=id,member_no,name,phone`) : [];
+    const byCard = Object.fromEntries(cards.map(c => [c.id, c]));
+    const fam = await familyOf(store, 'id,name').catch(() => []);
+    const branchName = Object.fromEntries(fam.map(f => [f.id, f.name]));
+    const rows = events.map(e => {
+      const c = byCard[e.card_id] || {};
+      // الصرف القديم (قبل ما نسجّل اسم المكافأة): المكافأة الحالية، وعليها علامة إنها تقديرية
+      return { at: e.created_at, kind: e.kind, reward: e.reward || (e.kind === 'redeem' ? settings.reward : 'هدية صديق'), guessed: !e.reward,
+        card_id: e.card_id, no: c.member_no || null, name: c.name || null, phone: c.phone || null, branch: fam.length > 1 ? (branchName[e.branch_id] || null) : null };
+    });
+    // نسبة الصرف (من البداية): من اكتملت بطاقته، كم واحد رجع وأخذ مكافأته
+    // والقريبين من المكافأة: باقي لهم ختم أو ختمين (صاحب المحل يقدر يذكّرهم)
+    const need = settings.needed;
+    const [open_, allRedeems] = await Promise.all([
+      rest(`loyalty_cards?client_id=eq.${store.id}&transferred_at=is.null&stamps=gte.${Math.max(1, need - 2)}&select=id,member_no,name,phone,stamps,last_stamp_at&order=stamps.desc,last_stamp_at.desc&limit=1000`).catch(() => []),
+      range ? rest(`loyalty_events?client_id=eq.${store.id}&kind=eq.redeem&select=id&limit=10000`).catch(() => []) : null
+    ]);
+    const redeemedAll = range ? allRedeems.length : rows.filter(r => r.kind === 'redeem').length;
+    const ready = open_.filter(c => c.stamps >= need), near = open_.filter(c => c.stamps < need);
+    const waiting = ready.reduce((n, c) => n + Math.floor(c.stamps / need), 0);
+    const card = (c) => ({ card_id: c.id, no: c.member_no, name: c.name || null, phone: c.phone || null, stamps: c.stamps, left: Math.max(0, need - c.stamps), last: c.last_stamp_at });
+    const funnel = { needed: need, redeemed: redeemedAll, waiting, rate: redeemedAll + waiting ? Math.round(redeemedAll / (redeemedAll + waiting) * 100) : null,
+      ready: ready.slice(0, 100).map(card), near: near.slice(0, 200).map(card), near_count: near.length, ready_count: ready.length };
+    const count = (key) => Object.entries(rows.reduce((a, r) => (a[r[key]] = (a[r[key]] || 0) + 1, a), {})).filter(([k]) => k && k !== 'null').map(([k, n]) => ({ name: k, n })).sort((a, b) => b.n - a.n);
+    return {
+      reward_now: settings.reward, multi: fam.length > 1, funnel,
+      summary: { total: rows.length, customers: new Set(rows.map(r => r.card_id)).size, gifts: rows.filter(r => r.kind === 'gift_redeem').length, by_reward: count('reward'), by_branch: fam.length > 1 ? count('branch') : [] },
+      rows: rows.slice(0, 500), more: rows.length > 500
+    };
+  }
+
   if (action === 'loyalty-member' && req.method === 'GET') {
     const { store } = await context(req);
     const id = int(req.query.id);
@@ -289,12 +332,14 @@ module.exports.post = async function post(action, req, b, env) {
       const rows = await rest(`loyalty_gifts?code=eq.${q(String(b.gift))}&to_card=eq.${card.id}&status=eq.claimed&expires_at=gt.${q(new Date().toISOString())}`,
         { method: 'PATCH', prefer: 'return=representation', body: { status: 'redeemed', redeemed_at: new Date().toISOString() } });
       if (!rows.length) throw new ApiError(409, 'الهدية مستخدمة أو منتهية', 'GIFT_USED');
-      await rest('loyalty_events', { method: 'POST', body: { client_id: sid, branch_id: await atBranch(), card_id: card.id, kind: 'gift_redeem' } }).catch(() => {});
       reward = rows[0].reward;
+      await rest('loyalty_events', { method: 'POST', body: { client_id: sid, branch_id: await atBranch(), card_id: card.id, kind: 'gift_redeem', reward } }).catch(() => {});
     } else {
       const r = await rpc('server_loyalty_redeem', { p_card: card.id, p_needed: settings.needed, p_distance: null });
       if (!r.ok) throw new ApiError(409, 'أختامه ما كملت', 'NOT_ENOUGH');
       await tagBranch(card.id, await atBranch());
+      // تقرير المكافآت: اسم المكافأة وقت الصرف (لو تغيّرت بعدين يبقى اللي أخذه)
+      await rest(`loyalty_events?card_id=eq.${card.id}&kind=eq.redeem&reward=is.null&created_at=gte.${q(new Date(Date.now() - 120e3).toISOString())}`, { method: 'PATCH', body: { reward } }).catch(() => {});
     }
     // رسالة تسليم المكافأة على بطاقة العميل (والتحديث نفسه يصفّر أختامه)
     const msg = await redeemMessage(store, settings, card, reward);

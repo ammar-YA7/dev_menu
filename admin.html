@@ -1702,6 +1702,7 @@
 
         <div class="ly-tabs" role="tablist" aria-label="أقسام الولاء">
           <button type="button" role="tab" data-lyt="overview"><i class="ph-bold ph-chart-bar"></i> نظرة عامة</button>
+          <button type="button" role="tab" data-lyt="rewards"><i class="ph-bold ph-gift"></i> المكافآت</button>
           <button type="button" role="tab" data-lyt="settings"><i class="ph-bold ph-sliders-horizontal"></i> الإعدادات</button>
           <button type="button" role="tab" data-lyt="messages"><i class="ph-bold ph-chat-circle-text"></i> الرسائل</button>
           <button type="button" role="tab" data-lyt="register"><i class="ph-bold ph-qr-code"></i> كرت التسجيل</button>
@@ -1829,6 +1830,41 @@
         </div>
 
         <!-- نظرة عامة -->
+        <!-- تقرير المكافآت: مين أخذ وش ومتى ومن أي فرع -->
+        <div data-lytab="rewards" class="hidden space-y-5">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div id="lr-range" class="lr-range" role="tablist" aria-label="الفترة">
+              <button type="button" data-lr="7">آخر 7 أيام</button>
+              <button type="button" data-lr="month">هذا الشهر</button>
+              <button type="button" data-lr="last">الشهر الماضي</button>
+              <button type="button" data-lr="90">آخر 3 أشهر</button>
+              <button type="button" data-lr="all">الكل</button>
+            </div>
+            <button type="button" onclick="exportRewardsCsv()" class="text-[12px] font-bold text-ink bg-white border border-brand/20 rounded-xl px-3 py-2"><i class="ph-bold ph-download-simple"></i> تصدير Excel</button>
+          </div>
+          <div id="lr-kpis" class="grid grid-cols-3 gap-2 sm:gap-3"></div>
+          <!-- نسبة الصرف + المستحقين + القريبين (حالة البطاقات الآن، مو حسب الفترة) -->
+          <div class="pro-card p-5 space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-2"><h3 class="text-sm font-bold">نسبة الصرف</h3><span class="text-[11px] text-ink">منذ بداية البطاقة</span></div>
+            <div id="lr-rate"></div>
+            <div class="grid lg:grid-cols-2 gap-5">
+              <div class="space-y-2"><h4 class="text-[13px] font-bold"><i class="ph-bold ph-gift text-emerald-600"></i> مستحقون لم يستلموا مكافأتهم <span id="lr-ready-n" class="text-ink font-normal"></span></h4><div id="lr-ready" class="divide-y divide-brand/10"></div></div>
+              <div class="space-y-2"><h4 class="text-[13px] font-bold"><i class="ph-bold ph-hourglass-medium text-emerald-600"></i> قريبون من المكافأة <span id="lr-near-n" class="text-ink font-normal"></span></h4><div id="lr-near" class="divide-y divide-brand/10"></div></div>
+            </div>
+            <p class="text-[11px] text-ink leading-relaxed">اضغط على أي عميل لفتح بطاقته وإرسال رسالة تذكير له.</p>
+          </div>
+          <div class="grid lg:grid-cols-[1fr_1.6fr] gap-5 items-start">
+            <div class="space-y-5">
+              <div class="pro-card p-5 space-y-3"><h3 class="text-sm font-bold">المكافآت حسب النوع</h3><div id="lr-by-reward" class="space-y-2.5"></div></div>
+              <div id="lr-branch-card" class="hidden pro-card p-5 space-y-3"><h3 class="text-sm font-bold">حسب الفرع</h3><div id="lr-by-branch" class="space-y-2.5"></div></div>
+            </div>
+            <div class="pro-card p-5 space-y-3">
+              <h3 class="text-sm font-bold">سجل الصرف</h3>
+              <div id="lr-list" class="divide-y divide-brand/10"></div>
+              <p id="lr-note" class="hidden text-[11px] text-ink leading-relaxed"></p>
+            </div>
+          </div>
+        </div>
         <div data-lytab="overview" class="space-y-5">
           <div id="ly-kpis" class="grid grid-cols-2 lg:grid-cols-4 gap-3"></div>
           <!-- عملاء كل فرع (للي عنده أكثر من فرع) -->
