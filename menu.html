@@ -2837,6 +2837,27 @@
       ${row(T('متوفرة على', 'Available as'), methods)}
     </div>`;
   }
+  // «يناسبه معه»: أصناف من تصنيفات ثانية (قهوة ← حلى وشي ثاني، حلى ← قهوة وشي ثاني)، صنف من كل تصنيف
+  // الاختيار ثابت لكل صنف (ما يتغير كل ما فتحه) ويختلف من صنف لصنف، واللي لها صور أول
+  // لو المنيو ما فيه تصنيفات ثانية كفاية نكمّل من نفس القسم
+  function ixPairs(p, list, at) {
+    const seed = [...String(p.id)].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
+    const ok = (x) => x.id !== p.id && x.is_available !== false;
+    const pick = (arr, k) => { const a = [...arr.filter(x => ixImg(x)), ...arr.filter(x => !ixImg(x))]; const withPic = arr.filter(x => ixImg(x)).length || a.length; return a.length ? a[(seed + k) % withPic] : null; };
+    // بالتصنيف مو بالمجموعة: لو القهوة والحلى في نفس المجموعة، الحلى يبقى تصنيف ثاني
+    const mine = allCategories.filter(c => productsIn(c, allProducts).some(q => q.id === p.id)).map(c => c.id);
+    const groups = allCategories.filter(c => !mine.includes(c.id))
+      .map(c => productsIn(c, allProducts).filter(ok)).filter(g => g.length);
+    // نبدأ من قسم مختلف حسب الصنف عشان كل صنف ياخذ خلطة مختلفة
+    const r = groups.length ? seed % groups.length : 0, order = [...groups.slice(r), ...groups.slice(0, r)];
+    const out = [];
+    for (let i = 0; i < order.length && out.length < 3; i++) { const x = pick(order[i], i); if (x && !out.some(y => y.id === x.id)) out.push(x); }
+    if (out.length < 3) {
+      const same = (at >= 0 ? [...list.slice(at + 1), ...list.slice(0, at)] : list).filter(x => ok(x) && !out.some(y => y.id === x.id));
+      out.push(...[...same.filter(x => ixImg(x)), ...same.filter(x => !ixImg(x))].slice(0, 3 - out.length));
+    }
+    return out;
+  }
   function ixRenderProd(p, { fly = false, step = 0 } = {}) {
     const off = p.is_available === false, canOrder = !off && orderingOn();
     const img = ixImg(p), vid = safeUrl(p.video_url), desc = productDesc(p), zs = sizesOf(p), deal = autoDeal(p);
@@ -2853,9 +2874,7 @@
         <span dir="ltr">${at + 1} / ${list.length}</span>
         <button type="button" class="ix-arrow" data-ix-step="1" ${at === list.length - 1 ? 'disabled' : ''} aria-label="${T('التالي', 'Next')}">${IX_ICON.next}</button>
       </div>` : '';
-    // «يناسبه معه»: ثلاثة أصناف ثانية من نفس القسم (اللي بعده بالترتيب، واللي لها صور أول)
-    const others = at >= 0 ? [...list.slice(at + 1), ...list.slice(0, at)] : list.filter(x => x.id !== p.id);
-    const pair = [...others.filter(x => ixImg(x)), ...others.filter(x => !ixImg(x))].slice(0, 3);
+    const pair = ixPairs(p, list, at);
     ixEl('ixProd').innerHTML = `
       <div class="ix-hero ${img || vid ? '' : 'nopic'}">
         ${img || vid ? `<div class="ix-heropic ${step ? 'ix-slide' : ''}" style="--sx:${ixSx(step)}"><div class="${fly ? '' : 'ix-pop'}" style="--i:0"><div class="ix-tilt"><div class="ix-float">${ixPic(p, true)}</div></div></div>${pager}</div>` : ''}
@@ -2956,6 +2975,8 @@
   }
   function ixSwap(id, step) {
     const p = productById(id); if (!p) return;
+    // اقتراح من قسم ثاني: ننتقل لقسمه عشان «السابق والتالي» يمشون داخل قسمه
+    if (!ixList().some(x => x.id === p.id)) ixKey = ixKeyOf(p) || ixKey;
     ixProd = p.id; ixRenderProd(p, { step: step || 1 }); ixEl('ixProd').scrollTop = 0;
     ixEl('ixProd').classList.remove('enter'); void ixEl('ixProd').offsetWidth; ixEl('ixProd').classList.add('enter');
     trackOnce(`d:${p.id}`, 'dish', p.id);
