@@ -485,7 +485,7 @@
     box.innerHTML = f.rate == null ? '<p class="text-xs text-ink">لم يكمل أي عميل بطاقته حتى الآن.</p>' : `
       <div class="flex items-end gap-3"><b class="text-3xl">${f.rate}%</b><span class="text-[12px] text-ink pb-1">من المكافآت المستحقة تم استلامها</span></div>
       <div class="h-2.5 rounded-full bg-brand/10 mt-2 overflow-hidden"><div class="h-2.5 rounded-full bg-brand" style="width:${f.rate}%"></div></div>
-      <p class="text-[12px] text-ink mt-2">${f.redeemed} مكافأة استُلمت، و${f.waiting} مكافأة مستحقة لم تُستلم بعد.</p>`;
+      <p class="text-[12px] text-ink mt-2">${f.redeemed} مكافأة استُلمت${f.waiting ? `، و${f.waiting} مكافأة مستحقة لم تُستلم بعد` : '، ولا توجد مكافآت تنتظر الاستلام'}.</p>`;
     const ago = (iso) => { if (!iso) return ''; const n = Math.floor((Date.now() - Date.parse(iso)) / 864e5); return n <= 0 ? 'اليوم' : n === 1 ? 'أمس' : `قبل ${n} يوم`; };
     const row = (c, sub) => `<button type="button" onclick="openLyMember(${Number(c.card_id)})" class="w-full flex items-center justify-between gap-3 py-2 text-start">
         <span class="min-w-0"><b class="block text-[13px] truncate">${esc(c.name || `عضو #${c.no || ''}`)}${c.name && c.no ? ` <span class="text-[11px] font-normal text-ink">#${c.no}</span>` : ''}</b><span class="block text-[12px] text-ink">${sub}</span></span>
