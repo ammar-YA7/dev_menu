@@ -190,9 +190,16 @@ module.exports.post = async function post(action, req, b, env) {
     else if (status === 'waiting') { patch.ready_at = null; patch.closed_at = null; }
     else patch.closed_at = now;
     if (status === 'done' || status === 'cancelled') patch.push_sub = null;
+    // الحالة قبل التعديل: «رجّعه» بعد «جاهز» لازم يوصل للعميل (انبلغ إنه جاهز وهو ما جهز)
+    const prev = status === 'waiting' ? ((await rest(`pager_tickets?id=eq.${id}&client_id=eq.${sid}&select=status`).catch(() => []))[0] || {}).status : null;
     const rows = await rest(`pager_tickets?id=eq.${id}&client_id=eq.${sid}`, { method: 'PATCH', body: patch, prefer: 'return=representation' });
     if (!rows.length) throw new ApiError(404, 'الرقم غير موجود');
     const t = rows[0];
+    // رجع للتجهيز بعد ما انبلغ إنه جاهز: بطاقة النداء ترجع «قيد التجهيز» مع إشعار، وبطاقة الولاء المربوطة يوصلها إشعار
+    if (status === 'waiting' && prev === 'ready') {
+      if (t.wallet_serial) later(wallet.updatePagerPass(t.wallet_serial, wallet.pagerStep({ store, number: t.number, step: 'waiting', lang: t.lang, invoice: t.invoice_no })).catch(e => console.error('PAGER_PASS_BACK', e.message)));
+      if (t.loyalty_card_id && PLANS.has(store, 'loyalty')) later((async () => { const home = await loyaltyHome(sid); return walletNotice(home, t.loyalty_card_id, `رقم ${t.number} رجع للتجهيز، بنبلغك أول ما يجهز`); })().catch(e => console.error('PAGER_WALLET_BACK', e.message)));
+    }
     // طلب سفري من المنيو مربوط بالرقم: استلم = تم، حذف = انلغى
     if (status === 'done' || status === 'cancelled') await rest(`menu_orders?pager_ticket_id=eq.${t.id}&client_id=eq.${sid}`, { method: 'PATCH', body: { status: status === 'done' ? 'served' : 'cancelled', closed_at: now } }).catch(() => {});
     if (status === 'ready' && !t.push_sub) console.log('PAGER_READY_NO_SUB', sid, t.id);
