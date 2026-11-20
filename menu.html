@@ -2837,24 +2837,48 @@
       ${row(T('متوفرة على', 'Available as'), methods)}
     </div>`;
   }
-  // «يناسبه معه»: أصناف من تصنيفات ثانية (قهوة ← حلى وشي ثاني، حلى ← قهوة وشي ثاني)، صنف من كل تصنيف
-  // الاختيار ثابت لكل صنف (ما يتغير كل ما فتحه) ويختلف من صنف لصنف، واللي لها صور أول
-  // لو المنيو ما فيه تصنيفات ثانية كفاية نكمّل من نفس القسم
+  // «يناسبه معه»: نعرف نوع كل تصنيف من اسمه، ونقترح اللي يمشي معه:
+  //   القهوة والمشروبات الحارة ← الحلى · الحلى ← القهوة ثم المشروبات · الوجبات ← الجانبية والمشروبات الغازية ثم الحلى
+  //   الجانبية ← الوجبات والمشروبات · المشروبات الباردة والغازية ← الوجبات والجانبية ثم الحلى · الصوصات والإضافات ما تنقترح
+  // الاختيار ثابت لكل صنف ويختلف من صنف لصنف، واللي لها صور أول. لو ما فيه شي مناسب نكمّل من باقي المنيو ثم من نفس القسم
+  const IX_ROLES = [
+    ['addon', /إضاف|اضاف|صوص|صلص|\b(add|addition|extra|sauce|dip|topping)/i],
+    ['coffee', /قهو|كوفي|اسبريس|إسبريس|لاتي|كابتش|كابوتش|موكا|امريكان|أمريكان|مقطر|مختص|ساخن|حار|شاي|كرك|\bv60|coffee|espresso|latte|cappuc|mocha|americano|brew|drip|\bhot\b|\btea\b|karak/i],
+    ['dessert', /حلو|حلى|حلا|كيك|تشيز ?كيك|كوكي|كرواس|معجنات|مخبوز|دونات|بان ?كيك|وافل|ايس ?كريم|آيس ?كريم|ايسكريم|بوظ|جيلات|كناف|سويت|براوني|تارت|dessert|sweet|cake|cookie|croissant|pastr|baker|donut|waffle|pancake|ice ?cream|gelato|brownie|tart/i],
+    ['side', /فراي|بطاط|جانبي|مقبلات|سلط|شورب|سناك|side|fries|appet|appetizer|starter|salad|soup|snack/i],
+    ['drink', /مشروب|غاز|عصير|عصائر|موهيت|ميلك ?شيك|سموذ|بارد|ليموناد|مياه|ماء|soda|soft|drink|juice|mojito|shake|smoothie|cold|iced|lemonade|water|beverage/i],
+    ['main', /برقر|برجر|ساندو|سندو|سندويش|وجب|طبق|أطباق|اطباق|بيتزا|باستا|مشاوي|مشوي|دجاج|لحم|رز|أرز|فطور|شاورم|تاكو|راب|كرسبي|تشيكن|بيف|burger|sandwich|meal|plate|pizza|pasta|grill|chicken|beef|rice|breakfast|shawarma|taco|wrap|main/i]
+  ];
+  const IX_GOES = { coffee: ['dessert'], dessert: ['coffee', 'drink'], main: ['side', 'drink', 'dessert'], side: ['main', 'drink'], drink: ['main', 'side', 'dessert'], addon: ['main', 'side'] };
+  const ixRoleCache = new Map();
+  function ixRole(c) {
+    if (!ixRoleCache.has(c.id)) { const t = `${c.name || ''} ${c.name_en || ''}`; ixRoleCache.set(c.id, (IX_ROLES.find(([, re]) => re.test(t)) || ['other'])[0]); }
+    return ixRoleCache.get(c.id);
+  }
   function ixPairs(p, list, at) {
     const seed = [...String(p.id)].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
-    const ok = (x) => x.id !== p.id && x.is_available !== false;
-    const pick = (arr, k) => { const a = [...arr.filter(x => ixImg(x)), ...arr.filter(x => !ixImg(x))]; const withPic = arr.filter(x => ixImg(x)).length || a.length; return a.length ? a[(seed + k) % withPic] : null; };
+    const out = [], has = (x) => out.some(y => y.id === x.id);
+    const ok = (x) => x.id !== p.id && x.is_available !== false && !has(x);
+    const pics = (arr) => [...arr.filter(x => ixImg(x)), ...arr.filter(x => !ixImg(x))];
+    const rot = (arr, k) => { const n = arr.length; if (!n) return arr; const r = (seed + k) % n; return [...arr.slice(r), ...arr.slice(0, r)]; };
     // بالتصنيف مو بالمجموعة: لو القهوة والحلى في نفس المجموعة، الحلى يبقى تصنيف ثاني
-    const mine = allCategories.filter(c => productsIn(c, allProducts).some(q => q.id === p.id)).map(c => c.id);
-    const groups = allCategories.filter(c => !mine.includes(c.id))
-      .map(c => productsIn(c, allProducts).filter(ok)).filter(g => g.length);
-    // نبدأ من قسم مختلف حسب الصنف عشان كل صنف ياخذ خلطة مختلفة
-    const r = groups.length ? seed % groups.length : 0, order = [...groups.slice(r), ...groups.slice(0, r)];
-    const out = [];
-    for (let i = 0; i < order.length && out.length < 3; i++) { const x = pick(order[i], i); if (x && !out.some(y => y.id === x.id)) out.push(x); }
+    const cats = allCategories.filter(c => productsIn(c, allProducts).length);
+    const mine = cats.filter(c => productsIn(c, allProducts).some(q => q.id === p.id));
+    const myRole = mine.length ? ixRole(mine[0]) : 'other';
+    const others = cats.filter(c => !mine.includes(c));
+    const itemsOf = (c) => pics(productsIn(c, allProducts));
+    // الأدوار المناسبة: أول جولة صنف من كل تصنيف، وبعدها نكمّل من نفس التصنيفات المناسبة
+    // نتناوب بين الأنواع: وجبة ← جانبي ثم مشروب ثم حلى، مو جانبيين ورا بعض
+    const byRole = (IX_GOES[myRole] || []).map((role, i) => rot(others.filter(c => ixRole(c) === role), i));
+    const good = [];
+    for (let i = 0; i < Math.max(0, ...byRole.map(l => l.length)); i++) byRole.forEach(l => l[i] && good.push(l[i]));
+    for (let round = 0; round < 3 && out.length < 3; round++)
+      for (const c of good) { if (out.length >= 3) break; const x = rot(itemsOf(c), round).find(ok); if (x) out.push(x); }
+    // ما فيه شي مناسب (أو المنيو أسماؤه ما تنعرف): من باقي التصنيفات، بدون الصوصات والإضافات ونفس النوع
+    if (out.length < 3) for (const c of rot(others.filter(c => ixRole(c) !== 'addon' && (myRole === 'other' || ixRole(c) !== myRole)), 3)) { if (out.length >= 3) break; const x = rot(itemsOf(c), 0).find(ok); if (x) out.push(x); }
     if (out.length < 3) {
-      const same = (at >= 0 ? [...list.slice(at + 1), ...list.slice(0, at)] : list).filter(x => ok(x) && !out.some(y => y.id === x.id));
-      out.push(...[...same.filter(x => ixImg(x)), ...same.filter(x => !ixImg(x))].slice(0, 3 - out.length));
+      const same = (at >= 0 ? [...list.slice(at + 1), ...list.slice(0, at)] : list).filter(ok);
+      out.push(...pics(same).slice(0, 3 - out.length));
     }
     return out;
   }
